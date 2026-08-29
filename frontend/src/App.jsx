@@ -1415,7 +1415,7 @@ export default function App() {
                 </div>
                 <div>
                   <h3 className="text-xl font-black text-white uppercase tracking-wider">Auto-Update Permission</h3>
-                  <p className="text-xs text-orange-400 font-bold">RivalsTracker App Engine</p>
+                  <p className="text-xs text-orange-400 font-bold">Meowdy 5000's Stat Tracker</p>
                 </div>
               </div>
 
