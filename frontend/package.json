@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "cap": "cap",
-    "sync": "cap sync android",
+    "sync": "cap copy android",
     "lint": "eslint .",
     "preview": "vite preview"
   },
