@@ -396,7 +396,9 @@ def check_update():
                 "latestDate": commit_date,
                 "commitUrl": commit_url,
                 "hasUpdate": has_update,
-                "repoUrl": "https://github.com/monfreda48/Meowdy5000"
+                "repoUrl": "https://github.com/monfreda48/Meowdy5000",
+                "apkUrl": "https://github.com/monfreda48/Meowdy5000/releases/download/latest/app-debug.apk",
+                "releasesUrl": "https://github.com/monfreda48/Meowdy5000/releases"
             })
     except Exception as e:
         print(f"[ERROR] GitHub Update Check Error: {e}")

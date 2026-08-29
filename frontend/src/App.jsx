@@ -425,12 +425,20 @@ export default function App() {
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
-                onClick={applyUpdateNow}
+                onClick={() => applyUpdateNow()}
                 disabled={isApplyingUpdate}
                 className="w-full sm:w-auto px-5 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-orange-500/30 text-center shrink-0 cursor-pointer disabled:opacity-50"
               >
-                {isApplyingUpdate ? 'Installing...' : '⚡ Apply Auto-Update Now'}
+                {isApplyingUpdate ? 'Installing...' : '⚡ Apply Web Update'}
               </button>
+              <a
+                href={updateInfo.apkUrl || 'https://github.com/monfreda48/Meowdy5000/releases'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/50 text-emerald-300 text-xs font-black uppercase tracking-wider transition-all text-center shrink-0"
+              >
+                📱 Download APK
+              </a>
               <a
                 href={updateInfo.commitUrl || updateInfo.repoUrl || 'https://github.com/monfreda48/Meowdy5000'}
                 target="_blank"

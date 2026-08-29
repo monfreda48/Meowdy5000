@@ -57,3 +57,15 @@ jobs:
         with:
           name: Meowdy5000-StatTracker-APK
           path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publish APK to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: latest
+          name: "Meowdy 5000's Stat Tracker APK"
+          body: "Latest automated APK build from main branch."
+          files: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
