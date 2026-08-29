@@ -261,5 +261,42 @@ def get_stats():
 
     return jsonify({"current": final_data, "history": history})
 
+CURRENT_VERSION_COMMIT = "e6dfe8a"
+
+@app.route('/api/check-update')
+def check_update():
+    """Queries GitHub API for the latest commit on monfreda48/Meowdy5000 repo."""
+    github_url = "https://api.github.com/repos/monfreda48/Meowdy5000/commits/main"
+    try:
+        res = requests.get(github_url, headers={"User-Agent": "RivalsTracker-App", "Accept": "application/vnd.github.v3+json"}, timeout=5)
+        if res.status_code == 200:
+            commit_data = res.json()
+            latest_sha = commit_data.get("sha", "")[:7]
+            commit_msg = commit_data.get("commit", {}).get("message", "").split("\n")[0]
+            commit_date = commit_data.get("commit", {}).get("committer", {}).get("date", "")
+            commit_url = commit_data.get("html_url", "https://github.com/monfreda48/Meowdy5000")
+            
+            has_update = latest_sha != CURRENT_VERSION_COMMIT and bool(latest_sha)
+            
+            return jsonify({
+                "success": True,
+                "currentVersion": CURRENT_VERSION_COMMIT,
+                "latestVersion": latest_sha,
+                "latestMessage": commit_msg,
+                "latestDate": commit_date,
+                "commitUrl": commit_url,
+                "hasUpdate": has_update,
+                "repoUrl": "https://github.com/monfreda48/Meowdy5000"
+            })
+    except Exception as e:
+        print(f"[ERROR] GitHub Update Check Error: {e}")
+    
+    return jsonify({
+        "success": False,
+        "currentVersion": CURRENT_VERSION_COMMIT,
+        "hasUpdate": False,
+        "repoUrl": "https://github.com/monfreda48/Meowdy5000"
+    })
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

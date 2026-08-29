@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function App() {
@@ -9,6 +9,25 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isMobileView, setIsMobileView] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState(null);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+
+  const checkForUpdates = async () => {
+    setCheckingUpdate(true);
+    try {
+      const res = await fetch('/api/check-update');
+      const data = await res.json();
+      setUpdateInfo(data);
+    } catch (err) {
+      console.error('Failed to check for updates:', err);
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
+
+  useEffect(() => {
+    checkForUpdates();
+  }, []);
 
   const fetchStats = async (e, overrideQuery = null, overrideSeason = null) => {
     if (e) e.preventDefault();
@@ -63,38 +82,76 @@ export default function App() {
             </div>
           </div>
 
-          {/* View Mode Toggle Switch (Top Right) */}
-          <div className="flex items-center gap-2 bg-[#131b2f] p-1 rounded-xl border border-slate-700/60 shadow-inner">
+          <div className="flex items-center gap-2">
+            {/* GitHub Update Check Button */}
             <button
-              onClick={() => setIsMobileView(false)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                !isMobileView 
-                  ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md' 
-                  : 'text-slate-400 hover:text-white'
-              }`}
+              onClick={checkForUpdates}
+              disabled={checkingUpdate}
+              title="Check GitHub for App Updates"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#131b2f] border border-slate-700/60 text-xs font-bold text-slate-300 hover:text-white hover:border-orange-500/50 transition-all shadow-inner disabled:opacity-50"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              <svg className={`h-4 w-4 text-orange-400 ${checkingUpdate ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
               </svg>
-              <span className="hidden sm:inline">Desktop</span>
+              <span className="hidden md:inline">
+                {checkingUpdate ? 'Checking...' : updateInfo?.hasUpdate ? 'Update Available!' : 'GitHub Sync'}
+              </span>
+              {updateInfo?.hasUpdate && (
+                <span className="w-2 h-2 rounded-full bg-orange-400 animate-ping"></span>
+              )}
             </button>
 
-            <button
-              onClick={() => setIsMobileView(true)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                isMobileView 
-                  ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md' 
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              <span className="hidden sm:inline">Mobile</span>
-            </button>
+            {/* View Mode Toggle Switch (Top Right) */}
+            <div className="flex items-center gap-2 bg-[#131b2f] p-1 rounded-xl border border-slate-700/60 shadow-inner">
+              <button
+                onClick={() => setIsMobileView(false)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  !isMobileView 
+                    ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span className="hidden sm:inline">Desktop</span>
+              </button>
+
+              <button
+                onClick={() => setIsMobileView(true)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  isMobileView 
+                    ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <span className="hidden sm:inline">Mobile</span>
+              </button>
+            </div>
           </div>
         </div>
       </nav>
+
+      {/* GitHub Update Notification Banner */}
+      {updateInfo?.hasUpdate && (
+        <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white py-2.5 px-4 text-center text-xs sm:text-sm font-bold flex items-center justify-center gap-3 shadow-lg">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+            New update available on GitHub! ({updateInfo.latestVersion} - {updateInfo.latestMessage})
+          </span>
+          <a
+            href={updateInfo.commitUrl || updateInfo.repoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1 bg-black/30 hover:bg-black/50 text-white rounded-lg transition-colors border border-white/20 uppercase text-[11px] tracking-wider"
+          >
+            View on GitHub
+          </a>
+        </div>
+      )}
 
       {/* Main Layout Container */}
       <main className={`mx-auto transition-all duration-300 ${
