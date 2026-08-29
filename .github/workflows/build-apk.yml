@@ -31,10 +31,6 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Make Gradle Wrapper Executable
-        run: |
-          chmod +x frontend/android/gradlew
-
       - name: Install Frontend Dependencies
         run: |
           cd frontend
@@ -45,14 +41,10 @@ jobs:
           cd frontend
           npm run build
 
-      - name: Sync Capacitor Android Project
-        run: |
-          cd frontend
-          npm run sync
-
       - name: Build Android APK
         run: |
           cd frontend/android
+          chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK Artifact
