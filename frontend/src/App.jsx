@@ -5,9 +5,9 @@ const AVAILABLE_METRICS = [
   { id: 'winRate', name: 'Win Rate', icon: '🏆', category: 'Core' },
   { id: 'kdRatio', name: 'K/D/A Ratio', icon: '⚔️', category: 'Core' },
   { id: 'topHeroes', name: 'Top Heroes', icon: '🦸', category: 'Core' },
-  { id: 'heroDamage', name: 'Hero Damage', icon: '💥', category: 'Combat' },
-  { id: 'healing', name: 'Healing Output', icon: '💚', category: 'Combat' },
-  { id: 'damageBlocked', name: 'Damage Blocked', icon: '🛡️', category: 'Combat' },
+  { id: 'heroDamage', name: 'Hero Damage / 10m', icon: '💥', category: 'Combat' },
+  { id: 'healing', name: 'Healing Output / 10m', icon: '💚', category: 'Combat' },
+  { id: 'damageBlocked', name: 'Damage Blocked / 10m', icon: '🛡️', category: 'Combat' },
   { id: 'accuracy', name: 'Shots Accuracy', icon: '🎯', category: 'Combat' },
   { id: 'timePlayed', name: 'Total Playtime', icon: '⏱️', category: 'Profile' },
   { id: 'matchesPlayed', name: 'Matches & Wins', icon: '🎮', category: 'Profile' },
@@ -425,7 +425,7 @@ export default function App() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
                     </svg>
                   </div>
-                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Hero Damage</p>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Hero Damage / 10m</p>
                   <p className={`font-black text-orange-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                     {typeof stats.current.heroDamage === 'number' ? stats.current.heroDamage.toLocaleString() : (stats.current.heroDamage || 'N/A')}
                   </p>
@@ -440,7 +440,7 @@ export default function App() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
                   </div>
-                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Healing Output</p>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Healing Output / 10m</p>
                   <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                     {stats.current.healing || 'N/A'}
                   </p>
@@ -455,7 +455,7 @@ export default function App() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                   </div>
-                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Damage Blocked</p>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Damage Blocked / 10m</p>
                   <p className={`font-black text-purple-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                     {stats.current.damageBlocked || 'N/A'}
                   </p>

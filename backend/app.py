@@ -66,6 +66,35 @@ HERO_MAP = {
     "1064": "Jubilee", "1065": "Rogue", "1066": "The Hood"
 }
 
+def calc_per_10m(stat_dict, per10_keys, total_keys, time_sec):
+    """Returns direct per-10m API metric or calculates (total / seconds) * 600."""
+    for k in per10_keys:
+        if k in stat_dict:
+            st = stat_dict[k]
+            disp = st.get('displayValue', st.get('value')) if isinstance(st, dict) else st
+            if disp and str(disp) != 'N/A':
+                return f"{disp} / 10m"
+    
+    total_val = None
+    for k in total_keys:
+        if k in stat_dict:
+            st = stat_dict[k]
+            val = st.get('value') if isinstance(st, dict) else st
+            if val is not None and str(val) != 'N/A':
+                try:
+                    total_val = float(str(val).replace(',', ''))
+                    break
+                except:
+                    pass
+    
+    if total_val is not None and time_sec and time_sec > 0:
+        per_10m_val = round((total_val / time_sec) * 600)
+        return f"{per_10m_val:,} / 10m"
+    elif total_val is not None:
+        return f"{round(total_val):,}"
+
+    return "N/A"
+
 def scrape_tracker_gg_api(username, season=None):
     """Uses Selenium to fetch Tracker.gg's protected API."""
     season_str = f" for season {season}" if season else ""
@@ -109,6 +138,14 @@ def scrape_tracker_gg_api(username, season=None):
             
             kda_stat = stats.get('kdaRatio', stats.get('kdRatio', {}))
             kd_ratio = kda_stat.get('value', 0.0) if isinstance(kda_stat, dict) else float(kda_stat or 0.0)
+
+            time_sec_raw = stats.get('timePlayed', {}).get('value', 0) if isinstance(stats.get('timePlayed'), dict) else 0
+            try: time_sec = float(time_sec_raw or 0)
+            except: time_sec = 0
+
+            hero_dmg_per_10 = calc_per_10m(stats, ['heroDamagePer10', 'totalHeroDamagePer10', 'heroDamagePer10Min'], ['totalHeroDamage', 'heroDamage'], time_sec)
+            healing_per_10 = calc_per_10m(stats, ['healingPer10', 'totalHealingPer10', 'healingPer10Min'], ['totalHealing', 'healing'], time_sec)
+            blocked_per_10 = calc_per_10m(stats, ['damageBlockedPer10', 'totalDamageBlockedPer10', 'damageMitigatedPer10'], ['totalDamageBlocked', 'totalDamageMitigated', 'damageBlocked'], time_sec)
             
             hero_list = []
             for seg in segments:
@@ -146,9 +183,9 @@ def scrape_tracker_gg_api(username, season=None):
                 "kills": int(stats.get('kills', {}).get('value', 0) if isinstance(stats.get('kills'), dict) else (stats.get('kills') or 0)),
                 "deaths": int(stats.get('deaths', {}).get('value', 0) if isinstance(stats.get('deaths'), dict) else (stats.get('deaths') or 0)),
                 "assists": int(stats.get('assists', {}).get('value', 0) if isinstance(stats.get('assists'), dict) else (stats.get('assists') or 0)),
-                "heroDamage": str(stats.get('totalHeroDamage', {}).get('displayValue', stats.get('totalHeroDamage', {}).get('value', 'N/A')) if isinstance(stats.get('totalHeroDamage'), dict) else (stats.get('totalHeroDamage') or 'N/A')),
-                "healing": str(stats.get('totalHealing', {}).get('displayValue', stats.get('totalHealing', {}).get('value', 'N/A')) if isinstance(stats.get('totalHealing'), dict) else (stats.get('totalHealing') or 'N/A')),
-                "damageBlocked": str(stats.get('totalDamageBlocked', {}).get('displayValue', stats.get('totalDamageMitigated', {}).get('displayValue', 'N/A')) if isinstance(stats.get('totalDamageBlocked'), dict) else (stats.get('totalDamageBlocked') or 'N/A')),
+                "heroDamage": hero_dmg_per_10,
+                "healing": healing_per_10,
+                "damageBlocked": blocked_per_10,
                 "accuracy": str(stats.get('accuracy', {}).get('displayValue', stats.get('shotsAccuracy', {}).get('displayValue', 'N/A')) if isinstance(stats.get('accuracy'), dict) else (stats.get('accuracy') or 'N/A')),
                 "timePlayed": str(stats.get('timePlayed', {}).get('displayValue', 'N/A') if isinstance(stats.get('timePlayed'), dict) else (stats.get('timePlayed') or 'N/A')),
                 "tracker_url": profile_url
