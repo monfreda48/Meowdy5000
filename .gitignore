@@ -25,3 +25,11 @@ __pycache__/
 # System
 .DS_Store
 Thumbs.db
+
+# Android Build Outputs
+frontend/android/app/build/
+frontend/android/build/
+frontend/android/.gradle/
+frontend/android/captures/
+frontend/android/.idea/
+

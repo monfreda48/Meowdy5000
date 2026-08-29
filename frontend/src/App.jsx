@@ -157,6 +157,20 @@ export default function App() {
   const [updateStatusMsg, setUpdateStatusMsg] = useState('');
   const [showAutoUpdateModal, setShowAutoUpdateModal] = useState(false);
 
+  const [backendBaseUrl, setBackendBaseUrl] = useState(() => {
+    try {
+      return localStorage.getItem('backend_server_url') || '';
+    } catch (e) {
+      return '';
+    }
+  });
+
+  const getApiUrl = (endpoint) => {
+    if (!backendBaseUrl) return endpoint;
+    const base = backendBaseUrl.replace(/\/+$/, '');
+    return `${base}${endpoint}`;
+  };
+
   const applyUpdateNow = async (targetSha = null) => {
     const attemptedSha = targetSha || updateInfo?.latestVersion;
     if (attemptedSha) {
@@ -165,7 +179,7 @@ export default function App() {
     setIsApplyingUpdate(true);
     setUpdateStatusMsg('⚡ Fetching and installing latest update from GitHub...');
     try {
-      const res = await fetch('/api/apply-update', { method: 'POST' });
+      const res = await fetch(getApiUrl('/api/apply-update'), { method: 'POST' });
       const data = await res.json();
       if (data.success) {
         setUpdateStatusMsg('✅ Update installed successfully! Reloading app...');
@@ -197,7 +211,7 @@ export default function App() {
   const checkForUpdates = async () => {
     setCheckingUpdate(true);
     try {
-      const res = await fetch('/api/check-update');
+      const res = await fetch(getApiUrl('/api/check-update'));
       const data = await res.json();
       setUpdateInfo(data);
 
@@ -234,7 +248,7 @@ export default function App() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`);
+      const response = await fetch(getApiUrl(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`));
       const data = await response.json();
 
       if (!response.ok) {

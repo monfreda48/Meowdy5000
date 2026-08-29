@@ -1,0 +1,12 @@
+{
+  "appId": "com.meowdy5000.stattracker",
+  "appName": "Meowdy 5000's Stat Tracker",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}
