@@ -65,6 +65,8 @@ export default function App() {
     }
   };
 
+  const [isEditOrderMode, setIsEditOrderMode] = useState(false);
+
   const [selectedMetrics, setSelectedMetrics] = useState(() => {
     try {
       const saved = localStorage.getItem('tracked_metrics');
@@ -73,6 +75,34 @@ export default function App() {
       return AVAILABLE_METRICS.map(m => m.id);
     }
   });
+
+  const moveMetricUp = (id, e) => {
+    if (e) e.stopPropagation();
+    const index = selectedMetrics.indexOf(id);
+    if (index <= 0) return;
+    const updated = [...selectedMetrics];
+    const temp = updated[index];
+    updated[index] = updated[index - 1];
+    updated[index - 1] = temp;
+    setSelectedMetrics(updated);
+    if (hasStoragePermission) {
+      try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) {}
+    }
+  };
+
+  const moveMetricDown = (id, e) => {
+    if (e) e.stopPropagation();
+    const index = selectedMetrics.indexOf(id);
+    if (index < 0 || index >= selectedMetrics.length - 1) return;
+    const updated = [...selectedMetrics];
+    const temp = updated[index];
+    updated[index] = updated[index + 1];
+    updated[index + 1] = temp;
+    setSelectedMetrics(updated);
+    if (hasStoragePermission) {
+      try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) {}
+    }
+  };
 
   const toggleMetric = (id) => {
     let updated;
@@ -402,36 +432,75 @@ export default function App() {
               </summary>
               
               <div className="p-4 bg-[#0f1526] border-t border-slate-700/50 space-y-3">
-                <p className="text-xs text-slate-400">
-                  Toggle what stats to display on your dashboard. Preferences save automatically:
-                </p>
+                <div className="flex items-center justify-between pb-1">
+                  <p className="text-xs text-slate-400">
+                    Toggle stats & rearrange display order. Changes persist automatically:
+                  </p>
+                  <button 
+                    type="button" 
+                    onClick={() => setIsEditOrderMode(!isEditOrderMode)} 
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                      isEditOrderMode 
+                        ? 'bg-amber-500/20 border-amber-500/60 text-amber-400 shadow-sm' 
+                        : 'bg-[#0b101e] border-slate-700/60 text-slate-300 hover:text-white hover:border-orange-500/50'
+                    }`}
+                  >
+                    {isEditOrderMode ? '🔒 Done Reordering' : '✏️ Rearrange Order'}
+                  </button>
+                </div>
 
                 <div className="flex flex-wrap gap-2">
                   {AVAILABLE_METRICS.map((m) => {
                     const active = isMetricTracked(m.id);
+                    const orderIndex = selectedMetrics.indexOf(m.id);
                     return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => toggleMetric(m.id)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
-                          active
-                            ? 'bg-gradient-to-r from-orange-500/20 to-red-500/20 border-orange-500/60 text-white shadow-sm'
-                            : 'bg-[#0b101e] border-slate-800 text-slate-500 hover:text-slate-300'
-                        }`}
-                      >
-                        <span>{m.icon}</span>
-                        <span>{m.name}</span>
-                        <span className={`w-2 h-2 rounded-full ${active ? 'bg-orange-400 shadow-[0_0_6px_rgba(249,115,22,0.8)]' : 'bg-slate-700'}`}></span>
-                      </button>
+                      <div key={m.id} className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => toggleMetric(m.id)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                            active
+                              ? 'bg-gradient-to-r from-orange-500/20 to-red-500/20 border-orange-500/60 text-white shadow-sm'
+                              : 'bg-[#0b101e] border-slate-800 text-slate-500 hover:text-slate-300'
+                          }`}
+                        >
+                          <span>{m.icon}</span>
+                          <span>{m.name}</span>
+                          <span className={`w-2 h-2 rounded-full ${active ? 'bg-orange-400 shadow-[0_0_6px_rgba(249,115,22,0.8)]' : 'bg-slate-700'}`}></span>
+                        </button>
+
+                        {isEditOrderMode && active && (
+                          <div className="flex items-center bg-[#0b101e] border border-slate-700/80 rounded-xl overflow-hidden">
+                            <button
+                              type="button"
+                              onClick={(e) => moveMetricUp(m.id, e)}
+                              disabled={orderIndex <= 0}
+                              title="Move Left / Up"
+                              className="px-1.5 py-1 text-slate-400 hover:text-orange-400 hover:bg-slate-800 disabled:opacity-30 disabled:hover:text-slate-400 font-black text-[10px]"
+                            >
+                              ◄
+                            </button>
+                            <span className="text-[10px] text-slate-500 font-bold px-0.5">{orderIndex + 1}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => moveMetricDown(m.id, e)}
+                              disabled={orderIndex >= selectedMetrics.length - 1}
+                              title="Move Right / Down"
+                              className="px-1.5 py-1 text-slate-400 hover:text-orange-400 hover:bg-slate-800 disabled:opacity-30 disabled:hover:text-slate-400 font-black text-[10px]"
+                            >
+                              ►
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
 
                 <div className="flex justify-end gap-3 pt-2 border-t border-slate-800/80 text-[11px]">
-                  <button type="button" onClick={selectAllMetrics} className="text-orange-400 hover:text-orange-300 font-bold">Select All</button>
+                  <button type="button" onClick={selectAllMetrics} className="text-orange-400 hover:text-orange-300 font-bold cursor-pointer">Select All</button>
                   <span className="text-slate-600">•</span>
-                  <button type="button" onClick={resetDefaultMetrics} className="text-slate-400 hover:text-white font-medium">Reset Defaults</button>
+                  <button type="button" onClick={resetDefaultMetrics} className="text-slate-400 hover:text-white font-medium cursor-pointer">Reset Defaults</button>
                 </div>
               </div>
             </details>
@@ -501,411 +570,455 @@ export default function App() {
             <div className={`grid gap-4 ${
               isMobileView ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:gap-6'
             }`}>
-              {/* Win Rate */}
-              {isMetricTracked('winRate') && (
-                <div 
-                  onClick={() => toggleExpandMetric('winRate')}
-                  className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
-                >
-                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                  </div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Win Rate</p>
-                    <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
-                      {expandedMetric === 'winRate' ? '▲ Hide' : '▼ Expand'}
-                    </span>
-                  </div>
-                  <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>{stats.current.winRate}%</p>
-                  
-                  {expandedMetric === 'winRate' && (
-                    <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>Total Matches:</span>
-                        <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
-                      </div>
-                      <div className="flex justify-between text-emerald-400 font-medium">
-                        <span>Victories (Wins):</span>
-                        <span className="font-bold">{stats.current.matchesWon}</span>
-                      </div>
-                      <div className="flex justify-between text-red-400 font-medium">
-                        <span>Defeats (Losses):</span>
-                        <span className="font-bold">{stats.current.matchesPlayed - stats.current.matchesWon}</span>
-                      </div>
-                      <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden flex mt-2">
-                        <div className="bg-emerald-500 h-full" style={{ width: `${stats.current.winRate}%` }}></div>
-                        <div className="bg-red-500 h-full flex-1"></div>
-                      </div>
+              {selectedMetrics.map((metricId) => {
+                if (metricId === 'winRate') return (
+                  <div 
+                    key="winRate"
+                    onClick={() => toggleExpandMetric('winRate')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                  >
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
                     </div>
-                  )}
-                </div>
-              )}
-
-              {/* KDA Ratio */}
-              {isMetricTracked('kdRatio') && (
-                <div 
-                  onClick={() => toggleExpandMetric('kdRatio')}
-                  className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
-                >
-                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                  </div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">KDA Ratio</p>
-                    <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
-                      {expandedMetric === 'kdRatio' ? '▲ Hide' : '▼ Expand'}
-                    </span>
-                  </div>
-                  <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>{stats.current.kdRatio}</p>
-                  
-                  {expandedMetric === 'kdRatio' && (
-                    <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>Eliminations (Kills):</span>
-                        <span className="font-bold text-emerald-400">{(stats.current.kills || 0).toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>Assists:</span>
-                        <span className="font-bold text-blue-400">{(stats.current.assists || 0).toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>Deaths:</span>
-                        <span className="font-bold text-red-400">{(stats.current.deaths || 0).toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-400 pt-1 border-t border-slate-800">
-                        <span>Pure K/D Ratio:</span>
-                        <span className="font-bold text-white">{((stats.current.kills || 0) / (stats.current.deaths || 1)).toFixed(2)}</span>
-                      </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Win Rate</p>
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                        {expandedMetric === 'winRate' ? '▲ Hide' : '▼ Expand'}
+                      </span>
                     </div>
-                  )}
-                </div>
-              )}
-
-              {/* Hero Damage */}
-              {isMetricTracked('heroDamage') && (
-                <div 
-                  onClick={() => toggleExpandMetric('heroDamage')}
-                  className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
-                >
-                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-                    </svg>
-                  </div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Damage / 10m</p>
-                    <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
-                      {expandedMetric === 'heroDamage' ? '▲ Hide' : '▼ Expand'}
-                    </span>
-                  </div>
-                  <p className={`font-black text-orange-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                    {typeof stats.current.heroDamage === 'number' ? stats.current.heroDamage.toLocaleString() : (stats.current.heroDamage || 'N/A')}
-                  </p>
-                  
-                  {expandedMetric === 'heroDamage' && (
-                    <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>Total Damage Output:</span>
-                        <span className="font-bold text-orange-400">{(stats.current.totalHeroDamageRaw || 0).toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>Avg Damage / Match:</span>
-                        <span className="font-bold text-white">
-                          {stats.current.matchesPlayed ? Math.round(stats.current.totalHeroDamageRaw / stats.current.matchesPlayed).toLocaleString() : 0}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Healing Output */}
-              {isMetricTracked('healing') && (
-                <div 
-                  onClick={() => toggleExpandMetric('healing')}
-                  className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
-                >
-                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Healing / 10m</p>
-                    <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
-                      {expandedMetric === 'healing' ? '▲ Hide' : '▼ Expand'}
-                    </span>
-                  </div>
-                  <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                    {stats.current.healing || 'N/A'}
-                  </p>
-                  
-                  {expandedMetric === 'healing' && (
-                    <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>Total Healing Output:</span>
-                        <span className="font-bold text-emerald-400">{(stats.current.totalHeroHealRaw || 0).toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>Avg Healing / Match:</span>
-                        <span className="font-bold text-white">
-                          {stats.current.matchesPlayed ? Math.round(stats.current.totalHeroHealRaw / stats.current.matchesPlayed).toLocaleString() : 0}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Damage Blocked */}
-              {isMetricTracked('damageBlocked') && (
-                <div 
-                  onClick={() => toggleExpandMetric('damageBlocked')}
-                  className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
-                >
-                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                  </div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Dmg Blocked / 10m</p>
-                    <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
-                      {expandedMetric === 'damageBlocked' ? '▲ Hide' : '▼ Expand'}
-                    </span>
-                  </div>
-                  <p className={`font-black text-purple-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                    {stats.current.damageBlocked || 'N/A'}
-                  </p>
-                  
-                  {expandedMetric === 'damageBlocked' && (
-                    <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>Total Damage Blocked:</span>
-                        <span className="font-bold text-purple-400">{(stats.current.totalDamageTakenRaw || 0).toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>Avg Blocked / Match:</span>
-                        <span className="font-bold text-white">
-                          {stats.current.matchesPlayed ? Math.round(stats.current.totalDamageTakenRaw / stats.current.matchesPlayed).toLocaleString() : 0}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Accuracy */}
-              {isMetricTracked('accuracy') && (
-                <div 
-                  onClick={() => toggleExpandMetric('accuracy')}
-                  className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
-                >
-                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Accuracy</p>
-                    <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
-                      {expandedMetric === 'accuracy' ? '▲ Hide' : '▼ Expand'}
-                    </span>
-                  </div>
-                  <p className={`font-black text-yellow-400 ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
-                    {stats.current.accuracy || 'N/A'}
-                  </p>
-                  
-                  {expandedMetric === 'accuracy' && (
-                    <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>Primary Attack Hits:</span>
-                        <span className="font-bold text-yellow-400">{(stats.current.mainAttackHits || 0).toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>Total Shots Fired:</span>
-                        <span className="font-bold text-white">{(stats.current.mainAttacks || 0).toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-400 font-medium">
-                        <span>Missed Shots:</span>
-                        <span className="font-bold text-red-400">
-                          {((stats.current.mainAttacks || 0) - (stats.current.mainAttackHits || 0)).toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* MVPs */}
-              {isMetricTracked('mvp') && (
-                <div 
-                  onClick={() => toggleExpandMetric('mvp')}
-                  className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
-                >
-                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-amber-400 font-black text-4xl">
-                    👑
-                  </div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">MVPs</p>
-                    <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
-                      {expandedMetric === 'mvp' ? '▲ Hide' : '▼ Expand'}
-                    </span>
-                  </div>
-                  <p className={`font-black text-amber-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                    {stats.current.mvp || '0'}
-                  </p>
-                  
-                  {expandedMetric === 'mvp' && (
-                    <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>MVP Performance Trophies:</span>
-                        <span className="font-bold text-amber-400">{stats.current.mvp}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>Total Matches Played:</span>
-                        <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* SVPs */}
-              {isMetricTracked('svp') && (
-                <div 
-                  onClick={() => toggleExpandMetric('svp')}
-                  className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
-                >
-                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-purple-400 font-black text-4xl">
-                    🌟
-                  </div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">SVPs</p>
-                    <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
-                      {expandedMetric === 'svp' ? '▲ Hide' : '▼ Expand'}
-                    </span>
-                  </div>
-                  <p className={`font-black text-purple-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                    {stats.current.svp || '0'}
-                  </p>
-                  
-                  {expandedMetric === 'svp' && (
-                    <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>SVP Team Honors:</span>
-                        <span className="font-bold text-purple-400">{stats.current.svp}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>Total Matches Played:</span>
-                        <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Total Playtime */}
-              {isMetricTracked('timePlayed') && (
-                <div 
-                  onClick={() => toggleExpandMetric('timePlayed')}
-                  className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
-                >
-                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Playtime</p>
-                    <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
-                      {expandedMetric === 'timePlayed' ? '▲ Hide' : '▼ Expand'}
-                    </span>
-                  </div>
-                  <p className={`font-black text-sky-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                    {stats.current.timePlayed || 'N/A'}
-                  </p>
-                  
-                  {expandedMetric === 'timePlayed' && (
-                    <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>Total Recorded Hours:</span>
-                        <span className="font-bold text-sky-400">{stats.current.timePlayed}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-300 font-medium">
-                        <span>Matches Tracked:</span>
-                        <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Top Heroes */}
-              {isMetricTracked('topHeroes') && (
-                <div className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                    </svg>
-                  </div>
-                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">Top Heroes</p>
-                  
-                  <div className="flex flex-col gap-2 relative z-10">
-                    {stats.current.topHeroesDetailed && stats.current.topHeroesDetailed.length > 0 ? (
-                      stats.current.topHeroesDetailed.map((hero, index) => (
-                        <details key={index} className="group bg-[#0f1526] rounded-xl border border-slate-700/50 overflow-hidden shadow-sm">
-                          <summary className="cursor-pointer flex items-center justify-between p-2.5 hover:bg-slate-800/50 transition-colors list-none">
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-5 h-5 rounded bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-400 shadow-inner">
-                                {index + 1}
-                              </div>
-                              <span className="text-base font-black text-emerald-400 truncate">{hero.name}</span>
-                            </div>
-                            <svg className="w-4 h-4 text-slate-500 transition-transform duration-300 group-open:-rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </summary>
-                          <div className="p-3 border-t border-slate-700/50 bg-[#0b101e] grid grid-cols-2 gap-y-2.5 gap-x-3 text-left">
-                            <div>
-                              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Win Rate</p>
-                              <p className="text-sm font-black text-orange-400">{hero.winRate}%</p>
-                            </div>
-                            <div>
-                              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">KDA Ratio</p>
-                              <p className="text-sm font-black text-blue-400">{hero.kda}</p>
-                            </div>
-                            <div>
-                              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Matches</p>
-                              <p className="text-xs font-bold text-slate-200">{hero.matches}</p>
-                            </div>
-                            <div>
-                              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Playtime</p>
-                              <p className="text-xs font-bold text-slate-200">{hero.timePlayed}</p>
-                            </div>
-                          </div>
-                        </details>
-                      ))
-                    ) : (
-                      <div className="flex flex-col gap-2">
-                        {stats.current.topHero.split(', ').map((hero, index) => (
-                          <div key={index} className="flex items-center gap-2.5">
-                            <div className="w-5 h-5 rounded bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-400">
-                              {index + 1}
-                            </div>
-                            <span className="text-lg font-black text-emerald-400 truncate">{hero}</span>
-                          </div>
-                        ))}
+                    <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>{stats.current.winRate}%</p>
+                    
+                    {expandedMetric === 'winRate' && (
+                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Total Matches:</span>
+                          <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
+                        </div>
+                        <div className="flex justify-between text-emerald-400 font-medium">
+                          <span>Victories (Wins):</span>
+                          <span className="font-bold">{stats.current.matchesWon}</span>
+                        </div>
+                        <div className="flex justify-between text-red-400 font-medium">
+                          <span>Defeats (Losses):</span>
+                          <span className="font-bold">{stats.current.matchesPlayed - stats.current.matchesWon}</span>
+                        </div>
+                        <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden flex mt-2">
+                          <div className="bg-emerald-500 h-full" style={{ width: `${stats.current.winRate}%` }}></div>
+                          <div className="bg-red-500 h-full flex-1"></div>
+                        </div>
                       </div>
                     )}
                   </div>
-                </div>
-              )}
+                );
+
+                return null;
+              })}
+
+                if (metricId === 'kdRatio') return (
+                  <div 
+                    key="kdRatio"
+                    onClick={() => toggleExpandMetric('kdRatio')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                  >
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">KDA Ratio</p>
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                        {expandedMetric === 'kdRatio' ? '▲ Hide' : '▼ Expand'}
+                      </span>
+                    </div>
+                    <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>{stats.current.kdRatio}</p>
+                    
+                    {expandedMetric === 'kdRatio' && (
+                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Eliminations (Kills):</span>
+                          <span className="font-bold text-emerald-400">{(stats.current.kills || 0).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Assists:</span>
+                          <span className="font-bold text-blue-400">{(stats.current.assists || 0).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Deaths:</span>
+                          <span className="font-bold text-red-400">{(stats.current.deaths || 0).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-400 pt-1 border-t border-slate-800">
+                          <span>Pure K/D Ratio:</span>
+                          <span className="font-bold text-white">{((stats.current.kills || 0) / (stats.current.deaths || 1)).toFixed(2)}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+
+                if (metricId === 'heroDamage') return (
+                  <div 
+                    key="heroDamage"
+                    onClick={() => toggleExpandMetric('heroDamage')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                  >
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                      </svg>
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Damage / 10m</p>
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                        {expandedMetric === 'heroDamage' ? '▲ Hide' : '▼ Expand'}
+                      </span>
+                    </div>
+                    <p className={`font-black text-orange-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                      {typeof stats.current.heroDamage === 'number' ? stats.current.heroDamage.toLocaleString() : (stats.current.heroDamage || 'N/A')}
+                    </p>
+                    
+                    {expandedMetric === 'heroDamage' && (
+                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Total Damage Output:</span>
+                          <span className="font-bold text-orange-400">{(stats.current.totalHeroDamageRaw || 0).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Avg Damage / Match:</span>
+                          <span className="font-bold text-white">
+                            {stats.current.matchesPlayed ? Math.round(stats.current.totalHeroDamageRaw / stats.current.matchesPlayed).toLocaleString() : 0}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+
+                if (metricId === 'healing') return (
+                  <div 
+                    key="healing"
+                    onClick={() => toggleExpandMetric('healing')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                  >
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Healing / 10m</p>
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                        {expandedMetric === 'healing' ? '▲ Hide' : '▼ Expand'}
+                      </span>
+                    </div>
+                    <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                      {stats.current.healing || 'N/A'}
+                    </p>
+                    
+                    {expandedMetric === 'healing' && (
+                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Total Healing Output:</span>
+                          <span className="font-bold text-emerald-400">{(stats.current.totalHeroHealRaw || 0).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Avg Healing / Match:</span>
+                          <span className="font-bold text-white">
+                            {stats.current.matchesPlayed ? Math.round(stats.current.totalHeroHealRaw / stats.current.matchesPlayed).toLocaleString() : 0}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+
+                if (metricId === 'damageBlocked') return (
+                  <div 
+                    key="damageBlocked"
+                    onClick={() => toggleExpandMetric('damageBlocked')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                  >
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Dmg Blocked / 10m</p>
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                        {expandedMetric === 'damageBlocked' ? '▲ Hide' : '▼ Expand'}
+                      </span>
+                    </div>
+                    <p className={`font-black text-purple-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                      {stats.current.damageBlocked || 'N/A'}
+                    </p>
+                    
+                    {expandedMetric === 'damageBlocked' && (
+                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Total Damage Blocked:</span>
+                          <span className="font-bold text-purple-400">{(stats.current.totalDamageTakenRaw || 0).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Avg Blocked / Match:</span>
+                          <span className="font-bold text-white">
+                            {stats.current.matchesPlayed ? Math.round(stats.current.totalDamageTakenRaw / stats.current.matchesPlayed).toLocaleString() : 0}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+
+                if (metricId === 'accuracy') return (
+                  <div 
+                    key="accuracy"
+                    onClick={() => toggleExpandMetric('accuracy')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                  >
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Accuracy</p>
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                        {expandedMetric === 'accuracy' ? '▲ Hide' : '▼ Expand'}
+                      </span>
+                    </div>
+                    <p className={`font-black text-yellow-400 ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
+                      {stats.current.accuracy || 'N/A'}
+                    </p>
+                    
+                    {expandedMetric === 'accuracy' && (
+                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Primary Attack Hits:</span>
+                          <span className="font-bold text-yellow-400">{(stats.current.mainAttackHits || 0).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Total Shots Fired:</span>
+                          <span className="font-bold text-white">{(stats.current.mainAttacks || 0).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-400 font-medium">
+                          <span>Missed Shots:</span>
+                          <span className="font-bold text-red-400">
+                            {((stats.current.mainAttacks || 0) - (stats.current.mainAttackHits || 0)).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+
+                if (metricId === 'mvp') return (
+                  <div 
+                    key="mvp"
+                    onClick={() => toggleExpandMetric('mvp')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                  >
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-amber-400 font-black text-4xl">
+                      👑
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">MVPs</p>
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                        {expandedMetric === 'mvp' ? '▲ Hide' : '▼ Expand'}
+                      </span>
+                    </div>
+                    <p className={`font-black text-amber-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                      {stats.current.mvp || '0'}
+                    </p>
+                    
+                    {expandedMetric === 'mvp' && (
+                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>MVP Performance Trophies:</span>
+                          <span className="font-bold text-amber-400">{stats.current.mvp}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Total Matches Played:</span>
+                          <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+
+                if (metricId === 'svp') return (
+                  <div 
+                    key="svp"
+                    onClick={() => toggleExpandMetric('svp')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                  >
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-purple-400 font-black text-4xl">
+                      🌟
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">SVPs</p>
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                        {expandedMetric === 'svp' ? '▲ Hide' : '▼ Expand'}
+                      </span>
+                    </div>
+                    <p className={`font-black text-purple-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                      {stats.current.svp || '0'}
+                    </p>
+                    
+                    {expandedMetric === 'svp' && (
+                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>SVP Team Honors:</span>
+                          <span className="font-bold text-purple-400">{stats.current.svp}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Total Matches Played:</span>
+                          <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+
+                if (metricId === 'timePlayed') return (
+                  <div 
+                    key="timePlayed"
+                    onClick={() => toggleExpandMetric('timePlayed')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                  >
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Playtime</p>
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                        {expandedMetric === 'timePlayed' ? '▲ Hide' : '▼ Expand'}
+                      </span>
+                    </div>
+                    <p className={`font-black text-sky-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                      {stats.current.timePlayed || 'N/A'}
+                    </p>
+                    
+                    {expandedMetric === 'timePlayed' && (
+                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Total Recorded Hours:</span>
+                          <span className="font-bold text-sky-400">{stats.current.timePlayed}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Matches Tracked:</span>
+                          <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+
+                if (metricId === 'matchesPlayed') return (
+                  <div 
+                    key="matchesPlayed"
+                    onClick={() => toggleExpandMetric('matchesPlayed')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                  >
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Matches & Wins</p>
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                        {expandedMetric === 'matchesPlayed' ? '▲ Hide' : '▼ Expand'}
+                      </span>
+                    </div>
+                    <p className={`font-black text-white ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                      {stats.current.matchesWon} <span className="text-sm font-bold text-slate-400">Wins</span> / {stats.current.matchesPlayed} <span className="text-sm font-bold text-slate-400">Total</span>
+                    </p>
+
+                    {expandedMetric === 'matchesPlayed' && (
+                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex justify-between text-emerald-400 font-medium">
+                          <span>Victories:</span>
+                          <span className="font-bold">{stats.current.matchesWon}</span>
+                        </div>
+                        <div className="flex justify-between text-red-400 font-medium">
+                          <span>Defeats:</span>
+                          <span className="font-bold">{stats.current.matchesPlayed - stats.current.matchesWon}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-300 font-medium">
+                          <span>Win Rate:</span>
+                          <span className="font-bold text-white">{stats.current.winRate}%</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+
+                if (metricId === 'topHeroes') return (
+                  <div key="topHeroes" className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                      </svg>
+                    </div>
+                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">Top Heroes</p>
+                    
+                    <div className="flex flex-col gap-2 relative z-10">
+                      {stats.current.topHeroesDetailed && stats.current.topHeroesDetailed.length > 0 ? (
+                        stats.current.topHeroesDetailed.map((hero, index) => (
+                          <details key={index} className="group bg-[#0f1526] rounded-xl border border-slate-700/50 overflow-hidden shadow-sm">
+                            <summary className="cursor-pointer flex items-center justify-between p-2.5 hover:bg-slate-800/50 transition-colors list-none">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-5 h-5 rounded bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-400 shadow-inner">
+                                  {index + 1}
+                                </div>
+                                <span className="text-base font-black text-emerald-400 truncate">{hero.name}</span>
+                              </div>
+                              <svg className="w-4 h-4 text-slate-500 transition-transform duration-300 group-open:-rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </summary>
+                            <div className="p-3 border-t border-slate-700/50 bg-[#0b101e] grid grid-cols-2 gap-y-2.5 gap-x-3 text-left">
+                              <div>
+                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Win Rate</p>
+                                <p className="text-sm font-black text-orange-400">{hero.winRate}%</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">KDA Ratio</p>
+                                <p className="text-sm font-black text-blue-400">{hero.kda}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Matches</p>
+                                <p className="text-xs font-bold text-slate-200">{hero.matches}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Playtime</p>
+                                <p className="text-xs font-bold text-slate-200">{hero.timePlayed}</p>
+                              </div>
+                            </div>
+                          </details>
+                        ))
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {stats.current.topHero.split(', ').map((hero, index) => (
+                            <div key={index} className="flex items-center gap-2.5">
+                              <div className="w-5 h-5 rounded bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-400">
+                                {index + 1}
+                              </div>
+                              <span className="text-lg font-black text-emerald-400 truncate">{hero}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
             </div>
 
             {/* Detailed Combat Telemetry Grid */}
