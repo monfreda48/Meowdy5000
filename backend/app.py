@@ -312,6 +312,15 @@ def get_stats():
 
     # ROUTE 2: Tracker.gg API via Selenium
     tracker_data = scrape_tracker_gg_api(final_data["username"], season=season, platform=platform)
+    
+    # Smart Fallback: If query on selected platform (e.g., PSN/Xbox) yielded 0 matches and platform != 'ign', retry on PC ('ign')
+    is_empty_profile = not tracker_data.get("success") or (tracker_data.get("matchesPlayed", 0) == 0 and tracker_data.get("kills", 0) == 0)
+    if is_empty_profile and platform != 'ign':
+        print(f"[FALLBACK] No stats found on {platform.upper()}, retrying on PC (IGN)...")
+        fallback_data = scrape_tracker_gg_api(final_data["username"], season=season, platform='ign')
+        if fallback_data.get("success") and (fallback_data.get("matchesPlayed", 0) > 0 or fallback_data.get("timePlayed") != "N/A"):
+            tracker_data = fallback_data
+
     final_data["trackerUrl"] = tracker_data.get("tracker_url", "")
     final_data["topHeroesDetailed"] = tracker_data.get("topHeroesDetailed", [])
 
