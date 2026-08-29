@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Meowdy 5000&apos;s Stat Tracker</string>
-    <string name="title_activity_main">Meowdy 5000&apos;s Stat Tracker</string>
+    <string name="app_name">Meowdy 5000 Stat Tracker</string>
+    <string name="title_activity_main">Meowdy 5000 Stat Tracker</string>
     <string name="package_name">com.meowdy5000.stattracker</string>
     <string name="custom_url_scheme">com.meowdy5000.stattracker</string>
 </resources>
