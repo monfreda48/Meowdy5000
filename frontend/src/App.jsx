@@ -378,11 +378,24 @@ export default function App() {
             <div className={`bg-[#131b2f] rounded-2xl border border-slate-700/50 shadow-2xl flex flex-col items-center text-center gap-3 ${
               isMobileView ? 'p-4' : 'p-6 md:p-8 md:flex-row md:justify-between md:text-left'
             }`}>
-              <div>
-                <h2 className={`font-black text-white ${isMobileView ? 'text-2xl' : 'text-4xl'}`}>{stats.current.username}</h2>
-                <p className="text-slate-400 uppercase tracking-widest text-xs mt-0.5 font-bold">
-                  {stats.current.rank}
-                </p>
+              <div className="flex items-center gap-4">
+                {stats.current.avatarUrl ? (
+                  <img 
+                    src={stats.current.avatarUrl} 
+                    alt={stats.current.username} 
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-2 border-orange-500/60 shadow-lg shadow-orange-500/20 object-cover"
+                  />
+                ) : (
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-orange-500/20">
+                    {stats.current.username.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <h2 className={`font-black text-white ${isMobileView ? 'text-2xl' : 'text-4xl'}`}>{stats.current.username}</h2>
+                  <p className="text-slate-400 uppercase tracking-widest text-xs mt-0.5 font-bold">
+                    {stats.current.rank}
+                  </p>
+                </div>
               </div>
             </div>
 

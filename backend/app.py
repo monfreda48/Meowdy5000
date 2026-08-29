@@ -182,8 +182,11 @@ def scrape_tracker_gg_api(username, season=None):
             top_3_names = [h['name'] for h in top_3_detailed]
             top_hero_str = ", ".join(top_3_names) if top_3_names else "Unknown"
 
+            avatar_url = data.get('data', {}).get('platformInfo', {}).get('avatarUrl', '')
+
             return {
                 "success": True,
+                "avatarUrl": avatar_url,
                 "winRate": str(round(win_rate, 1)),
                 "kdRatio": str(round(kd_ratio, 2)),
                 "topHero": top_hero_str,
@@ -223,6 +226,7 @@ def get_stats():
     # Default fallback data
     final_data = {
         "username": query,
+        "avatarUrl": "",
         "rank": "Unranked",
         "winRate": "0.0",
         "kdRatio": "0.0",
@@ -284,6 +288,7 @@ def get_stats():
     # ROUTE 2: Tracker.gg API via Selenium
     tracker_data = scrape_tracker_gg_api(final_data["username"], season=season)
     final_data["trackerUrl"] = tracker_data.get("tracker_url", "")
+    final_data["avatarUrl"] = tracker_data.get("avatarUrl", "")
     final_data["topHeroesDetailed"] = tracker_data.get("topHeroesDetailed", [])
 
     if tracker_data.get("success"):
