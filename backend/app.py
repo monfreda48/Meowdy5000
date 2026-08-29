@@ -219,6 +219,11 @@ def scrape_tracker_gg_api(username, season=None):
                 "accuracy": accuracy_val,
                 "mvp": mvp_str,
                 "svp": svp_str,
+                "totalHeroDamageRaw": int(stats.get('totalHeroDamage', {}).get('value', 0) if isinstance(stats.get('totalHeroDamage'), dict) else (stats.get('totalHeroDamage') or 0)),
+                "totalHeroHealRaw": int(stats.get('totalHeroHeal', {}).get('value', 0) if isinstance(stats.get('totalHeroHeal'), dict) else (stats.get('totalHeroHeal') or 0)),
+                "totalDamageTakenRaw": int(stats.get('totalDamageTaken', {}).get('value', 0) if isinstance(stats.get('totalDamageTaken'), dict) else (stats.get('totalDamageTaken') or 0)),
+                "mainAttacks": int(m_attacks),
+                "mainAttackHits": int(m_hits),
                 "timePlayed": str(stats.get('timePlayed', {}).get('displayValue', 'N/A') if isinstance(stats.get('timePlayed'), dict) else (stats.get('timePlayed') or 'N/A')),
                 "tracker_url": profile_url
             }
@@ -324,6 +329,11 @@ def get_stats():
         if tracker_data.get("accuracy"): final_data["accuracy"] = tracker_data["accuracy"]
         if tracker_data.get("mvp"): final_data["mvp"] = tracker_data["mvp"]
         if tracker_data.get("svp"): final_data["svp"] = tracker_data["svp"]
+        if tracker_data.get("totalHeroDamageRaw"): final_data["totalHeroDamageRaw"] = tracker_data["totalHeroDamageRaw"]
+        if tracker_data.get("totalHeroHealRaw"): final_data["totalHeroHealRaw"] = tracker_data["totalHeroHealRaw"]
+        if tracker_data.get("totalDamageTakenRaw"): final_data["totalDamageTakenRaw"] = tracker_data["totalDamageTakenRaw"]
+        if tracker_data.get("mainAttacks"): final_data["mainAttacks"] = tracker_data["mainAttacks"]
+        if tracker_data.get("mainAttackHits"): final_data["mainAttackHits"] = tracker_data["mainAttackHits"]
         if tracker_data.get("timePlayed"): final_data["timePlayed"] = tracker_data["timePlayed"]
     
     # If the user typed a name, they skipped Route 1. We MUST fill their stats using Tracker.gg!
