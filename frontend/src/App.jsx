@@ -87,9 +87,7 @@ export default function App() {
     updated.splice(targetIndex, 0, moved);
     setSelectedMetrics(updated);
 
-    if (hasStoragePermission) {
-      try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) {}
-    }
+    try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) {}
   };
 
   const moveMetricUp = (id, e) => {
@@ -101,9 +99,7 @@ export default function App() {
     updated[index] = updated[index - 1];
     updated[index - 1] = temp;
     setSelectedMetrics(updated);
-    if (hasStoragePermission) {
-      try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) {}
-    }
+    try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) {}
   };
 
   const moveMetricDown = (id, e) => {
@@ -115,9 +111,7 @@ export default function App() {
     updated[index] = updated[index + 1];
     updated[index + 1] = temp;
     setSelectedMetrics(updated);
-    if (hasStoragePermission) {
-      try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) {}
-    }
+    try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) {}
   };
 
   const toggleMetric = (id) => {
@@ -576,7 +570,10 @@ export default function App() {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  {AVAILABLE_METRICS.map((m) => {
+                  {(isEditOrderMode 
+                    ? [...selectedMetrics.map(id => AVAILABLE_METRICS.find(m => m.id === id)).filter(Boolean), ...AVAILABLE_METRICS.filter(m => !selectedMetrics.includes(m.id))]
+                    : AVAILABLE_METRICS
+                  ).map((m) => {
                     const active = isMetricTracked(m.id);
                     const orderIndex = selectedMetrics.indexOf(m.id);
 
@@ -596,12 +593,19 @@ export default function App() {
                           <span className={`w-2 h-2 rounded-full ${active ? 'bg-orange-400 shadow-[0_0_6px_rgba(249,115,22,0.8)]' : 'bg-slate-700'}`}></span>
                         </button>
 
-                        {active && (
-                          <div className="flex items-center gap-1 bg-[#0b101e] border border-slate-700/80 rounded-xl px-1.5 py-1">
+                        {isEditOrderMode && active && (
+                          <div 
+                            onClick={(e) => e.stopPropagation()} 
+                            className="flex items-center gap-1 bg-[#0b101e] border border-slate-700/80 rounded-xl px-1.5 py-1"
+                          >
                             <span className="text-[10px] text-slate-400 font-bold uppercase">Order:</span>
                             <select
                               value={orderIndex + 1}
-                              onChange={(e) => changeMetricOrder(m.id, parseInt(e.target.value))}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                changeMetricOrder(m.id, parseInt(e.target.value));
+                              }}
+                              onClick={(e) => e.stopPropagation()}
                               className="bg-slate-800 border border-slate-700 text-orange-400 font-black text-xs rounded px-1 py-0.5 focus:outline-none focus:border-orange-500 cursor-pointer"
                             >
                               {selectedMetrics.map((_, idx) => (
@@ -616,7 +620,7 @@ export default function App() {
                                 onClick={(e) => moveMetricUp(m.id, e)}
                                 disabled={orderIndex <= 0}
                                 title="Move Up"
-                                className="px-1 py-0.5 text-slate-400 hover:text-orange-400 disabled:opacity-30 font-black text-[10px]"
+                                className="px-1 py-0.5 text-slate-400 hover:text-orange-400 disabled:opacity-30 font-black text-[10px] cursor-pointer"
                               >
                                 ◄
                               </button>
@@ -625,7 +629,7 @@ export default function App() {
                                 onClick={(e) => moveMetricDown(m.id, e)}
                                 disabled={orderIndex >= selectedMetrics.length - 1}
                                 title="Move Down"
-                                className="px-1 py-0.5 text-slate-400 hover:text-orange-400 disabled:opacity-30 font-black text-[10px]"
+                                className="px-1 py-0.5 text-slate-400 hover:text-orange-400 disabled:opacity-30 font-black text-[10px] cursor-pointer"
                               >
                                 ►
                               </button>
@@ -715,7 +719,9 @@ export default function App() {
                   <div 
                     key="winRate"
                     onClick={() => toggleExpandMetric('winRate')}
-                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                    }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -724,9 +730,11 @@ export default function App() {
                     </div>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
-                          #{orderIndex + 1}
-                        </span>
+                        {isEditOrderMode && (
+                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                            #{orderIndex + 1}
+                          </span>
+                        )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Win Rate</p>
                       </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
@@ -762,7 +770,9 @@ export default function App() {
                   <div 
                     key="kdRatio"
                     onClick={() => toggleExpandMetric('kdRatio')}
-                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                    }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -771,9 +781,11 @@ export default function App() {
                     </div>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
-                          #{orderIndex + 1}
-                        </span>
+                        {isEditOrderMode && (
+                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                            #{orderIndex + 1}
+                          </span>
+                        )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">KDA Ratio</p>
                       </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
@@ -809,7 +821,9 @@ export default function App() {
                   <div 
                     key="heroDamage"
                     onClick={() => toggleExpandMetric('heroDamage')}
-                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                    }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -818,9 +832,11 @@ export default function App() {
                     </div>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
-                          #{orderIndex + 1}
-                        </span>
+                        {isEditOrderMode && (
+                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                            #{orderIndex + 1}
+                          </span>
+                        )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Damage / 10m</p>
                       </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
@@ -852,7 +868,9 @@ export default function App() {
                   <div 
                     key="healing"
                     onClick={() => toggleExpandMetric('healing')}
-                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                    }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -861,9 +879,11 @@ export default function App() {
                     </div>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
-                          #{orderIndex + 1}
-                        </span>
+                        {isEditOrderMode && (
+                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                            #{orderIndex + 1}
+                          </span>
+                        )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Healing / 10m</p>
                       </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
@@ -895,7 +915,9 @@ export default function App() {
                   <div 
                     key="damageBlocked"
                     onClick={() => toggleExpandMetric('damageBlocked')}
-                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                    }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -904,9 +926,11 @@ export default function App() {
                     </div>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
-                          #{orderIndex + 1}
-                        </span>
+                        {isEditOrderMode && (
+                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                            #{orderIndex + 1}
+                          </span>
+                        )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Dmg Blocked / 10m</p>
                       </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
@@ -938,7 +962,9 @@ export default function App() {
                   <div 
                     key="accuracy"
                     onClick={() => toggleExpandMetric('accuracy')}
-                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                    }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -948,9 +974,11 @@ export default function App() {
                     </div>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
-                          #{orderIndex + 1}
-                        </span>
+                        {isEditOrderMode && (
+                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                            #{orderIndex + 1}
+                          </span>
+                        )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Accuracy</p>
                       </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
@@ -986,16 +1014,20 @@ export default function App() {
                   <div 
                     key="mvp"
                     onClick={() => toggleExpandMetric('mvp')}
-                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                    }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-amber-400 font-black text-4xl">
                       👑
                     </div>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
-                          #{orderIndex + 1}
-                        </span>
+                        {isEditOrderMode && (
+                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                            #{orderIndex + 1}
+                          </span>
+                        )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">MVPs</p>
                       </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
@@ -1025,16 +1057,20 @@ export default function App() {
                   <div 
                     key="svp"
                     onClick={() => toggleExpandMetric('svp')}
-                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                    }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-purple-400 font-black text-4xl">
                       🌟
                     </div>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
-                          #{orderIndex + 1}
-                        </span>
+                        {isEditOrderMode && (
+                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                            #{orderIndex + 1}
+                          </span>
+                        )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">SVPs</p>
                       </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
@@ -1064,7 +1100,9 @@ export default function App() {
                   <div 
                     key="timePlayed"
                     onClick={() => toggleExpandMetric('timePlayed')}
-                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                    }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1073,9 +1111,11 @@ export default function App() {
                     </div>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
-                          #{orderIndex + 1}
-                        </span>
+                        {isEditOrderMode && (
+                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                            #{orderIndex + 1}
+                          </span>
+                        )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Playtime</p>
                       </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
@@ -1105,7 +1145,9 @@ export default function App() {
                   <div 
                     key="matchesPlayed"
                     onClick={() => toggleExpandMetric('matchesPlayed')}
-                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
+                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                    }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1115,9 +1157,11 @@ export default function App() {
                     </div>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
-                          #{orderIndex + 1}
-                        </span>
+                        {isEditOrderMode && (
+                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                            #{orderIndex + 1}
+                          </span>
+                        )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Matches & Wins</p>
                       </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
@@ -1148,7 +1192,9 @@ export default function App() {
                 );
 
                 if (metricId === 'topHeroes') return (
-                  <div key="topHeroes" className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
+                  <div key="topHeroes" className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group transition-all duration-300 ${
+                    isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50'
+                  }`}>
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
@@ -1156,9 +1202,11 @@ export default function App() {
                     </div>
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
-                          #{orderIndex + 1}
-                        </span>
+                        {isEditOrderMode && (
+                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                            #{orderIndex + 1}
+                          </span>
+                        )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Top Heroes</p>
                       </div>
                     </div>
