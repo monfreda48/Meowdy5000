@@ -2,12 +2,12 @@ apply plugin: 'com.android.application'
 
 android {
     namespace 'com.meowdy5000.stattracker'
-    compileSdk 36
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.meowdy5000.stattracker"
         minSdk 24
-        targetSdk 36
+        targetSdk 34
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
