@@ -1421,7 +1421,7 @@ export default function App() {
 
               <div className="space-y-3 text-sm text-slate-300">
                 <p className="leading-relaxed">
-                  Would you like RivalsTracker to automatically check for and install updates from GitHub when you start the app?
+                  Would you like Meowdy 5000's Stat Tracker to automatically check for and install updates from GitHub when you start the app?
                 </p>
                 <div className="bg-[#0b101e] p-3.5 rounded-xl border border-slate-700/60 space-y-2 text-xs">
                   <div className="flex items-start gap-2 text-emerald-400">
