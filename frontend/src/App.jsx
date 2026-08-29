@@ -1,6 +1,18 @@
 import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+const AVAILABLE_METRICS = [
+  { id: 'winRate', name: 'Win Rate', icon: '🏆', category: 'Core' },
+  { id: 'kdRatio', name: 'K/D/A Ratio', icon: '⚔️', category: 'Core' },
+  { id: 'topHeroes', name: 'Top Heroes', icon: '🦸', category: 'Core' },
+  { id: 'heroDamage', name: 'Hero Damage', icon: '💥', category: 'Combat' },
+  { id: 'healing', name: 'Healing Output', icon: '💚', category: 'Combat' },
+  { id: 'damageBlocked', name: 'Damage Blocked', icon: '🛡️', category: 'Combat' },
+  { id: 'accuracy', name: 'Shots Accuracy', icon: '🎯', category: 'Combat' },
+  { id: 'timePlayed', name: 'Total Playtime', icon: '⏱️', category: 'Profile' },
+  { id: 'matchesPlayed', name: 'Matches & Wins', icon: '🎮', category: 'Profile' },
+];
+
 export default function App() {
   const [query, setQuery] = useState('');
   const [season, setSeason] = useState('19');
@@ -11,6 +23,40 @@ export default function App() {
   const [isMobileView, setIsMobileView] = useState(false);
   const [updateInfo, setUpdateInfo] = useState(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [selectedMetrics, setSelectedMetrics] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tracked_metrics');
+      return saved ? JSON.parse(saved) : AVAILABLE_METRICS.map(m => m.id);
+    } catch (e) {
+      return AVAILABLE_METRICS.map(m => m.id);
+    }
+  });
+
+  const toggleMetric = (id) => {
+    let updated;
+    if (selectedMetrics.includes(id)) {
+      if (selectedMetrics.length === 1) return;
+      updated = selectedMetrics.filter(mId => mId !== id);
+    } else {
+      updated = [...selectedMetrics, id];
+    }
+    setSelectedMetrics(updated);
+    localStorage.setItem('tracked_metrics', JSON.stringify(updated));
+  };
+
+  const isMetricTracked = (id) => selectedMetrics.includes(id);
+
+  const selectAllMetrics = () => {
+    const allIds = AVAILABLE_METRICS.map(m => m.id);
+    setSelectedMetrics(allIds);
+    localStorage.setItem('tracked_metrics', JSON.stringify(allIds));
+  };
+
+  const resetDefaultMetrics = () => {
+    const allIds = AVAILABLE_METRICS.map(m => m.id);
+    setSelectedMetrics(allIds);
+    localStorage.setItem('tracked_metrics', JSON.stringify(allIds));
+  };
 
   const checkForUpdates = async () => {
     setCheckingUpdate(true);
@@ -243,6 +289,57 @@ export default function App() {
             </div>
           </form>
 
+          {/* Customize What You Track Selection Box */}
+          <div className={`w-full ${isMobileView ? '' : 'max-w-3xl'} text-left`}>
+            <details className="group bg-[#131b2f] border border-slate-700/50 rounded-2xl overflow-hidden shadow-xl transition-all duration-300" open>
+              <summary className="flex cursor-pointer items-center justify-between px-4 py-3 font-bold text-slate-300 hover:text-orange-400 transition-colors list-none">
+                <span className="flex items-center gap-2 uppercase tracking-widest text-xs">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                  </svg>
+                  ⚙️ Select Metrics to Track ({selectedMetrics.length}/{AVAILABLE_METRICS.length} Active)
+                </span>
+                <svg className="w-4 h-4 text-slate-500 transition-transform duration-300 group-open:-rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </summary>
+              
+              <div className="p-4 bg-[#0f1526] border-t border-slate-700/50 space-y-3">
+                <p className="text-xs text-slate-400">
+                  Toggle what stats to display on your dashboard. Preferences save automatically:
+                </p>
+
+                <div className="flex flex-wrap gap-2">
+                  {AVAILABLE_METRICS.map((m) => {
+                    const active = isMetricTracked(m.id);
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => toggleMetric(m.id)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                          active
+                            ? 'bg-gradient-to-r from-orange-500/20 to-red-500/20 border-orange-500/60 text-white shadow-sm'
+                            : 'bg-[#0b101e] border-slate-800 text-slate-500 hover:text-slate-300'
+                        }`}
+                      >
+                        <span>{m.icon}</span>
+                        <span>{m.name}</span>
+                        <span className={`w-2 h-2 rounded-full ${active ? 'bg-orange-400 shadow-[0_0_6px_rgba(249,115,22,0.8)]' : 'bg-slate-700'}`}></span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2 border-t border-slate-800/80 text-[11px]">
+                  <button type="button" onClick={selectAllMetrics} className="text-orange-400 hover:text-orange-300 font-bold">Select All</button>
+                  <span className="text-slate-600">•</span>
+                  <button type="button" onClick={resetDefaultMetrics} className="text-slate-400 hover:text-white font-medium">Reset Defaults</button>
+                </div>
+              </div>
+            </details>
+          </div>
+
           {/* Expandable "How Tracking Works" Box */}
           <div className={`w-full ${isMobileView ? '' : 'max-w-3xl'} text-left`}>
             <details className="group bg-[#131b2f] border border-slate-700/50 rounded-xl overflow-hidden shadow-lg transition-all duration-300">
@@ -290,85 +387,172 @@ export default function App() {
               </div>
             </div>
 
-            {/* Main Stats Cards Grid */}
-            <div className={`grid gap-4 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3 md:gap-6'}`}>
-              <div className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
+            {/* Primary Tracked Metrics Grid */}
+            <div className={`grid gap-4 ${
+              isMobileView ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:gap-6'
+            }`}>
+              {/* Win Rate */}
+              {isMetricTracked('winRate') && (
+                <div className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                  </div>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Win Rate</p>
+                  <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>{stats.current.winRate}%</p>
                 </div>
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Win Rate</p>
-                <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>{stats.current.winRate}%</p>
-              </div>
+              )}
 
-              <div className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
+              {/* KDA Ratio */}
+              {isMetricTracked('kdRatio') && (
+                <div className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </div>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">KDA Ratio</p>
+                  <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>{stats.current.kdRatio}</p>
                 </div>
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">KDA Ratio</p>
-                <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>{stats.current.kdRatio}</p>
-              </div>
+              )}
 
-              <div className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                  </svg>
+              {/* Hero Damage */}
+              {isMetricTracked('heroDamage') && (
+                <div className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                    </svg>
+                  </div>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Hero Damage</p>
+                  <p className={`font-black text-orange-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                    {typeof stats.current.heroDamage === 'number' ? stats.current.heroDamage.toLocaleString() : (stats.current.heroDamage || 'N/A')}
+                  </p>
                 </div>
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">Top Heroes</p>
-                
-                <div className="flex flex-col gap-2 relative z-10">
-                  {stats.current.topHeroesDetailed && stats.current.topHeroesDetailed.length > 0 ? (
-                    stats.current.topHeroesDetailed.map((hero, index) => (
-                      <details key={index} className="group bg-[#0f1526] rounded-xl border border-slate-700/50 overflow-hidden shadow-sm">
-                        <summary className="cursor-pointer flex items-center justify-between p-2.5 hover:bg-slate-800/50 transition-colors list-none">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-5 h-5 rounded bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-400 shadow-inner">
+              )}
+
+              {/* Healing Output */}
+              {isMetricTracked('healing') && (
+                <div className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Healing Output</p>
+                  <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                    {stats.current.healing || 'N/A'}
+                  </p>
+                </div>
+              )}
+
+              {/* Damage Blocked */}
+              {isMetricTracked('damageBlocked') && (
+                <div className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </div>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Damage Blocked</p>
+                  <p className={`font-black text-purple-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                    {stats.current.damageBlocked || 'N/A'}
+                  </p>
+                </div>
+              )}
+
+              {/* Accuracy */}
+              {isMetricTracked('accuracy') && (
+                <div className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </div>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Accuracy</p>
+                  <p className={`font-black text-yellow-400 ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
+                    {stats.current.accuracy || 'N/A'}
+                  </p>
+                </div>
+              )}
+
+              {/* Total Playtime */}
+              {isMetricTracked('timePlayed') && (
+                <div className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Playtime</p>
+                  <p className={`font-black text-sky-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                    {stats.current.timePlayed || 'N/A'}
+                  </p>
+                </div>
+              )}
+
+              {/* Top Heroes */}
+              {isMetricTracked('topHeroes') && (
+                <div className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                  </div>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">Top Heroes</p>
+                  
+                  <div className="flex flex-col gap-2 relative z-10">
+                    {stats.current.topHeroesDetailed && stats.current.topHeroesDetailed.length > 0 ? (
+                      stats.current.topHeroesDetailed.map((hero, index) => (
+                        <details key={index} className="group bg-[#0f1526] rounded-xl border border-slate-700/50 overflow-hidden shadow-sm">
+                          <summary className="cursor-pointer flex items-center justify-between p-2.5 hover:bg-slate-800/50 transition-colors list-none">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-5 h-5 rounded bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-400 shadow-inner">
+                                {index + 1}
+                              </div>
+                              <span className="text-base font-black text-emerald-400 truncate">{hero.name}</span>
+                            </div>
+                            <svg className="w-4 h-4 text-slate-500 transition-transform duration-300 group-open:-rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </summary>
+                          <div className="p-3 border-t border-slate-700/50 bg-[#0b101e] grid grid-cols-2 gap-y-2.5 gap-x-3 text-left">
+                            <div>
+                              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Win Rate</p>
+                              <p className="text-sm font-black text-orange-400">{hero.winRate}%</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">KDA Ratio</p>
+                              <p className="text-sm font-black text-blue-400">{hero.kda}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Matches</p>
+                              <p className="text-xs font-bold text-slate-200">{hero.matches}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Playtime</p>
+                              <p className="text-xs font-bold text-slate-200">{hero.timePlayed}</p>
+                            </div>
+                          </div>
+                        </details>
+                      ))
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        {stats.current.topHero.split(', ').map((hero, index) => (
+                          <div key={index} className="flex items-center gap-2.5">
+                            <div className="w-5 h-5 rounded bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-400">
                               {index + 1}
                             </div>
-                            <span className="text-base font-black text-emerald-400 truncate">{hero.name}</span>
+                            <span className="text-lg font-black text-emerald-400 truncate">{hero}</span>
                           </div>
-                          <svg className="w-4 h-4 text-slate-500 transition-transform duration-300 group-open:-rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </summary>
-                        <div className="p-3 border-t border-slate-700/50 bg-[#0b101e] grid grid-cols-2 gap-y-2.5 gap-x-3 text-left">
-                          <div>
-                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Win Rate</p>
-                            <p className="text-sm font-black text-orange-400">{hero.winRate}%</p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">KDA Ratio</p>
-                            <p className="text-sm font-black text-blue-400">{hero.kda}</p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Matches</p>
-                            <p className="text-xs font-bold text-slate-200">{hero.matches}</p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Playtime</p>
-                            <p className="text-xs font-bold text-slate-200">{hero.timePlayed}</p>
-                          </div>
-                        </div>
-                      </details>
-                    ))
-                  ) : (
-                    <div className="flex flex-col gap-2">
-                      {stats.current.topHero.split(', ').map((hero, index) => (
-                        <div key={index} className="flex items-center gap-2.5">
-                          <div className="w-5 h-5 rounded bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-400">
-                            {index + 1}
-                          </div>
-                          <span className="text-lg font-black text-emerald-400 truncate">{hero}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Detailed Combat Telemetry Grid */}

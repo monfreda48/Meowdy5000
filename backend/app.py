@@ -147,6 +147,9 @@ def scrape_tracker_gg_api(username, season=None):
                 "deaths": int(stats.get('deaths', {}).get('value', 0) if isinstance(stats.get('deaths'), dict) else (stats.get('deaths') or 0)),
                 "assists": int(stats.get('assists', {}).get('value', 0) if isinstance(stats.get('assists'), dict) else (stats.get('assists') or 0)),
                 "heroDamage": str(stats.get('totalHeroDamage', {}).get('displayValue', stats.get('totalHeroDamage', {}).get('value', 'N/A')) if isinstance(stats.get('totalHeroDamage'), dict) else (stats.get('totalHeroDamage') or 'N/A')),
+                "healing": str(stats.get('totalHealing', {}).get('displayValue', stats.get('totalHealing', {}).get('value', 'N/A')) if isinstance(stats.get('totalHealing'), dict) else (stats.get('totalHealing') or 'N/A')),
+                "damageBlocked": str(stats.get('totalDamageBlocked', {}).get('displayValue', stats.get('totalDamageMitigated', {}).get('displayValue', 'N/A')) if isinstance(stats.get('totalDamageBlocked'), dict) else (stats.get('totalDamageBlocked') or 'N/A')),
+                "accuracy": str(stats.get('accuracy', {}).get('displayValue', stats.get('shotsAccuracy', {}).get('displayValue', 'N/A')) if isinstance(stats.get('accuracy'), dict) else (stats.get('accuracy') or 'N/A')),
                 "timePlayed": str(stats.get('timePlayed', {}).get('displayValue', 'N/A') if isinstance(stats.get('timePlayed'), dict) else (stats.get('timePlayed') or 'N/A')),
                 "tracker_url": profile_url
             }
@@ -184,6 +187,9 @@ def get_stats():
         "deaths": 0,
         "assists": 0,
         "heroDamage": "N/A",
+        "healing": "N/A",
+        "damageBlocked": "N/A",
+        "accuracy": "N/A",
         "timePlayed": "N/A"
     }
 
@@ -239,6 +245,9 @@ def get_stats():
         if tracker_data.get("deaths"): final_data["deaths"] = tracker_data["deaths"]
         if tracker_data.get("assists"): final_data["assists"] = tracker_data["assists"]
         if tracker_data.get("heroDamage"): final_data["heroDamage"] = tracker_data["heroDamage"]
+        if tracker_data.get("healing"): final_data["healing"] = tracker_data["healing"]
+        if tracker_data.get("damageBlocked"): final_data["damageBlocked"] = tracker_data["damageBlocked"]
+        if tracker_data.get("accuracy"): final_data["accuracy"] = tracker_data["accuracy"]
         if tracker_data.get("timePlayed"): final_data["timePlayed"] = tracker_data["timePlayed"]
     
     # If the user typed a name, they skipped Route 1. We MUST fill their stats using Tracker.gg!
