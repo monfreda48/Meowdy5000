@@ -8,7 +8,7 @@ const AVAILABLE_METRICS = [
   { id: 'heroDamage', name: 'Damage / 10m', icon: '💥', category: 'Combat' },
   { id: 'healing', name: 'Healing / 10m', icon: '💚', category: 'Combat' },
   { id: 'damageBlocked', name: 'Dmg Blocked / 10m', icon: '🛡️', category: 'Combat' },
-  { id: 'accuracy', name: 'Shots Accuracy', icon: '🎯', category: 'Combat' },
+  { id: 'accuracy', name: 'Accuracy', icon: '🎯', category: 'Combat' },
   { id: 'timePlayed', name: 'Total Playtime', icon: '⏱️', category: 'Profile' },
   { id: 'matchesPlayed', name: 'Matches & Wins', icon: '🎮', category: 'Profile' },
 ];
