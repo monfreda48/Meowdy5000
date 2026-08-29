@@ -15,6 +15,7 @@ const AVAILABLE_METRICS = [
 
 export default function App() {
   const [query, setQuery] = useState('');
+  const [platform, setPlatform] = useState('ign');
   const [season, setSeason] = useState('19');
   const [timeframe, setTimeframe] = useState('all');
   const [stats, setStats] = useState(null);
@@ -75,17 +76,18 @@ export default function App() {
     checkForUpdates();
   }, []);
 
-  const fetchStats = async (e, overrideQuery = null, overrideSeason = null) => {
+  const fetchStats = async (e, overrideQuery = null, overrideSeason = null, overridePlatform = null) => {
     if (e) e.preventDefault();
     const activeQuery = overrideQuery !== null ? overrideQuery : query;
     const activeSeason = overrideSeason !== null ? overrideSeason : season;
+    const activePlatform = overridePlatform !== null ? overridePlatform : platform;
     if (!activeQuery) return;
     
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`);
+      const response = await fetch(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}&platform=${encodeURIComponent(activePlatform)}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -244,16 +246,37 @@ export default function App() {
             <div className={`flex bg-[#131b2f] p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${
               isMobileView ? 'flex-col gap-2.5' : 'flex-col md:flex-row gap-3'
             }`}>
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Enter Username or UID..."
-                className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-4 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all text-white placeholder-slate-500 ${
-                  isMobileView ? 'py-3 text-base' : 'py-4 text-lg flex-1'
-                }`}
-                required
-              />
+              <div className="flex-1 flex gap-2 w-full">
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Enter Username or UID..."
+                  className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-4 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all text-white placeholder-slate-500 ${
+                    isMobileView ? 'py-3 text-base' : 'py-4 text-lg flex-1'
+                  }`}
+                  required
+                />
+                <select 
+                  value={platform} 
+                  onChange={(e) => {
+                    const selectedPlatform = e.target.value;
+                    setPlatform(selectedPlatform);
+                    if (query) {
+                      fetchStats(null, query, season, selectedPlatform);
+                    }
+                  }}
+                  className={`bg-[#0b101e] border border-slate-700/50 rounded-xl px-3 focus:outline-none focus:border-orange-500 text-white cursor-pointer text-xs sm:text-sm font-bold shrink-0 ${
+                    isMobileView ? 'py-3' : 'py-4'
+                  }`}
+                  title="Select Platform"
+                >
+                  <option value="ign">💻 PC</option>
+                  <option value="psn">🎮 PlayStation</option>
+                  <option value="xbl">💚 Xbox</option>
+                </select>
+              </div>
+
               <div className={`flex gap-2 ${isMobileView ? 'w-full' : ''}`}>
                 <select 
                   value={season} 
@@ -261,7 +284,7 @@ export default function App() {
                     const selectedSeason = e.target.value;
                     setSeason(selectedSeason);
                     if (query) {
-                      fetchStats(null, query, selectedSeason);
+                      fetchStats(null, query, selectedSeason, platform);
                     }
                   }}
                   className={`bg-[#0b101e] border border-slate-700/50 rounded-xl px-3 focus:outline-none focus:border-orange-500 text-white cursor-pointer text-sm ${
