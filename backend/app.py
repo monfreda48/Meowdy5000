@@ -4,6 +4,7 @@ import requests
 import json
 import sys
 from datetime import datetime
+import urllib.parse
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
@@ -182,7 +183,12 @@ def scrape_tracker_gg_api(username, season=None):
             top_3_names = [h['name'] for h in top_3_detailed]
             top_hero_str = ", ".join(top_3_names) if top_3_names else "Unknown"
 
-            avatar_url = data.get('data', {}).get('platformInfo', {}).get('avatarUrl', '')
+            raw_avatar_url = data.get('data', {}).get('platformInfo', {}).get('avatarUrl', '')
+            if raw_avatar_url:
+                encoded_avatar = urllib.parse.quote(raw_avatar_url, safe='')
+                avatar_url = f"https://imgsvc.trackercdn.com/url/size(128),fit(cover)/{encoded_avatar}/image.jpg"
+            else:
+                avatar_url = ""
 
             return {
                 "success": True,
