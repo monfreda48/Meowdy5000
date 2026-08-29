@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build & Dist
+dist/
+frontend/dist/
+build/
+
+# Databases
+backend/*.db
+*.db
+*.sqlite3
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment & Logs
+.env
+*.log
+
+# System
+.DS_Store
+Thumbs.db
