@@ -66,23 +66,6 @@ export default function App() {
   };
 
   const [isEditOrderMode, setIsEditOrderMode] = useState(false);
-  const [draggedMetricId, setDraggedMetricId] = useState(null);
-  const [dragOverMetricId, setDragOverMetricId] = useState(null);
-
-  useEffect(() => {
-    const handleGlobalPointerUp = () => {
-      setDraggedMetricId(null);
-      setDragOverMetricId(null);
-    };
-    window.addEventListener('pointerup', handleGlobalPointerUp);
-    window.addEventListener('mouseup', handleGlobalPointerUp);
-    window.addEventListener('touchend', handleGlobalPointerUp);
-    return () => {
-      window.removeEventListener('pointerup', handleGlobalPointerUp);
-      window.removeEventListener('mouseup', handleGlobalPointerUp);
-      window.removeEventListener('touchend', handleGlobalPointerUp);
-    };
-  }, []);
 
   const [selectedMetrics, setSelectedMetrics] = useState(() => {
     try {
@@ -93,103 +76,20 @@ export default function App() {
     }
   });
 
-  const performSwap = (sourceId, targetId) => {
-    if (!sourceId || !targetId || sourceId === targetId) return;
+  const changeMetricOrder = (id, targetPosition) => {
+    const currentIndex = selectedMetrics.indexOf(id);
+    if (currentIndex === -1) return;
+    const targetIndex = targetPosition - 1;
+    if (targetIndex < 0 || targetIndex >= selectedMetrics.length) return;
 
-    const fromIndex = selectedMetrics.indexOf(sourceId);
-    const toIndex = selectedMetrics.indexOf(targetId);
+    const updated = [...selectedMetrics];
+    const [moved] = updated.splice(currentIndex, 1);
+    updated.splice(targetIndex, 0, moved);
+    setSelectedMetrics(updated);
 
-    if (fromIndex !== -1 && toIndex !== -1) {
-      const updated = [...selectedMetrics];
-      const [moved] = updated.splice(fromIndex, 1);
-      updated.splice(toIndex, 0, moved);
-      setSelectedMetrics(updated);
-
-      if (hasStoragePermission) {
-        try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) {}
-      }
+    if (hasStoragePermission) {
+      try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) {}
     }
-  };
-
-  const handlePointerDown = (id, e) => {
-    // Left click or touch primary contact
-    if (e.button !== undefined && e.button !== 0) return;
-    setDraggedMetricId(id);
-  };
-
-  const handlePointerEnter = (id) => {
-    if (draggedMetricId && draggedMetricId !== id) {
-      setDragOverMetricId(id);
-      performSwap(draggedMetricId, id);
-    }
-  };
-
-  const handleDragStart = (id, e) => {
-    setDraggedMetricId(id);
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', id);
-    }
-  };
-
-  const handleDragOver = (id, e) => {
-    if (e) e.preventDefault();
-    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-    if (draggedMetricId && draggedMetricId !== id) {
-      setDragOverMetricId(id);
-      performSwap(draggedMetricId, id);
-    }
-  };
-
-  const handleDrop = (targetId, e) => {
-    if (e) e.preventDefault();
-    const sourceId = draggedMetricId || (e.dataTransfer ? e.dataTransfer.getData('text/plain') : null);
-    performSwap(sourceId, targetId);
-    setDraggedMetricId(null);
-    setDragOverMetricId(null);
-  };
-
-  const handleTouchStart = (id, e) => {
-    setDraggedMetricId(id);
-  };
-
-  const handleTouchMove = (e) => {
-    if (!draggedMetricId) return;
-    const touch = e.touches ? e.touches[0] : null;
-    if (!touch) return;
-    const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (!targetElement) return;
-
-    const cardElement = targetElement.closest('[data-metric-id]');
-    if (cardElement) {
-      const targetId = cardElement.getAttribute('data-metric-id');
-      if (targetId && targetId !== draggedMetricId) {
-        setDragOverMetricId(targetId);
-        performSwap(draggedMetricId, targetId);
-      }
-    }
-  };
-
-  const getCardDragProps = (metricId) => {
-    const isDragging = draggedMetricId === metricId;
-    const isDragOver = dragOverMetricId === metricId;
-
-    return {
-      'data-metric-id': metricId,
-      draggable: true,
-      onPointerDown: (e) => handlePointerDown(metricId, e),
-      onPointerEnter: () => handlePointerEnter(metricId),
-      onTouchStart: (e) => handleTouchStart(metricId, e),
-      onTouchMove: handleTouchMove,
-      onDragStart: (e) => handleDragStart(metricId, e),
-      onDragOver: (e) => handleDragOver(metricId, e),
-      onDrop: (e) => handleDrop(metricId, e),
-      className: `bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group transition-all duration-300 select-none cursor-grab active:cursor-grabbing ${
-        isDragging ? 'opacity-50 border-dashed border-orange-500 scale-95 shadow-2xl ring-2 ring-orange-500/80 z-30' : 'border-slate-700/50'
-      } ${
-        isDragOver ? 'border-2 border-orange-500 scale-105 shadow-2xl shadow-orange-500/30 ring-4 ring-orange-500/50 z-20' : 'hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
-      }`
-    };
   };
 
   const moveMetricUp = (id, e) => {
@@ -603,24 +503,9 @@ export default function App() {
                   {AVAILABLE_METRICS.map((m) => {
                     const active = isMetricTracked(m.id);
                     const orderIndex = selectedMetrics.indexOf(m.id);
-                    const isDragging = draggedMetricId === m.id;
-                    const isDragOver = dragOverMetricId === m.id;
 
                     return (
-                      <div 
-                        key={m.id} 
-                        draggable={true}
-                        onPointerDown={(e) => handlePointerDown(m.id, e)}
-                        onPointerEnter={() => handlePointerEnter(m.id)}
-                        onDragStart={(e) => handleDragStart(m.id, e)}
-                        onDragOver={(e) => handleDragOver(m.id, e)}
-                        onDrop={(e) => handleDrop(m.id, e)}
-                        className={`flex items-center gap-1 transition-all cursor-grab active:cursor-grabbing select-none ${
-                          isDragging ? 'opacity-40 scale-95 border-dashed border-orange-500' : ''
-                        } ${
-                          isDragOver ? 'ring-2 ring-orange-500 rounded-xl scale-105 shadow-md shadow-orange-500/30' : ''
-                        }`}
-                      >
+                      <div key={m.id} className="flex items-center gap-1.5 bg-[#0f1526] p-1 rounded-xl border border-slate-800">
                         <button
                           type="button"
                           onClick={() => toggleMetric(m.id)}
@@ -630,33 +515,45 @@ export default function App() {
                               : 'bg-[#0b101e] border-slate-800 text-slate-500 hover:text-slate-300'
                           }`}
                         >
-                          <span className="text-slate-400 group-hover:text-white font-mono text-[10px]">⣿</span>
                           <span>{m.icon}</span>
                           <span>{m.name}</span>
                           <span className={`w-2 h-2 rounded-full ${active ? 'bg-orange-400 shadow-[0_0_6px_rgba(249,115,22,0.8)]' : 'bg-slate-700'}`}></span>
                         </button>
 
-                        {isEditOrderMode && active && (
-                          <div className="flex items-center bg-[#0b101e] border border-slate-700/80 rounded-xl overflow-hidden">
-                            <button
-                              type="button"
-                              onClick={(e) => moveMetricUp(m.id, e)}
-                              disabled={orderIndex <= 0}
-                              title="Move Left / Up"
-                              className="px-1.5 py-1 text-slate-400 hover:text-orange-400 hover:bg-slate-800 disabled:opacity-30 disabled:hover:text-slate-400 font-black text-[10px]"
+                        {active && (
+                          <div className="flex items-center gap-1 bg-[#0b101e] border border-slate-700/80 rounded-xl px-1.5 py-1">
+                            <span className="text-[10px] text-slate-400 font-bold uppercase">Order:</span>
+                            <select
+                              value={orderIndex + 1}
+                              onChange={(e) => changeMetricOrder(m.id, parseInt(e.target.value))}
+                              className="bg-slate-800 border border-slate-700 text-orange-400 font-black text-xs rounded px-1 py-0.5 focus:outline-none focus:border-orange-500 cursor-pointer"
                             >
-                              ◄
-                            </button>
-                            <span className="text-[10px] text-slate-500 font-bold px-0.5">{orderIndex + 1}</span>
-                            <button
-                              type="button"
-                              onClick={(e) => moveMetricDown(m.id, e)}
-                              disabled={orderIndex >= selectedMetrics.length - 1}
-                              title="Move Right / Down"
-                              className="px-1.5 py-1 text-slate-400 hover:text-orange-400 hover:bg-slate-800 disabled:opacity-30 disabled:hover:text-slate-400 font-black text-[10px]"
-                            >
-                              ►
-                            </button>
+                              {selectedMetrics.map((_, idx) => (
+                                <option key={idx + 1} value={idx + 1}>
+                                  #{idx + 1}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="flex items-center ml-0.5 border-l border-slate-700/80 pl-1">
+                              <button
+                                type="button"
+                                onClick={(e) => moveMetricUp(m.id, e)}
+                                disabled={orderIndex <= 0}
+                                title="Move Up"
+                                className="px-1 py-0.5 text-slate-400 hover:text-orange-400 disabled:opacity-30 font-black text-[10px]"
+                              >
+                                ◄
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => moveMetricDown(m.id, e)}
+                                disabled={orderIndex >= selectedMetrics.length - 1}
+                                title="Move Down"
+                                className="px-1 py-0.5 text-slate-400 hover:text-orange-400 disabled:opacity-30 font-black text-[10px]"
+                              >
+                                ►
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -737,12 +634,12 @@ export default function App() {
             <div className={`grid gap-4 ${
               isMobileView ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:gap-6'
             }`}>
-              {selectedMetrics.map((metricId) => {
+              {selectedMetrics.map((metricId, orderIndex) => {
                 if (metricId === 'winRate') return (
                   <div 
                     key="winRate"
-                    {...getCardDragProps('winRate')}
                     onClick={() => toggleExpandMetric('winRate')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -750,10 +647,12 @@ export default function App() {
                       </svg>
                     </div>
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
-                        <span className="text-slate-500 font-mono text-xs">⣿</span>
-                        Win Rate
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
+                          #{orderIndex + 1}
+                        </span>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Win Rate</p>
+                      </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
                         {expandedMetric === 'winRate' ? '▲ Hide' : '▼ Expand'}
                       </span>
@@ -783,14 +682,11 @@ export default function App() {
                   </div>
                 );
 
-                return null;
-              })}
-
                 if (metricId === 'kdRatio') return (
                   <div 
                     key="kdRatio"
-                    {...getCardDragProps('kdRatio')}
                     onClick={() => toggleExpandMetric('kdRatio')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -798,10 +694,12 @@ export default function App() {
                       </svg>
                     </div>
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
-                        <span className="text-slate-500 font-mono text-xs">⣿</span>
-                        KDA Ratio
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
+                          #{orderIndex + 1}
+                        </span>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">KDA Ratio</p>
+                      </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
                         {expandedMetric === 'kdRatio' ? '▲ Hide' : '▼ Expand'}
                       </span>
@@ -834,8 +732,8 @@ export default function App() {
                 if (metricId === 'heroDamage') return (
                   <div 
                     key="heroDamage"
-                    {...getCardDragProps('heroDamage')}
                     onClick={() => toggleExpandMetric('heroDamage')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -843,10 +741,12 @@ export default function App() {
                       </svg>
                     </div>
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
-                        <span className="text-slate-500 font-mono text-xs">⣿</span>
-                        Damage / 10m
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
+                          #{orderIndex + 1}
+                        </span>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Damage / 10m</p>
+                      </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
                         {expandedMetric === 'heroDamage' ? '▲ Hide' : '▼ Expand'}
                       </span>
@@ -875,8 +775,8 @@ export default function App() {
                 if (metricId === 'healing') return (
                   <div 
                     key="healing"
-                    {...getCardDragProps('healing')}
                     onClick={() => toggleExpandMetric('healing')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -884,10 +784,12 @@ export default function App() {
                       </svg>
                     </div>
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
-                        <span className="text-slate-500 font-mono text-xs">⣿</span>
-                        Healing / 10m
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
+                          #{orderIndex + 1}
+                        </span>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Healing / 10m</p>
+                      </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
                         {expandedMetric === 'healing' ? '▲ Hide' : '▼ Expand'}
                       </span>
@@ -916,8 +818,8 @@ export default function App() {
                 if (metricId === 'damageBlocked') return (
                   <div 
                     key="damageBlocked"
-                    {...getCardDragProps('damageBlocked')}
                     onClick={() => toggleExpandMetric('damageBlocked')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -925,10 +827,12 @@ export default function App() {
                       </svg>
                     </div>
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
-                        <span className="text-slate-500 font-mono text-xs">⣿</span>
-                        Dmg Blocked / 10m
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
+                          #{orderIndex + 1}
+                        </span>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Dmg Blocked / 10m</p>
+                      </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
                         {expandedMetric === 'damageBlocked' ? '▲ Hide' : '▼ Expand'}
                       </span>
@@ -957,8 +861,8 @@ export default function App() {
                 if (metricId === 'accuracy') return (
                   <div 
                     key="accuracy"
-                    {...getCardDragProps('accuracy')}
                     onClick={() => toggleExpandMetric('accuracy')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -967,10 +871,12 @@ export default function App() {
                       </svg>
                     </div>
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
-                        <span className="text-slate-500 font-mono text-xs">⣿</span>
-                        Accuracy
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
+                          #{orderIndex + 1}
+                        </span>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Accuracy</p>
+                      </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
                         {expandedMetric === 'accuracy' ? '▲ Hide' : '▼ Expand'}
                       </span>
@@ -1003,17 +909,19 @@ export default function App() {
                 if (metricId === 'mvp') return (
                   <div 
                     key="mvp"
-                    {...getCardDragProps('mvp')}
                     onClick={() => toggleExpandMetric('mvp')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-amber-400 font-black text-4xl">
                       👑
                     </div>
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
-                        <span className="text-slate-500 font-mono text-xs">⣿</span>
-                        MVPs
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
+                          #{orderIndex + 1}
+                        </span>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">MVPs</p>
+                      </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
                         {expandedMetric === 'mvp' ? '▲ Hide' : '▼ Expand'}
                       </span>
@@ -1040,17 +948,19 @@ export default function App() {
                 if (metricId === 'svp') return (
                   <div 
                     key="svp"
-                    {...getCardDragProps('svp')}
                     onClick={() => toggleExpandMetric('svp')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-purple-400 font-black text-4xl">
                       🌟
                     </div>
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
-                        <span className="text-slate-500 font-mono text-xs">⣿</span>
-                        SVPs
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
+                          #{orderIndex + 1}
+                        </span>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">SVPs</p>
+                      </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
                         {expandedMetric === 'svp' ? '▲ Hide' : '▼ Expand'}
                       </span>
@@ -1077,8 +987,8 @@ export default function App() {
                 if (metricId === 'timePlayed') return (
                   <div 
                     key="timePlayed"
-                    {...getCardDragProps('timePlayed')}
                     onClick={() => toggleExpandMetric('timePlayed')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1086,10 +996,12 @@ export default function App() {
                       </svg>
                     </div>
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
-                        <span className="text-slate-500 font-mono text-xs">⣿</span>
-                        Total Playtime
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
+                          #{orderIndex + 1}
+                        </span>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Playtime</p>
+                      </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
                         {expandedMetric === 'timePlayed' ? '▲ Hide' : '▼ Expand'}
                       </span>
@@ -1116,8 +1028,8 @@ export default function App() {
                 if (metricId === 'matchesPlayed') return (
                   <div 
                     key="matchesPlayed"
-                    {...getCardDragProps('matchesPlayed')}
                     onClick={() => toggleExpandMetric('matchesPlayed')}
+                    className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group cursor-pointer transition-all duration-300 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10"
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1126,10 +1038,12 @@ export default function App() {
                       </svg>
                     </div>
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
-                        <span className="text-slate-500 font-mono text-xs">⣿</span>
-                        Matches & Wins
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
+                          #{orderIndex + 1}
+                        </span>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Matches & Wins</p>
+                      </div>
                       <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
                         {expandedMetric === 'matchesPlayed' ? '▲ Hide' : '▼ Expand'}
                       </span>
@@ -1158,19 +1072,20 @@ export default function App() {
                 );
 
                 if (metricId === 'topHeroes') return (
-                  <div 
-                    key="topHeroes"
-                    {...getCardDragProps('topHeroes')}
-                  >
+                  <div key="topHeroes" className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                       </svg>
                     </div>
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                      <span className="text-slate-500 font-mono text-xs">⣿</span>
-                      Top Heroes
-                    </p>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black">
+                          #{orderIndex + 1}
+                        </span>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Top Heroes</p>
+                      </div>
+                    </div>
                     
                     <div className="flex flex-col gap-2 relative z-10">
                       {stats.current.topHeroesDetailed && stats.current.topHeroesDetailed.length > 0 ? (
@@ -1222,6 +1137,7 @@ export default function App() {
                     </div>
                   </div>
                 );
+              })}
             </div>
 
             {/* Detailed Combat Telemetry Grid */}
