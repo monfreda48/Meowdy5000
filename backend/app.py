@@ -397,7 +397,7 @@ def check_update():
                 "commitUrl": commit_url,
                 "hasUpdate": has_update,
                 "repoUrl": "https://github.com/monfreda48/Meowdy5000",
-                "apkUrl": "https://github.com/monfreda48/Meowdy5000/releases/download/latest/app-debug.apk",
+                "apkUrl": "https://github.com/monfreda48/Meowdy5000/releases/download/v1.0.0/app-debug.apk",
                 "releasesUrl": "https://github.com/monfreda48/Meowdy5000/releases"
             })
     except Exception as e:
