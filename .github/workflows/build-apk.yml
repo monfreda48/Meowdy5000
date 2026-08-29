@@ -53,12 +53,14 @@ jobs:
           name: Meowdy5000-StatTracker-APK
           path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
 
-      - name: Publish APK to GitHub Release
-        uses: ncipollo/release-action@v1
+      - name: Publish APK to GitHub Releases
+        uses: softprops/action-gh-release@v2
         with:
-          artifacts: "frontend/android/app/build/outputs/apk/debug/app-debug.apk"
-          tag: "v1.0.0"
-          name: "Meowdy 5000 Stat Tracker Latest APK"
-          allowUpdates: true
-          recreateRelease: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: "v1.0.0"
+          target_commitish: "main"
+          name: "Meowdy 5000 Stat Tracker APK"
+          body: "Latest automated Android APK build from main branch."
+          files: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
