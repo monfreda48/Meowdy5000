@@ -44,7 +44,7 @@ jobs:
       - name: Sync Capacitor Android Project
         run: |
           cd frontend
-          npx @capacitor/cli sync android
+          npm run sync
 
       - name: Build Android APK
         run: |
