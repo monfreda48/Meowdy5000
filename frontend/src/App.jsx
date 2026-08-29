@@ -122,10 +122,9 @@ export default function App() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center font-black text-white shadow-md shadow-orange-500/20 text-xs">
               SP
             </div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-xs sm:text-sm font-bold tracking-widest text-slate-400 uppercase hidden xs:inline">MEOWDY 5000'S</span>
-              <span className="text-base sm:text-xl font-black tracking-widest text-white uppercase">STAT TRACKER</span>
-            </div>
+            <span className="text-base sm:text-xl font-black tracking-widest text-white uppercase">
+              MEOWDY 5000'S STAT TRACKER
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
