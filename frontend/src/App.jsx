@@ -296,12 +296,14 @@ export default function App() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-inner cursor-pointer ${
                 autoUpdatePref === 'enabled' 
                   ? 'bg-orange-500/10 border-orange-500/40 text-orange-400 hover:border-orange-500/70'
+                  : autoUpdatePref === 'never_ask'
+                  ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:border-red-500/60'
                   : 'bg-slate-800/50 border-slate-700/60 text-slate-400 hover:text-white'
               }`}
             >
               <span className="text-xs">⚡</span>
               <span className="hidden md:inline">
-                Auto-Update: {autoUpdatePref === 'enabled' ? 'Enabled' : autoUpdatePref === 'disabled' ? 'Disabled' : 'Action Needed'}
+                Auto-Update: {autoUpdatePref === 'enabled' ? 'Enabled' : autoUpdatePref === 'never_ask' ? 'Off (Don\'t Ask)' : autoUpdatePref ? 'Ask' : 'Action Needed'}
               </span>
             </button>
 
@@ -1433,21 +1435,30 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <div className="flex flex-col gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={() => setAutoUpdatePermission('enabled')}
-                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-orange-500/30 cursor-pointer text-center"
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-orange-500/30 cursor-pointer text-center"
                 >
                   ⚡ Enable Auto-Updates
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setAutoUpdatePermission('disabled')}
-                  className="py-3 px-4 rounded-xl bg-[#0b101e] hover:bg-slate-800 border border-slate-700 text-slate-400 hover:text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer text-center"
-                >
-                  🔔 Ask / Manual Only
-                </button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAutoUpdatePermission('ask_each_time')}
+                    className="flex-1 py-2.5 px-3 rounded-xl bg-[#0b101e] hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer text-center"
+                  >
+                    🔔 Ask Me Each Time
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAutoUpdatePermission('never_ask')}
+                    className="flex-1 py-2.5 px-3 rounded-xl bg-[#0b101e] hover:bg-slate-800 border border-red-500/40 text-red-400 hover:text-red-300 hover:border-red-500/70 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer text-center"
+                  >
+                    🚫 Don't Ask Again
+                  </button>
+                </div>
               </div>
             </div>
           </div>
