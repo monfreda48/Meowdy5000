@@ -24,7 +24,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 app = Flask(__name__)
 CORS(app)
 
-DB = 'stats.db'
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB = os.path.join(BASE_DIR, 'stats.db')
 
 def init_db():
     conn = sqlite3.connect(DB)
