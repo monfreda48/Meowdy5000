@@ -395,5 +395,28 @@ def check_update():
         "repoUrl": "https://github.com/monfreda48/Meowdy5000"
     })
 
+@app.route('/api/apply-update', methods=['POST', 'GET'])
+def apply_update():
+    """Triggers git pull origin main to automatically pull the latest codebase updates."""
+    try:
+        import subprocess
+        result = subprocess.run(["git", "pull", "origin", "main"], capture_output=True, text=True, timeout=15)
+        if result.returncode == 0:
+            return jsonify({
+                "success": True,
+                "message": "Update successfully pulled from GitHub! Reloading app...",
+                "output": result.stdout
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": result.stderr or result.stdout or "Git pull failed."
+            }), 500
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

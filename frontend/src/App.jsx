@@ -152,12 +152,63 @@ export default function App() {
     }
   };
 
+  const [autoUpdatePref, setAutoUpdatePref] = useState(() => {
+    try {
+      return localStorage.getItem('auto_update_preference') || null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
+  const [updateStatusMsg, setUpdateStatusMsg] = useState('');
+  const [showAutoUpdateModal, setShowAutoUpdateModal] = useState(false);
+
+  const applyUpdateNow = async () => {
+    setIsApplyingUpdate(true);
+    setUpdateStatusMsg('⚡ Fetching and installing latest update from GitHub...');
+    try {
+      const res = await fetch('/api/apply-update', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setUpdateStatusMsg('✅ Update installed successfully! Reloading app...');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        setUpdateStatusMsg(`❌ Update failed: ${data.error || 'Git pull error'}`);
+        setIsApplyingUpdate(false);
+      }
+    } catch (err) {
+      setUpdateStatusMsg('❌ Error connecting to update service.');
+      setIsApplyingUpdate(false);
+    }
+  };
+
+  const setAutoUpdatePermission = (preference) => {
+    try {
+      localStorage.setItem('auto_update_preference', preference);
+    } catch (e) {}
+    setAutoUpdatePref(preference);
+    setShowAutoUpdateModal(false);
+
+    if (preference === 'enabled' && updateInfo?.hasUpdate) {
+      applyUpdateNow();
+    }
+  };
+
   const checkForUpdates = async () => {
     setCheckingUpdate(true);
     try {
       const res = await fetch('/api/check-update');
       const data = await res.json();
       setUpdateInfo(data);
+
+      const pref = localStorage.getItem('auto_update_preference');
+      if (!pref) {
+        setShowAutoUpdateModal(true);
+      } else if (pref === 'enabled' && data.hasUpdate) {
+        applyUpdateNow();
+      }
     } catch (err) {
       console.error('Failed to check for updates:', err);
     } finally {
@@ -242,6 +293,22 @@ export default function App() {
               {updateInfo?.hasUpdate && (
                 <span className="w-2 h-2 rounded-full bg-orange-400 animate-ping"></span>
               )}
+            </button>
+
+            {/* Auto-Update Preference Status Badge */}
+            <button
+              onClick={() => setShowAutoUpdateModal(true)}
+              title="Configure Startup Auto-Update Preferences"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-inner cursor-pointer ${
+                autoUpdatePref === 'enabled' 
+                  ? 'bg-orange-500/10 border-orange-500/40 text-orange-400 hover:border-orange-500/70'
+                  : 'bg-slate-800/50 border-slate-700/60 text-slate-400 hover:text-white'
+              }`}
+            >
+              <span className="text-xs">⚡</span>
+              <span className="hidden md:inline">
+                Auto-Update: {autoUpdatePref === 'enabled' ? 'Enabled' : autoUpdatePref === 'disabled' ? 'Disabled' : 'Action Needed'}
+              </span>
             </button>
 
             {/* Local Storage Permission Badge */}
@@ -336,14 +403,23 @@ export default function App() {
                 </p>
               </div>
             </div>
-            <a
-              href={updateInfo.commitUrl || updateInfo.repoUrl || 'https://github.com/monfreda48/Meowdy5000'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto px-5 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-orange-500/30 text-center shrink-0"
-            >
-              Update App
-            </a>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={applyUpdateNow}
+                disabled={isApplyingUpdate}
+                className="w-full sm:w-auto px-5 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-orange-500/30 text-center shrink-0 cursor-pointer disabled:opacity-50"
+              >
+                {isApplyingUpdate ? 'Installing...' : '⚡ Apply Auto-Update Now'}
+              </button>
+              <a
+                href={updateInfo.commitUrl || updateInfo.repoUrl || 'https://github.com/monfreda48/Meowdy5000'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-2 rounded-xl bg-[#0b101e] hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold transition-all text-center shrink-0"
+              >
+                View Code
+              </a>
+            </div>
           </div>
         )}
 
@@ -1270,6 +1346,80 @@ export default function App() {
               </div>
             )}
 
+          </div>
+        )}
+
+        {/* Auto-Update Permission Consent Modal */}
+        {showAutoUpdateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-[#131b2f] border border-orange-500/50 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl shadow-orange-500/20 text-left space-y-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <svg className="w-24 h-24 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white text-2xl shadow-lg shadow-orange-500/30">
+                  ⚡
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-white uppercase tracking-wider">Auto-Update Permission</h3>
+                  <p className="text-xs text-orange-400 font-bold">RivalsTracker App Engine</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-sm text-slate-300">
+                <p className="leading-relaxed">
+                  Would you like RivalsTracker to automatically check for and install updates from GitHub when you start the app?
+                </p>
+                <div className="bg-[#0b101e] p-3.5 rounded-xl border border-slate-700/60 space-y-2 text-xs">
+                  <div className="flex items-start gap-2 text-emerald-400">
+                    <span>✓</span>
+                    <span>Instantly pulls latest telemetry features, stats fixes, and hero updates.</span>
+                  </div>
+                  <div className="flex items-start gap-2 text-emerald-400">
+                    <span>✓</span>
+                    <span>Automatic seamless app reloading on startup when updates are detected.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setAutoUpdatePermission('enabled')}
+                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-orange-500/30 cursor-pointer text-center"
+                >
+                  ⚡ Enable Auto-Updates
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAutoUpdatePermission('disabled')}
+                  className="py-3 px-4 rounded-xl bg-[#0b101e] hover:bg-slate-800 border border-slate-700 text-slate-400 hover:text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer text-center"
+                >
+                  🔔 Ask / Manual Only
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Installing Update Overlay */}
+        {isApplyingUpdate && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-lg animate-in fade-in duration-300">
+            <div className="bg-[#131b2f] border-2 border-orange-500 rounded-3xl p-8 max-w-md w-full text-center space-y-5 shadow-2xl shadow-orange-500/30">
+              <div className="w-16 h-16 rounded-full bg-orange-500/20 border-2 border-orange-500 flex items-center justify-center text-3xl mx-auto animate-bounce">
+                ⚡
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-white uppercase tracking-wider">Installing Update</h3>
+                <p className="text-sm font-bold text-orange-400 mt-1">{updateStatusMsg}</p>
+              </div>
+              <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div className="bg-gradient-to-r from-orange-500 to-red-500 h-full w-full animate-pulse"></div>
+              </div>
+            </div>
           </div>
         )}
 
