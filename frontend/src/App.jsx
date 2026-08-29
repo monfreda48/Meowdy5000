@@ -23,6 +23,41 @@ export default function App() {
   const [isMobileView, setIsMobileView] = useState(false);
   const [updateInfo, setUpdateInfo] = useState(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [hasStoragePermission, setHasStoragePermission] = useState(() => {
+    try {
+      return localStorage.getItem('storage_permission_granted') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+  const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
+    try {
+      return localStorage.getItem('storage_permission_granted') !== 'true';
+    } catch (e) {
+      return true;
+    }
+  });
+
+  const grantStoragePermission = () => {
+    try {
+      localStorage.setItem('storage_permission_granted', 'true');
+      setHasStoragePermission(true);
+      setShowPermissionPrompt(false);
+    } catch (e) {
+      console.error('Local storage write error:', e);
+    }
+  };
+
+  const revokeStoragePermission = () => {
+    try {
+      localStorage.removeItem('storage_permission_granted');
+      setHasStoragePermission(false);
+      setShowPermissionPrompt(true);
+    } catch (e) {
+      console.error('Local storage error:', e);
+    }
+  };
+
   const [selectedMetrics, setSelectedMetrics] = useState(() => {
     try {
       const saved = localStorage.getItem('tracked_metrics');
@@ -41,7 +76,9 @@ export default function App() {
       updated = [...selectedMetrics, id];
     }
     setSelectedMetrics(updated);
-    localStorage.setItem('tracked_metrics', JSON.stringify(updated));
+    if (hasStoragePermission) {
+      try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (e) {}
+    }
   };
 
   const isMetricTracked = (id) => selectedMetrics.includes(id);
@@ -49,13 +86,17 @@ export default function App() {
   const selectAllMetrics = () => {
     const allIds = AVAILABLE_METRICS.map(m => m.id);
     setSelectedMetrics(allIds);
-    localStorage.setItem('tracked_metrics', JSON.stringify(allIds));
+    if (hasStoragePermission) {
+      try { localStorage.setItem('tracked_metrics', JSON.stringify(allIds)); } catch (e) {}
+    }
   };
 
   const resetDefaultMetrics = () => {
     const allIds = AVAILABLE_METRICS.map(m => m.id);
     setSelectedMetrics(allIds);
-    localStorage.setItem('tracked_metrics', JSON.stringify(allIds));
+    if (hasStoragePermission) {
+      try { localStorage.setItem('tracked_metrics', JSON.stringify(allIds)); } catch (e) {}
+    }
   };
 
   const checkForUpdates = async () => {
@@ -146,6 +187,22 @@ export default function App() {
               )}
             </button>
 
+            {/* Local Storage Permission Badge */}
+            <button
+              onClick={() => setShowPermissionPrompt(true)}
+              title={hasStoragePermission ? "Local Storage Write Permission Active" : "Click to Grant Local Storage Permission"}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-inner cursor-pointer ${
+                hasStoragePermission 
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:border-emerald-500/60'
+                  : 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:border-amber-500/60 animate-pulse'
+              }`}
+            >
+              <span className="text-xs">💾</span>
+              <span className="hidden md:inline">
+                {hasStoragePermission ? 'Storage: Granted' : 'Storage: Action Needed'}
+              </span>
+            </button>
+
             {/* View Mode Toggle Switch (Top Right) */}
             <div className="flex items-center gap-2 bg-[#131b2f] p-1 rounded-xl border border-slate-700/60 shadow-inner">
               <button
@@ -199,11 +256,45 @@ export default function App() {
       )}
 
       {/* Main Layout Container */}
-      <main className={`mx-auto transition-all duration-300 ${
-        isMobileView 
-          ? 'max-w-md px-4 py-6 my-4 bg-[#0d1324] border border-slate-700/80 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.6)] space-y-6' 
-          : 'max-w-6xl px-6 py-12 space-y-12'
+      <main className={`mx-auto px-4 sm:px-6 py-6 sm:py-10 transition-all duration-300 ${
+        isMobileView ? 'max-w-md' : 'max-w-6xl'
       }`}>
+
+        {/* Local Storage Write Permission Request Banner */}
+        {showPermissionPrompt && (
+          <div className="w-full bg-gradient-to-r from-[#131b2f] via-[#1a2b4c] to-[#131b2f] border border-orange-500/50 rounded-2xl p-4 sm:p-5 shadow-2xl shadow-orange-500/10 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="flex items-start gap-3.5 text-left">
+              <div className="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-xl shrink-0">
+                💾
+              </div>
+              <div>
+                <h4 className="text-base font-black text-white flex items-center gap-2">
+                  Local Storage Write Permission Request
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 uppercase font-bold">
+                    Data Safety
+                  </span>
+                </h4>
+                <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
+                  Meowdy 5000's Stat Tracker stores your performance history and metric preferences locally in your browser. Granting local storage write permission ensures your data is preserved across app updates!
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5 shrink-0 w-full md:w-auto">
+              <button
+                onClick={grantStoragePermission}
+                className="flex-1 md:flex-initial px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-orange-500/20 cursor-pointer"
+              >
+                Grant Permission
+              </button>
+              <button
+                onClick={() => setShowPermissionPrompt(false)}
+                className="px-4 py-2.5 rounded-xl bg-[#0b101e] border border-slate-700/60 text-slate-400 hover:text-white text-xs font-bold transition-all cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
         
         {/* Mobile View Badge Indicator */}
         {isMobileView && (
