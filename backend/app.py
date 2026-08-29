@@ -128,11 +128,9 @@ def scrape_tracker_gg_api(username, season=None):
             if not segments:
                 return {"success": False, "tracker_url": profile_url}
 
-            # The first segment is usually overall stats
+            # The first segment is overall player stats
             stats = segments[0].get('stats', {})
-            print(f"=== TRACKER.GG AVAILABLE STATS: {list(stats.keys())[:10]} ===")
             
-            # Extract standard Tracker stats
             win_stat = stats.get('matchesWinPct', {})
             win_rate = win_stat.get('value', 0.0) if isinstance(win_stat, dict) else float(win_stat or 0.0)
             
@@ -143,9 +141,47 @@ def scrape_tracker_gg_api(username, season=None):
             try: time_sec = float(time_sec_raw or 0)
             except: time_sec = 0
 
-            hero_dmg_per_10 = calc_per_10m(stats, ['heroDamagePer10', 'totalHeroDamagePer10', 'heroDamagePer10Min'], ['totalHeroDamage', 'heroDamage'], time_sec)
-            healing_per_10 = calc_per_10m(stats, ['healingPer10', 'totalHealingPer10', 'healingPer10Min'], ['totalHealing', 'healing'], time_sec)
-            blocked_per_10 = calc_per_10m(stats, ['damageBlockedPer10', 'totalDamageBlockedPer10', 'damageMitigatedPer10'], ['totalDamageBlocked', 'totalDamageMitigated', 'damageBlocked'], time_sec)
+            # Scan ALL segments for healing, damage blocked, and accuracy metrics
+            combined_stats = dict(stats)
+            total_healing_sum = 0
+            total_blocked_sum = 0
+            found_healing = False
+            found_blocked = False
+            accuracy_val = "N/A"
+
+            for seg in segments:
+                st = seg.get('stats', {})
+                # Check for healing
+                for h_key in ['totalHealing', 'healing']:
+                    if h_key in st and isinstance(st[h_key], dict) and st[h_key].get('value'):
+                        total_healing_sum += float(st[h_key].get('value', 0))
+                        found_healing = True
+                
+                # Check for damage blocked / mitigated
+                for b_key in ['totalDamageBlocked', 'damageBlocked', 'totalDamageMitigated', 'damageMitigated']:
+                    if b_key in st and isinstance(st[b_key], dict) and st[b_key].get('value'):
+                        total_blocked_sum += float(st[b_key].get('value', 0))
+                        found_blocked = True
+                
+                # Check for accuracy
+                if accuracy_val == "N/A":
+                    for a_key in ['accuracy', 'shotsAccuracy', 'weaponAccuracy', 'headshotPct']:
+                        if a_key in st and isinstance(st[a_key], dict):
+                            disp = st[a_key].get('displayValue', st[a_key].get('value'))
+                            if disp and str(disp) != 'N/A' and str(disp) != '0':
+                                accuracy_val = str(disp)
+                                if not accuracy_val.endswith('%') and '.' in accuracy_val:
+                                    try: accuracy_val = f"{round(float(accuracy_val), 1)}%"
+                                    except: pass
+
+            if found_healing:
+                combined_stats['totalHealing'] = {"value": total_healing_sum}
+            if found_blocked:
+                combined_stats['totalDamageBlocked'] = {"value": total_blocked_sum}
+
+            hero_dmg_per_10 = calc_per_10m(combined_stats, ['heroDamagePer10', 'totalHeroDamagePer10'], ['totalHeroDamage', 'heroDamage'], time_sec)
+            healing_per_10 = calc_per_10m(combined_stats, ['healingPer10', 'totalHealingPer10'], ['totalHealing', 'healing'], time_sec)
+            blocked_per_10 = calc_per_10m(combined_stats, ['damageBlockedPer10', 'totalDamageBlockedPer10'], ['totalDamageBlocked', 'damageBlocked'], time_sec)
             
             hero_list = []
             for seg in segments:
@@ -186,7 +222,7 @@ def scrape_tracker_gg_api(username, season=None):
                 "heroDamage": hero_dmg_per_10,
                 "healing": healing_per_10,
                 "damageBlocked": blocked_per_10,
-                "accuracy": str(stats.get('accuracy', {}).get('displayValue', stats.get('shotsAccuracy', {}).get('displayValue', 'N/A')) if isinstance(stats.get('accuracy'), dict) else (stats.get('accuracy') or 'N/A')),
+                "accuracy": accuracy_val,
                 "timePlayed": str(stats.get('timePlayed', {}).get('displayValue', 'N/A') if isinstance(stats.get('timePlayed'), dict) else (stats.get('timePlayed') or 'N/A')),
                 "tracker_url": profile_url
             }
