@@ -331,7 +331,7 @@ def get_stats():
 
     return jsonify({"current": final_data, "history": history})
 
-CURRENT_VERSION_COMMIT = "6a7334b"
+CURRENT_VERSION_COMMIT = "2c8ee97"
 
 @app.route('/api/check-update')
 def check_update():
