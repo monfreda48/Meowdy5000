@@ -117,7 +117,17 @@ export default function App() {
       
       {/* Top Navigation Bar */}
       <nav className="border-b border-slate-800 bg-[#0f1526]/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-end gap-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center font-black text-white shadow-md shadow-orange-500/20 text-xs">
+              SP
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xs sm:text-sm font-bold tracking-widest text-slate-400 uppercase hidden xs:inline">MEOWDY 5000'S</span>
+              <span className="text-base sm:text-xl font-black tracking-widest text-white uppercase">STAT TRACKER</span>
+            </div>
+          </div>
+
           <div className="flex items-center gap-2">
             {/* GitHub Update Check Button */}
             <button
@@ -216,12 +226,11 @@ export default function App() {
 
         {/* Header & Search Section */}
         <div className={`flex flex-col items-center text-center ${isMobileView ? 'space-y-4' : 'space-y-6'}`}>
-          <h1 className={`font-black tracking-tight text-white uppercase w-full flex flex-col items-center justify-center text-center gap-1 ${
+          <h1 className={`font-black tracking-tight text-white uppercase w-full flex flex-col gap-1 ${
             isMobileView ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-5xl md:text-6xl lg:text-7xl'
           }`}>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-orange-400">
-              MEOWDY 5000'S STAT TRACKER
-            </span>
+            <span>SN4K PACK:</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">SNACK HARD, TRACK HARD</span>
           </h1>
 
           {/* Active Season & Upcoming Season 10 Status Pill */}
