@@ -95,11 +95,10 @@ def calc_per_10m(stat_dict, per10_keys, total_keys, time_sec):
 
     return "N/A"
 
-def scrape_tracker_gg_api(username, season=None, platform='ign'):
+def scrape_tracker_gg_api(username, season=None):
     """Uses Selenium to fetch Tracker.gg's protected API."""
     season_str = f" for season {season}" if season else ""
-    platform_str = f" ({platform.upper()})"
-    print(f"[INFO] Launching Headless Chrome to fetch Tracker.gg API for {username}{platform_str}{season_str}...")
+    print(f"[INFO] Launching Headless Chrome to fetch Tracker.gg API for {username}{season_str}...")
     
     options = Options()
     options.add_argument("--headless=new")
@@ -107,12 +106,11 @@ def scrape_tracker_gg_api(username, season=None, platform='ign'):
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
     
     safe_name = username.replace(" ", "%20")
-    safe_platform = platform if platform in ['ign', 'psn', 'xbl', 'pc'] else 'ign'
     season_param = f"?season={season}" if season else ""
     
-    # Pointing the browser DIRECTLY at platform specific API JSON data!
-    api_url = f"https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/{safe_platform}/{safe_name}{season_param}"
-    profile_url = f"https://tracker.gg/marvel-rivals/profile/{safe_platform}/{safe_name}/overview{season_param}"
+    # Pointing the browser DIRECTLY at API JSON data!
+    api_url = f"https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/ign/{safe_name}{season_param}"
+    profile_url = f"https://tracker.gg/marvel-rivals/profile/ign/{safe_name}/overview{season_param}"
     
     try:
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
@@ -311,16 +309,7 @@ def get_stats():
             print(f"[ERROR] RivalsMeta Error: {e}")
 
     # ROUTE 2: Tracker.gg API via Selenium
-    tracker_data = scrape_tracker_gg_api(final_data["username"], season=season, platform=platform)
-    
-    # Smart Fallback: If query on selected platform (e.g., PSN/Xbox) yielded 0 matches and platform != 'ign', retry on PC ('ign')
-    is_empty_profile = not tracker_data.get("success") or (tracker_data.get("matchesPlayed", 0) == 0 and tracker_data.get("kills", 0) == 0)
-    if is_empty_profile and platform != 'ign':
-        print(f"[FALLBACK] No stats found on {platform.upper()}, retrying on PC (IGN)...")
-        fallback_data = scrape_tracker_gg_api(final_data["username"], season=season, platform='ign')
-        if fallback_data.get("success") and (fallback_data.get("matchesPlayed", 0) > 0 or fallback_data.get("timePlayed") != "N/A"):
-            tracker_data = fallback_data
-
+    tracker_data = scrape_tracker_gg_api(final_data["username"], season=season)
     final_data["trackerUrl"] = tracker_data.get("tracker_url", "")
     final_data["topHeroesDetailed"] = tracker_data.get("topHeroesDetailed", [])
 
