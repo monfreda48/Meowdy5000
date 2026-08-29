@@ -9,6 +9,8 @@ const AVAILABLE_METRICS = [
   { id: 'healing', name: 'Healing / 10m', icon: '💚', category: 'Combat' },
   { id: 'damageBlocked', name: 'Dmg Blocked / 10m', icon: '🛡️', category: 'Combat' },
   { id: 'accuracy', name: 'Accuracy', icon: '🎯', category: 'Combat' },
+  { id: 'mvp', name: 'MVPs', icon: '👑', category: 'Combat' },
+  { id: 'svp', name: 'SVPs', icon: '🌟', category: 'Combat' },
   { id: 'timePlayed', name: 'Total Playtime', icon: '⏱️', category: 'Profile' },
   { id: 'matchesPlayed', name: 'Matches & Wins', icon: '🎮', category: 'Profile' },
 ];
@@ -577,6 +579,32 @@ export default function App() {
                   <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Accuracy</p>
                   <p className={`font-black text-yellow-400 ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
                     {stats.current.accuracy || 'N/A'}
+                  </p>
+                </div>
+              )}
+
+              {/* MVPs */}
+              {isMetricTracked('mvp') && (
+                <div className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-amber-400 font-black text-4xl">
+                    👑
+                  </div>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">MVPs</p>
+                  <p className={`font-black text-amber-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                    {stats.current.mvp || '0'}
+                  </p>
+                </div>
+              )}
+
+              {/* SVPs */}
+              {isMetricTracked('svp') && (
+                <div className="bg-[#131b2f] p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-purple-400 font-black text-4xl">
+                    🌟
+                  </div>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">SVPs</p>
+                  <p className={`font-black text-purple-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                    {stats.current.svp || '0'}
                   </p>
                 </div>
               )}

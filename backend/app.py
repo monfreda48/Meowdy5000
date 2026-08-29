@@ -68,14 +68,7 @@ HERO_MAP = {
 }
 
 def calc_per_10m(stat_dict, per10_keys, total_keys, time_sec):
-    """Returns direct per-10m API metric or calculates (total / seconds) * 600."""
-    for k in per10_keys:
-        if k in stat_dict:
-            st = stat_dict[k]
-            disp = st.get('displayValue', st.get('value')) if isinstance(st, dict) else st
-            if disp and str(disp) != 'N/A':
-                return f"{disp} / 10m"
-    
+    """Calculates exact per 10 minutes stat: (total / time_sec) * 600."""
     total_val = None
     for k in total_keys:
         if k in stat_dict:
@@ -91,7 +84,15 @@ def calc_per_10m(stat_dict, per10_keys, total_keys, time_sec):
     if total_val is not None and time_sec and time_sec > 0:
         per_10m_val = round((total_val / time_sec) * 600)
         return f"{per_10m_val:,} / 10m"
-    elif total_val is not None:
+
+    for k in per10_keys:
+        if k in stat_dict:
+            st = stat_dict[k]
+            disp = st.get('displayValue', st.get('value')) if isinstance(st, dict) else st
+            if disp and str(disp) != 'N/A':
+                return f"{disp} / 10m"
+
+    if total_val is not None:
         return f"{round(total_val):,}"
 
     return "N/A"
@@ -183,6 +184,16 @@ def scrape_tracker_gg_api(username, season=None):
             top_3_names = [h['name'] for h in top_3_detailed]
             top_hero_str = ", ".join(top_3_names) if top_3_names else "Unknown"
 
+            # MVP & SVP Extraction
+            mvp_val = stats.get('totalMvp', {}).get('value', 0) if isinstance(stats.get('totalMvp'), dict) else (stats.get('totalMvp') or 0)
+            mvp_pct = stats.get('totalMvpPct', {}).get('value', 0) if isinstance(stats.get('totalMvpPct'), dict) else (stats.get('totalMvpPct') or 0)
+            
+            svp_val = stats.get('totalSvp', {}).get('value', 0) if isinstance(stats.get('totalSvp'), dict) else (stats.get('totalSvp') or 0)
+            svp_pct = stats.get('totalSvpPct', {}).get('value', 0) if isinstance(stats.get('totalSvpPct'), dict) else (stats.get('totalSvpPct') or 0)
+            
+            mvp_str = f"{int(mvp_val)} ({round(float(mvp_pct), 1)}%)" if mvp_val else "0"
+            svp_str = f"{int(svp_val)} ({round(float(svp_pct), 1)}%)" if svp_val else "0"
+
             raw_avatar_url = data.get('data', {}).get('platformInfo', {}).get('avatarUrl', '')
             if raw_avatar_url:
                 encoded_avatar = urllib.parse.quote(raw_avatar_url, safe='')
@@ -206,6 +217,8 @@ def scrape_tracker_gg_api(username, season=None):
                 "healing": healing_per_10,
                 "damageBlocked": blocked_per_10,
                 "accuracy": accuracy_val,
+                "mvp": mvp_str,
+                "svp": svp_str,
                 "timePlayed": str(stats.get('timePlayed', {}).get('displayValue', 'N/A') if isinstance(stats.get('timePlayed'), dict) else (stats.get('timePlayed') or 'N/A')),
                 "tracker_url": profile_url
             }
@@ -248,6 +261,8 @@ def get_stats():
         "healing": "N/A",
         "damageBlocked": "N/A",
         "accuracy": "N/A",
+        "mvp": "0",
+        "svp": "0",
         "timePlayed": "N/A"
     }
 
@@ -307,6 +322,8 @@ def get_stats():
         if tracker_data.get("healing"): final_data["healing"] = tracker_data["healing"]
         if tracker_data.get("damageBlocked"): final_data["damageBlocked"] = tracker_data["damageBlocked"]
         if tracker_data.get("accuracy"): final_data["accuracy"] = tracker_data["accuracy"]
+        if tracker_data.get("mvp"): final_data["mvp"] = tracker_data["mvp"]
+        if tracker_data.get("svp"): final_data["svp"] = tracker_data["svp"]
         if tracker_data.get("timePlayed"): final_data["timePlayed"] = tracker_data["timePlayed"]
     
     # If the user typed a name, they skipped Route 1. We MUST fill their stats using Tracker.gg!
