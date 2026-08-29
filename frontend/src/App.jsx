@@ -5,7 +5,7 @@ const AVAILABLE_METRICS = [
   { id: 'winRate', name: 'Win Rate', icon: '🏆', category: 'Core' },
   { id: 'kdRatio', name: 'K/D/A Ratio', icon: '⚔️', category: 'Core' },
   { id: 'topHeroes', name: 'Top Heroes', icon: '🦸', category: 'Core' },
-  { id: 'heroDamage', name: 'Hero / 10m', icon: '💥', category: 'Combat' },
+  { id: 'heroDamage', name: 'Damage / 10m', icon: '💥', category: 'Combat' },
   { id: 'healing', name: 'Healing / 10m', icon: '💚', category: 'Combat' },
   { id: 'damageBlocked', name: 'Dmg Blocked / 10m', icon: '🛡️', category: 'Combat' },
   { id: 'accuracy', name: 'Shots Accuracy', icon: '🎯', category: 'Combat' },
@@ -424,7 +424,7 @@ export default function App() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
                     </svg>
                   </div>
-                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Hero / 10m</p>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Damage / 10m</p>
                   <p className={`font-black text-orange-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                     {typeof stats.current.heroDamage === 'number' ? stats.current.heroDamage.toLocaleString() : (stats.current.heroDamage || 'N/A')}
                   </p>
