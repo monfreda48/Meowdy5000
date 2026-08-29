@@ -157,7 +157,11 @@ export default function App() {
   const [updateStatusMsg, setUpdateStatusMsg] = useState('');
   const [showAutoUpdateModal, setShowAutoUpdateModal] = useState(false);
 
-  const applyUpdateNow = async () => {
+  const applyUpdateNow = async (targetSha = null) => {
+    const attemptedSha = targetSha || updateInfo?.latestVersion;
+    if (attemptedSha) {
+      try { sessionStorage.setItem('last_attempted_update_sha', attemptedSha); } catch (e) {}
+    }
     setIsApplyingUpdate(true);
     setUpdateStatusMsg('⚡ Fetching and installing latest update from GitHub...');
     try {
@@ -186,7 +190,7 @@ export default function App() {
     setShowAutoUpdateModal(false);
 
     if (preference === 'enabled' && updateInfo?.hasUpdate) {
-      applyUpdateNow();
+      applyUpdateNow(updateInfo?.latestVersion);
     }
   };
 
@@ -198,10 +202,16 @@ export default function App() {
       setUpdateInfo(data);
 
       const pref = localStorage.getItem('auto_update_preference');
+      const lastAttempted = sessionStorage.getItem('last_attempted_update_sha');
+
       if (!pref) {
         setShowAutoUpdateModal(true);
       } else if (pref === 'enabled' && data.hasUpdate) {
-        applyUpdateNow();
+        if (data.latestVersion && data.latestVersion === lastAttempted) {
+          console.warn('[AutoUpdate] Already attempted update to commit', data.latestVersion, 'in this session. Skipping to prevent update loop.');
+        } else {
+          applyUpdateNow(data.latestVersion);
+        }
       }
     } catch (err) {
       console.error('Failed to check for updates:', err);

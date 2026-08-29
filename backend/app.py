@@ -360,12 +360,24 @@ def get_stats():
 
 CURRENT_VERSION_COMMIT = "6eb0fed"
 
+def get_local_commit_sha():
+    """Gets current local git commit SHA or falls back to static tag."""
+    try:
+        import subprocess
+        res = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, timeout=3)
+        if res.returncode == 0 and res.stdout.strip():
+            return res.stdout.strip()[:7]
+    except Exception:
+        pass
+    return CURRENT_VERSION_COMMIT
+
 @app.route('/api/check-update')
 def check_update():
     """Queries GitHub API for the latest commit on monfreda48/Meowdy5000 repo."""
+    local_sha = get_local_commit_sha()
     github_url = "https://api.github.com/repos/monfreda48/Meowdy5000/commits/main"
     try:
-        res = requests.get(github_url, headers={"User-Agent": "RivalsTracker-App", "Accept": "application/vnd.github.v3+json"}, timeout=5)
+        res = requests.get(github_url, headers={"User-Agent": "Meowdy-5000-Stat-Tracker", "Accept": "application/vnd.github.v3+json"}, timeout=5)
         if res.status_code == 200:
             commit_data = res.json()
             latest_sha = commit_data.get("sha", "")[:7]
@@ -373,11 +385,12 @@ def check_update():
             commit_date = commit_data.get("commit", {}).get("committer", {}).get("date", "")
             commit_url = commit_data.get("html_url", "https://github.com/monfreda48/Meowdy5000")
             
-            has_update = latest_sha != CURRENT_VERSION_COMMIT and bool(latest_sha)
+            # Update is available ONLY if local_sha and latest_sha exist and differ
+            has_update = bool(local_sha) and bool(latest_sha) and local_sha.lower()[:7] != latest_sha.lower()[:7]
             
             return jsonify({
                 "success": True,
-                "currentVersion": CURRENT_VERSION_COMMIT,
+                "currentVersion": local_sha,
                 "latestVersion": latest_sha,
                 "latestMessage": commit_msg,
                 "latestDate": commit_date,
@@ -390,7 +403,7 @@ def check_update():
     
     return jsonify({
         "success": False,
-        "currentVersion": CURRENT_VERSION_COMMIT,
+        "currentVersion": local_sha,
         "hasUpdate": False,
         "repoUrl": "https://github.com/monfreda48/Meowdy5000"
     })
@@ -401,9 +414,11 @@ def apply_update():
     try:
         import subprocess
         result = subprocess.run(["git", "pull", "origin", "main"], capture_output=True, text=True, timeout=15)
+        new_sha = get_local_commit_sha()
         if result.returncode == 0:
             return jsonify({
                 "success": True,
+                "newVersion": new_sha,
                 "message": "Update successfully pulled from GitHub! Reloading app...",
                 "output": result.stdout
             })
