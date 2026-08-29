@@ -69,6 +69,21 @@ export default function App() {
   const [draggedMetricId, setDraggedMetricId] = useState(null);
   const [dragOverMetricId, setDragOverMetricId] = useState(null);
 
+  useEffect(() => {
+    const handleGlobalPointerUp = () => {
+      setDraggedMetricId(null);
+      setDragOverMetricId(null);
+    };
+    window.addEventListener('pointerup', handleGlobalPointerUp);
+    window.addEventListener('mouseup', handleGlobalPointerUp);
+    window.addEventListener('touchend', handleGlobalPointerUp);
+    return () => {
+      window.removeEventListener('pointerup', handleGlobalPointerUp);
+      window.removeEventListener('mouseup', handleGlobalPointerUp);
+      window.removeEventListener('touchend', handleGlobalPointerUp);
+    };
+  }, []);
+
   const [selectedMetrics, setSelectedMetrics] = useState(() => {
     try {
       const saved = localStorage.getItem('tracked_metrics');
@@ -78,37 +93,8 @@ export default function App() {
     }
   });
 
-  const handleDragStart = (id, e) => {
-    setDraggedMetricId(id);
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', id);
-    }
-  };
-
-  const handleDragOver = (id, e) => {
-    if (e) e.preventDefault();
-    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-    if (dragOverMetricId !== id) {
-      setDragOverMetricId(id);
-    }
-  };
-
-  const handleDragLeave = (id) => {
-    if (dragOverMetricId === id) {
-      setDragOverMetricId(null);
-    }
-  };
-
-  const handleDrop = (targetId, e) => {
-    if (e) e.preventDefault();
-    const sourceId = draggedMetricId || (e.dataTransfer ? e.dataTransfer.getData('text/plain') : null);
-    
-    if (!sourceId || sourceId === targetId) {
-      setDraggedMetricId(null);
-      setDragOverMetricId(null);
-      return;
-    }
+  const performSwap = (sourceId, targetId) => {
+    if (!sourceId || !targetId || sourceId === targetId) return;
 
     const fromIndex = selectedMetrics.indexOf(sourceId);
     const toIndex = selectedMetrics.indexOf(targetId);
@@ -123,9 +109,65 @@ export default function App() {
         try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) {}
       }
     }
+  };
 
+  const handlePointerDown = (id, e) => {
+    // Left click or touch primary contact
+    if (e.button !== undefined && e.button !== 0) return;
+    setDraggedMetricId(id);
+  };
+
+  const handlePointerEnter = (id) => {
+    if (draggedMetricId && draggedMetricId !== id) {
+      setDragOverMetricId(id);
+      performSwap(draggedMetricId, id);
+    }
+  };
+
+  const handleDragStart = (id, e) => {
+    setDraggedMetricId(id);
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', id);
+    }
+  };
+
+  const handleDragOver = (id, e) => {
+    if (e) e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    if (draggedMetricId && draggedMetricId !== id) {
+      setDragOverMetricId(id);
+      performSwap(draggedMetricId, id);
+    }
+  };
+
+  const handleDrop = (targetId, e) => {
+    if (e) e.preventDefault();
+    const sourceId = draggedMetricId || (e.dataTransfer ? e.dataTransfer.getData('text/plain') : null);
+    performSwap(sourceId, targetId);
     setDraggedMetricId(null);
     setDragOverMetricId(null);
+  };
+
+  const handleTouchStart = (id, e) => {
+    setDraggedMetricId(id);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!draggedMetricId) return;
+    const touch = e.touches ? e.touches[0] : null;
+    if (!touch) return;
+    const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!targetElement) return;
+
+    const cardElement = targetElement.closest('[data-metric-id]');
+    if (cardElement) {
+      const targetId = cardElement.getAttribute('data-metric-id');
+      if (targetId && targetId !== draggedMetricId) {
+        setDragOverMetricId(targetId);
+        performSwap(draggedMetricId, targetId);
+      }
+    }
   };
 
   const getCardDragProps = (metricId) => {
@@ -133,15 +175,19 @@ export default function App() {
     const isDragOver = dragOverMetricId === metricId;
 
     return {
+      'data-metric-id': metricId,
       draggable: true,
+      onPointerDown: (e) => handlePointerDown(metricId, e),
+      onPointerEnter: () => handlePointerEnter(metricId),
+      onTouchStart: (e) => handleTouchStart(metricId, e),
+      onTouchMove: handleTouchMove,
       onDragStart: (e) => handleDragStart(metricId, e),
       onDragOver: (e) => handleDragOver(metricId, e),
-      onDragLeave: () => handleDragLeave(metricId),
       onDrop: (e) => handleDrop(metricId, e),
-      className: `bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-grab active:cursor-grabbing transition-all duration-300 ${
-        isDragging ? 'opacity-40 border-dashed border-orange-500 scale-95' : 'border-slate-700/50'
+      className: `bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group transition-all duration-300 select-none cursor-grab active:cursor-grabbing ${
+        isDragging ? 'opacity-50 border-dashed border-orange-500 scale-95 shadow-2xl ring-2 ring-orange-500/80 z-30' : 'border-slate-700/50'
       } ${
-        isDragOver ? 'border-2 border-orange-500 scale-105 shadow-xl shadow-orange-500/20 ring-2 ring-orange-500/50' : 'hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+        isDragOver ? 'border-2 border-orange-500 scale-105 shadow-2xl shadow-orange-500/30 ring-4 ring-orange-500/50 z-20' : 'hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
       }`
     };
   };
@@ -564,11 +610,12 @@ export default function App() {
                       <div 
                         key={m.id} 
                         draggable={true}
+                        onPointerDown={(e) => handlePointerDown(m.id, e)}
+                        onPointerEnter={() => handlePointerEnter(m.id)}
                         onDragStart={(e) => handleDragStart(m.id, e)}
                         onDragOver={(e) => handleDragOver(m.id, e)}
-                        onDragLeave={() => handleDragLeave(m.id)}
                         onDrop={(e) => handleDrop(m.id, e)}
-                        className={`flex items-center gap-1 transition-all cursor-grab active:cursor-grabbing ${
+                        className={`flex items-center gap-1 transition-all cursor-grab active:cursor-grabbing select-none ${
                           isDragging ? 'opacity-40 scale-95 border-dashed border-orange-500' : ''
                         } ${
                           isDragOver ? 'ring-2 ring-orange-500 rounded-xl scale-105 shadow-md shadow-orange-500/30' : ''
