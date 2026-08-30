@@ -590,6 +590,8 @@ export default function App() {
     } catch (e) {}
   };
 
+
+
   const downloadUserDataset = (data) => {
     try {
       const username = data.current?.username || 'Player';
@@ -849,14 +851,12 @@ export default function App() {
     } catch (e) {}
     setAutoUpdatePref(preference);
     setShowAutoUpdateModal(false);
-    
-    setUpdateToast({
-      type: 'success',
-      message: preference === 'enabled' 
-        ? '⚙️ Auto-update enabled. You will be prompted when new releases are available.'
-        : '⚙️ Auto-update preference updated.'
-    });
-    setTimeout(() => setUpdateToast(null), 3500);
+    triggerHaptic('success');
+    showNativeToast(`Auto-Update policy set to ${preference}`);
+  };
+
+  const handleSaveAutoUpdatePref = (preference) => {
+    setAutoUpdatePermission(preference);
   };
 
   const [updateToast, setUpdateToast] = useState(null);
