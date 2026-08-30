@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Filesystem } from '@capacitor/filesystem';
+import { Browser } from '@capacitor/browser';
 
 const AVAILABLE_METRICS = [
   { id: 'winRate', name: 'Win Rate', icon: '🏆', category: 'Core' },
@@ -245,22 +246,47 @@ export default function App() {
       try { sessionStorage.setItem('last_attempted_update_sha', attemptedSha); } catch (e) {}
     }
     setIsApplyingUpdate(true);
+
+    // Native Mobile Android APK Self-Update
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      setUpdateStatusMsg('📱 Launching Android APK Package Installer...');
+      try {
+        const apkUrl = updateInfo?.apkUrl || 'https://github.com/monfreda48/Meowdy5000/releases/download/v1.0.0/app-debug.apk';
+        await Browser.open({ url: apkUrl });
+        setUpdateStatusMsg('✅ Package installer launched! Confirm installation to complete update.');
+      } catch (e) {
+        window.open('https://github.com/monfreda48/Meowdy5000/releases', '_system');
+      } finally {
+        setTimeout(() => setIsApplyingUpdate(false), 2000);
+      }
+      return;
+    }
+
+    // Web / Local Server Self-Update
     setUpdateStatusMsg('⚡ Fetching and installing latest update from GitHub...');
     try {
       const res = await fetch(getApiUrl('/api/apply-update'), { method: 'POST' });
-      const data = await res.json();
-      if (data.success) {
-        setUpdateStatusMsg('✅ Update installed successfully! Reloading app...');
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-      } else {
-        setUpdateStatusMsg(`❌ Update failed: ${data.error || 'Git pull error'}`);
-        setIsApplyingUpdate(false);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setUpdateStatusMsg('✅ Web update installed successfully! Reloading app...');
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+          return;
+        }
       }
+      setUpdateStatusMsg('🔄 Reloading application assets...');
+      setTimeout(() => {
+        window.location.reload(true);
+      }, 1000);
     } catch (err) {
-      setUpdateStatusMsg('❌ Error connecting to update service.');
-      setIsApplyingUpdate(false);
+      setUpdateStatusMsg('🔄 Reloading application...');
+      setTimeout(() => {
+        window.location.reload(true);
+      }, 1000);
+    } finally {
+      setTimeout(() => setIsApplyingUpdate(false), 2000);
     }
   };
 

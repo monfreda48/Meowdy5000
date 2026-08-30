@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@capacitor/android": "^7.0.1",
+    "@capacitor/browser": "^7.0.5",
     "@capacitor/core": "^7.0.1",
     "@capacitor/filesystem": "^7.1.8",
     "@tailwindcss/vite": "^4.3.0",
