@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Filesystem } from '@capacitor/filesystem';
 
@@ -28,6 +28,58 @@ export default function App() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Pull to Refresh state and gesture handlers
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isPulling, setIsPulling] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const touchStartRef = useRef(0);
+  const PULL_THRESHOLD = 75;
+
+  const handleTouchStart = (e) => {
+    if (window.scrollY === 0) {
+      touchStartRef.current = e.touches[0].clientY;
+      setIsPulling(true);
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isPulling || window.scrollY > 0) return;
+    const currentY = e.touches[0].clientY;
+    const distance = currentY - touchStartRef.current;
+    
+    if (distance > 0) {
+      const dampenedDistance = Math.min(distance * 0.45, 110);
+      setPullDistance(dampenedDistance);
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (!isPulling) return;
+    setIsPulling(false);
+    
+    if (pullDistance >= PULL_THRESHOLD && !isRefreshing && !loading) {
+      setIsRefreshing(true);
+      setPullDistance(50);
+      
+      try {
+        if (query) {
+          await fetchStats(null, query, season);
+        } else {
+          await checkForUpdates(true);
+        }
+      } catch (err) {
+        console.error('Pull to refresh error:', err);
+      } finally {
+        setTimeout(() => {
+          setIsRefreshing(false);
+          setPullDistance(0);
+        }, 500);
+      }
+    } else {
+      setPullDistance(0);
+    }
+  };
   const [isMobileView, setIsMobileView] = useState(false);
   const [updateInfo, setUpdateInfo] = useState(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
@@ -323,7 +375,44 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-[100dvh] mobile-safe-area bg-[#0b101e] text-slate-200 font-sans selection:bg-orange-500/30 transition-all duration-300">
+    <div 
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      className="min-h-[100dvh] mobile-safe-area bg-[#0b101e] text-slate-200 font-sans selection:bg-orange-500/30 transition-all duration-300 relative"
+    >
+      {/* Pull to Refresh Indicator */}
+      <div 
+        className="w-full flex flex-col items-center justify-center overflow-hidden transition-all duration-150 pointer-events-none sticky top-0 z-50"
+        style={{ 
+          height: `${pullDistance}px`,
+          opacity: Math.min(pullDistance / PULL_THRESHOLD, 1)
+        }}
+      >
+        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#131b2f] border border-orange-500/50 text-orange-400 text-xs font-bold shadow-xl backdrop-blur-md">
+          <svg 
+            className={`w-4 h-4 text-orange-500 transition-transform duration-200 ${
+              isRefreshing ? 'animate-spin' : ''
+            }`}
+            style={{
+              transform: isRefreshing ? 'none' : `rotate(${Math.min(pullDistance / PULL_THRESHOLD, 1) * 360}deg)`
+            }}
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor" 
+            strokeWidth="2.5"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>
+            {isRefreshing 
+              ? 'Refreshing Stats...' 
+              : pullDistance >= PULL_THRESHOLD 
+              ? 'Release to Refresh' 
+              : 'Pull down to refresh'}
+          </span>
+        </div>
+      </div>
       
       {/* Opening Splash Screen Overlay */}
       {showSplash && (
