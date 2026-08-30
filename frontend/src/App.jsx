@@ -638,6 +638,11 @@ export default function App() {
       setStats(data);
     } catch (err) {
       setError(err.message);
+      setLastCapturedError({
+        error: err.message,
+        stack: err.stack || 'Fetch Stats Exception',
+        timestamp: new Date().toISOString()
+      });
     } finally {
       setLoading(false);
     }
@@ -1079,13 +1084,26 @@ export default function App() {
             </details>
           </div>
 
-          {/* Error Message */}
+          {/* Error Message with Prominent Report Button */}
           {error && (
-            <div className="w-full max-w-3xl bg-red-500/10 border border-red-500/50 text-red-400 p-3 rounded-xl flex items-center justify-center gap-2 text-xs sm:text-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              {error}
+            <div className="w-full max-w-3xl bg-red-500/15 border-2 border-red-500/60 text-red-400 p-3.5 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm shadow-2xl animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-2.5">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <span className="font-bold">{error}</span>
+              </div>
+              
+              <button
+                onClick={() => {
+                  setReportNotes(`Error encountered: ${error}`);
+                  setShowReportModal(true);
+                }}
+                className="shrink-0 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/60 text-amber-300 hover:text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md hover:scale-105 active:scale-95"
+              >
+                <span>⚠️</span>
+                <span>Report Error to Developers</span>
+              </button>
             </div>
           )}
         </div>
