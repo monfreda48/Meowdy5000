@@ -558,6 +558,9 @@ export default function App() {
     }
   };
 
+  const [networkStatus, setNetworkStatus] = useState({ connected: true, connectionType: 'unknown' });
+  const [deviceInfo, setDeviceInfo] = useState(null);
+  const [appInfo, setAppInfo] = useState(null);
   const [storagePermissionStatus, setStoragePermissionStatus] = useState('unknown');
 
   const checkStoragePermission = async () => {
