@@ -184,22 +184,37 @@ export default function App() {
     try {
       if (window.Capacitor && window.Capacitor.isNativePlatform()) {
         try {
-          const permStatus = await Filesystem.requestPermissions();
-          console.log('[NativePermission] Phone storage write permission granted status:', permStatus);
+          const status = await Filesystem.checkPermissions();
+          console.log('[NativePermission] Filesystem checkPermissions:', status);
+          
+          if (status.publicStorage !== 'granted') {
+            const reqStatus = await Filesystem.requestPermissions();
+            console.log('[NativePermission] Filesystem requestPermissions:', reqStatus);
+            
+            if (reqStatus.publicStorage === 'granted') {
+              setUpdateToast({ type: 'success', message: '✅ Android OS Storage Permission Granted!' });
+            } else {
+              setUpdateToast({ type: 'error', message: '⚠️ Android Storage Permission Denied. Please allow storage access in Android App Info Settings.' });
+            }
+          } else {
+            setUpdateToast({ type: 'success', message: '✅ Android OS Storage Permission is Active!' });
+          }
         } catch (err) {
           console.warn('[NativePermission] Filesystem requestPermissions error:', err);
         }
-      }
-
-      if (navigator.storage && navigator.storage.persist) {
-        try {
-          await navigator.storage.persist();
-        } catch (e) {}
+      } else {
+        if (navigator.storage && navigator.storage.persist) {
+          try {
+            await navigator.storage.persist();
+          } catch (e) {}
+        }
+        setUpdateToast({ type: 'success', message: '✅ Storage Write Permission Granted!' });
       }
 
       localStorage.setItem('storage_permission_granted', 'true');
       setHasStoragePermission(true);
       setShowPermissionPrompt(false);
+      setTimeout(() => setUpdateToast(null), 4000);
     } catch (e) {
       console.error('Local storage write error:', e);
     }
