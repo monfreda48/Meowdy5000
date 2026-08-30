@@ -2029,7 +2029,7 @@ export default function App() {
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
-                        One-Click Update
+                        Check for update
                       </h4>
                       <p className="text-[10px] text-slate-400">Check, download & install latest release</p>
                     </div>
