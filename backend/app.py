@@ -369,7 +369,7 @@ def get_stats():
 
     return jsonify({"current": final_data, "history": history})
 
-CURRENT_VERSION_COMMIT = "ff0b6ce"
+CURRENT_VERSION_COMMIT = "59b50cc"
 
 def get_local_commit_sha():
     """Gets current local git commit SHA or falls back to static tag."""
