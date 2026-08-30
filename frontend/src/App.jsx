@@ -1070,28 +1070,36 @@ ${payload.stack || 'No stack trace available.'}
   // 1. Monitor Network Connectivity (@capacitor/network)
   useEffect(() => {
     let isMounted = true;
-    const initNetwork = async () => {
+    let listener;
+
+    const setupNetwork = async () => {
       try {
         const status = await Network.getStatus();
         if (isMounted) setNetworkStatus(status);
+
+        listener = await Network.addListener('networkStatusChange', (newStatus) => {
+          setNetworkStatus((prevStatus) => {
+            // Only trigger toast & updates if connectivity state actually transitioned!
+            if (prevStatus && prevStatus.connected !== newStatus.connected) {
+              if (!newStatus.connected) {
+                triggerHaptic('warning');
+                showNativeToast('⚠️ Offline Mode — Network connection lost');
+              } else {
+                triggerHaptic('success');
+                showNativeToast('⚡ Network Reconnected');
+                checkForUpdates(false);
+              }
+            }
+            return newStatus;
+          });
+        });
       } catch (e) {}
     };
-    initNetwork();
 
-    let listener;
-    Network.addListener('networkStatusChange', (status) => {
-      setNetworkStatus(status);
-      if (!status.connected) {
-        triggerHaptic('warning');
-        showNativeToast('⚠️ Offline Mode — Network connection lost');
-      } else {
-        triggerHaptic('success');
-        showNativeToast('⚡ Network Reconnected');
-        checkForUpdates(false);
-      }
-    }).then(l => { listener = l; });
+    setupNetwork();
 
     return () => {
+      isMounted = false;
       if (listener) listener.remove();
     };
   }, []);
