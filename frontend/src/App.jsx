@@ -282,33 +282,75 @@ export default function App() {
     setCheckingUpdate(true);
     setUpdateToast(null);
     try {
-      const res = await fetch(getApiUrl('/api/check-update'));
-      const data = await res.json();
-      setUpdateInfo(data);
+      let latestSha = '';
+      let latestMessage = '';
+      let commitUrl = '';
+
+      // 1. Fetch directly from GitHub REST API (CORS enabled, works everywhere on web & APK)
+      try {
+        const ghRes = await fetch('https://api.github.com/repos/monfreda48/Meowdy5000/commits/main', {
+          headers: { 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if (ghRes.ok) {
+          const ghData = await ghRes.json();
+          latestSha = (ghData.sha || '').slice(0, 7);
+          latestMessage = ghData.commit?.message?.split('\n')[0] || '';
+          commitUrl = ghData.html_url || 'https://github.com/monfreda48/Meowdy5000';
+        }
+      } catch (ghErr) {
+        console.warn('Direct GitHub API check error:', ghErr);
+      }
+
+      // 2. Query Flask backend endpoint if available
+      let localSha = import.meta.env.VITE_APP_COMMIT_SHA || 'aa684f1';
+      try {
+        const backendRes = await fetch(getApiUrl('/api/check-update'));
+        if (backendRes.ok) {
+          const backendData = await backendRes.json();
+          if (backendData.localVersion) localSha = backendData.localVersion;
+          if (!latestSha && backendData.latestVersion) latestSha = backendData.latestVersion;
+        }
+      } catch (backendErr) {
+        console.warn('Backend update check error:', backendErr);
+      }
+
+      const hasUpdate = Boolean(latestSha && localSha && localSha.toLowerCase().slice(0, 7) !== latestSha.toLowerCase().slice(0, 7));
+
+      const updateData = {
+        hasUpdate,
+        localVersion: localSha,
+        latestVersion: latestSha || localSha,
+        latestMessage: latestMessage || 'Latest enhancements and bug fixes available on GitHub.',
+        commitUrl: commitUrl || 'https://github.com/monfreda48/Meowdy5000',
+        apkUrl: 'https://github.com/monfreda48/Meowdy5000/releases/download/v1.0.0/app-debug.apk',
+        repoUrl: 'https://github.com/monfreda48/Meowdy5000'
+      };
+
+      setUpdateInfo(updateData);
 
       const pref = localStorage.getItem('auto_update_preference');
       const lastAttempted = sessionStorage.getItem('last_attempted_update_sha');
 
-      if (data.hasUpdate) {
-        setUpdateToast({ type: 'update', message: `⚡ New update available! (Latest Commit: ${data.latestVersion})` });
+      if (hasUpdate) {
+        setUpdateToast({ type: 'update', message: `⚡ New update available on GitHub! (Latest: ${latestSha})` });
         if (!pref) {
           setShowAutoUpdateModal(true);
         } else if (pref === 'enabled') {
-          if (data.latestVersion && data.latestVersion === lastAttempted) {
-            console.warn('[AutoUpdate] Already attempted update to commit', data.latestVersion, 'in this session. Skipping to prevent update loop.');
+          if (latestSha && latestSha === lastAttempted) {
+            console.warn('[AutoUpdate] Already attempted update to commit', latestSha, 'in this session. Skipping to prevent loop.');
           } else {
-            applyUpdateNow(data.latestVersion);
+            applyUpdateNow(latestSha);
           }
         }
       } else if (isManual) {
-        setUpdateToast({ type: 'success', message: `✅ Your app is up to date! (Current Commit: ${data.localVersion || 'Latest'})` });
-        setTimeout(() => setUpdateToast(null), 4000);
+        setUpdateToast({ type: 'success', message: `✅ Your app is up to date! (Current Commit: ${localSha})` });
+        setTimeout(() => setUpdateToast(null), 4500);
       }
     } catch (err) {
       console.error('Failed to check for updates:', err);
       if (isManual) {
         setUpdateToast({ type: 'error', message: '❌ Could not connect to update server.' });
-        setTimeout(() => setUpdateToast(null), 4000);
+        setTimeout(() => setUpdateToast(null), 4500);
       }
     } finally {
       setCheckingUpdate(false);
