@@ -74,6 +74,20 @@ const DEFAULT_SEASONS = [
   { id: '1', name: 'Season 0 (Launch)', status: 'past' }
 ];
 
+const getApiUrl = (path) => {
+  try {
+    const customUrl = localStorage.getItem('backend_base_url');
+    if (customUrl) {
+      const base = customUrl.replace(/\/+$/, '');
+      return `${base}${path.startsWith('/') ? path : '/' + path}`;
+    }
+  } catch (e) { }
+  if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+    return `http://10.0.2.2:5000${path.startsWith('/') ? path : '/' + path}`;
+  }
+  return path;
+};
+
 export default function App() {
   const [query, setQuery] = useState('');
   const [season, setSeason] = useState('19');
