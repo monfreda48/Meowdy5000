@@ -1,1 +1,35 @@
 @import "tailwindcss";
+
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #0b101e;
+  overflow-x: hidden;
+}
+
+/* Safe area inset wrapper for mobile taskbars */
+.mobile-safe-area {
+  padding-top: max(env(safe-area-inset-top), 0px);
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+
+/* Compact vertical height helper on mobile screens */
+@media (max-width: 768px) {
+  html, body {
+    height: -webkit-fill-available;
+  }
+
+  .mobile-compact-padding {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  .mobile-compact-gap {
+    gap: 0.5rem !important;
+  }
+}

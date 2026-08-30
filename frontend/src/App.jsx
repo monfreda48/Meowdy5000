@@ -276,11 +276,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b101e] text-slate-200 font-sans selection:bg-orange-500/30 transition-all duration-300">
+    <div className="min-h-[100dvh] mobile-safe-area bg-[#0b101e] text-slate-200 font-sans selection:bg-orange-500/30 transition-all duration-300">
       
       {/* Top Navigation Bar */}
       <nav className="border-b border-slate-800 bg-[#0f1526]/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 py-2 sm:py-3.5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center font-black text-white shadow-md shadow-orange-500/20 text-xs">
               SP
@@ -400,8 +400,8 @@ export default function App() {
       )}
 
       {/* Main Layout Container */}
-      <main className={`mx-auto px-4 sm:px-6 py-6 sm:py-10 transition-all duration-300 ${
-        isMobileView ? 'max-w-md' : 'max-w-6xl'
+      <main className={`mx-auto px-3 sm:px-6 py-3 sm:py-10 transition-all duration-300 ${
+        isMobileView ? 'max-w-md py-2' : 'max-w-6xl'
       }`}>
 
         {/* App Update Available Banner (Mobile & Desktop) */}
@@ -506,33 +506,34 @@ export default function App() {
         )}
 
         {/* Header & Search Section */}
-        <div className={`flex flex-col items-center text-center ${isMobileView ? 'space-y-4' : 'space-y-6'}`}>
-          <h1 className={`font-black tracking-tight text-white uppercase w-full flex flex-col gap-1 ${
-            isMobileView ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-5xl md:text-6xl lg:text-7xl'
+        <div className={`flex flex-col items-center text-center ${isMobileView ? 'space-y-2' : 'space-y-3 sm:space-y-6'}`}>
+          <h1 className={`font-black tracking-tight text-white uppercase w-full flex flex-col gap-0.5 ${
+            isMobileView ? 'text-xl sm:text-3xl' : 'text-2xl sm:text-5xl md:text-6xl lg:text-7xl'
           }`}>
             <span>SN4K PACK:</span>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">SNACK HARD, TRACK HARD</span>
           </h1>
 
           {/* Active Season & Upcoming Season 10 Status Pill */}
-          <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold text-orange-400 shadow-md">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 px-3 py-1 rounded-full text-xs sm:text-sm font-bold text-orange-400 shadow-md">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span>Season 9.5 Active</span>
             <span className="text-slate-500">•</span>
-            <span className="text-slate-300 font-medium">Season 10 Starts Sept 11, 2026</span>
+            <span className="text-slate-300 font-medium hidden sm:inline">Season 10 Starts Sept 11, 2026</span>
+            <span className="text-slate-300 font-medium sm:hidden">S10 Sept 11</span>
           </div>
 
-          <form onSubmit={fetchStats} className={`w-full ${isMobileView ? 'mt-2' : 'max-w-3xl mt-8'}`}>
-            <div className={`flex bg-[#131b2f] p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${
-              isMobileView ? 'flex-col gap-2.5' : 'flex-col md:flex-row gap-3'
+          <form onSubmit={fetchStats} className={`w-full ${isMobileView ? 'mt-1' : 'max-w-3xl mt-3 sm:mt-8'}`}>
+            <div className={`flex bg-[#131b2f] p-2.5 sm:p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${
+              isMobileView ? 'flex-col gap-2' : 'flex-col md:flex-row gap-3'
             }`}>
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Enter Username or UID..."
-                className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-4 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all text-white placeholder-slate-500 ${
-                  isMobileView ? 'py-3 text-base' : 'py-4 text-lg flex-1'
+                className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-3.5 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all text-white placeholder-slate-500 ${
+                  isMobileView ? 'py-2.5 text-sm' : 'py-3.5 sm:py-4 text-base sm:text-lg flex-1'
                 }`}
                 required
               />
@@ -546,8 +547,8 @@ export default function App() {
                       fetchStats(null, query, selectedSeason);
                     }
                   }}
-                  className={`bg-[#0b101e] border border-slate-700/50 rounded-xl px-3 focus:outline-none focus:border-orange-500 text-white cursor-pointer text-sm ${
-                    isMobileView ? 'py-3 flex-1' : 'py-4'
+                  className={`bg-[#0b101e] border border-slate-700/50 rounded-xl px-3 focus:outline-none focus:border-orange-500 text-white cursor-pointer text-xs sm:text-sm ${
+                    isMobileView ? 'py-2.5 flex-1' : 'py-3.5 sm:py-4'
                   }`}
                 >
                   <option value="19">Season 9.5 (Active)</option>
@@ -561,7 +562,7 @@ export default function App() {
                   type="submit"
                   disabled={loading}
                   className={`bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(249,115,22,0.3)] uppercase tracking-wider text-xs sm:text-sm ${
-                    isMobileView ? 'py-3 px-5 flex-1' : 'py-4 px-8'
+                    isMobileView ? 'py-2.5 px-4 flex-1' : 'py-3.5 sm:py-4 px-6 sm:px-8'
                   }`}
                 >
                   {loading ? 'Scanning...' : 'Search'}
@@ -572,7 +573,7 @@ export default function App() {
 
           {/* Customize What You Track Selection Box */}
           <div className={`w-full ${isMobileView ? '' : 'max-w-3xl'} text-left`}>
-            <details className="group bg-[#131b2f] border border-slate-700/50 rounded-2xl overflow-hidden shadow-xl transition-all duration-300" open>
+            <details className="group bg-[#131b2f] border border-slate-700/50 rounded-2xl overflow-hidden shadow-xl transition-all duration-300">
               <summary className="flex cursor-pointer items-center justify-between px-4 py-3 font-bold text-slate-300 hover:text-orange-400 transition-colors list-none">
                 <span className="flex items-center gap-2 uppercase tracking-widest text-xs">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
