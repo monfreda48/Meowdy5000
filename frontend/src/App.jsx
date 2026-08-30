@@ -370,15 +370,56 @@ export default function App() {
     }
   };
 
-  const setAutoUpdatePermission = (preference) => {
-    try {
-      localStorage.setItem('auto_update_preference', preference);
-    } catch (e) {}
-    setAutoUpdatePref(preference);
-    setShowAutoUpdateModal(false);
+  const handleOneClickUpdate = async () => {
+    setCheckingUpdate(true);
+    setUpdateToast({ type: 'update', message: '🔍 Checking GitHub for latest app updates...' });
 
-    if (preference === 'enabled' && updateInfo?.hasUpdate) {
-      applyUpdateNow(updateInfo?.latestVersion);
+    try {
+      let latestSha = '';
+      let latestMessage = '';
+      let commitUrl = '';
+
+      // 1. Fetch directly from GitHub REST API
+      try {
+        const ghRes = await fetch('https://api.github.com/repos/monfreda48/Meowdy5000/commits/main', {
+          headers: { 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if (ghRes.ok) {
+          const ghData = await ghRes.json();
+          latestSha = (ghData.sha || '').slice(0, 7);
+          latestMessage = ghData.commit?.message?.split('\n')[0] || '';
+          commitUrl = ghData.html_url || 'https://github.com/monfreda48/Meowdy5000';
+        }
+      } catch (ghErr) {
+        console.warn('Direct GitHub API check error:', ghErr);
+      }
+
+      // 2. Local commit check
+      let localSha = import.meta.env.VITE_APP_COMMIT_SHA || '98ac9c9';
+      try {
+        const backendRes = await fetch(getApiUrl('/api/check-update'));
+        if (backendRes.ok) {
+          const backendData = await backendRes.json();
+          if (backendData.localVersion) localSha = backendData.localVersion;
+          if (!latestSha && backendData.latestVersion) latestSha = backendData.latestVersion;
+        }
+      } catch (e) {}
+
+      const hasUpdate = Boolean(latestSha && localSha && localSha.toLowerCase().slice(0, 7) !== latestSha.toLowerCase().slice(0, 7));
+
+      if (hasUpdate) {
+        setUpdateToast({ type: 'update', message: `⚡ Update found (${latestSha})! Starting one-click installation...` });
+        await applyUpdateNow(latestSha);
+      } else {
+        setUpdateToast({ type: 'success', message: `✅ App is up to date! (Current Commit: ${localSha})` });
+        setTimeout(() => setUpdateToast(null), 4000);
+      }
+    } catch (err) {
+      console.error('One-click update error:', err);
+      setUpdateToast({ type: 'error', message: '❌ Error connecting to update service.' });
+      setTimeout(() => setUpdateToast(null), 4000);
+    } finally {
+      setCheckingUpdate(false);
     }
   };
 
@@ -703,25 +744,25 @@ export default function App() {
               <span className="hidden md:inline">Report Issue</span>
             </button>
 
-            {/* Check for Updates Button */}
+            {/* One-Click Check & Update Button */}
             <button
-              onClick={() => checkForUpdates(true)}
-              disabled={checkingUpdate}
-              title="Check GitHub for Latest App Updates"
+              onClick={handleOneClickUpdate}
+              disabled={checkingUpdate || isApplyingUpdate}
+              title="One-Click Check, Download, Install & Restart App"
               className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-inner disabled:opacity-50 cursor-pointer ${
                 updateInfo?.hasUpdate 
                   ? 'bg-emerald-500/20 border-emerald-500/70 text-emerald-400 animate-pulse' 
                   : 'bg-[#131b2f] border-slate-700/60 text-slate-300 hover:text-white hover:border-emerald-500/50'
               }`}
             >
-              <svg className={`h-3.5 w-3.5 text-emerald-400 ${checkingUpdate ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg className={`h-3.5 w-3.5 text-emerald-400 ${checkingUpdate || isApplyingUpdate ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
               <span className="hidden md:inline">
-                {checkingUpdate ? 'Checking...' : updateInfo?.hasUpdate ? 'Update Available!' : 'Check for Updates'}
+                {checkingUpdate ? 'Checking Updates...' : isApplyingUpdate ? 'Updating App...' : '⚡ One-Click Update'}
               </span>
               <span className="md:hidden">
-                {checkingUpdate ? '...' : updateInfo?.hasUpdate ? 'Update!' : 'Updates'}
+                {checkingUpdate ? '...' : isApplyingUpdate ? 'Updating...' : '⚡ Update'}
               </span>
               {updateInfo?.hasUpdate && (
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
