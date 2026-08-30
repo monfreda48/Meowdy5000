@@ -47,3 +47,16 @@ body {
 .animate-grid-horizontal {
   animation: spinHorizontalRightToLeft 5s linear infinite;
 }
+
+/* Safe area inset protection for mobile taskbars & status bars */
+.drawer-safe-area {
+  padding-top: max(env(safe-area-inset-top, 0px), 1.25rem) !important;
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 1.5rem) !important;
+  padding-left: max(env(safe-area-inset-left, 0px), 1.25rem) !important;
+  padding-right: max(env(safe-area-inset-right, 0px), 1.25rem) !important;
+}
+
+.modal-safe-area {
+  padding-top: max(env(safe-area-inset-top, 0px), 1rem) !important;
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 1rem) !important;
+}
