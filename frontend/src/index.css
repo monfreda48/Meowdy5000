@@ -33,3 +33,17 @@ body {
     gap: 0.5rem !important;
   }
 }
+
+/* Horizontal Right-to-Left Grid Rotation Animation */
+@keyframes spinHorizontalRightToLeft {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-grid-horizontal {
+  animation: spinHorizontalRightToLeft 5s linear infinite;
+}

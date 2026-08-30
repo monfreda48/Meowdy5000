@@ -707,19 +707,32 @@ export default function App() {
 
           <div className="relative z-10 flex flex-col items-center space-y-5 max-w-sm">
             <div className="w-24 h-24 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-4xl sm:text-5xl shadow-[0_0_40px_rgba(16,185,129,0.7)] border-2 border-emerald-500/80 transform hover:scale-105 transition-transform duration-500 drop-shadow-[0_0_15px_rgba(52,211,153,0.9)] tracking-tighter relative overflow-hidden group">
-              {/* Spinning 3D Green Grid Sphere Mesh */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 animate-[spin_16s_linear_infinite]">
-                <svg className="w-full h-full text-emerald-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.2">
-                  <ellipse cx="50" cy="22" rx="43" ry="9" />
-                  <ellipse cx="50" cy="36" rx="48" ry="14" />
-                  <ellipse cx="50" cy="50" rx="49" ry="17" />
-                  <ellipse cx="50" cy="64" rx="48" ry="14" />
-                  <ellipse cx="50" cy="78" rx="43" ry="9" />
-                  <ellipse cx="50" cy="50" rx="14" ry="49" />
-                  <ellipse cx="50" cy="50" rx="30" ry="49" />
-                  <ellipse cx="50" cy="50" rx="43" ry="49" />
-                  <line x1="1" y1="50" x2="99" y2="50" strokeWidth="1.5" />
-                </svg>
+              {/* Horizontal Right-To-Left Spinning Green Grid Sphere Overlay */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-65 overflow-hidden rounded-full">
+                <div className="w-[200%] h-full flex items-center animate-grid-horizontal">
+                  <svg className="w-1/2 h-full text-emerald-400 shrink-0" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.2">
+                    <line x1="0" y1="22" x2="100" y2="22" strokeDasharray="3 2" />
+                    <line x1="0" y1="36" x2="100" y2="36" />
+                    <line x1="0" y1="50" x2="100" y2="50" strokeWidth="1.8" />
+                    <line x1="0" y1="64" x2="100" y2="64" />
+                    <line x1="0" y1="78" x2="100" y2="78" strokeDasharray="3 2" />
+                    <path d="M 0,0 Q 25,50 0,100" />
+                    <path d="M 25,0 Q 50,50 25,100" />
+                    <path d="M 50,0 Q 75,50 50,100" />
+                    <path d="M 75,0 Q 100,50 75,100" />
+                  </svg>
+                  <svg className="w-1/2 h-full text-emerald-400 shrink-0" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.2">
+                    <line x1="0" y1="22" x2="100" y2="22" strokeDasharray="3 2" />
+                    <line x1="0" y1="36" x2="100" y2="36" />
+                    <line x1="0" y1="50" x2="100" y2="50" strokeWidth="1.8" />
+                    <line x1="0" y1="64" x2="100" y2="64" />
+                    <line x1="0" y1="78" x2="100" y2="78" strokeDasharray="3 2" />
+                    <path d="M 0,0 Q 25,50 0,100" />
+                    <path d="M 25,0 Q 50,50 25,100" />
+                    <path d="M 50,0 Q 75,50 50,100" />
+                    <path d="M 75,0 Q 100,50 75,100" />
+                  </svg>
+                </div>
               </div>
               <span className="relative z-10 drop-shadow-[0_0_10px_rgba(52,211,153,0.9)]">M5</span>
             </div>
@@ -749,15 +762,26 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-2.5 sm:px-6 py-2 sm:py-3.5 flex items-center justify-between gap-1.5 sm:gap-3">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-xs sm:text-sm tracking-tighter shadow-[0_0_18px_rgba(16,185,129,0.6)] border border-emerald-500/70 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)] relative overflow-hidden">
-              {/* Spinning 3D Green Grid Sphere Mesh */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 animate-[spin_12s_linear_infinite]">
-                <svg className="w-full h-full text-emerald-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <ellipse cx="50" cy="25" rx="42" ry="10" />
-                  <ellipse cx="50" cy="50" rx="49" ry="16" />
-                  <ellipse cx="50" cy="75" rx="42" ry="10" />
-                  <ellipse cx="50" cy="50" rx="16" ry="49" />
-                  <ellipse cx="50" cy="50" rx="35" ry="49" />
-                </svg>
+              {/* Horizontal Right-To-Left Spinning Green Grid Sphere Overlay */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-65 overflow-hidden rounded-full">
+                <div className="w-[200%] h-full flex items-center animate-grid-horizontal">
+                  <svg className="w-1/2 h-full text-emerald-400 shrink-0" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <line x1="0" y1="25" x2="100" y2="25" strokeDasharray="3 2" />
+                    <line x1="0" y1="50" x2="100" y2="50" strokeWidth="2" />
+                    <line x1="0" y1="75" x2="100" y2="75" strokeDasharray="3 2" />
+                    <path d="M 0,0 Q 25,50 0,100" />
+                    <path d="M 33,0 Q 58,50 33,100" />
+                    <path d="M 66,0 Q 91,50 66,100" />
+                  </svg>
+                  <svg className="w-1/2 h-full text-emerald-400 shrink-0" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <line x1="0" y1="25" x2="100" y2="25" strokeDasharray="3 2" />
+                    <line x1="0" y1="50" x2="100" y2="50" strokeWidth="2" />
+                    <line x1="0" y1="75" x2="100" y2="75" strokeDasharray="3 2" />
+                    <path d="M 0,0 Q 25,50 0,100" />
+                    <path d="M 33,0 Q 58,50 33,100" />
+                    <path d="M 66,0 Q 91,50 66,100" />
+                  </svg>
+                </div>
               </div>
               <span className="relative z-10 drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]">M5</span>
             </div>
