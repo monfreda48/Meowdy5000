@@ -198,6 +198,56 @@ export default function App() {
       setPullDistance(0);
     }
   };
+
+  // Drawer Pull to Refresh state and gesture handlers
+  const [drawerPullDistance, setDrawerPullDistance] = useState(0);
+  const [isDrawerPulling, setIsDrawerPulling] = useState(false);
+  const [isDrawerRefreshing, setIsDrawerRefreshing] = useState(false);
+  const drawerTouchStartRef = useRef(0);
+  const drawerScrollRef = useRef(null);
+
+  const handleDrawerTouchStart = (e) => {
+    if (drawerScrollRef.current && drawerScrollRef.current.scrollTop === 0) {
+      drawerTouchStartRef.current = e.touches[0].clientY;
+      setIsDrawerPulling(true);
+    }
+  };
+
+  const handleDrawerTouchMove = (e) => {
+    if (!isDrawerPulling || (drawerScrollRef.current && drawerScrollRef.current.scrollTop > 0)) return;
+    const currentY = e.touches[0].clientY;
+    const distance = currentY - drawerTouchStartRef.current;
+
+    if (distance > 0) {
+      const dampenedDistance = Math.min(distance * 0.45, 100);
+      setDrawerPullDistance(dampenedDistance);
+    }
+  };
+
+  const handleDrawerTouchEnd = async () => {
+    if (!isDrawerPulling) return;
+    setIsDrawerPulling(false);
+
+    if (drawerPullDistance >= PULL_THRESHOLD && !isDrawerRefreshing) {
+      setIsDrawerRefreshing(true);
+      setDrawerPullDistance(45);
+      triggerHaptic('light');
+
+      try {
+        await handleOneClickUpdate();
+      } catch (err) {
+        console.error('Drawer pull refresh error:', err);
+      } finally {
+        setTimeout(() => {
+          setIsDrawerRefreshing(false);
+          setDrawerPullDistance(0);
+        }, 600);
+      }
+    } else {
+      setDrawerPullDistance(0);
+    }
+  };
+
   const [isMobileView, setIsMobileView] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [updateInfo, setUpdateInfo] = useState(null);
@@ -3435,11 +3485,46 @@ ${payload.stack || 'No stack trace available.'}
             className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex justify-end animate-in fade-in duration-300 select-none modal-safe-area"
           >
             <div
+              ref={drawerScrollRef}
+              onTouchStart={handleDrawerTouchStart}
+              onTouchMove={handleDrawerTouchMove}
+              onTouchEnd={handleDrawerTouchEnd}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm bg-[#0f1526] border-l border-slate-700/80 h-full flex flex-col justify-between overflow-y-auto shadow-2xl animate-in slide-in-from-right duration-300 drawer-safe-area"
+              className="w-full max-w-sm bg-[#0f1526] border-l border-slate-700/80 h-full flex flex-col justify-between overflow-y-auto shadow-2xl animate-in slide-in-from-right duration-300 drawer-safe-area relative"
             >
+              {/* Drawer Pull to Refresh Update Pill */}
+              <div
+                className="w-full flex items-center justify-center overflow-hidden transition-all duration-150 pointer-events-none sticky top-0 z-50 pt-2"
+                style={{
+                  height: `${drawerPullDistance}px`,
+                  opacity: Math.min(drawerPullDistance / PULL_THRESHOLD, 1)
+                }}
+              >
+                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#131b2f] border border-emerald-500/60 text-emerald-400 text-[11px] font-bold shadow-xl backdrop-blur-md">
+                  <svg
+                    className={`w-3.5 h-3.5 text-emerald-500 transition-transform duration-200 ${isDrawerRefreshing ? 'animate-spin' : ''}`}
+                    style={{
+                      transform: isDrawerRefreshing ? 'none' : `rotate(${Math.min(drawerPullDistance / PULL_THRESHOLD, 1) * 360}deg)`
+                    }}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>
+                    {isDrawerRefreshing
+                      ? 'Checking for Updates...'
+                      : drawerPullDistance >= PULL_THRESHOLD
+                        ? 'Release to Check Update'
+                        : 'Pull down to refresh'}
+                  </span>
+                </div>
+              </div>
+
               {/* Drawer Header */}
-              <div className="space-y-6">
+              <div className="space-y-6 p-4">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-xs tracking-tighter border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
