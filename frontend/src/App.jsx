@@ -1481,8 +1481,8 @@ ${payload.stack || 'No stack trace available.'}
               isMobileView ? 'flex-col gap-2' : 'flex-col md:flex-row items-center gap-3'
             }`}>
               {/* Checkbox to the left of the search bar for Tracking Mode */}
-              <label 
-                className={`flex items-center gap-2 px-3.5 py-2.5 sm:py-3.5 rounded-xl border transition-all cursor-pointer shrink-0 select-none ${
+              <div 
+                className={`flex items-center gap-2 px-3.5 py-2.5 sm:py-3.5 rounded-xl border transition-all shrink-0 select-none ${
                   isTrackingMode 
                     ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/60 text-white shadow-md shadow-emerald-500/10' 
                     : 'bg-[#0b101e] border-slate-700/60 text-slate-400 hover:text-slate-200'
@@ -1491,11 +1491,14 @@ ${payload.stack || 'No stack trace available.'}
               >
                 <input 
                   type="checkbox"
+                  id="trackingCheckboxInput"
                   checked={isTrackingMode}
                   onChange={(e) => {
                     const val = e.target.checked;
                     setIsTrackingMode(val);
                     try { localStorage.setItem('tracking_mode_enabled', val ? 'true' : 'false'); } catch (err) {}
+                    triggerHaptic('light');
+                    showNativeToast(`Tracking Mode ${val ? '📥 ON' : '🚫 OFF'}`);
                     setUpdateToast({
                       type: val ? 'success' : 'update',
                       message: val ? '📥 Tracking Mode ON: User dataset will auto-download on each search.' : '🚫 Tracking Mode OFF: Datasets will not download.'
@@ -1504,13 +1507,23 @@ ${payload.stack || 'No stack trace available.'}
                   }}
                   className="w-4 h-4 rounded border-slate-700 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900 bg-slate-900 cursor-pointer accent-emerald-500"
                 />
-                <span className="text-xs font-black uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5">
+                <label htmlFor="trackingCheckboxInput" className="text-xs font-black uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5 cursor-pointer">
                   <span>{isTrackingMode ? '📥' : '🚫'}</span>
                   <span className={isTrackingMode ? 'text-emerald-300' : 'text-slate-400'}>
                     Tracking {isTrackingMode ? 'ON' : 'OFF'}
                   </span>
-                </span>
-              </label>
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => { triggerHaptic('light'); setShowAutoUpdateModal(true); }}
+                  title="Click to change default tracking mode preference in Options"
+                  className="text-[10px] text-slate-400 hover:text-emerald-400 font-bold ml-1 pl-2 border-l border-slate-700/80 cursor-pointer flex items-center gap-1 group"
+                >
+                  <span className="group-hover:rotate-45 transition-transform">⚙️</span>
+                  <span className="hidden sm:inline">Default: <strong className={defaultTrackingPref === 'enabled' ? 'text-emerald-400' : 'text-slate-400'}>{defaultTrackingPref === 'enabled' ? 'ON' : 'OFF'}</strong></span>
+                </button>
+              </div>
 
               <div className="flex-1 relative w-full">
                 <input
