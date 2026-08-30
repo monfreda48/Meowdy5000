@@ -3514,44 +3514,9 @@ ${payload.stack || 'No stack trace available.'}
             className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex justify-end animate-in fade-in duration-300 select-none modal-safe-area"
           >
             <div
-              ref={drawerScrollRef}
-              onTouchStart={handleDrawerTouchStart}
-              onTouchMove={handleDrawerTouchMove}
-              onTouchEnd={handleDrawerTouchEnd}
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-sm bg-[#0f1526] border-l border-slate-700/80 h-full flex flex-col justify-between overflow-y-auto shadow-2xl animate-in slide-in-from-right duration-300 drawer-safe-area relative"
             >
-              {/* Drawer Pull to Refresh Update Pill */}
-              <div
-                className="w-full flex items-center justify-center overflow-hidden transition-all duration-150 pointer-events-none sticky top-0 z-50 pt-2"
-                style={{
-                  height: `${drawerPullDistance}px`,
-                  opacity: Math.min(drawerPullDistance / PULL_THRESHOLD, 1)
-                }}
-              >
-                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#131b2f] border border-emerald-500/60 text-emerald-400 text-[11px] font-bold shadow-xl backdrop-blur-md">
-                  <svg
-                    className={`w-3.5 h-3.5 text-emerald-500 transition-transform duration-200 ${isDrawerRefreshing ? 'animate-spin' : ''}`}
-                    style={{
-                      transform: isDrawerRefreshing ? 'none' : `rotate(${Math.min(drawerPullDistance / PULL_THRESHOLD, 1) * 360}deg)`
-                    }}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  <span>
-                    {isDrawerRefreshing
-                      ? 'Checking for Updates...'
-                      : drawerPullDistance >= PULL_THRESHOLD
-                        ? 'Release to Check Update'
-                        : 'Pull down to refresh'}
-                  </span>
-                </div>
-              </div>
-
               {/* Drawer Header */}
               <div className="space-y-6 p-4">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -3579,22 +3544,30 @@ ${payload.stack || 'No stack trace available.'}
                   </span>
 
                   <button
-                    onClick={() => { setIsMenuOpen(false); handleOneClickUpdate(); }}
+                    onClick={() => handleOneClickUpdate()}
                     disabled={checkingUpdate || isApplyingUpdate}
-                    className="w-full bg-[#131b2f] hover:bg-emerald-500/10 border border-slate-700/80 hover:border-emerald-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                    className="w-full bg-[#131b2f] hover:bg-emerald-500/10 border border-slate-700/80 hover:border-emerald-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer disabled:opacity-80"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
-                        ⚡
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0">
+                        {checkingUpdate ? (
+                          <div className="w-4 h-4 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin"></div>
+                        ) : (
+                          '⚡'
+                        )}
                       </div>
                       <div>
                         <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
-                          Check for update
+                          {checkingUpdate ? 'Checking for updates...' : 'Check for update'}
                         </h4>
-                        <p className="text-[10px] text-slate-400">Check, download & install latest release</p>
+                        <p className="text-[10px] text-slate-400">
+                          {checkingUpdate ? 'Connecting to GitHub API...' : 'Check, download & install latest release'}
+                        </p>
                       </div>
                     </div>
-                    <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">→</span>
+                    <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">
+                      {checkingUpdate ? '⏳' : '→'}
+                    </span>
                   </button>
 
                   <button
