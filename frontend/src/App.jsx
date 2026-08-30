@@ -143,6 +143,9 @@ export default function App() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [searchProgress, setSearchProgress] = useState(0);
+  const [searchProgressMsg, setSearchProgressMsg] = useState('');
+  const searchAbortControllerRef = useRef(null);
 
   // Pull to Refresh state and gesture handlers
   const [pullDistance, setPullDistance] = useState(0);
@@ -1179,25 +1182,76 @@ ${payload.stack || 'No stack trace available.'}
     return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
+  const cancelSearch = () => {
+    if (searchAbortControllerRef.current) {
+      searchAbortControllerRef.current.abort();
+      searchAbortControllerRef.current = null;
+    }
+    setLoading(false);
+    setSearchProgress(0);
+    setSearchProgressMsg('');
+    showNativeToast('🚫 Search cancelled');
+  };
+
   const fetchStats = async (e, overrideQuery = null, overrideSeason = null) => {
     if (e) e.preventDefault();
     const activeQuery = overrideQuery !== null ? overrideQuery : query;
     const activeSeason = overrideSeason !== null ? overrideSeason : season;
     if (!activeQuery) return;
 
+    if (searchAbortControllerRef.current) {
+      searchAbortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    searchAbortControllerRef.current = controller;
+
     addRecentSearch(activeQuery);
     setLoading(true);
     setError(null);
+    setSearchProgress(15);
+    setSearchProgressMsg('Connecting to Marvel Rivals backend API...');
+
+    const pInterval = setInterval(() => {
+      setSearchProgress(prev => {
+        if (prev < 40) {
+          setSearchProgressMsg('Querying Rivals Meta API & Tracker.gg...');
+          return prev + 15;
+        } else if (prev < 75) {
+          setSearchProgressMsg('Scraping player summary & match history...');
+          return prev + 10;
+        } else if (prev < 92) {
+          setSearchProgressMsg('Parsing hero stats & telemetry cards...');
+          return prev + 4;
+        }
+        return prev;
+      });
+    }, 400);
+
+    const timeoutId = setTimeout(() => {
+      if (controller) controller.abort();
+    }, 12000);
 
     try {
-      const response = await fetch(getApiUrl(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`));
+      const response = await fetch(
+        getApiUrl(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`),
+        { signal: controller.signal }
+      );
+      clearTimeout(timeoutId);
+      clearInterval(pInterval);
+
+      setSearchProgress(95);
+      setSearchProgressMsg('Finalizing player dashboard...');
+
       const data = await safeFetchJson(response);
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch player stats.');
       }
 
+      setSearchProgress(100);
+      setSearchProgressMsg('Search Complete!');
       setStats(data);
+
       if (data?.current?.username) {
         const uKey = data.current.username.toLowerCase();
         if (trackedPlayers[uKey]) {
@@ -1208,14 +1262,25 @@ ${payload.stack || 'No stack trace available.'}
         }
       }
     } catch (err) {
-      setError(err.message);
-      setLastCapturedError({
-        error: err.message,
-        stack: err.stack || 'Fetch Stats Exception',
-        timestamp: new Date().toISOString()
-      });
+      clearInterval(pInterval);
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        setError('Search timed out after 12s or was cancelled. Please check your connection or backend URL in Menu (⚙️).');
+      } else {
+        setError(err.message);
+        setLastCapturedError({
+          error: err.message,
+          stack: err.stack || 'Fetch Stats Exception',
+          timestamp: new Date().toISOString()
+        });
+      }
     } finally {
-      setLoading(false);
+      searchAbortControllerRef.current = null;
+      setTimeout(() => {
+        setLoading(false);
+        setSearchProgress(0);
+        setSearchProgressMsg('');
+      }, 500);
     }
   };
 
@@ -1575,6 +1640,40 @@ ${payload.stack || 'No stack trace available.'}
               </div>
             </div>
           </form>
+
+          {/* Live Search Telemetry Progress Bar */}
+          {loading && (
+            <div className={`w-full ${isMobileView ? '' : 'max-w-3xl'} bg-[#131b2f] border-2 border-emerald-500/60 rounded-2xl p-4 shadow-2xl shadow-emerald-500/20 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300 text-left`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin shrink-0"></div>
+                  <span className="text-xs font-black uppercase tracking-wider text-white">
+                    {searchProgressMsg || 'Searching Marvel Rivals Database...'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                    {searchProgress}%
+                  </span>
+                  <button
+                    type="button"
+                    onClick={cancelSearch}
+                    className="text-[10px] bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 border border-red-500/40 px-2.5 py-1 rounded-lg font-bold uppercase cursor-pointer transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+
+              {/* Glowing Progress Track Bar */}
+              <div className="w-full bg-slate-900 border border-slate-700/60 rounded-full h-3 overflow-hidden p-0.5">
+                <div
+                  className="bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 h-full rounded-full transition-all duration-300 shadow-[0_0_12px_rgba(16,185,129,0.8)]"
+                  style={{ width: `${Math.max(searchProgress, 8)}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
 
           {/* Customize What You Track Selection Box */}
           <div className={`w-full ${isMobileView ? '' : 'max-w-3xl'} text-left`}>
