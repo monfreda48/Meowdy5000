@@ -19,6 +19,9 @@ const AVAILABLE_METRICS = [
 
 export default function App() {
   const [query, setQuery] = useState('');
+  const [season, setSeason] = useState('19');
+  const [timeframe, setTimeframe] = useState('all');
+  const [expandedMetric, setExpandedMetric] = useState(null);
   const DEFAULT_SEASONS = [
     { id: '20', name: 'Season 10', status: 'upcoming' },
     { id: '19', name: 'Season 9.5', status: 'current' },
@@ -677,26 +680,27 @@ export default function App() {
       )}
 
       {/* Top Navigation Bar */}
-      <nav className="border-b border-slate-800 bg-[#0f1526]/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-3 sm:px-6 py-2 sm:py-3.5 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-sm tracking-tighter shadow-[0_0_15px_rgba(52,211,153,0.5)] border border-emerald-500/50 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]">
+      <nav className="border-b border-slate-800 bg-[#0f1526]/80 backdrop-blur-md sticky top-0 z-50 overflow-x-hidden">
+        <div className="max-w-6xl mx-auto px-2.5 sm:px-6 py-2 sm:py-3.5 flex items-center justify-between gap-1.5 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-xs sm:text-sm tracking-tighter shadow-[0_0_15px_rgba(52,211,153,0.5)] border border-emerald-500/50 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]">
               M5
             </div>
-            <span className="text-base sm:text-xl font-black tracking-widest text-white uppercase">
-              MEOWDY 5000'S STAT TRACKER
+            <span className="text-xs sm:text-lg md:text-xl font-black tracking-wider text-white uppercase truncate">
+              <span className="sm:hidden">MEOWDY 5000</span>
+              <span className="hidden sm:inline">MEOWDY 5000'S STAT TRACKER</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Report Issue Button */}
             <button
               onClick={() => setShowReportModal(true)}
               title="Report an issue or bug directly to developers"
-              className="bg-[#131b2f] border border-slate-700/60 text-slate-300 hover:text-white hover:border-emerald-500/50 text-xs px-2.5 sm:px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+              className="bg-[#131b2f] border border-slate-700/60 text-slate-300 hover:text-white hover:border-emerald-500/50 text-xs px-2 sm:px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
             >
-              <span className="text-amber-400 font-bold">⚠️</span>
-              <span className="hidden sm:inline">Report Issue</span>
+              <span className="text-amber-400 font-bold text-xs">⚠️</span>
+              <span className="hidden md:inline">Report Issue</span>
             </button>
 
             {/* Check for Updates Button */}
@@ -704,7 +708,7 @@ export default function App() {
               onClick={() => checkForUpdates(true)}
               disabled={checkingUpdate}
               title="Check GitHub for Latest App Updates"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-inner disabled:opacity-50 cursor-pointer ${
+              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-inner disabled:opacity-50 cursor-pointer ${
                 updateInfo?.hasUpdate 
                   ? 'bg-emerald-500/20 border-emerald-500/70 text-emerald-400 animate-pulse' 
                   : 'bg-[#131b2f] border-slate-700/60 text-slate-300 hover:text-white hover:border-emerald-500/50'
@@ -713,8 +717,11 @@ export default function App() {
               <svg className={`h-3.5 w-3.5 text-emerald-400 ${checkingUpdate ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span>
+              <span className="hidden md:inline">
                 {checkingUpdate ? 'Checking...' : updateInfo?.hasUpdate ? 'Update Available!' : 'Check for Updates'}
+              </span>
+              <span className="md:hidden">
+                {checkingUpdate ? '...' : updateInfo?.hasUpdate ? 'Update!' : 'Updates'}
               </span>
               {updateInfo?.hasUpdate && (
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
@@ -725,7 +732,7 @@ export default function App() {
             <button
               onClick={() => setShowAutoUpdateModal(true)}
               title="Configure Startup Auto-Update Preferences"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-inner cursor-pointer ${
+              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-inner cursor-pointer ${
                 autoUpdatePref === 'enabled' 
                   ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400 hover:border-emerald-500/70'
                   : autoUpdatePref === 'never_ask'
@@ -734,7 +741,7 @@ export default function App() {
               }`}
             >
               <span className="text-xs">⚡</span>
-              <span className="hidden md:inline">
+              <span className="hidden lg:inline">
                 Auto-Update: {autoUpdatePref === 'enabled' ? 'Enabled' : autoUpdatePref === 'never_ask' ? 'Off (Don\'t Ask)' : autoUpdatePref ? 'Ask' : 'Action Needed'}
               </span>
             </button>
@@ -808,8 +815,8 @@ export default function App() {
       )}
 
       {/* Main Layout Container */}
-      <main className={`mx-auto px-3 sm:px-6 py-3 sm:py-10 transition-all duration-300 ${
-        isMobileView ? 'max-w-md py-2' : 'max-w-6xl'
+      <main className={`mx-auto px-2.5 sm:px-6 py-3 sm:py-10 transition-all duration-300 w-full ${
+        isMobileView ? 'max-w-full sm:max-w-md py-2' : 'max-w-6xl'
       }`}>
 
         {/* Update Feedback Toast Banner */}
@@ -828,14 +835,14 @@ export default function App() {
 
         {/* App Update Available Banner (Mobile & Desktop) */}
         {updateInfo?.hasUpdate && (
-          <div className="w-full bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-emerald-500/20 border-2 border-emerald-500 rounded-2xl p-4 shadow-2xl shadow-emerald-500/20 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3.5 animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="flex items-center gap-3 text-left">
+          <div className="w-full bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-emerald-500/20 border-2 border-emerald-500 rounded-2xl p-3.5 sm:p-4 shadow-2xl shadow-emerald-500/20 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3.5 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="flex items-center gap-3 text-left w-full sm:w-auto">
               <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-xl shrink-0 shadow-md shadow-emerald-500/40">
                 🚀
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-black text-white uppercase tracking-wider">New App Update Available!</h4>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">New App Update Available!</h4>
                   <span className="text-[10px] bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold">
                     v{updateInfo.latestVersion}
                   </span>
@@ -845,7 +852,7 @@ export default function App() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
               <button
                 onClick={() => applyUpdateNow()}
                 disabled={isApplyingUpdate}
