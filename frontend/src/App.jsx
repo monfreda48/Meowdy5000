@@ -652,8 +652,8 @@ export default function App() {
           <div className="absolute w-80 h-80 rounded-full bg-gradient-to-tr from-emerald-500/20 via-teal-500/10 to-transparent blur-3xl animate-pulse"></div>
 
           <div className="relative z-10 flex flex-col items-center space-y-5 max-w-sm">
-            <div className="w-24 h-24 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-5xl shadow-[0_0_35px_rgba(52,211,153,0.6)] border-2 border-emerald-500/60 transform hover:scale-105 transition-transform duration-500 drop-shadow-[0_0_15px_rgba(52,211,153,0.9)]">
-              M
+            <div className="w-24 h-24 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-4xl sm:text-5xl shadow-[0_0_35px_rgba(52,211,153,0.6)] border-2 border-emerald-500/60 transform hover:scale-105 transition-transform duration-500 drop-shadow-[0_0_15px_rgba(52,211,153,0.9)] tracking-tighter">
+              M5
             </div>
 
             <div className="space-y-2">
@@ -680,8 +680,8 @@ export default function App() {
       <nav className="border-b border-slate-800 bg-[#0f1526]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-3 sm:px-6 py-2 sm:py-3.5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-xl shadow-[0_0_15px_rgba(52,211,153,0.5)] border border-emerald-500/50 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]">
-              M
+            <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-sm tracking-tighter shadow-[0_0_15px_rgba(52,211,153,0.5)] border border-emerald-500/50 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]">
+              M5
             </div>
             <span className="text-base sm:text-xl font-black tracking-widest text-white uppercase">
               MEOWDY 5000'S STAT TRACKER
