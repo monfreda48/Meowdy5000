@@ -169,6 +169,10 @@ export default function App() {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [readyToInstallUpdate, setReadyToInstallUpdate] = useState(null);
   const [showSnapshotHistoryModal, setShowSnapshotHistoryModal] = useState(false);
+  const [showViewReportsModal, setShowViewReportsModal] = useState(false);
+  const [fetchedReports, setFetchedReports] = useState([]);
+  const [isLoadingReports, setIsLoadingReports] = useState(false);
+  const [expandedReportId, setExpandedReportId] = useState(null);
   const [hasStoragePermission, setHasStoragePermission] = useState(() => {
     try {
       return localStorage.getItem('storage_permission_granted') === 'true';
@@ -304,6 +308,29 @@ export default function App() {
     } catch (e) {
       window.open(url, '_blank');
     }
+  };
+
+  const handleFetchErrorReports = async () => {
+    setIsLoadingReports(true);
+    try {
+      const res = await fetch(getApiUrl('/api/error-reports'));
+      if (res.ok) {
+        const data = await res.json();
+        setFetchedReports(Array.isArray(data) ? data : (data.reports || []));
+      } else {
+        setFetchedReports([]);
+      }
+    } catch (e) {
+      console.warn('Fetch error reports failed:', e);
+      setFetchedReports([]);
+    } finally {
+      setIsLoadingReports(false);
+    }
+  };
+
+  const openErrorReportsViewer = () => {
+    setShowViewReportsModal(true);
+    handleFetchErrorReports();
   };
 
   const grantStoragePermission = async () => {
@@ -995,11 +1022,22 @@ export default function App() {
             </span>
           </div>
 
-          {/* Right Hamburger Menu Icon Button */}
+        {/* Right Nav Menu & Desktop Error Reports Button */}
+        <div className="flex items-center gap-2">
+          {!isMobileView && (
+            <button
+              onClick={openErrorReportsViewer}
+              className="hidden md:flex items-center gap-2 bg-[#131b2f] hover:bg-slate-800 border border-slate-700/80 hover:border-amber-500/60 text-slate-300 hover:text-amber-400 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md group"
+              title="View all client & system error reports logged in backend database"
+            >
+              <span className="text-amber-400 group-hover:scale-110 transition-transform">📜</span>
+              <span>View Error Reports</span>
+            </button>
+          )}
+
           <button
             onClick={() => setIsMenuOpen(true)}
-            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-[#131b2f] hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-white hover:border-emerald-500/50 transition-all flex items-center gap-2 cursor-pointer shadow-sm relative group"
-            title="Open Settings & Menu"
+            className="flex items-center gap-2 bg-[#131b2f] hover:bg-slate-800 border border-slate-700/80 hover:border-emerald-500/60 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer relative shadow-md group"
           >
             <svg className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -1012,7 +1050,8 @@ export default function App() {
             )}
           </button>
         </div>
-      </nav>
+      </div>
+    </nav>
 
       {/* Main Layout Container */}
       <main className={`mx-auto px-2.5 sm:px-6 py-3 sm:py-10 transition-all duration-300 w-full ${
@@ -2336,6 +2375,119 @@ export default function App() {
           </div>
         )}
 
+        {/* Error Reports Viewer Dashboard Modal */}
+        {showViewReportsModal && (
+          <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 select-none modal-safe-area">
+            <div className="bg-[#0f1526] border border-slate-700/80 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl space-y-5 max-h-[85vh] flex flex-col">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-4 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-xl font-bold">
+                    📜
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
+                      <span>Client & System Error Reports</span>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                        {fetchedReports.length} Reports Logged
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-400">Live error diagnostic telemetry stored in SQLite database</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleFetchErrorReports}
+                    disabled={isLoadingReports}
+                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                  >
+                    <span className={isLoadingReports ? 'animate-spin' : ''}>🔄</span>
+                    <span>Refresh</span>
+                  </button>
+                  <button 
+                    onClick={() => setShowViewReportsModal(false)}
+                    className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              {/* Reports List Body */}
+              <div className="overflow-y-auto space-y-3.5 pr-1 flex-1">
+                {isLoadingReports ? (
+                  <div className="py-12 text-center text-slate-400 text-xs font-bold space-y-2">
+                    <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p>Fetching error reports from database...</p>
+                  </div>
+                ) : fetchedReports.length === 0 ? (
+                  <div className="py-12 text-center text-slate-400 text-xs font-bold bg-[#131b2f] border border-slate-800 rounded-2xl p-6">
+                    <span className="text-3xl block mb-2">🎉</span>
+                    <p className="text-white text-sm">No Error Reports Logged!</p>
+                    <p className="text-slate-500 mt-1 font-normal">All app components are operating normally with zero captured errors.</p>
+                  </div>
+                ) : (
+                  fetchedReports.map((report) => (
+                    <div 
+                      key={report.id}
+                      className="bg-[#131b2f] border border-slate-700/60 hover:border-amber-500/40 p-4 rounded-2xl space-y-2.5 transition-all text-xs"
+                    >
+                      <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
+                            #{report.id}
+                          </span>
+                          <span className="text-slate-400 font-bold">{report.timestamp}</span>
+                        </div>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 uppercase tracking-wider border border-slate-700">
+                          {report.platform || 'Client'}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="font-bold text-red-400 text-xs break-words">
+                          {report.error || report.errorMessage || 'Unhandled Client Exception'}
+                        </div>
+                        {report.notes && (
+                          <div className="text-slate-300 text-[11px] bg-[#0b101e] p-2 rounded-xl border border-slate-800/80">
+                            <strong className="text-amber-400">User Notes:</strong> {report.notes}
+                          </div>
+                        )}
+                      </div>
+
+                      {(report.stack || report.stackTrace) && (
+                        <div>
+                          <button
+                            onClick={() => setExpandedReportId(expandedReportId === report.id ? null : report.id)}
+                            className="text-[11px] font-bold text-amber-400 hover:text-amber-300 underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <span>{expandedReportId === report.id ? '▼ Hide Stack Trace' : '▶ View Stack Trace'}</span>
+                          </button>
+                          {expandedReportId === report.id && (
+                            <pre className="mt-2 p-3 bg-[#080c17] text-red-300 font-mono text-[10px] rounded-xl overflow-x-auto border border-red-500/20 max-h-40 whitespace-pre-wrap leading-tight">
+                              {report.stack || report.stackTrace}
+                            </pre>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="pt-2 border-t border-slate-800 flex justify-end shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowViewReportsModal(false)}
+                  className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       {/* Slide-Out Side Hamburger Drawer Menu */}
       {isMenuOpen && (
         <div 
@@ -2499,6 +2651,24 @@ export default function App() {
                 <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
                   🛠️ Developer Tools & Issue Reporting
                 </span>
+
+                <button
+                  onClick={() => { setIsMenuOpen(false); openErrorReportsViewer(); }}
+                  className="w-full bg-[#131b2f] hover:bg-amber-500/10 border border-slate-700/80 hover:border-amber-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
+                      📜
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">
+                        View Error Reports Log
+                      </h4>
+                      <p className="text-[10px] text-slate-400">Inspect all client & system diagnostic logs</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-500 group-hover:text-amber-400 font-bold">→</span>
+                </button>
 
                 <button
                   onClick={() => { setIsMenuOpen(false); setShowReportModal(true); }}
