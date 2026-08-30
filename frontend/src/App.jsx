@@ -846,27 +846,78 @@ export default function App() {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [lastCapturedError, setLastCapturedError] = useState(null);
 
-  const sendErrorReport = async (payload) => {
-    try {
-      const fullPayload = {
-        error: payload.error || 'Unknown Client Error',
-        stack: payload.stack || '',
-        notes: payload.notes || '',
-        platform: window.Capacitor && window.Capacitor.isNativePlatform() ? 'Android Native APK' : 'Web Browser',
-        userAgent: navigator.userAgent
-      };
+  const openGitHubIssueForError = (payload) => {
+    const errorTitle = encodeURIComponent(`[Bug Report] ${payload.error || 'Client Exception'}`);
+    const commitSha = import.meta.env.VITE_APP_COMMIT_SHA || '6f36886';
+    const platform = window.Capacitor && window.Capacitor.isNativePlatform() ? 'Android Native APK' : 'Web Browser';
+    
+    const bodyText = `### 🐛 Error Report Details
 
-      await fetch(getApiUrl('/api/report-error'), {
+**Error Message:** ${payload.error || 'N/A'}
+**Platform:** ${platform}
+**App Commit SHA:** \`${commitSha}\`
+**Timestamp:** ${new Date().toISOString()}
+
+**User Notes / Description:**
+${payload.notes || 'No user notes provided.'}
+
+**Stack Trace / Diagnostic Info:**
+\`\`\`
+${payload.stack || 'No stack trace available.'}
+\`\`\`
+
+*Reported via RivalsTracker Client Telemetry*`;
+
+    const githubIssueUrl = `https://github.com/monfreda48/Meowdy5000/issues/new?title=${errorTitle}&body=${encodeURIComponent(bodyText)}`;
+    
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      Browser.open({ url: githubIssueUrl });
+    } else {
+      window.open(githubIssueUrl, '_blank');
+    }
+  };
+
+  const copyDiagnosticLog = (payload) => {
+    try {
+      const text = `=== ERROR DIAGNOSTIC LOG ===\nError: ${payload.error || 'N/A'}\nPlatform: ${window.Capacitor && window.Capacitor.isNativePlatform() ? 'Android Native APK' : 'Web Browser'}\nSHA: ${import.meta.env.VITE_APP_COMMIT_SHA || '6f36886'}\nNotes: ${payload.notes || 'None'}\nStack:\n${payload.stack || 'None'}`;
+      navigator.clipboard.writeText(text);
+      setUpdateToast({ type: 'success', message: '📋 Diagnostic log copied to clipboard!' });
+      setTimeout(() => setUpdateToast(null), 3000);
+    } catch (e) {}
+  };
+
+  const sendErrorReport = async (payload) => {
+    const fullPayload = {
+      error: payload.error || 'Unknown Client Error',
+      stack: payload.stack || '',
+      notes: payload.notes || '',
+      platform: window.Capacitor && window.Capacitor.isNativePlatform() ? 'Android Native APK' : 'Web Browser',
+      userAgent: navigator.userAgent,
+      timestamp: new Date().toISOString(),
+      commitSha: import.meta.env.VITE_APP_COMMIT_SHA || '6f36886'
+    };
+
+    // Save to local storage error queue
+    try {
+      const existingQueue = JSON.parse(localStorage.getItem('error_report_queue') || '[]');
+      existingQueue.unshift(fullPayload);
+      localStorage.setItem('error_report_queue', JSON.stringify(existingQueue.slice(0, 20)));
+    } catch (e) {}
+
+    try {
+      const res = await fetch(getApiUrl('/api/report-error'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fullPayload)
       });
-      console.log('✅ Error report successfully sent to developer telemetry server.');
-      return true;
+      if (res.ok) {
+        console.log('✅ Error report successfully sent to developer telemetry server.');
+        return true;
+      }
     } catch (err) {
       console.warn('Could not send error report to backend telemetry endpoint:', err);
-      return false;
     }
+    return false;
   };
 
   useEffect(() => {
@@ -899,7 +950,7 @@ export default function App() {
     };
   }, []);
 
-  const handleManualSubmitReport = async (e) => {
+  const handleManualSubmitReport = async (e, mode = 'both') => {
     if (e) e.preventDefault();
     setIsSubmittingReport(true);
     const payload = {
@@ -908,17 +959,21 @@ export default function App() {
       notes: reportNotes || 'User submitted feedback/error report via UI.'
     };
 
+    if (mode === 'github' || mode === 'both') {
+      openGitHubIssueForError(payload);
+    }
+
     const sent = await sendErrorReport(payload);
     setIsSubmittingReport(false);
     setShowReportModal(false);
     setReportNotes('');
 
     if (sent) {
-      setUpdateToast({ type: 'success', message: '✅ Error report sent! Thank you for helping us fix it.' });
+      setUpdateToast({ type: 'success', message: '🚀 Error report submitted to developer telemetry & GitHub!' });
     } else {
-      setUpdateToast({ type: 'success', message: '✅ Report logged locally. Thank you!' });
+      setUpdateToast({ type: 'success', message: '🚀 Report dispatched to GitHub & saved to local error queue.' });
     }
-    setTimeout(() => setUpdateToast(null), 4000);
+    setTimeout(() => setUpdateToast(null), 4500);
   };
 
   const [showSplash, setShowSplash] = useState(true);
@@ -2625,36 +2680,44 @@ export default function App() {
 
         {/* Error Reporting Modal */}
         {showReportModal && (
-          <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
-            <div className="bg-[#0f1526] border border-slate-700/80 rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4">
+          <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300 select-none modal-safe-area">
+            <div className="bg-[#0f1526] border border-slate-700/80 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold">
-                    ⚠️
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold text-xl">
+                    🛠️
                   </div>
                   <div>
-                    <h3 className="text-base font-black text-white uppercase tracking-wider">Report an Issue</h3>
-                    <p className="text-[11px] text-slate-400">Error logs will be sent directly to the developer</p>
+                    <h3 className="text-base font-black text-white uppercase tracking-wider">Report Issue to Developer</h3>
+                    <p className="text-xs text-slate-400">Dispatch diagnostic logs & stack traces directly to GitHub</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setShowReportModal(false)}
-                  className="text-slate-400 hover:text-white text-lg font-bold px-2 py-0.5 rounded-lg hover:bg-slate-800"
+                  className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
                 >
                   ✕
                 </button>
               </div>
 
               {lastCapturedError && (
-                <div className="bg-[#0b101e] border border-red-500/30 rounded-xl p-3 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-red-400">Captured Error Log:</span>
-                  <p className="text-xs font-mono text-slate-300 break-words line-clamp-3">
+                <div className="bg-[#0b101e] border border-red-500/30 rounded-2xl p-3.5 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold text-red-400 tracking-wider">Captured Error Log:</span>
+                    <button
+                      onClick={() => copyDiagnosticLog(lastCapturedError)}
+                      className="text-[10px] text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer"
+                    >
+                      📋 Copy Log
+                    </button>
+                  </div>
+                  <p className="text-xs font-mono text-slate-300 break-words line-clamp-3 leading-relaxed">
                     {lastCapturedError.error}
                   </p>
                 </div>
               )}
 
-              <form onSubmit={handleManualSubmitReport} className="space-y-3">
+              <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
                     Describe what happened (Optional)
@@ -2664,36 +2727,38 @@ export default function App() {
                     onChange={(e) => setReportNotes(e.target.value)}
                     placeholder="e.g. App froze when searching player name or metrics disappeared..."
                     rows="3"
-                    className="w-full bg-[#0b101e] border border-slate-700 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-all resize-none"
+                    className="w-full bg-[#0b101e] border border-slate-700 rounded-2xl p-3.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-all resize-none"
                   ></textarea>
                 </div>
 
-                <div className="flex items-center justify-end gap-2.5 pt-2">
+                <div className="space-y-2 pt-1">
                   <button
                     type="button"
-                    onClick={() => setShowReportModal(false)}
-                    className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white font-bold text-xs uppercase cursor-pointer"
+                    onClick={(e) => handleManualSubmitReport(e, 'github')}
+                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-purple-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
-                    Cancel
+                    <span>🚀 Submit GitHub Issue to Developer</span>
                   </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmittingReport}
-                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-emerald-500/20 cursor-pointer disabled:opacity-50 flex items-center gap-2"
-                  >
-                    {isSubmittingReport ? (
-                      <>
-                        <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        <span>Sending...</span>
-                      </>
-                    ) : (
-                      <span>Send Error Report</span>
-                    )}
-                  </button>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => handleManualSubmitReport(e, 'telemetry')}
+                      disabled={isSubmittingReport}
+                      className="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 text-xs font-bold uppercase cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+                    >
+                      <span>📡 Silent Telemetry</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => copyDiagnosticLog(lastCapturedError || { error: 'Manual Report', notes: reportNotes })}
+                      className="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-bold uppercase cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <span>📋 Copy Log</span>
+                    </button>
+                  </div>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
         )}
