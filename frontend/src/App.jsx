@@ -1,12 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Browser } from '@capacitor/browser';
 import { App as CapApp } from '@capacitor/app';
 import { Network } from '@capacitor/network';
 import { Device } from '@capacitor/device';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { Toast } from '@capacitor/toast';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { Share } from '@capacitor/share';
+import { Clipboard } from '@capacitor/clipboard';
+import { ScreenOrientation } from '@capacitor/screen-orientation';
 
 const triggerHaptic = async (type = 'light') => {
   try {
@@ -1242,7 +1247,7 @@ ${payload.stack || 'No stack trace available.'}
     };
   }, []);
 
-  // 3. Fetch Hardware Specs (@capacitor/device)
+  // 3. Fetch Hardware Specs & Configure Native UI (@capacitor/device, @capacitor/status-bar, @capacitor/splash-screen)
   useEffect(() => {
     const fetchDeviceInfo = async () => {
       try {
@@ -1250,8 +1255,44 @@ ${payload.stack || 'No stack trace available.'}
         setDeviceInfo(info);
       } catch (e) { }
     };
+    const setupNativeUi = async () => {
+      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        try {
+          await StatusBar.setStyle({ style: Style.Dark });
+          await StatusBar.setBackgroundColor({ color: '#0b101e' });
+        } catch (e) { }
+        try {
+          await SplashScreen.hide();
+        } catch (e) { }
+      }
+    };
     fetchDeviceInfo();
+    setupNativeUi();
   }, []);
+
+  const sharePlayerStats = async () => {
+    if (!stats?.current) return;
+    triggerHaptic('light');
+    const username = stats.current.username || 'Player';
+    const winRate = stats.current.winRate || 0;
+    const kdRatio = stats.current.kdRatio || 0;
+    const topHero = stats.current.topHero || 'Unknown';
+    const shareText = `🦸 Marvel Rivals Stat Sheet for ${username}:\n🏆 Win Rate: ${winRate}%\n⚔️ K/D Ratio: ${kdRatio}\n⭐ Top Hero: ${topHero}\nTracked with Meowdy 5000 Rivals Tracker!`;
+
+    try {
+      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        await Share.share({
+          title: `Marvel Rivals Stats: ${username}`,
+          text: shareText,
+          url: 'https://github.com/monfreda48/Meowdy5000',
+          dialogTitle: 'Share Player Stats'
+        });
+      } else {
+        await Clipboard.write({ string: shareText });
+        showNativeToast('📋 Player stats summary copied to clipboard!');
+      }
+    } catch (e) { }
+  };
 
   // 4. Periodic 3-Minute Background Auto-Update Check
   useEffect(() => {
@@ -1980,6 +2021,14 @@ ${payload.stack || 'No stack trace available.'}
                 <span>
                   {trackedPlayers[stats.current.username?.toLowerCase()] ? 'Tracked • Snapshot Data Active' : 'Track Player Progress'}
                 </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => sharePlayerStats()}
+                className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-blue-500/20 border border-blue-400/40 uppercase tracking-wider"
+              >
+                <span>📤 Share Stats</span>
               </button>
             </div>
 
