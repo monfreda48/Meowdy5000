@@ -1129,18 +1129,29 @@ ${payload.stack || 'No stack trace available.'}
       localStorage.setItem('error_report_queue', JSON.stringify(existingQueue.slice(0, 20)));
     } catch (e) { }
 
-    try {
-      const res = await fetch(getApiUrl('/api/report-error'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(fullPayload)
-      });
-      if (res.ok) {
-        console.log('✅ Error report successfully sent to developer telemetry server.');
-        return true;
+    const candidateUrls = [
+      getApiUrl('/api/report-error'),
+      '/api/report-error',
+      'http://localhost:5000/api/report-error',
+      'http://10.0.2.2:5000/api/report-error'
+    ];
+
+    for (const targetUrl of candidateUrls) {
+      if (!targetUrl) continue;
+      try {
+        const res = await fetch(targetUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(fullPayload)
+        });
+        if (res.ok) {
+          console.log(`✅ Error report successfully sent to developer telemetry server via ${targetUrl}`);
+          showNativeToast('📡 Bug report submitted to developer telemetry database!');
+          return true;
+        }
+      } catch (err) {
+        console.warn(`Telemetry POST attempt to ${targetUrl} failed:`, err);
       }
-    } catch (err) {
-      console.warn('Could not send error report to backend telemetry endpoint:', err);
     }
     return false;
   };
