@@ -430,10 +430,14 @@ export default function App() {
     } catch (e) {}
     setAutoUpdatePref(preference);
     setShowAutoUpdateModal(false);
-
-    if (preference === 'enabled' && updateInfo?.hasUpdate) {
-      applyUpdateNow(updateInfo?.latestVersion);
-    }
+    
+    setUpdateToast({
+      type: 'success',
+      message: preference === 'enabled' 
+        ? '⚙️ Auto-update enabled. You will be prompted when new releases are available.'
+        : '⚙️ Auto-update preference updated.'
+    });
+    setTimeout(() => setUpdateToast(null), 3500);
   };
 
   const [updateToast, setUpdateToast] = useState(null);
@@ -462,7 +466,7 @@ export default function App() {
       }
 
       // 2. Query Flask backend endpoint if available
-      let localSha = import.meta.env.VITE_APP_COMMIT_SHA || 'aa684f1';
+      let localSha = import.meta.env.VITE_APP_COMMIT_SHA || '98ac9c9';
       try {
         const backendRes = await fetch(getApiUrl('/api/check-update'));
         if (backendRes.ok) {
@@ -488,20 +492,13 @@ export default function App() {
 
       setUpdateInfo(updateData);
 
-      const pref = localStorage.getItem('auto_update_preference');
-      const lastAttempted = sessionStorage.getItem('last_attempted_update_sha');
-
-      if (hasUpdate) {
-        if (pref === 'enabled') {
-          if (latestSha && latestSha === lastAttempted) {
-            console.warn('[AutoUpdate] Already attempted update to commit', latestSha, 'in this session. Skipping to prevent loop.');
-          } else {
-            applyUpdateNow(latestSha);
-          }
+      if (isManual) {
+        if (hasUpdate) {
+          setUpdateToast({ type: 'update', message: `⚡ Update available (${latestSha})! Click "Check for update" in menu to install.` });
+        } else {
+          setUpdateToast({ type: 'success', message: `✅ Your app is up to date! (Current Commit: ${localSha})` });
+          setTimeout(() => setUpdateToast(null), 4500);
         }
-      } else if (isManual) {
-        setUpdateToast({ type: 'success', message: `✅ Your app is up to date! (Current Commit: ${localSha})` });
-        setTimeout(() => setUpdateToast(null), 4500);
       }
     } catch (err) {
       console.error('Failed to check for updates:', err);
