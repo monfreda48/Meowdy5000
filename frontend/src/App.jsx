@@ -510,6 +510,8 @@ export default function App() {
   });
   const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
   const [updateStatusMsg, setUpdateStatusMsg] = useState('');
+  const [showUpToDateModal, setShowUpToDateModal] = useState(false);
+  const [upToDateDetails, setUpToDateDetails] = useState(null);
   const [activeUserTab, setActiveUserTab] = useState('live');
   const [showAutoUpdateModal, setShowAutoUpdateModal] = useState(false);
   const [networkStatus, setNetworkStatus] = useState({ connected: true, connectionType: 'unknown' });
@@ -788,6 +790,8 @@ export default function App() {
   };
 
   const handleOneClickUpdate = async () => {
+    triggerHaptic('light');
+    showNativeToast('🔍 Checking GitHub for updates...');
     setCheckingUpdate(true);
     setUpdateToast({ type: 'update', message: '🔍 Checking GitHub for latest app updates...' });
 
@@ -832,14 +836,26 @@ export default function App() {
       );
 
       if (hasUpdate) {
-        setUpdateToast({ type: 'update', message: `⚡ Update found (${latestSha})! Starting one-click installation...` });
+        triggerHaptic('success');
+        showNativeToast(`⚡ Update found (${latestSha})! Installing...`);
+        setUpdateToast({ type: 'update', message: `⚡ Update found (${latestSha})! Starting seamless update...` });
         await applyUpdateNow(latestSha);
       } else {
-        setUpdateToast({ type: 'success', message: `✅ App is up to date! (Current Commit: ${localSha})` });
+        triggerHaptic('success');
+        showNativeToast('✅ Your app is up to date!');
+        setUpToDateDetails({
+          currentSha: localSha,
+          latestSha: latestSha || localSha,
+          commitMsg: latestMessage || 'Latest enhancements & bugfixes applied.'
+        });
+        setShowUpToDateModal(true);
+        setUpdateToast({ type: 'success', message: `✅ App is up to date! (Commit ${localSha})` });
         setTimeout(() => setUpdateToast(null), 4000);
       }
     } catch (err) {
       console.error('One-click update error:', err);
+      triggerHaptic('warning');
+      showNativeToast('❌ Error checking update server');
       setUpdateToast({ type: 'error', message: '❌ Error connecting to update service.' });
       setTimeout(() => setUpdateToast(null), 4000);
     } finally {
@@ -3124,6 +3140,60 @@ ${payload.stack || 'No stack trace available.'}
                   Done
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Up-To-Date Confirmation Modal */}
+        {showUpToDateModal && (
+          <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 select-none">
+            <div className="bg-[#0f1526] border-2 border-emerald-500/60 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center space-y-5 shadow-2xl shadow-emerald-500/20 relative">
+              <button
+                onClick={() => setShowUpToDateModal(false)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer transition-all"
+              >
+                ✕
+              </button>
+
+              <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center text-3xl mx-auto shadow-lg shadow-emerald-500/30">
+                ✅
+              </div>
+
+              <div className="space-y-1.5">
+                <h3 className="text-xl font-black text-white uppercase tracking-wider">App is Up to Date!</h3>
+                <p className="text-xs text-slate-400 font-medium">
+                  You are running the latest version of Meowdy 5000's Stat Tracker.
+                </p>
+              </div>
+
+              <div className="bg-[#0b101e] border border-slate-800 rounded-2xl p-4 text-left space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400 font-bold">Installed Version:</span>
+                  <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+                    {upToDateDetails?.currentSha || 'v1.0.0'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400 font-bold">Latest Release SHA:</span>
+                  <span className="font-mono text-teal-300 font-bold">
+                    {upToDateDetails?.latestSha || 'v1.0.0'}
+                  </span>
+                </div>
+                {upToDateDetails?.commitMsg && (
+                  <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-300">
+                    <strong className="text-slate-400 block font-bold mb-0.5">Latest GitHub Commit:</strong>
+                    <p className="italic text-slate-400 leading-snug">"{upToDateDetails.commitMsg}"</p>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowUpToDateModal(false)}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 cursor-pointer"
+              >
+                Great, Done!
+              </button>
             </div>
           </div>
         )}
