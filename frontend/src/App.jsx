@@ -162,6 +162,7 @@ export default function App() {
     }
   };
   const [isMobileView, setIsMobileView] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [updateInfo, setUpdateInfo] = useState(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [hasStoragePermission, setHasStoragePermission] = useState(() => {
@@ -766,107 +767,22 @@ export default function App() {
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Report Issue Button */}
-            <button
-              onClick={() => setShowReportModal(true)}
-              title="Report an issue or bug directly to developers"
-              className="bg-[#131b2f] border border-slate-700/60 text-slate-300 hover:text-white hover:border-emerald-500/50 text-xs px-2 sm:px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
-            >
-              <span className="text-amber-400 font-bold text-xs">⚠️</span>
-              <span className="hidden md:inline">Report Issue</span>
-            </button>
-
-            {/* One-Click Check & Update Button */}
-            <button
-              onClick={handleOneClickUpdate}
-              disabled={checkingUpdate || isApplyingUpdate}
-              title="One-Click Check, Download, Install & Restart App"
-              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-inner disabled:opacity-50 cursor-pointer ${
-                updateInfo?.hasUpdate 
-                  ? 'bg-emerald-500/20 border-emerald-500/70 text-emerald-400 animate-pulse' 
-                  : 'bg-[#131b2f] border-slate-700/60 text-slate-300 hover:text-white hover:border-emerald-500/50'
-              }`}
-            >
-              <svg className={`h-3.5 w-3.5 text-emerald-400 ${checkingUpdate || isApplyingUpdate ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              <span className="hidden md:inline">
-                {checkingUpdate ? 'Checking Updates...' : isApplyingUpdate ? 'Updating App...' : '⚡ One-Click Update'}
-              </span>
-              <span className="md:hidden">
-                {checkingUpdate ? '...' : isApplyingUpdate ? 'Updating...' : '⚡ Update'}
-              </span>
-              {updateInfo?.hasUpdate && (
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              )}
-            </button>
-
-            {/* Auto-Update Preference Status Badge */}
-            <button
-              onClick={() => setShowAutoUpdateModal(true)}
-              title="Configure Startup Auto-Update Preferences"
-              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-inner cursor-pointer ${
-                autoUpdatePref === 'enabled' 
-                  ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400 hover:border-emerald-500/70'
-                  : autoUpdatePref === 'never_ask'
-                  ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:border-red-500/60'
-                  : 'bg-slate-800/50 border-slate-700/60 text-slate-400 hover:text-white'
-              }`}
-            >
-              <span className="text-xs">⚡</span>
-              <span className="hidden lg:inline">
-                Auto-Update: {autoUpdatePref === 'enabled' ? 'Enabled' : autoUpdatePref === 'never_ask' ? 'Off (Don\'t Ask)' : autoUpdatePref ? 'Ask' : 'Action Needed'}
-              </span>
-            </button>
-
-            {/* Local Storage Permission Badge */}
-            <button
-              onClick={() => setShowPermissionPrompt(true)}
-              title={hasStoragePermission ? "Local Storage Write Permission Active" : "Click to Grant Local Storage Permission"}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-inner cursor-pointer ${
-                hasStoragePermission 
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:border-emerald-500/60'
-                  : 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:border-amber-500/60 animate-pulse'
-              }`}
-            >
-              <span className="text-xs">💾</span>
-              <span className="hidden md:inline">
-                {hasStoragePermission ? 'Storage: Granted' : 'Storage: Action Needed'}
-              </span>
-            </button>
-
-            {/* View Mode Toggle Switch (Top Right) */}
-            <div className="flex items-center gap-2 bg-[#131b2f] p-1 rounded-xl border border-slate-700/60 shadow-inner">
-              <button
-                onClick={() => setIsMobileView(false)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  !isMobileView 
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md' 
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <span className="hidden sm:inline">Desktop</span>
-              </button>
-
-              <button
-                onClick={() => setIsMobileView(true)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  isMobileView 
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md' 
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-                <span className="hidden sm:inline">Mobile</span>
-              </button>
-            </div>
-          </div>
+          {/* Right Hamburger Menu Icon Button */}
+          <button
+            onClick={() => setIsMenuOpen(true)}
+            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-[#131b2f] hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-white hover:border-emerald-500/50 transition-all flex items-center gap-2 cursor-pointer shadow-sm relative group"
+            title="Open Settings & Menu"
+          >
+            <svg className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <span className="hidden sm:inline text-xs font-bold text-slate-300 group-hover:text-white uppercase tracking-wider">
+              Menu
+            </span>
+            {updateInfo?.hasUpdate && (
+              <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
+            )}
+          </button>
         </div>
       </nav>
 
@@ -2023,6 +1939,178 @@ export default function App() {
             </div>
           </div>
         )}
+
+      {/* Slide-Out Side Hamburger Drawer Menu */}
+      {isMenuOpen && (
+        <div 
+          onClick={() => setIsMenuOpen(false)}
+          className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex justify-end animate-in fade-in duration-300 select-none"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm bg-[#0f1526] border-l border-slate-700/80 h-full p-6 flex flex-col justify-between overflow-y-auto shadow-2xl animate-in slide-in-from-right duration-300"
+          >
+            {/* Drawer Header */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-xs tracking-tighter border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                    M5
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-white uppercase tracking-wider">Settings & Tools</h3>
+                    <p className="text-[11px] text-slate-400 font-medium">Control panel & app configurations</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsMenuOpen(false)}
+                  className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Drawer Group 1: App Updates */}
+              <div className="space-y-2.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                  ⚡ App Updates & Maintenance
+                </span>
+
+                <button
+                  onClick={() => { setIsMenuOpen(false); handleOneClickUpdate(); }}
+                  disabled={checkingUpdate || isApplyingUpdate}
+                  className="w-full bg-[#131b2f] hover:bg-emerald-500/10 border border-slate-700/80 hover:border-emerald-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
+                      ⚡
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
+                        One-Click Update
+                      </h4>
+                      <p className="text-[10px] text-slate-400">Check, download & install latest release</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">→</span>
+                </button>
+
+                <button
+                  onClick={() => { setIsMenuOpen(false); setShowAutoUpdateModal(true); }}
+                  className="w-full bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-sm">
+                      ⚙️
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white group-hover:text-teal-400 transition-colors">
+                        Auto-Update Settings
+                      </h4>
+                      <p className="text-[10px] text-slate-400">
+                        Status: <span className="text-emerald-400 font-bold">{autoUpdatePref === 'enabled' ? 'Enabled' : autoUpdatePref === 'never_ask' ? 'Off' : 'Ask on startup'}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-500 group-hover:text-teal-400 font-bold">→</span>
+                </button>
+              </div>
+
+              {/* Drawer Group 2: Storage & Data */}
+              <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                  💾 Storage & Persistence
+                </span>
+
+                <button
+                  onClick={() => { setIsMenuOpen(false); grantStoragePermission(); }}
+                  className="w-full bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-sm">
+                      💾
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white group-hover:text-blue-400 transition-colors">
+                        Storage Write Permission
+                      </h4>
+                      <p className="text-[10px] text-slate-400">
+                        Status: <span className={hasStoragePermission ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>{hasStoragePermission ? 'Granted' : 'Action Needed'}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-500 group-hover:text-blue-400 font-bold">→</span>
+                </button>
+              </div>
+
+              {/* Drawer Group 3: Diagnostics & Feedback */}
+              <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                  🛠️ Developer Tools & Issue Reporting
+                </span>
+
+                <button
+                  onClick={() => { setIsMenuOpen(false); setShowReportModal(true); }}
+                  className="w-full bg-[#131b2f] hover:bg-amber-500/10 border border-slate-700/80 hover:border-amber-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
+                      ⚠️
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">
+                        Report an Issue / Bug
+                      </h4>
+                      <p className="text-[10px] text-slate-400">Send diagnostic stack trace to developers</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-500 group-hover:text-amber-400 font-bold">→</span>
+                </button>
+
+                <div className="bg-[#131b2f] border border-slate-700/80 p-3 rounded-xl flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-sm">
+                      📱
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white">View Mode Preview</h4>
+                      <p className="text-[10px] text-slate-400">Toggle mobile responsive testing frame</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsMobileView(!isMobileView)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
+                      isMobileView 
+                        ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-400' 
+                        : 'bg-slate-800 border-slate-700 text-slate-300'
+                    }`}
+                  >
+                    {isMobileView ? 'Mobile' : 'Desktop'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Drawer Footer */}
+            <div className="pt-6 border-t border-slate-800/80 text-center space-y-3">
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span className="font-bold text-slate-300">App Version</span>
+                <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono font-bold text-[11px]">
+                  v1.0.0 (ac332a4)
+                </span>
+              </div>
+              <a
+                href="https://github.com/monfreda48/Meowdy5000"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white font-bold text-xs uppercase tracking-wider transition-all text-center"
+              >
+                🔗 View GitHub Repository
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
         {/* Subtle Non-Intrusive App Footer & Version Badge */}
         <footer className="mt-12 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-xs">
