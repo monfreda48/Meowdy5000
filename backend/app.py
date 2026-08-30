@@ -537,6 +537,7 @@ def check_update():
     })
 
 @app.route('/api/apply-update', methods=['POST', 'GET'])
+@app.route('/api/apply-update', methods=['POST'])
 def apply_update():
     """Triggers git pull origin main to automatically pull the latest codebase updates."""
     try:

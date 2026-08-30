@@ -775,12 +775,12 @@ export default function App() {
     }
 
     setIsApplyingUpdate(true);
-    setUpdateStatusMsg('⚡ Applying update seamlessly in background...');
+    setUpdateStatusMsg('⚡ Pulling latest release from GitHub & updating codebase...');
 
     try {
-      // 1. Trigger backend server git pull / code update if connected with short 3s timeout
+      // 1. Trigger backend server git pull / code update if connected with 15s timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
 
       const res = await fetch(getApiUrl('/api/apply-update'), {
         method: 'POST',
@@ -791,26 +791,29 @@ export default function App() {
       if (res.ok) {
         const data = await safeFetchJson(res);
         if (data.success) {
-          setUpdateStatusMsg('✅ Update applied! Reloading app...');
-          showNativeToast('⚡ App updated seamlessly to latest release');
+          if (data.newVersion) {
+            try { localStorage.setItem('installed_commit_sha', data.newVersion); } catch (e) { }
+          }
+          setUpdateStatusMsg('✅ Update successfully applied! Reloading app...');
+          showNativeToast('⚡ App updated to latest release version');
           setTimeout(() => {
             setIsApplyingUpdate(false);
-            window.location.reload(true);
-          }, 600);
+            window.location.href = window.location.origin + window.location.pathname + '?v=' + Date.now();
+          }, 800);
           return;
         }
       }
     } catch (err) {
-      console.warn('[SeamlessUpdate] Backend pull skipped/unavailable:', err);
+      console.warn('[SeamlessUpdate] Backend pull warning:', err);
     }
 
-    // 2. Seamless In-App Hot Code Reload
+    // 2. Cache-busting Hot Code Reload
     setUpdateStatusMsg('⚡ Reloading to latest code bundle...');
-    showNativeToast('⚡ App updated seamlessly to latest version');
+    showNativeToast('⚡ App updated to latest code bundle');
     setTimeout(() => {
       setIsApplyingUpdate(false);
-      window.location.reload(true);
-    }, 600);
+      window.location.href = window.location.origin + window.location.pathname + '?v=' + Date.now();
+    }, 800);
   };
 
   const executeInstallUpdate = async () => {
