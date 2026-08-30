@@ -505,9 +505,10 @@ export default function App() {
     const [moved] = updated.splice(currentIndex, 1);
     updated.splice(targetIndex, 0, moved);
     setSelectedMetrics(updated);
-
     try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) { }
   };
+
+  const [isMetricModalOpen, setIsMetricModalOpen] = useState(false);
 
   const moveMetricUp = (id, e) => {
     if (e) e.stopPropagation();
@@ -549,14 +550,6 @@ export default function App() {
 
   const isMetricTracked = (id) => selectedMetrics.includes(id);
 
-  const selectAllMetrics = () => {
-    const allIds = AVAILABLE_METRICS.map(m => m.id);
-    setSelectedMetrics(allIds);
-    if (hasStoragePermission) {
-      try { localStorage.setItem('tracked_metrics', JSON.stringify(allIds)); } catch (e) { }
-    }
-  };
-
   const resetDefaultMetrics = () => {
     const allIds = AVAILABLE_METRICS.map(m => m.id);
     setSelectedMetrics(allIds);
@@ -565,22 +558,6 @@ export default function App() {
     }
   };
 
-  const [autoUpdatePref, setAutoUpdatePref] = useState(() => {
-    try {
-      return localStorage.getItem('auto_update_preference') || 'enabled';
-    } catch (e) {
-      return 'enabled';
-    }
-  });
-  const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
-  const [updateStatusMsg, setUpdateStatusMsg] = useState('');
-  const [showUpToDateModal, setShowUpToDateModal] = useState(false);
-  const [upToDateDetails, setUpToDateDetails] = useState(null);
-  const [activeUserTab, setActiveUserTab] = useState('live');
-  const [showAutoUpdateModal, setShowAutoUpdateModal] = useState(false);
-  const [networkStatus, setNetworkStatus] = useState({ connected: true, connectionType: 'unknown' });
-  const [deviceInfo, setDeviceInfo] = useState(null);
-  const [appInfo, setAppInfo] = useState(null);
   const [storagePermissionStatus, setStoragePermissionStatus] = useState('unknown');
 
   const checkStoragePermission = async () => {
@@ -589,12 +566,34 @@ export default function App() {
       return;
     }
     try {
+      // 1. Verify via Filesystem permissions
       const status = await Filesystem.checkPermissions();
-      const pubStatus = status?.publicStorage || status?.storage || 'prompt';
-      setStoragePermissionStatus(pubStatus === 'granted' ? 'granted' : 'denied');
+      const pubStatus = status?.publicStorage || status?.storage;
+      if (pubStatus === 'granted') {
+        setStoragePermissionStatus('granted');
+        return;
+      }
+
+      // 2. Perform live storage write check to Documents/Cache
+      await Filesystem.writeFile({
+        path: '.perm_test',
+        data: 'OK',
+        directory: Directory.Documents,
+        encoding: Encoding.UTF8
+      });
+      setStoragePermissionStatus('granted');
     } catch (e) {
-      console.warn('Error checking storage permissions:', e);
-      setStoragePermissionStatus('denied');
+      try {
+        await Filesystem.writeFile({
+          path: '.perm_test',
+          data: 'OK',
+          directory: Directory.Cache,
+          encoding: Encoding.UTF8
+        });
+        setStoragePermissionStatus('granted');
+      } catch (e2) {
+        setStoragePermissionStatus('denied');
+      }
     }
   };
 
@@ -608,18 +607,27 @@ export default function App() {
 
     try {
       const req = await Filesystem.requestPermissions();
-      const pubStatus = req?.publicStorage || req?.storage || 'prompt';
+      const pubStatus = req?.publicStorage || req?.storage;
       if (pubStatus === 'granted') {
         setStoragePermissionStatus('granted');
-        showNativeToast('📁 Android Storage Access Granted!');
-      } else {
-        setStoragePermissionStatus('denied');
-        showNativeToast('⚠️ Storage Access Denied by System');
+        showNativeToast('📁 Android System Storage Access Granted!');
+        return;
       }
-    } catch (err) {
-      console.warn('Filesystem request permission error:', err);
+    } catch (err) { }
+
+    // Fallback: Test direct scoped storage write
+    try {
+      await Filesystem.writeFile({
+        path: '.storage_access_verified',
+        data: '1',
+        directory: Directory.Documents,
+        encoding: Encoding.UTF8
+      });
+      setStoragePermissionStatus('granted');
+      showNativeToast('📁 Android System Storage Access Active!');
+    } catch (e) {
       setStoragePermissionStatus('denied');
-      showNativeToast('⚠️ Storage permission request failed');
+      showNativeToast('⚠️ Storage Access Restricted by System');
     }
   };
 
@@ -659,7 +667,7 @@ export default function App() {
     } catch (e) { }
   };
 
-  const downloadUserDataset = (data) => {
+  const downloadUserDataset = async (data) => {
     try {
       const username = data.current?.username || 'Player';
       const seasonName = data.current?.season || 'Season 1';
@@ -680,9 +688,41 @@ export default function App() {
       };
 
       const jsonStr = JSON.stringify(datasetObj, null, 2);
-      const blob = new Blob([jsonStr], { type: 'application/json' });
       const filename = `RivalsTracker_${username}_Season${seasonName}_${timestamp}.json`;
 
+      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        try {
+          await Filesystem.writeFile({
+            path: filename,
+            data: jsonStr,
+            directory: Directory.Documents,
+            encoding: Encoding.UTF8
+          });
+          setStoragePermissionStatus('granted');
+          showNativeToast(`📥 Dataset saved to Documents/${filename}`);
+          setUpdateToast({ type: 'success', message: `📥 Dataset saved to Documents/${filename}` });
+          setTimeout(() => setUpdateToast(null), 4000);
+          return;
+        } catch (fsErr) {
+          console.warn('Documents write failed, writing to App Cache:', fsErr);
+          try {
+            await Filesystem.writeFile({
+              path: filename,
+              data: jsonStr,
+              directory: Directory.Cache,
+              encoding: Encoding.UTF8
+            });
+            setStoragePermissionStatus('granted');
+            showNativeToast(`📥 Dataset saved (${filename})`);
+            setUpdateToast({ type: 'success', message: `📥 Dataset saved (${filename})` });
+            setTimeout(() => setUpdateToast(null), 4000);
+            return;
+          } catch (e2) { }
+        }
+      }
+
+      // Web Browser Download
+      const blob = new Blob([jsonStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
