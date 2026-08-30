@@ -985,6 +985,40 @@ ${payload.stack || 'No stack trace available.'}
     }
   };
 
+  const handleManualSubmitReport = async (e, mode = 'both') => {
+    if (e) e.preventDefault();
+    setIsSubmittingReport(true);
+    triggerHaptic('light');
+
+    const errObj = typeof lastCapturedError === 'object' && lastCapturedError !== null
+      ? lastCapturedError
+      : { error: 'User Submitted Issue Report', stack: '', notes: reportNotes };
+
+    const payload = {
+      error: errObj.error || errObj.message || 'User Submitted Bug Report',
+      stack: errObj.stack || errObj.stackTrace || '',
+      notes: reportNotes || 'User submitted feedback via modal.',
+      platform: window.Capacitor && window.Capacitor.isNativePlatform() ? 'Android Native APK' : 'Web Browser'
+    };
+
+    // 1. Dispatch telemetry POST to backend database
+    const sent = await sendErrorReport(payload);
+
+    // 2. Open GitHub Issue submission form
+    openGitHubIssueForError(payload);
+
+    setIsSubmittingReport(false);
+    setShowReportModal(false);
+    setReportNotes('');
+
+    if (sent) {
+      setUpdateToast({ type: 'success', message: '🚀 GitHub issue form opened & error report sent to telemetry!' });
+    } else {
+      setUpdateToast({ type: 'success', message: '🚀 GitHub issue form opened!' });
+    }
+    setTimeout(() => setUpdateToast(null), 4500);
+  };
+
   const copyDiagnosticLog = (payload) => {
     try {
       const text = `=== ERROR DIAGNOSTIC LOG ===\nError: ${payload.error || 'N/A'}\nPlatform: ${window.Capacitor && window.Capacitor.isNativePlatform() ? 'Android Native APK' : 'Web Browser'}\nSHA: ${import.meta.env.VITE_APP_COMMIT_SHA || '6f36886'}\nNotes: ${payload.notes || 'None'}\nStack:\n${payload.stack || 'None'}`;
