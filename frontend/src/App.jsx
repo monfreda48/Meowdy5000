@@ -1483,8 +1483,9 @@ ${payload.stack || 'No stack trace available.'}
               isMobileView ? 'flex-col gap-2' : 'flex-col md:flex-row items-center gap-3'
             }`}>
               {/* Checkbox to the left of the search bar for Tracking Mode */}
-              <div 
-                className={`flex items-center gap-2 px-3.5 py-2.5 sm:py-3.5 rounded-xl border transition-all shrink-0 select-none ${
+              <label 
+                htmlFor="trackingCheckboxInput"
+                className={`flex items-center gap-2 px-3.5 py-2.5 sm:py-3.5 rounded-xl border transition-all shrink-0 select-none cursor-pointer ${
                   isTrackingMode 
                     ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/60 text-white shadow-md shadow-emerald-500/10' 
                     : 'bg-[#0b101e] border-slate-700/60 text-slate-400 hover:text-slate-200'
@@ -1509,23 +1510,13 @@ ${payload.stack || 'No stack trace available.'}
                   }}
                   className="w-4 h-4 rounded border-slate-700 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900 bg-slate-900 cursor-pointer accent-emerald-500"
                 />
-                <label htmlFor="trackingCheckboxInput" className="text-xs font-black uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5 cursor-pointer">
+                <span className="text-xs font-black uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5 cursor-pointer">
                   <span>{isTrackingMode ? '📥' : '🚫'}</span>
                   <span className={isTrackingMode ? 'text-emerald-300' : 'text-slate-400'}>
                     Tracking {isTrackingMode ? 'ON' : 'OFF'}
                   </span>
-                </label>
-
-                <button
-                  type="button"
-                  onClick={() => { triggerHaptic('light'); setShowAutoUpdateModal(true); }}
-                  title="Click to change default tracking mode preference in Options"
-                  className="text-[10px] text-slate-400 hover:text-emerald-400 font-bold ml-1 pl-2 border-l border-slate-700/80 cursor-pointer flex items-center gap-1 group"
-                >
-                  <span className="group-hover:rotate-45 transition-transform">⚙️</span>
-                  <span className="hidden sm:inline">Default: <strong className={defaultTrackingPref === 'enabled' ? 'text-emerald-400' : 'text-slate-400'}>{defaultTrackingPref === 'enabled' ? 'ON' : 'OFF'}</strong></span>
-                </button>
-              </div>
+                </span>
+              </label>
 
               <div className="flex-1 relative w-full">
                 <input
@@ -2819,240 +2810,7 @@ ${payload.stack || 'No stack trace available.'}
             </div>
           </div>
         )}
-        {/* Auto-Update Settings Preference Modal */}
-        {showAutoUpdateModal && (
-          <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 select-none modal-safe-area">
-            <div className="bg-[#0f1526] border border-slate-700/80 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-400 text-xl font-bold">
-                    ⚙️
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-black text-white uppercase tracking-wider">Auto-Update Settings</h3>
-                    <p className="text-xs text-slate-400">Configure background update behavior & preferences</p>
-                  </div>
-                </div>
-                
-                <button 
-                  onClick={() => setShowAutoUpdateModal(false)}
-                  className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
 
-              {/* Mode Selection Cards */}
-              <div className="space-y-3">
-                <button
-                  onClick={() => { triggerHaptic('light'); setAutoUpdatePermission('silent'); }}
-                  className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-1 ${
-                    autoUpdatePref === 'silent'
-                      ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-lg shadow-emerald-500/10'
-                      : 'bg-[#131b2f] border-slate-700/80 hover:border-emerald-500/50 text-slate-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-emerald-400 flex items-center gap-2">
-                      <span>⚡</span> Silent Background Auto-Update
-                    </span>
-                    {autoUpdatePref === 'silent' && <span className="text-xs font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/40">Active</span>}
-                  </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Automatically checks, downloads, and installs latest update releases seamlessly in the background.
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => { triggerHaptic('light'); setAutoUpdatePermission('enabled'); }}
-                  className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-1 ${
-                    autoUpdatePref === 'enabled' || (!autoUpdatePref && autoUpdatePref !== 'silent' && autoUpdatePref !== 'never_ask')
-                      ? 'bg-teal-500/15 border-teal-500 text-white shadow-lg shadow-teal-500/10'
-                      : 'bg-[#131b2f] border-slate-700/80 hover:border-teal-500/50 text-slate-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-teal-400 flex items-center gap-2">
-                      <span>🔔</span> Prompt for Updates (Recommended)
-                    </span>
-                    {(autoUpdatePref === 'enabled' || (!autoUpdatePref && autoUpdatePref !== 'silent' && autoUpdatePref !== 'never_ask')) && (
-                      <span className="text-xs font-bold bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-full border border-teal-500/40">Active</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Automatically checks for updates on startup, resume, and network reconnect, showing a 1-click update banner when ready.
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => { triggerHaptic('light'); setAutoUpdatePermission('never_ask'); }}
-                  className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-1 ${
-                    autoUpdatePref === 'never_ask'
-                      ? 'bg-amber-500/15 border-amber-500 text-white shadow-lg shadow-amber-500/10'
-                      : 'bg-[#131b2f] border-slate-700/80 hover:border-amber-500/50 text-slate-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-amber-400 flex items-center gap-2">
-                      <span>🛑</span> Manual Updates Only
-                    </span>
-                    {autoUpdatePref === 'never_ask' && <span className="text-xs font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/40">Active</span>}
-                  </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Disables background update popups. Updates will only run when manually clicking "Check for update".
-                  </p>
-                </button>
-              </div>
-
-              {/* Default Tracking Mode Setting Card */}
-              <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-4 space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                  <span className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                    <span>📥</span>
-                    <span>Default Tracking Mode</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-bold">App Preference</span>
-                </div>
-                
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Choose whether player searches auto-download a dataset file by default:
-                </p>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleUpdateDefaultTrackingPref('enabled')}
-                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer font-bold text-xs flex flex-col justify-between gap-1.5 ${
-                      defaultTrackingPref === 'enabled'
-                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-md shadow-emerald-500/10'
-                        : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:text-slate-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span>📥 Tracking ON</span>
-                      {defaultTrackingPref === 'enabled' && <span className="text-[10px] text-emerald-400 font-black">✓ Default</span>}
-                    </div>
-                    <span className="text-[10px] text-slate-400 font-normal">Auto-downloads dataset file on search</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleUpdateDefaultTrackingPref('disabled')}
-                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer font-bold text-xs flex flex-col justify-between gap-1.5 ${
-                      defaultTrackingPref === 'disabled'
-                        ? 'bg-slate-800 border-slate-600 text-white shadow-md'
-                        : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:text-slate-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span>🚫 Tracking OFF</span>
-                      {defaultTrackingPref === 'disabled' && <span className="text-[10px] text-slate-300 font-black">✓ Default</span>}
-                    </div>
-                    <span className="text-[10px] text-slate-400 font-normal">Standard search without dataset downloads</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Backend Server Connection URL Card */}
-              <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-4 space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                  <span className="text-xs font-black uppercase tracking-wider text-teal-400 flex items-center gap-1.5">
-                    <span>🌐</span>
-                    <span>Backend Server Connection URL</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-bold">Port 5000</span>
-                </div>
-                
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Specify your custom Python Flask Backend Server IP / Domain for Android APK:
-                </p>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={backendBaseUrl}
-                    onChange={(e) => setBackendBaseUrl(e.target.value)}
-                    placeholder={window.Capacitor?.isNativePlatform() ? "http://10.0.2.2:5000 or http://192.168.1.X:5000" : "http://localhost:5000"}
-                    className="flex-1 bg-[#0b101e] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-teal-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleSaveBackendBaseUrl(backendBaseUrl)}
-                    className="px-3.5 py-2 rounded-xl bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/60 text-teal-300 font-bold text-xs uppercase cursor-pointer transition-all shrink-0"
-                  >
-                    Save URL
-                  </button>
-                </div>
-              </div>
-
-              {/* Android Native Storage Access Permission Card */}
-              <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-4 space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                  <span className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                    <span>📁</span>
-                    <span>Android System Storage Access</span>
-                  </span>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${
-                    storagePermissionStatus === 'granted' || storagePermissionStatus === 'web_granted'
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                      : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                  }`}>
-                    {storagePermissionStatus === 'granted' || storagePermissionStatus === 'web_granted' ? 'Granted ✓' : 'Permission Required'}
-                  </span>
-                </div>
-
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Grants native Android system-level file access to save downloaded player dataset `.json` files into your device's Downloads directory:
-                </p>
-
-                <button
-                  type="button"
-                  onClick={requestNativeStoragePermission}
-                  className={`w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2 ${
-                    storagePermissionStatus === 'granted' || storagePermissionStatus === 'web_granted'
-                      ? 'bg-emerald-500/20 border border-emerald-500/60 text-emerald-300 hover:bg-emerald-500/30'
-                      : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white shadow-amber-500/20'
-                  }`}
-                >
-                  <span>📁</span>
-                  <span>
-                    {storagePermissionStatus === 'granted' || storagePermissionStatus === 'web_granted'
-                      ? '✓ Grant Android System Storage Access (Granted)'
-                      : '📁 Grant Android System Storage Access'}
-                  </span>
-                </button>
-              </div>
-
-              {/* System & Device Diagnostics Card (Powered by @capacitor/device & @capacitor/app) */}
-              {deviceInfo && (
-                <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-4 space-y-2 text-xs">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-teal-400 block border-b border-slate-800 pb-1.5">
-                    📱 Device & Native System Diagnostics
-                  </span>
-                  <div className="grid grid-cols-2 gap-2 text-slate-300">
-                    <div><span className="text-slate-500">Platform:</span> <strong className="text-white">{deviceInfo.platform || 'Web'}</strong></div>
-                    <div><span className="text-slate-500">OS Version:</span> <strong className="text-white">{deviceInfo.osVersion || 'Unknown'}</strong></div>
-                    <div><span className="text-slate-500">Model:</span> <strong className="text-white">{deviceInfo.model || 'Browser'}</strong></div>
-                    <div><span className="text-slate-500">Manufacturer:</span> <strong className="text-white">{deviceInfo.manufacturer || 'Generic'}</strong></div>
-                    {appInfo && (
-                      <div className="col-span-2"><span className="text-slate-500">App Build Version:</span> <strong className="text-emerald-400 font-mono">{appInfo.version} ({appInfo.build})</strong></div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div className="pt-2 border-t border-slate-800 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setShowAutoUpdateModal(false)}
-                  className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider cursor-pointer"
-                >
-                  Done
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Installing Update Overlay */}
         {isApplyingUpdate && (
@@ -3314,10 +3072,135 @@ ${payload.stack || 'No stack trace available.'}
                 </button>
               </div>
 
-              {/* Drawer Group 1: App Updates */}
-              <div className="space-y-2.5">
+              {/* Drawer Group 1: Preferences & App Configurations */}
+              <div className="space-y-3">
                 <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                  ⚡ App Updates & Maintenance
+                  ⚙️ App Preferences & Server Config
+                </span>
+
+                {/* Default Tracking Mode Card */}
+                <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-3.5 space-y-2 text-left">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span>📥</span> Default Tracking Mode
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${
+                      defaultTrackingPref === 'enabled'
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                        : 'bg-slate-800 text-slate-400 border-slate-700'
+                    }`}>
+                      {defaultTrackingPref === 'enabled' ? 'ON by Default' : 'OFF by Default'}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-400">Choose default tracking state when launching the app:</p>
+
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateDefaultTrackingPref('enabled')}
+                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer font-bold text-xs flex flex-col justify-between gap-1 ${
+                        defaultTrackingPref === 'enabled'
+                          ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300 shadow-md shadow-emerald-500/10'
+                          : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>📥 Tracking ON</span>
+                        {defaultTrackingPref === 'enabled' && <span className="text-[10px] text-emerald-400 font-black">✓</span>}
+                      </div>
+                      <span className="text-[9px] text-slate-400 font-normal">Auto-download dataset on search</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateDefaultTrackingPref('disabled')}
+                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer font-bold text-xs flex flex-col justify-between gap-1 ${
+                        defaultTrackingPref === 'disabled'
+                          ? 'bg-slate-800 border-slate-600 text-white shadow-md'
+                          : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>🚫 Tracking OFF</span>
+                        {defaultTrackingPref === 'disabled' && <span className="text-[10px] text-slate-300 font-black">✓</span>}
+                      </div>
+                      <span className="text-[9px] text-slate-400 font-normal">Search without auto-download</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Backend Server Connection URL Card */}
+                <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-3.5 space-y-2 text-left">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                    <span className="text-xs font-bold text-teal-400 flex items-center gap-1.5">
+                      <span>🌐</span> Backend Server Connection URL
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">Port 5000</span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    Custom Flask Backend Server IP / Domain for Android APK:
+                  </p>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={backendBaseUrl}
+                      onChange={(e) => setBackendBaseUrl(e.target.value)}
+                      placeholder={window.Capacitor?.isNativePlatform() ? "http://10.0.2.2:5000 or http://192.168.1.X:5000" : "http://localhost:5000"}
+                      className="flex-1 bg-[#0b101e] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-teal-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleSaveBackendBaseUrl(backendBaseUrl)}
+                      className="px-3 py-2 rounded-xl bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/60 text-teal-300 font-bold text-xs uppercase cursor-pointer transition-all shrink-0"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+
+                {/* Auto-Update Preference Selector Card */}
+                <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-3.5 space-y-2 text-left">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                    <span className="text-xs font-bold text-purple-400 flex items-center gap-1.5">
+                      <span>⚡</span> Background Auto-Update Policy
+                    </span>
+                    <span className="text-[10px] text-emerald-400 font-bold">Silent Reload</span>
+                  </div>
+
+                  <div className="space-y-1.5 pt-1">
+                    {[
+                      { id: 'enabled', title: '⚡ Always Auto-Update (Recommended)', desc: 'App checks and updates seamlessly in background' },
+                      { id: 'ask', title: '❓ Ask Before Installing', desc: 'Display notification toast when new commit is published' },
+                      { id: 'never_ask', title: '🚫 Never Check Automatically', desc: 'Manual updates only via Check for Update button' }
+                    ].map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => handleSaveAutoUpdatePref(opt.id)}
+                        className={`w-full p-2.5 rounded-xl border text-left transition-all cursor-pointer font-bold text-xs flex items-center justify-between gap-2 ${
+                          autoUpdatePref === opt.id
+                            ? 'bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-md'
+                            : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        <div>
+                          <div className="text-white text-xs">{opt.title}</div>
+                          <div className="text-[9px] text-slate-400 font-normal">{opt.desc}</div>
+                        </div>
+                        {autoUpdatePref === opt.id && <span className="text-purple-400 font-bold">✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Drawer Group 2: App Updates & Maintenance */}
+              <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                  ⚡ App Maintenance
                 </span>
 
                 <button
@@ -3331,111 +3214,63 @@ ${payload.stack || 'No stack trace available.'}
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
-                        Check for update
+                        Check for Updates Now
                       </h4>
-                      <p className="text-[10px] text-slate-400">Check, download & install latest release</p>
+                      <p className="text-[10px] text-slate-400">Fetch & apply latest release from GitHub</p>
                     </div>
                   </div>
                   <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">→</span>
                 </button>
-
-                <button
-                  onClick={() => { setIsMenuOpen(false); setShowAutoUpdateModal(true); }}
-                  className="w-full bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-sm">
-                      ⚙️
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-white group-hover:text-teal-400 transition-colors">
-                        Auto-Update Settings
-                      </h4>
-                      <p className="text-[10px] text-slate-400">
-                        Status: <span className="text-emerald-400 font-bold">{autoUpdatePref === 'enabled' ? 'Enabled' : autoUpdatePref === 'never_ask' ? 'Off' : 'Ask on startup'}</span>
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-slate-500 group-hover:text-teal-400 font-bold">→</span>
-                </button>
               </div>
 
-              {/* Drawer Group 2: Storage & Data */}
+              {/* Drawer Group 3: Storage & Permissions */}
               <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
                 <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                  💾 Storage & Persistence
+                  💾 System Storage Access
                 </span>
 
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => { setIsMenuOpen(false); grantStoragePermission(); }}
-                      className="flex-1 bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-sm">
-                          💾
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-bold text-white group-hover:text-blue-400 transition-colors">
-                            Storage Write Permission
-                          </h4>
-                          <p className="text-[10px] text-slate-400">
-                            Status: <span className={hasStoragePermission ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>{hasStoragePermission ? 'Granted' : 'Action Needed'}</span>
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-xs text-slate-500 group-hover:text-blue-400 font-bold">→</span>
-                    </button>
-
-                    <button
-                      onClick={() => setShowWhyPermission(!showWhyPermission)}
-                      className={`px-3 py-3 rounded-xl border font-black text-xs transition-all flex items-center justify-center cursor-pointer shrink-0 shadow-sm ${
-                        showWhyPermission 
-                          ? 'bg-blue-500/30 border-blue-400 text-white shadow-md scale-105' 
-                          : 'bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/40 text-blue-400 hover:text-white'
-                      }`}
-                      title="Why is storage write permission required?"
-                    >
-                      <span>Why?</span>
-                    </button>
+                <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-3.5 space-y-2.5 text-left">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                    <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                      <span>📁</span> Android System Storage Access
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${
+                      storagePermissionStatus === 'granted' || storagePermissionStatus === 'web_granted'
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                        : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                    }`}>
+                      {storagePermissionStatus === 'granted' || storagePermissionStatus === 'web_granted' ? 'Granted ✓' : 'Permission Required'}
+                    </span>
                   </div>
 
-                  {/* Expandable Permission Explanation Box */}
-                  {showWhyPermission && (
-                    <div className="bg-[#131b2f] border border-blue-500/40 p-3.5 rounded-xl space-y-2 text-xs animate-in fade-in slide-in-from-top-2">
-                      <div className="flex items-center gap-1.5 text-blue-400 font-bold text-xs uppercase tracking-wider">
-                        <span>💡</span>
-                        <span>Why Permission is Required:</span>
-                      </div>
-                      <ul className="space-y-1.5 text-slate-300 text-[11px] leading-relaxed">
-                        <li className="flex items-start gap-1.5">
-                          <span className="text-emerald-400 font-bold">1.</span>
-                          <span><strong className="text-white">Download & Install Updates:</strong> Saves release APK packages to your device so you can update in 1 click.</span>
-                        </li>
-                        <li className="flex items-start gap-1.5">
-                          <span className="text-emerald-400 font-bold">2.</span>
-                          <span><strong className="text-white">Local Tracking Data Files:</strong> Creates local data snapshot files to track daily Win Rate and KDA history over time.</span>
-                        </li>
-                      </ul>
-                    </div>
-                  )}
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    Grants native Android file access to save downloaded player dataset `.json` files into Downloads:
+                  </p>
 
-                  {/* Export Data Backup Button */}
+                  <button
+                    type="button"
+                    onClick={requestNativeStoragePermission}
+                    className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 ${
+                      storagePermissionStatus === 'granted' || storagePermissionStatus === 'web_granted'
+                        ? 'bg-emerald-500/20 border border-emerald-500/60 text-emerald-300 hover:bg-emerald-500/30'
+                        : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white'
+                    }`}
+                  >
+                    <span>📁</span>
+                    <span>
+                      {storagePermissionStatus === 'granted' || storagePermissionStatus === 'web_granted'
+                        ? '✓ Android Storage Access Granted'
+                        : '📁 Grant Android System Storage Access'}
+                    </span>
+                  </button>
+
                   <button
                     onClick={() => { setIsMenuOpen(false); handleExportBackup(); }}
-                    className="w-full bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                    className="w-full bg-[#0b101e] hover:bg-slate-800/80 border border-slate-700/80 p-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer mt-2"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
-                        📥
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
-                          Export Data Backup File
-                        </h4>
-                        <p className="text-[10px] text-slate-400">Save tracked stats & configs to JSON file</p>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-emerald-400 text-sm">📥</span>
+                      <span className="text-xs font-bold text-white group-hover:text-emerald-400">Export Data Backup File</span>
                     </div>
                     <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">→</span>
                   </button>
