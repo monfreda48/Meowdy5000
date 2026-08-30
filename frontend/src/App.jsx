@@ -2,6 +2,40 @@ import { useState, useEffect, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Browser } from '@capacitor/browser';
+import { App as CapApp } from '@capacitor/app';
+import { Network } from '@capacitor/network';
+import { Device } from '@capacitor/device';
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { Toast } from '@capacitor/toast';
+
+const triggerHaptic = async (type = 'light') => {
+  try {
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      if (type === 'success') {
+        await Haptics.notification({ type: NotificationType.Success });
+      } else if (type === 'warning' || type === 'error') {
+        await Haptics.notification({ type: NotificationType.Warning });
+      } else if (type === 'heavy') {
+        await Haptics.impact({ style: ImpactStyle.Heavy });
+      } else {
+        await Haptics.impact({ style: ImpactStyle.Light });
+      }
+    }
+  } catch (e) {}
+};
+
+const showNativeToast = async (text) => {
+  try {
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      await Toast.show({
+        text,
+        duration: 'short',
+        position: 'bottom'
+      });
+    }
+  } catch (e) {}
+};
+
 
 const AVAILABLE_METRICS = [
   { id: 'winRate', name: 'Win Rate', icon: '🏆', category: 'Core' },
@@ -474,6 +508,9 @@ export default function App() {
   const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
   const [updateStatusMsg, setUpdateStatusMsg] = useState('');
   const [showAutoUpdateModal, setShowAutoUpdateModal] = useState(false);
+  const [networkStatus, setNetworkStatus] = useState({ connected: true, connectionType: 'unknown' });
+  const [deviceInfo, setDeviceInfo] = useState(null);
+  const [appInfo, setAppInfo] = useState(null);
 
   const [backendBaseUrl, setBackendBaseUrl] = useState(() => {
     try {
@@ -751,13 +788,19 @@ export default function App() {
 
       setUpdateInfo(updateData);
 
-      if (isManual) {
-        if (hasUpdate) {
+      if (hasUpdate) {
+        triggerHaptic('success');
+        showNativeToast(`⚡ App Update Available (${latestSha})`);
+
+        if (autoUpdatePref === 'silent') {
+          console.log('[AutoUpdate] Silent auto-update mode active. Triggering automatic background download...');
+          applyUpdateNow(latestSha);
+        } else if (isManual) {
           setUpdateToast({ type: 'update', message: `⚡ Update available (${latestSha})! Click "Check for update" in menu to install.` });
-        } else {
-          setUpdateToast({ type: 'success', message: `✅ Your app is up to date! (Current Commit: ${localSha})` });
-          setTimeout(() => setUpdateToast(null), 4500);
         }
+      } else if (isManual) {
+        setUpdateToast({ type: 'success', message: `✅ Your app is up to date! (Current Commit: ${localSha})` });
+        setTimeout(() => setUpdateToast(null), 4500);
       }
     } catch (err) {
       console.error('Failed to check for updates:', err);
@@ -869,6 +912,91 @@ export default function App() {
     };
   }, []);
 
+  // 1. Monitor Network Connectivity (@capacitor/network)
+  useEffect(() => {
+    let isMounted = true;
+    const initNetwork = async () => {
+      try {
+        const status = await Network.getStatus();
+        if (isMounted) setNetworkStatus(status);
+      } catch (e) {}
+    };
+    initNetwork();
+
+    let listener;
+    Network.addListener('networkStatusChange', (status) => {
+      setNetworkStatus(status);
+      if (!status.connected) {
+        triggerHaptic('warning');
+        showNativeToast('⚠️ Offline Mode — Network connection lost');
+      } else {
+        triggerHaptic('success');
+        showNativeToast('⚡ Network Reconnected');
+        checkForUpdates(false);
+      }
+    }).then(l => { listener = l; });
+
+    return () => {
+      if (listener) listener.remove();
+    };
+  }, []);
+
+  // 2. Monitor App Lifecycle Events (@capacitor/app)
+  useEffect(() => {
+    let appStateListener;
+    let backButtonListener;
+
+    const setupCapApp = async () => {
+      try {
+        const info = await CapApp.getInfo();
+        setAppInfo(info);
+
+        appStateListener = await CapApp.addListener('appStateChange', ({ isActive }) => {
+          if (isActive) {
+            console.log('[CapApp] App returned to foreground. Performing auto-update check...');
+            checkForUpdates(false);
+          }
+        });
+
+        backButtonListener = await CapApp.addListener('backButton', ({ canGoBack }) => {
+          if (canGoBack) {
+            window.history.back();
+          } else {
+            CapApp.minimizeApp();
+          }
+        });
+      } catch (e) {}
+    };
+
+    setupCapApp();
+
+    return () => {
+      if (appStateListener) appStateListener.remove();
+      if (backButtonListener) backButtonListener.remove();
+    };
+  }, []);
+
+  // 3. Fetch Hardware Specs (@capacitor/device)
+  useEffect(() => {
+    const fetchDeviceInfo = async () => {
+      try {
+        const info = await Device.getInfo();
+        setDeviceInfo(info);
+      } catch (e) {}
+    };
+    fetchDeviceInfo();
+  }, []);
+
+  // 4. Periodic 15-Minute Background Auto-Update Check
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('[AutoUpdate] 15-minute scheduled background update check...');
+      checkForUpdates(false);
+    }, 15 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     cleanupOldApkFiles();
     checkForUpdates();
@@ -938,6 +1066,14 @@ export default function App() {
       onTouchEnd={handleTouchEnd}
       className="min-h-[100dvh] mobile-safe-area bg-[#0b101e] text-slate-200 font-sans selection:bg-emerald-500/30 transition-all duration-300 relative"
     >
+      {/* Network Offline Alert Banner */}
+      {!networkStatus.connected && (
+        <div className="w-full bg-amber-500/20 border-b border-amber-500/40 px-4 py-2 text-center text-amber-300 text-xs font-bold flex items-center justify-center gap-2 z-[60] backdrop-blur-md sticky top-0">
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+          <span>⚠️ Offline Mode — Network connection lost. Online statistics & auto-update checks are paused.</span>
+        </div>
+      )}
+
       {/* Pull to Refresh Indicator */}
       <div 
         className="w-full flex flex-col items-center justify-center overflow-hidden transition-all duration-150 pointer-events-none sticky top-0 z-50"
@@ -2321,6 +2457,121 @@ export default function App() {
                 >
                   <span>🚀</span>
                   <span>Install & Launch Now</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Auto-Update Settings Preference Modal */}
+        {showAutoUpdateModal && (
+          <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 select-none modal-safe-area">
+            <div className="bg-[#0f1526] border border-slate-700/80 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-400 text-xl font-bold">
+                    ⚙️
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-white uppercase tracking-wider">Auto-Update Settings</h3>
+                    <p className="text-xs text-slate-400">Configure background update behavior & preferences</p>
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={() => setShowAutoUpdateModal(false)}
+                  className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Mode Selection Cards */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => { triggerHaptic('light'); setAutoUpdatePermission('silent'); }}
+                  className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-1 ${
+                    autoUpdatePref === 'silent'
+                      ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-lg shadow-emerald-500/10'
+                      : 'bg-[#131b2f] border-slate-700/80 hover:border-emerald-500/50 text-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm text-emerald-400 flex items-center gap-2">
+                      <span>⚡</span> Silent Background Auto-Update
+                    </span>
+                    {autoUpdatePref === 'silent' && <span className="text-xs font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/40">Active</span>}
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Automatically checks, downloads, and installs latest update releases seamlessly in the background.
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => { triggerHaptic('light'); setAutoUpdatePermission('enabled'); }}
+                  className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-1 ${
+                    autoUpdatePref === 'enabled' || (!autoUpdatePref && autoUpdatePref !== 'silent' && autoUpdatePref !== 'never_ask')
+                      ? 'bg-teal-500/15 border-teal-500 text-white shadow-lg shadow-teal-500/10'
+                      : 'bg-[#131b2f] border-slate-700/80 hover:border-teal-500/50 text-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm text-teal-400 flex items-center gap-2">
+                      <span>🔔</span> Prompt for Updates (Recommended)
+                    </span>
+                    {(autoUpdatePref === 'enabled' || (!autoUpdatePref && autoUpdatePref !== 'silent' && autoUpdatePref !== 'never_ask')) && (
+                      <span className="text-xs font-bold bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-full border border-teal-500/40">Active</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Automatically checks for updates on startup, resume, and network reconnect, showing a 1-click update banner when ready.
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => { triggerHaptic('light'); setAutoUpdatePermission('never_ask'); }}
+                  className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-1 ${
+                    autoUpdatePref === 'never_ask'
+                      ? 'bg-amber-500/15 border-amber-500 text-white shadow-lg shadow-amber-500/10'
+                      : 'bg-[#131b2f] border-slate-700/80 hover:border-amber-500/50 text-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm text-amber-400 flex items-center gap-2">
+                      <span>🛑</span> Manual Updates Only
+                    </span>
+                    {autoUpdatePref === 'never_ask' && <span className="text-xs font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/40">Active</span>}
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Disables background update popups. Updates will only run when manually clicking "Check for update".
+                  </p>
+                </button>
+              </div>
+
+              {/* System & Device Diagnostics Card (Powered by @capacitor/device & @capacitor/app) */}
+              {deviceInfo && (
+                <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-4 space-y-2 text-xs">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-teal-400 block border-b border-slate-800 pb-1.5">
+                    📱 Device & Native System Diagnostics
+                  </span>
+                  <div className="grid grid-cols-2 gap-2 text-slate-300">
+                    <div><span className="text-slate-500">Platform:</span> <strong className="text-white">{deviceInfo.platform || 'Web'}</strong></div>
+                    <div><span className="text-slate-500">OS Version:</span> <strong className="text-white">{deviceInfo.osVersion || 'Unknown'}</strong></div>
+                    <div><span className="text-slate-500">Model:</span> <strong className="text-white">{deviceInfo.model || 'Browser'}</strong></div>
+                    <div><span className="text-slate-500">Manufacturer:</span> <strong className="text-white">{deviceInfo.manufacturer || 'Generic'}</strong></div>
+                    {appInfo && (
+                      <div className="col-span-2"><span className="text-slate-500">App Build Version:</span> <strong className="text-emerald-400 font-mono">{appInfo.version} ({appInfo.build})</strong></div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-2 border-t border-slate-800 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowAutoUpdateModal(false)}
+                  className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider cursor-pointer"
+                >
+                  Done
                 </button>
               </div>
             </div>
