@@ -3508,9 +3508,48 @@ ${payload.stack || 'No stack trace available.'}
               {/* Drawer Group 4: Community & Meta Resources */}
               <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
                 <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                  🌐 Community & Esports Meta Wiki
+                  🌐 Community & Esports Meta Resources
                 </span>
 
+                {/* Resource 1: RivalsMeta.com */}
+                <button
+                  onClick={() => { setIsMenuOpen(false); openExternalUrl('https://rivalsmeta.com'); }}
+                  className="w-full bg-[#131b2f] hover:bg-emerald-500/10 border border-slate-700/80 hover:border-emerald-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
+                      ⚔️
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
+                        Rivals Meta (RivalsMeta.com)
+                      </h4>
+                      <p className="text-[10px] text-slate-400 font-medium">Hero tier lists, win rates & player matchups</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">↗</span>
+                </button>
+
+                {/* Resource 2: RivalsTracker.com */}
+                <button
+                  onClick={() => { setIsMenuOpen(false); openExternalUrl('https://rivalstracker.com'); }}
+                  className="w-full bg-[#131b2f] hover:bg-amber-500/10 border border-slate-700/80 hover:border-amber-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
+                      🎯
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">
+                        RivalsTracker.com
+                      </h4>
+                      <p className="text-[10px] text-slate-400 font-medium">Player leaderboards & community stat tracking</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-500 group-hover:text-amber-400 font-bold">↗</span>
+                </button>
+
+                {/* Resource 3: Tracker.gg */}
                 <button
                   onClick={() => { setIsMenuOpen(false); openExternalUrl('https://tracker.gg/marvel-rivals'); }}
                   className="w-full bg-[#131b2f] hover:bg-purple-500/10 border border-slate-700/80 hover:border-purple-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
@@ -3523,12 +3562,13 @@ ${payload.stack || 'No stack trace available.'}
                       <h4 className="text-xs font-bold text-white group-hover:text-purple-400 transition-colors">
                         Marvel Rivals Tracker.gg
                       </h4>
-                      <p className="text-[10px] text-slate-400 font-medium">Open in-app official leaderboards</p>
+                      <p className="text-[10px] text-slate-400 font-medium">Official player profiles & global leaderboards</p>
                     </div>
                   </div>
                   <span className="text-xs text-slate-500 group-hover:text-purple-400 font-bold">↗</span>
                 </button>
 
+                {/* Resource 4: Liquipedia Wiki */}
                 <button
                   onClick={() => { setIsMenuOpen(false); openExternalUrl('https://liquipedia.net/marvelrivals/Hero_ID'); }}
                   className="w-full bg-[#131b2f] hover:bg-cyan-500/10 border border-slate-700/80 hover:border-cyan-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
@@ -3541,7 +3581,7 @@ ${payload.stack || 'No stack trace available.'}
                       <h4 className="text-xs font-bold text-white group-hover:text-cyan-400 transition-colors">
                         Liquipedia Hero Meta Wiki
                       </h4>
-                      <p className="text-[10px] text-slate-400 font-medium">Open hero ability & ID database</p>
+                      <p className="text-[10px] text-slate-400 font-medium">Esports tournaments, team rosters & hero IDs</p>
                     </div>
                   </div>
                   <span className="text-xs text-slate-500 group-hover:text-cyan-400 font-bold">↗</span>
@@ -3570,8 +3610,76 @@ ${payload.stack || 'No stack trace available.'}
         </div>
       )}
 
-        {/* Subtle Non-Intrusive App Footer & Version Badge */}
-        <footer className="mt-12 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-xs">
+        {/* Community & Esports Meta Resources Footer Bar */}
+        <div className="mt-12 pt-6 border-t border-slate-800/80 space-y-4 text-left">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <span>🌐</span> Community & Esports Meta Section
+            </h4>
+            <span className="text-[10px] text-slate-500 font-bold">Official Web Resources</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <button
+              onClick={() => openExternalUrl('https://rivalsmeta.com')}
+              className="bg-[#131b2f] hover:bg-emerald-500/15 border border-slate-700/60 hover:border-emerald-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-2 truncate">
+                <span className="text-sm">⚔️</span>
+                <div className="truncate">
+                  <span className="text-xs font-bold text-white group-hover:text-emerald-400 block truncate">Rivals Meta</span>
+                  <span className="text-[9px] text-slate-400 block font-mono">rivalsmeta.com</span>
+                </div>
+              </div>
+              <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold shrink-0">↗</span>
+            </button>
+
+            <button
+              onClick={() => openExternalUrl('https://rivalstracker.com')}
+              className="bg-[#131b2f] hover:bg-amber-500/15 border border-slate-700/60 hover:border-amber-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-2 truncate">
+                <span className="text-sm">🎯</span>
+                <div className="truncate">
+                  <span className="text-xs font-bold text-white group-hover:text-amber-400 block truncate">RivalsTracker</span>
+                  <span className="text-[9px] text-slate-400 block font-mono">rivalstracker.com</span>
+                </div>
+              </div>
+              <span className="text-xs text-slate-500 group-hover:text-amber-400 font-bold shrink-0">↗</span>
+            </button>
+
+            <button
+              onClick={() => openExternalUrl('https://tracker.gg/marvel-rivals')}
+              className="bg-[#131b2f] hover:bg-purple-500/15 border border-slate-700/60 hover:border-purple-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-2 truncate">
+                <span className="text-sm">🌐</span>
+                <div className="truncate">
+                  <span className="text-xs font-bold text-white group-hover:text-purple-400 block truncate">Tracker.gg</span>
+                  <span className="text-[9px] text-slate-400 block font-mono">tracker.gg</span>
+                </div>
+              </div>
+              <span className="text-xs text-slate-500 group-hover:text-purple-400 font-bold shrink-0">↗</span>
+            </button>
+
+            <button
+              onClick={() => openExternalUrl('https://liquipedia.net/marvelrivals/Hero_ID')}
+              className="bg-[#131b2f] hover:bg-cyan-500/15 border border-slate-700/60 hover:border-cyan-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-2 truncate">
+                <span className="text-sm">📖</span>
+                <div className="truncate">
+                  <span className="text-xs font-bold text-white group-hover:text-cyan-400 block truncate">Liquipedia Wiki</span>
+                  <span className="text-[9px] text-slate-400 block font-mono">liquipedia.net</span>
+                </div>
+              </div>
+              <span className="text-xs text-slate-500 group-hover:text-cyan-400 font-bold shrink-0">↗</span>
+            </button>
+          </div>
+        </div>
+
+        {/* App Footer & Version Badge */}
+        <footer className="mt-6 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-xs">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center font-black text-[#00ff88] text-[9px] border border-[#00ff88] shadow-[0_0_10px_#00ff88]">
               M5
