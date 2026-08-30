@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Filesystem } from '@capacitor/filesystem';
 
 const AVAILABLE_METRICS = [
   { id: 'winRate', name: 'Win Rate', icon: '🏆', category: 'Core' },
@@ -45,8 +46,23 @@ export default function App() {
     }
   });
 
-  const grantStoragePermission = () => {
+  const grantStoragePermission = async () => {
     try {
+      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        try {
+          const permStatus = await Filesystem.requestPermissions();
+          console.log('[NativePermission] Phone storage write permission granted status:', permStatus);
+        } catch (err) {
+          console.warn('[NativePermission] Filesystem requestPermissions error:', err);
+        }
+      }
+
+      if (navigator.storage && navigator.storage.persist) {
+        try {
+          await navigator.storage.persist();
+        } catch (e) {}
+      }
+
       localStorage.setItem('storage_permission_granted', 'true');
       setHasStoragePermission(true);
       setShowPermissionPrompt(false);
