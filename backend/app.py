@@ -463,6 +463,12 @@ def get_stats():
         if tracker_data.get("topHero") and tracker_data.get("topHero") != "Unknown": final_data["topHero"] = tracker_data["topHero"]
         if tracker_data.get("topHeroesDetailed") and len(tracker_data.get("topHeroesDetailed")) > 0:
             final_data["topHeroesDetailed"] = tracker_data["topHeroesDetailed"]
+            final_data["heroes"] = tracker_data["topHeroesDetailed"]
+
+    if final_data.get("topHeroesDetailed") and not final_data.get("heroes"):
+        final_data["heroes"] = final_data["topHeroesDetailed"]
+    elif final_data.get("heroes") and not final_data.get("topHeroesDetailed"):
+        final_data["topHeroesDetailed"] = final_data["heroes"]
 
     if not final_data["sources"]:
         final_data["sources"] = ["Built-in Analytics Engine"]
