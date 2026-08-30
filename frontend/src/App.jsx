@@ -86,7 +86,7 @@ export default function App() {
     try {
       const res = await fetch(getApiUrl('/api/seasons'));
       if (res.ok) {
-        const data = await res.json();
+        const data = await safeFetchJson(res);
         if (data.seasons && data.seasons.length > 0) {
           setSeasonsList(data.seasons);
         }
@@ -524,6 +524,19 @@ export default function App() {
     if (!backendBaseUrl) return endpoint;
     const base = backendBaseUrl.replace(/\/+$/, '');
     return `${base}${endpoint}`;
+  };
+
+  const safeFetchJson = async (res) => {
+    const text = await res.text();
+    const isHtml = text.trim().startsWith('<') || text.toLowerCase().includes('<!doctype html');
+    if (isHtml) {
+      throw new Error(`Server returned HTML instead of JSON. Ensure Python Flask backend server (port 5000) is running.`);
+    }
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      throw new Error(`Invalid JSON response: ${text.slice(0, 80)}`);
+    }
   };
 
   const cleanupOldApkFiles = async () => {
@@ -1100,7 +1113,7 @@ ${payload.stack || 'No stack trace available.'}
 
     try {
       const response = await fetch(getApiUrl(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`));
-      const data = await response.json();
+      const data = await safeFetchJson(response);
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch player stats.');
