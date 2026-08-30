@@ -500,9 +500,9 @@ export default function App() {
 
   const [autoUpdatePref, setAutoUpdatePref] = useState(() => {
     try {
-      return localStorage.getItem('auto_update_preference') || null;
+      return localStorage.getItem('auto_update_preference') || 'enabled';
     } catch (e) {
-      return null;
+      return 'enabled';
     }
   });
   const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
@@ -569,12 +569,12 @@ export default function App() {
 
     const apkUrl = updateInfo?.apkUrl || 'https://github.com/monfreda48/Meowdy5000/releases/download/v1.0.0/app-debug.apk';
 
-    // 1. Native Mobile Android Background APK Download & Install Consent
+    // 1. Native Mobile Android Background APK Download & Automatic Installation Launcher
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
       await cleanupOldApkFiles();
       setIsDownloadingUpdate(true);
       setDownloadProgress(15);
-      setUpdateToast({ type: 'update', message: '⚡ Downloading update package in background...' });
+      setUpdateToast({ type: 'update', message: '⚡ Automatically downloading update in background...' });
 
       try {
         const res = await Filesystem.downloadFile({
@@ -599,41 +599,38 @@ export default function App() {
           } catch (e) {}
         }
 
-        setReadyToInstallUpdate({
-          apkUrl,
-          fileUri: fileUri || apkUrl,
-          latestVersion: attemptedSha
-        });
-        setUpdateToast({ type: 'success', message: '✅ Download complete! Confirm installation to update.' });
+        setIsApplyingUpdate(true);
+        setUpdateStatusMsg('📱 Launching Android Package Installer...');
+        await Browser.open({ url: fileUri || apkUrl });
+        setTimeout(() => {
+          cleanupOldApkFiles();
+          setIsApplyingUpdate(false);
+        }, 10000);
 
       } catch (dlErr) {
-        console.warn('[BackgroundDownload] Download error, using direct prompt:', dlErr);
+        console.warn('[BackgroundDownload] Download error, launching direct installer:', dlErr);
         setIsDownloadingUpdate(false);
-        setReadyToInstallUpdate({
-          apkUrl,
-          fileUri: apkUrl,
-          latestVersion: attemptedSha
-        });
+        await Browser.open({ url: apkUrl });
       }
       return;
     }
 
-    // 2. Web / Local Server Self-Update
+    // 2. Web / Local Server Self-Update (Automated Git Pull & Reload)
     setIsApplyingUpdate(true);
-    setUpdateStatusMsg('⚡ Fetching and installing latest update from GitHub...');
+    setUpdateStatusMsg('⚡ Automatically pulling latest update from GitHub...');
     try {
       const res = await fetch(getApiUrl('/api/apply-update'), { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
-          setUpdateStatusMsg('✅ Web update installed successfully! Reloading app...');
+          setUpdateStatusMsg('✅ Update pulled & installed! Reloading app...');
           setTimeout(() => {
             window.location.reload();
-          }, 1500);
+          }, 1200);
           return;
         }
       }
-      setUpdateStatusMsg('🔄 Reloading application assets...');
+      setUpdateStatusMsg('🔄 Reloading application...');
       setTimeout(() => {
         window.location.reload(true);
       }, 1000);
@@ -819,8 +816,9 @@ export default function App() {
         triggerHaptic('success');
         showNativeToast(`⚡ App Update Available (${latestSha})`);
 
-        if (autoUpdatePref === 'silent') {
-          console.log('[AutoUpdate] Silent auto-update mode active. Triggering automatic background download...');
+        if (autoUpdatePref !== 'never_ask') {
+          console.log(`[AutoUpdate] New release found (${latestSha}). Executing automated update...`);
+          setUpdateToast({ type: 'update', message: `⚡ New release found (${latestSha})! Automating update installation...` });
           applyUpdateNow(latestSha);
         } else if (isManual) {
           setUpdateToast({ type: 'update', message: `⚡ Update available (${latestSha})! Click "Check for update" in menu to install.` });
@@ -1069,12 +1067,12 @@ ${payload.stack || 'No stack trace available.'}
     fetchDeviceInfo();
   }, []);
 
-  // 4. Periodic 15-Minute Background Auto-Update Check
+  // 4. Periodic 3-Minute Background Auto-Update Check
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log('[AutoUpdate] 15-minute scheduled background update check...');
+      console.log('[AutoUpdate] 3-minute scheduled background update check...');
       checkForUpdates(false);
-    }, 15 * 60 * 1000);
+    }, 3 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);
