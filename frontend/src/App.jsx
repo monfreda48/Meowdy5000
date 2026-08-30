@@ -592,10 +592,25 @@ export default function App() {
     }
   });
 
+  const handleSaveBackendBaseUrl = (url) => {
+    const trimmed = (url || '').trim();
+    setBackendBaseUrl(trimmed);
+    try {
+      localStorage.setItem('backend_server_url', trimmed);
+      triggerHaptic('success');
+      showNativeToast(`Backend URL set: ${trimmed || 'Default Host'}`);
+    } catch (e) {}
+  };
+
   const getApiUrl = (endpoint) => {
-    if (!backendBaseUrl) return endpoint;
-    const base = backendBaseUrl.replace(/\/+$/, '');
-    return `${base}${endpoint}`;
+    let base = backendBaseUrl;
+    if (!base && window.Capacitor && window.Capacitor.isNativePlatform()) {
+      base = 'http://10.0.2.2:5000';
+    }
+    if (!base) return endpoint;
+    const cleanBase = base.replace(/\/+$/, '');
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    return `${cleanBase}${cleanEndpoint}`;
   };
 
   const safeFetchJson = async (res) => {
@@ -2734,74 +2749,8 @@ ${payload.stack || 'No stack trace available.'}
 
           </div>
         )}
-
-          </div>
-        )}
-
-        {/* Auto-Update Permission Consent Modal */}
-        {showAutoUpdateModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-[#131b2f] border border-emerald-500/50 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl shadow-emerald-500/20 text-left space-y-6 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-10">
-                <svg className="w-24 h-24 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-2xl shadow-lg shadow-emerald-500/30">
-                  ⚡
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-white uppercase tracking-wider">Auto-Update Permission</h3>
-                  <p className="text-xs text-emerald-400 font-bold">Meowdy 5000's Stat Tracker</p>
-                </div>
-              </div>
-
-              <div className="space-y-3 text-sm text-slate-300">
-                <p className="leading-relaxed">
-                  Would you like Meowdy 5000's Stat Tracker to automatically check for and install updates from GitHub when you start the app?
-                </p>
-                <div className="bg-[#0b101e] p-3.5 rounded-xl border border-slate-700/60 space-y-2 text-xs">
-                  <div className="flex items-start gap-2 text-emerald-400">
-                    <span>✓</span>
-                    <span>Instantly pulls latest telemetry features, stats fixes, and hero updates.</span>
-                  </div>
-                  <div className="flex items-start gap-2 text-emerald-400">
-                    <span>✓</span>
-                    <span>Automatic seamless app reloading on startup when updates are detected.</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setAutoUpdatePermission('enabled')}
-                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-500/30 cursor-pointer text-center"
-                >
-                  ⚡ Enable Auto-Updates
-                </button>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setAutoUpdatePermission('ask_each_time')}
-                    className="flex-1 py-2.5 px-3 rounded-xl bg-[#0b101e] hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer text-center"
-                  >
-                    🔔 Ask Me Each Time
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAutoUpdatePermission('never_ask')}
-                    className="flex-1 py-2.5 px-3 rounded-xl bg-[#0b101e] hover:bg-slate-800 border border-red-500/40 text-red-400 hover:text-red-300 hover:border-red-500/70 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer text-center"
-                  >
-                    🚫 Don't Ask Again
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+      </div>
+    )}
 
         {/* Background Download Progress Indicator */}
         {isDownloadingUpdate && (
@@ -2995,6 +2944,38 @@ ${payload.stack || 'No stack trace available.'}
                       {defaultTrackingPref === 'disabled' && <span className="text-[10px] text-slate-300 font-black">✓ Default</span>}
                     </div>
                     <span className="text-[10px] text-slate-400 font-normal">Standard search without dataset downloads</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Backend Server Connection URL Card */}
+              <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-teal-400 flex items-center gap-1.5">
+                    <span>🌐</span>
+                    <span>Backend Server Connection URL</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-bold">Port 5000</span>
+                </div>
+                
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Specify your custom Python Flask Backend Server IP / Domain for Android APK:
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={backendBaseUrl}
+                    onChange={(e) => setBackendBaseUrl(e.target.value)}
+                    placeholder={window.Capacitor?.isNativePlatform() ? "http://10.0.2.2:5000 or http://192.168.1.X:5000" : "http://localhost:5000"}
+                    className="flex-1 bg-[#0b101e] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-teal-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSaveBackendBaseUrl(backendBaseUrl)}
+                    className="px-3.5 py-2 rounded-xl bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/60 text-teal-300 font-bold text-xs uppercase cursor-pointer transition-all shrink-0"
+                  >
+                    Save URL
                   </button>
                 </div>
               </div>
