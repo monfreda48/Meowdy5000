@@ -888,13 +888,13 @@ export default function App() {
   };
 
   const getAppLocalSha = (backendData = null) => {
-    if (backendData?.currentVersion) return backendData.currentVersion;
-    if (backendData?.localVersion) return backendData.localVersion;
     try {
       const savedCommit = localStorage.getItem('installed_commit_sha');
-      if (savedCommit) return savedCommit;
+      if (savedCommit && savedCommit.length >= 6) return savedCommit.slice(0, 7);
     } catch (e) { }
-    return import.meta.env.VITE_APP_COMMIT_SHA || '664d25b';
+    if (backendData?.currentVersion) return backendData.currentVersion.slice(0, 7);
+    if (backendData?.localVersion) return backendData.localVersion.slice(0, 7);
+    return (import.meta.env.VITE_APP_COMMIT_SHA || 'afab44e').slice(0, 7);
   };
 
   const checkForUpdates = async (isSilent = true) => {
