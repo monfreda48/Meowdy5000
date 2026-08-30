@@ -631,12 +631,12 @@ export default function App() {
 
     const apkUrl = updateInfo?.apkUrl || 'https://github.com/monfreda48/Meowdy5000/releases/download/v1.0.0/app-debug.apk';
 
-    // 1. Native Mobile Android Background APK Download & Automatic Installation Launcher
+    // 1. Native Mobile Android Background APK Download & Installation Launcher
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
       await cleanupOldApkFiles();
       setIsDownloadingUpdate(true);
       setDownloadProgress(15);
-      setUpdateToast({ type: 'update', message: '⚡ Automatically downloading update in background...' });
+      setUpdateToast({ type: 'update', message: '⚡ Downloading update package...' });
 
       try {
         const res = await Filesystem.downloadFile({
@@ -646,7 +646,6 @@ export default function App() {
           progress: true
         });
 
-        console.log('[BackgroundDownload] Download complete:', res);
         setDownloadProgress(100);
         setIsDownloadingUpdate(false);
 
@@ -662,47 +661,61 @@ export default function App() {
         }
 
         setIsApplyingUpdate(true);
-        setUpdateStatusMsg('📱 Launching Android Package Installer...');
-        await Browser.open({ url: fileUri || apkUrl });
-        setTimeout(() => {
-          cleanupOldApkFiles();
-          setIsApplyingUpdate(false);
-        }, 10000);
+        setUpdateStatusMsg('📱 Opening Package Installer...');
+
+        try {
+          await Browser.open({ url: fileUri || apkUrl });
+        } catch (bErr) {
+          window.open(apkUrl, '_blank');
+        } finally {
+          setTimeout(() => {
+            cleanupOldApkFiles();
+            setIsApplyingUpdate(false);
+          }, 1500);
+        }
 
       } catch (dlErr) {
-        console.warn('[BackgroundDownload] Download error, launching direct installer:', dlErr);
+        console.warn('[BackgroundDownload] Download fallback:', dlErr);
         setIsDownloadingUpdate(false);
-        await Browser.open({ url: apkUrl });
+        setIsApplyingUpdate(true);
+        setUpdateStatusMsg('📱 Opening Installer Link...');
+        try {
+          await Browser.open({ url: apkUrl });
+        } catch (e) {
+          window.open(apkUrl, '_blank');
+        } finally {
+          setTimeout(() => setIsApplyingUpdate(false), 1500);
+        }
       }
       return;
     }
 
     // 2. Web / Local Server Self-Update (Automated Git Pull & Reload)
     setIsApplyingUpdate(true);
-    setUpdateStatusMsg('⚡ Automatically pulling latest update from GitHub...');
+    setUpdateStatusMsg('⚡ Fetching update from GitHub...');
     try {
       const res = await fetch(getApiUrl('/api/apply-update'), { method: 'POST' });
       if (res.ok) {
-        const data = await res.json();
+        const data = await safeFetchJson(res);
         if (data.success) {
-          setUpdateStatusMsg('✅ Update pulled & installed! Reloading app...');
+          setUpdateStatusMsg('✅ Update installed! Reloading app...');
           setTimeout(() => {
             window.location.reload();
           }, 1200);
           return;
         }
       }
-      setUpdateStatusMsg('🔄 Reloading application...');
+      setUpdateStatusMsg('🔄 Reloading app...');
       setTimeout(() => {
         window.location.reload(true);
       }, 1000);
     } catch (err) {
-      setUpdateStatusMsg('🔄 Reloading application...');
+      setUpdateStatusMsg('🔄 Reloading app...');
       setTimeout(() => {
         window.location.reload(true);
       }, 1000);
     } finally {
-      setTimeout(() => setIsApplyingUpdate(false), 2000);
+      setTimeout(() => setIsApplyingUpdate(false), 1500);
     }
   };
 
@@ -2753,8 +2766,15 @@ ${payload.stack || 'No stack trace available.'}
 
         {/* Installing Update Overlay */}
         {isApplyingUpdate && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-lg animate-in fade-in duration-300">
-            <div className="bg-[#131b2f] border-2 border-emerald-500 rounded-3xl p-8 max-w-md w-full text-center space-y-5 shadow-2xl shadow-emerald-500/30">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-lg animate-in fade-in duration-300">
+            <div className="bg-[#131b2f] border-2 border-emerald-500 rounded-3xl p-8 max-w-md w-full text-center space-y-5 shadow-2xl shadow-emerald-500/30 relative">
+              <button 
+                onClick={() => setIsApplyingUpdate(false)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer transition-all"
+                title="Close"
+              >
+                ✕
+              </button>
               <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center text-3xl mx-auto animate-bounce">
                 ⚡
               </div>
@@ -2765,6 +2785,13 @@ ${payload.stack || 'No stack trace available.'}
               <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
                 <div className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full w-full animate-pulse"></div>
               </div>
+              <button
+                type="button"
+                onClick={() => setIsApplyingUpdate(false)}
+                className="px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold uppercase cursor-pointer"
+              >
+                Dismiss Window
+              </button>
             </div>
           </div>
         )}
