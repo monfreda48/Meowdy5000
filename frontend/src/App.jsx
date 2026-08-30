@@ -581,7 +581,6 @@ export default function App() {
   const [networkStatus, setNetworkStatus] = useState({ connected: true, connectionType: 'unknown' });
   const [deviceInfo, setDeviceInfo] = useState(null);
   const [appInfo, setAppInfo] = useState(null);
-
   const [storagePermissionStatus, setStoragePermissionStatus] = useState('unknown');
 
   const checkStoragePermission = async () => {
@@ -591,37 +590,36 @@ export default function App() {
     }
     try {
       const status = await Filesystem.checkPermissions();
-      setStoragePermissionStatus(status.publicStorage || 'granted');
+      const pubStatus = status?.publicStorage || status?.storage || 'prompt';
+      setStoragePermissionStatus(pubStatus === 'granted' ? 'granted' : 'denied');
     } catch (e) {
       console.warn('Error checking storage permissions:', e);
-      setStoragePermissionStatus('granted');
+      setStoragePermissionStatus('denied');
     }
   };
 
   const requestNativeStoragePermission = async () => {
+    triggerHaptic('light');
     if (!window.Capacitor || !window.Capacitor.isNativePlatform()) {
-      showNativeToast('Storage access active (Web Sandbox Environment)');
       setStoragePermissionStatus('web_granted');
+      showNativeToast('📁 Web Storage Active');
       return;
     }
+
     try {
-      triggerHaptic('light');
-      const result = await Filesystem.requestPermissions();
-      const granted = result.publicStorage === 'granted' || result.publicStorage === 'prompt-with-rationale';
-      setStoragePermissionStatus(result.publicStorage || 'granted');
-      if (granted) {
-        triggerHaptic('success');
-        showNativeToast('✅ Android Storage Permission Granted!');
-      } else {
-        // Fallback check
-        triggerHaptic('success');
+      const req = await Filesystem.requestPermissions();
+      const pubStatus = req?.publicStorage || req?.storage || 'prompt';
+      if (pubStatus === 'granted') {
         setStoragePermissionStatus('granted');
-        showNativeToast('✅ Android Storage Permission Active!');
+        showNativeToast('📁 Android Storage Access Granted!');
+      } else {
+        setStoragePermissionStatus('denied');
+        showNativeToast('⚠️ Storage Access Denied by System');
       }
-    } catch (e) {
-      console.warn('Error requesting storage permissions:', e);
-      setStoragePermissionStatus('granted');
-      showNativeToast('✅ Android System Storage Access Active!');
+    } catch (err) {
+      console.warn('Filesystem request permission error:', err);
+      setStoragePermissionStatus('denied');
+      showNativeToast('⚠️ Storage permission request failed');
     }
   };
 
