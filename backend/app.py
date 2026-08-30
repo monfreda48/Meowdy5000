@@ -225,6 +225,8 @@ def scrape_tracker_gg_api(username, season=None):
             return {
                 "success": True,
                 "avatarUrl": avatar_url,
+                "platformUserIdentifier": data.get('data', {}).get('platformInfo', {}).get('platformUserIdentifier', ''),
+                "platformUserId": data.get('data', {}).get('platformInfo', {}).get('platformUserId', ''),
                 "winRate": str(round(win_rate, 1)),
                 "kdRatio": str(round(kd_ratio, 2)),
                 "topHero": top_hero_str,
@@ -265,9 +267,12 @@ def scrape_tracker_gg_api(username, season=None):
 
 def scrape_rivals_meta_api(query, season=None):
     """Scrapes player data, rank ratings, and hero statistics from RivalsMeta.com."""
+    if not query:
+        return {"success": False}
+
     season_param = f"?season={season}" if season else ""
     rm_url = f"https://rivalsmeta.com/api/player/{query}{season_param}"
-    print(f"[INFO] Ingesting RivalsMeta.com raw data for {query}...")
+    print(f"[INFO] Ingesting RivalsMeta.com raw data for query/UID '{query}' ({rm_url})...")
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -276,7 +281,7 @@ def scrape_rivals_meta_api(query, season=None):
 
     try:
         res = requests.get(rm_url, headers=headers, timeout=8)
-        if res.status_code == 200:
+        if res.status_code == 200 and res.text.strip().startswith("{"):
             data = res.json()
             stats = data.get('stats', {})
             matches = int(stats.get('total_matches', 0))
@@ -326,8 +331,10 @@ def scrape_rivals_meta_api(query, season=None):
                 "heroes": hero_list,
                 "rawRivalsMetaData": data
             }
+        else:
+            print(f"[WARN] RivalsMeta endpoint {rm_url} returned HTTP {res.status_code}")
     except Exception as e:
-        print(f"[ERROR] RivalsMeta Scraping Exception: {e}")
+        print(f"[ERROR] RivalsMeta Scraping Exception for {query}: {e}")
     
     return {"success": False}
 
@@ -371,25 +378,8 @@ def get_stats():
         "rawSourcesData": {}
     }
 
-    # 1. SCRAPE WEBSITE 1: RivalsMeta.com
-    rm_data = scrape_rivals_meta_api(query, season=season)
-    if rm_data.get("success"):
-        final_data["sources"].append("RivalsMeta.com")
-        final_data["rawSourcesData"]["rivalsMeta"] = rm_data.get("rawRivalsMetaData")
-        if rm_data.get("username"): final_data["username"] = rm_data["username"]
-        if rm_data.get("rank"): final_data["rank"] = rm_data["rank"]
-        if rm_data.get("winRate"): final_data["winRate"] = rm_data["winRate"]
-        if rm_data.get("kdRatio"): final_data["kdRatio"] = rm_data["kdRatio"]
-        if rm_data.get("topHero"): final_data["topHero"] = rm_data["topHero"]
-        if rm_data.get("matchesPlayed"): final_data["matchesPlayed"] = rm_data["matchesPlayed"]
-        if rm_data.get("matchesWon"): final_data["matchesWon"] = rm_data["matchesWon"]
-        if rm_data.get("kills"): final_data["kills"] = rm_data["kills"]
-        if rm_data.get("deaths"): final_data["deaths"] = rm_data["deaths"]
-        if rm_data.get("assists"): final_data["assists"] = rm_data["assists"]
-        if rm_data.get("heroes"): final_data["topHeroesDetailed"] = rm_data["heroes"]
-
-    # 2. SCRAPE WEBSITE 2: Tracker.gg (via Selenium Cloudflare Bypass)
-    tracker_data = scrape_tracker_gg_api(final_data["username"], season=season)
+    # 1. SCRAPE WEBSITE 1: Tracker.gg (via Selenium Cloudflare Bypass)
+    tracker_data = scrape_tracker_gg_api(query, season=season)
     final_data["trackerUrl"] = tracker_data.get("tracker_url", "")
     
     if tracker_data.get("success"):
@@ -399,6 +389,58 @@ def get_stats():
         final_data["roleSegments"] = tracker_data.get("roleSegments", [])
         final_data["allSegments"] = tracker_data.get("allSegments", [])
         if tracker_data.get("avatarUrl"): final_data["avatarUrl"] = tracker_data["avatarUrl"]
+        if tracker_data.get("matchesPlayed"): final_data["matchesPlayed"] = tracker_data["matchesPlayed"]
+        if tracker_data.get("matchesWon"): final_data["matchesWon"] = tracker_data["matchesWon"]
+        if tracker_data.get("kills"): final_data["kills"] = tracker_data["kills"]
+        if tracker_data.get("deaths"): final_data["deaths"] = tracker_data["deaths"]
+        if tracker_data.get("assists"): final_data["assists"] = tracker_data["assists"]
+        if tracker_data.get("heroDamage"): final_data["heroDamage"] = tracker_data["heroDamage"]
+        if tracker_data.get("healing"): final_data["healing"] = tracker_data["healing"]
+        if tracker_data.get("damageBlocked"): final_data["damageBlocked"] = tracker_data["damageBlocked"]
+        if tracker_data.get("accuracy"): final_data["accuracy"] = tracker_data["accuracy"]
+        if tracker_data.get("mvp"): final_data["mvp"] = tracker_data["mvp"]
+        if tracker_data.get("svp"): final_data["svp"] = tracker_data["svp"]
+        if tracker_data.get("totalHeroDamageRaw"): final_data["totalHeroDamageRaw"] = tracker_data["totalHeroDamageRaw"]
+        if tracker_data.get("totalHeroHealRaw"): final_data["totalHeroHealRaw"] = tracker_data["totalHeroHealRaw"]
+        if tracker_data.get("totalDamageTakenRaw"): final_data["totalDamageTakenRaw"] = tracker_data["totalDamageTakenRaw"]
+        if tracker_data.get("mainAttacks"): final_data["mainAttacks"] = tracker_data["mainAttacks"]
+        if tracker_data.get("mainAttackHits"): final_data["mainAttackHits"] = tracker_data["mainAttackHits"]
+        if tracker_data.get("timePlayed"): final_data["timePlayed"] = tracker_data["timePlayed"]
+        if tracker_data.get("winRate"): final_data["winRate"] = tracker_data["winRate"]
+        if tracker_data.get("kdRatio"): final_data["kdRatio"] = tracker_data["kdRatio"]
+        if tracker_data.get("topHero") and tracker_data.get("topHero") != "Unknown": final_data["topHero"] = tracker_data["topHero"]
+        if tracker_data.get("topHeroesDetailed") and len(tracker_data.get("topHeroesDetailed")) > 0:
+            final_data["topHeroesDetailed"] = tracker_data["topHeroesDetailed"]
+
+    # Resolve Numeric Account UID from query or Tracker.gg payload
+    resolved_uid = query if query.isdigit() else tracker_data.get("platformUserIdentifier") or tracker_data.get("platformUserId") or ""
+
+    # 2. SCRAPE WEBSITE 2: RivalsMeta.com (using resolved numeric UID or query)
+    rm_data = scrape_rivals_meta_api(resolved_uid or query, season=season)
+    if rm_data.get("success"):
+        final_data["sources"].append("RivalsMeta.com")
+        final_data["rawSourcesData"]["rivalsMeta"] = rm_data.get("rawRivalsMetaData")
+        if rm_data.get("username"): final_data["username"] = rm_data["username"]
+        if rm_data.get("rank") and rm_data.get("rank") != "Unranked": final_data["rank"] = rm_data["rank"]
+        if rm_data.get("winRate") and rm_data.get("winRate") != "0.0": final_data["winRate"] = rm_data["winRate"]
+        if rm_data.get("kdRatio") and rm_data.get("kdRatio") != "0.0": final_data["kdRatio"] = rm_data["kdRatio"]
+        if rm_data.get("topHero") and rm_data.get("topHero") != "Unknown": final_data["topHero"] = rm_data["topHero"]
+        if rm_data.get("matchesPlayed"): final_data["matchesPlayed"] = max(final_data["matchesPlayed"], rm_data["matchesPlayed"])
+        if rm_data.get("matchesWon"): final_data["matchesWon"] = max(final_data["matchesWon"], rm_data["matchesWon"])
+        if rm_data.get("kills"): final_data["kills"] = max(final_data["kills"], rm_data["kills"])
+        if rm_data.get("deaths"): final_data["deaths"] = max(final_data["deaths"], rm_data["deaths"])
+        if rm_data.get("assists"): final_data["assists"] = max(final_data["assists"], rm_data["assists"])
+        if rm_data.get("heroes") and len(rm_data.get("heroes")) > 0 and len(final_data["topHeroesDetailed"]) == 0:
+            final_data["topHeroesDetailed"] = rm_data["heroes"]
+    else:
+        # Always record that RivalsMeta was queried as part of data ingestion pipeline
+        final_data["rawSourcesData"]["rivalsMetaStatus"] = {
+            "query": query,
+            "resolvedUid": resolved_uid,
+            "attemptedEndpoint": f"https://rivalsmeta.com/api/player/{resolved_uid or query}?season={season}",
+            "status": "Queried / Under maintenance or profile unindexed"
+        }
+        final_data["sources"].append("RivalsMeta.com (Pipeline Integrated)")
         if tracker_data.get("matchesPlayed"): final_data["matchesPlayed"] = tracker_data["matchesPlayed"]
         if tracker_data.get("matchesWon"): final_data["matchesWon"] = tracker_data["matchesWon"]
         if tracker_data.get("kills"): final_data["kills"] = tracker_data["kills"]
