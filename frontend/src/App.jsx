@@ -2968,16 +2968,16 @@ ${payload.stack || 'No stack trace available.'}
         )}
         {/* Auto-Update Settings Preference Modal */}
         {showAutoUpdateModal && (
-          <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 select-none modal-safe-area">
-            <div className="bg-[#0f1526] border border-slate-700/80 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-400 text-xl font-bold">
+          <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300 select-none modal-safe-area">
+            <div className="bg-[#0f1526] border border-slate-700/80 rounded-3xl p-4 sm:p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-400 text-lg font-bold">
                     ⚙️
                   </div>
                   <div>
-                    <h3 className="text-lg font-black text-white uppercase tracking-wider">Auto-Update Settings</h3>
-                    <p className="text-xs text-slate-400">Configure background update behavior & preferences</p>
+                    <h3 className="text-base font-black text-white uppercase tracking-wider">Auto-Update Settings</h3>
+                    <p className="text-[11px] text-slate-400">Configure background update behavior & preferences</p>
                   </div>
                 </div>
 
@@ -2989,8 +2989,10 @@ ${payload.stack || 'No stack trace available.'}
                 </button>
               </div>
 
-              {/* Mode Selection Cards */}
-              <div className="space-y-3">
+              {/* Scrollable Submenu Body Container */}
+              <div className="overflow-y-auto space-y-3 pr-1">
+                {/* Mode Selection Cards */}
+                <div className="space-y-2">
                 <button
                   onClick={() => { triggerHaptic('light'); setAutoUpdatePermission('silent'); }}
                   className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-1 ${autoUpdatePref === 'silent'
@@ -3180,8 +3182,9 @@ ${payload.stack || 'No stack trace available.'}
                   </div>
                 </div>
               )}
+              </div>
 
-              <div className="pt-2 border-t border-slate-800 flex justify-end">
+              <div className="pt-2 border-t border-slate-800 flex justify-end shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowAutoUpdateModal(false)}
