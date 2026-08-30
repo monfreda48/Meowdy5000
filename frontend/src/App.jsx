@@ -789,18 +789,16 @@ export default function App() {
     try {
       let latestSha = '';
       let latestMessage = '';
-      let commitUrl = '';
 
-      // 1. Fetch directly from GitHub REST API
+      // 1. Fetch directly from GitHub REST API with fresh cache
       try {
-        const ghRes = await fetch('https://api.github.com/repos/monfreda48/Meowdy5000/commits/main', {
+        const ghRes = await fetch(`https://api.github.com/repos/monfreda48/Meowdy5000/commits/main?t=${Date.now()}`, {
           headers: { 'Accept': 'application/vnd.github.v3+json' }
         });
         if (ghRes.ok) {
           const ghData = await ghRes.json();
           latestSha = (ghData.sha || '').slice(0, 7);
           latestMessage = ghData.commit?.message?.split('\n')[0] || '';
-          commitUrl = ghData.html_url || 'https://github.com/monfreda48/Meowdy5000';
         }
       } catch (ghErr) {
         console.warn('Direct GitHub API check error:', ghErr);
@@ -817,26 +815,29 @@ export default function App() {
       } catch (e) {}
 
       const localSha = getAppLocalSha(backendData);
-      const lastAttempted = (sessionStorage.getItem('last_attempted_update_sha') || '').slice(0, 7);
 
-      const hasUpdate = Boolean(
+      // If we have a latestSha and it differs, OR if user explicitly requested an update re-sync
+      const isNewer = Boolean(
         latestSha && 
         localSha && 
-        localSha.toLowerCase().slice(0, 7) !== latestSha.toLowerCase().slice(0, 7) &&
-        (!lastAttempted || lastAttempted.toLowerCase() !== latestSha.toLowerCase())
+        localSha.toLowerCase().slice(0, 7) !== latestSha.toLowerCase().slice(0, 7)
       );
 
-      if (hasUpdate) {
-        setUpdateToast({ type: 'update', message: `⚡ Update found (${latestSha})! Starting one-click installation...` });
+      if (isNewer) {
+        setUpdateToast({ type: 'success', message: `⚡ Update found (${latestSha}): "${latestMessage}". Installing...` });
         await applyUpdateNow(latestSha);
+      } else if (latestSha) {
+        setUpdateToast({ type: 'success', message: `✅ App is on latest version (${localSha}). Syncing code bundle...` });
+        await applyUpdateNow(latestSha || localSha);
       } else {
-        setUpdateToast({ type: 'success', message: `✅ App is up to date! (Current Commit: ${localSha})` });
-        setTimeout(() => setUpdateToast(null), 4000);
+        // Fallback force reload to ensure latest webview bundle
+        setUpdateToast({ type: 'update', message: `⚡ Reloading to verify latest release bundle...` });
+        await applyUpdateNow(localSha);
       }
     } catch (err) {
       console.error('One-click update error:', err);
       setUpdateToast({ type: 'error', message: '❌ Error connecting to update service.' });
-      setTimeout(() => setUpdateToast(null), 4000);
+      setTimeout(() => setUpdateToast(null), 3000);
     } finally {
       setCheckingUpdate(false);
     }
