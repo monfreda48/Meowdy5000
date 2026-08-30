@@ -447,7 +447,7 @@ export default function App() {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      className="min-h-[100dvh] mobile-safe-area bg-[#0b101e] text-slate-200 font-sans selection:bg-orange-500/30 transition-all duration-300 relative"
+      className="min-h-[100dvh] mobile-safe-area bg-[#0b101e] text-slate-200 font-sans selection:bg-emerald-500/30 transition-all duration-300 relative"
     >
       {/* Pull to Refresh Indicator */}
       <div 
@@ -457,9 +457,9 @@ export default function App() {
           opacity: Math.min(pullDistance / PULL_THRESHOLD, 1)
         }}
       >
-        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#131b2f] border border-orange-500/50 text-orange-400 text-xs font-bold shadow-xl backdrop-blur-md">
+        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#131b2f] border border-emerald-500/50 text-emerald-400 text-xs font-bold shadow-xl backdrop-blur-md">
           <svg 
-            className={`w-4 h-4 text-orange-500 transition-transform duration-200 ${
+            className={`w-4 h-4 text-emerald-500 transition-transform duration-200 ${
               isRefreshing ? 'animate-spin' : ''
             }`}
             style={{
@@ -490,7 +490,7 @@ export default function App() {
             splashFading ? 'opacity-0 pointer-events-none scale-105' : 'opacity-100'
           }`}
         >
-          <div className="absolute w-80 h-80 rounded-full bg-gradient-to-tr from-orange-500/20 via-red-500/10 to-transparent blur-3xl animate-pulse"></div>
+          <div className="absolute w-80 h-80 rounded-full bg-gradient-to-tr from-emerald-500/20 via-teal-500/10 to-transparent blur-3xl animate-pulse"></div>
 
           <div className="relative z-10 flex flex-col items-center space-y-5 max-w-sm">
             <div className="w-24 h-24 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-5xl shadow-[0_0_35px_rgba(52,211,153,0.6)] border-2 border-emerald-500/60 transform hover:scale-105 transition-transform duration-500 drop-shadow-[0_0_15px_rgba(52,211,153,0.9)]">
@@ -501,13 +501,13 @@ export default function App() {
               <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-wider animate-in fade-in slide-in-from-bottom-4 duration-1000">
                 Meowdy 5000's Stat Tracker
               </h1>
-              <p className="text-xs sm:text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500 uppercase tracking-widest animate-in fade-in slide-in-from-bottom-6 duration-1000">
+              <p className="text-xs sm:text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500 uppercase tracking-widest animate-in fade-in slide-in-from-bottom-6 duration-1000">
                 SNACK HARD, TRACK HARD
               </p>
             </div>
 
             <div className="w-48 h-1 bg-slate-800 rounded-full overflow-hidden mt-4 border border-slate-700/50">
-              <div className="h-full bg-gradient-to-r from-orange-500 via-red-500 to-orange-400 rounded-full animate-pulse w-full"></div>
+              <div className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 rounded-full animate-pulse w-full"></div>
             </div>
             
             <p className="text-[10px] text-slate-500 font-medium tracking-wider uppercase pt-2">
@@ -537,18 +537,18 @@ export default function App() {
               title="Check GitHub for Latest App Updates"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-inner disabled:opacity-50 cursor-pointer ${
                 updateInfo?.hasUpdate 
-                  ? 'bg-orange-500/20 border-orange-500/70 text-orange-400 animate-pulse' 
-                  : 'bg-[#131b2f] border-slate-700/60 text-slate-300 hover:text-white hover:border-orange-500/50'
+                  ? 'bg-emerald-500/20 border-emerald-500/70 text-emerald-400 animate-pulse' 
+                  : 'bg-[#131b2f] border-slate-700/60 text-slate-300 hover:text-white hover:border-emerald-500/50'
               }`}
             >
-              <svg className={`h-3.5 w-3.5 text-orange-400 ${checkingUpdate ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg className={`h-3.5 w-3.5 text-emerald-400 ${checkingUpdate ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
               <span>
                 {checkingUpdate ? 'Checking...' : updateInfo?.hasUpdate ? 'Update Available!' : 'Check for Updates'}
               </span>
               {updateInfo?.hasUpdate && (
-                <span className="w-2 h-2 rounded-full bg-orange-400 animate-ping"></span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
               )}
             </button>
 
@@ -558,7 +558,7 @@ export default function App() {
               title="Configure Startup Auto-Update Preferences"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-inner cursor-pointer ${
                 autoUpdatePref === 'enabled' 
-                  ? 'bg-orange-500/10 border-orange-500/40 text-orange-400 hover:border-orange-500/70'
+                  ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400 hover:border-emerald-500/70'
                   : autoUpdatePref === 'never_ask'
                   ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:border-red-500/60'
                   : 'bg-slate-800/50 border-slate-700/60 text-slate-400 hover:text-white'
@@ -592,7 +592,7 @@ export default function App() {
                 onClick={() => setIsMobileView(false)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   !isMobileView 
-                    ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md' 
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md' 
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -606,7 +606,7 @@ export default function App() {
                 onClick={() => setIsMobileView(true)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   isMobileView 
-                    ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md' 
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md' 
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -622,7 +622,7 @@ export default function App() {
 
       {/* GitHub Update Notification Banner */}
       {updateInfo?.hasUpdate && (
-        <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white py-2.5 px-4 text-center text-xs sm:text-sm font-bold flex items-center justify-center gap-3 shadow-lg">
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-2.5 px-4 text-center text-xs sm:text-sm font-bold flex items-center justify-center gap-3 shadow-lg">
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
             New update available on GitHub! ({updateInfo.latestVersion} - {updateInfo.latestMessage})
@@ -650,7 +650,7 @@ export default function App() {
               ? 'bg-emerald-500/10 border border-emerald-500/40 text-emerald-400'
               : updateToast.type === 'error'
               ? 'bg-red-500/10 border border-red-500/40 text-red-400'
-              : 'bg-orange-500/10 border border-orange-500/40 text-orange-400'
+              : 'bg-emerald-500/10 border border-emerald-500/40 text-emerald-400'
           }`}>
             <span>{updateToast.message}</span>
             <button onClick={() => setUpdateToast(null)} className="text-slate-400 hover:text-white text-xs">✕</button>
@@ -659,15 +659,15 @@ export default function App() {
 
         {/* App Update Available Banner (Mobile & Desktop) */}
         {updateInfo?.hasUpdate && (
-          <div className="w-full bg-gradient-to-r from-orange-500/20 via-red-500/20 to-orange-500/20 border-2 border-orange-500 rounded-2xl p-4 shadow-2xl shadow-orange-500/20 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3.5 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="w-full bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-emerald-500/20 border-2 border-emerald-500 rounded-2xl p-4 shadow-2xl shadow-emerald-500/20 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3.5 animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="flex items-center gap-3 text-left">
-              <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center text-white text-xl shrink-0 shadow-md shadow-orange-500/40">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-xl shrink-0 shadow-md shadow-emerald-500/40">
                 🚀
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="text-sm font-black text-white uppercase tracking-wider">New App Update Available!</h4>
-                  <span className="text-[10px] bg-orange-500/30 text-orange-300 border border-orange-500/40 px-2 py-0.5 rounded-full font-bold">
+                  <span className="text-[10px] bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold">
                     v{updateInfo.latestVersion}
                   </span>
                 </div>
@@ -680,7 +680,7 @@ export default function App() {
               <button
                 onClick={() => applyUpdateNow()}
                 disabled={isApplyingUpdate}
-                className="w-full sm:w-auto px-5 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-orange-500/30 text-center shrink-0 cursor-pointer disabled:opacity-50"
+                className="w-full sm:w-auto px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-emerald-500/30 text-center shrink-0 cursor-pointer disabled:opacity-50"
               >
                 {isApplyingUpdate ? 'Installing...' : '⚡ Apply Web Update'}
               </button>
@@ -706,15 +706,15 @@ export default function App() {
 
         {/* Local Storage Write Permission Request Banner */}
         {showPermissionPrompt && (
-          <div className="w-full bg-gradient-to-r from-[#131b2f] via-[#1a2b4c] to-[#131b2f] border border-orange-500/50 rounded-2xl p-4 sm:p-5 shadow-2xl shadow-orange-500/10 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="w-full bg-gradient-to-r from-[#131b2f] via-[#1a2b4c] to-[#131b2f] border border-emerald-500/50 rounded-2xl p-4 sm:p-5 shadow-2xl shadow-emerald-500/10 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="flex items-start gap-3.5 text-left">
-              <div className="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-xl shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-xl shrink-0">
                 💾
               </div>
               <div>
                 <h4 className="text-base font-black text-white flex items-center gap-2">
                   Local Storage Write Permission Request
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 uppercase font-bold">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase font-bold">
                     Data Safety
                   </span>
                 </h4>
@@ -726,7 +726,7 @@ export default function App() {
             <div className="flex items-center gap-2.5 shrink-0 w-full md:w-auto">
               <button
                 onClick={grantStoragePermission}
-                className="flex-1 md:flex-initial px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-orange-500/20 cursor-pointer"
+                className="flex-1 md:flex-initial px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-emerald-500/20 cursor-pointer"
               >
                 Grant Permission
               </button>
@@ -742,7 +742,7 @@ export default function App() {
         
         {/* Mobile View Badge Indicator */}
         {isMobileView && (
-          <div className="flex items-center justify-between bg-orange-500/10 border border-orange-500/30 px-3 py-2 rounded-xl text-xs text-orange-400 font-medium">
+          <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 px-3 py-2 rounded-xl text-xs text-emerald-400 font-medium">
             <span className="flex items-center gap-1.5">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -764,11 +764,11 @@ export default function App() {
             isMobileView ? 'text-xl sm:text-3xl' : 'text-2xl sm:text-5xl md:text-6xl lg:text-7xl'
           }`}>
             <span>SN4K PACK:</span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">SNACK HARD, TRACK HARD</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">SNACK HARD, TRACK HARD</span>
           </h1>
 
           {/* Active Season & Upcoming Season 10 Status Pill */}
-          <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 px-3 py-1 rounded-full text-xs sm:text-sm font-bold text-orange-400 shadow-md">
+          <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full text-xs sm:text-sm font-bold text-emerald-400 shadow-md">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span>Season 9.5 Active</span>
             <span className="text-slate-500">•</span>
@@ -785,7 +785,7 @@ export default function App() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Enter Username or UID..."
-                className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-3.5 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all text-white placeholder-slate-500 ${
+                className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white placeholder-slate-500 ${
                   isMobileView ? 'py-2.5 text-sm' : 'py-3.5 sm:py-4 text-base sm:text-lg flex-1'
                 }`}
                 required
@@ -800,7 +800,7 @@ export default function App() {
                       fetchStats(null, query, selectedSeason);
                     }
                   }}
-                  className={`bg-[#0b101e] border border-slate-700/50 rounded-xl px-3 focus:outline-none focus:border-orange-500 text-white cursor-pointer text-xs sm:text-sm ${
+                  className={`bg-[#0b101e] border border-slate-700/50 rounded-xl px-3 focus:outline-none focus:border-emerald-500 text-white cursor-pointer text-xs sm:text-sm ${
                     isMobileView ? 'py-2.5 flex-1' : 'py-3.5 sm:py-4'
                   }`}
                 >
@@ -814,7 +814,7 @@ export default function App() {
                 <button 
                   type="submit"
                   disabled={loading}
-                  className={`bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(249,115,22,0.3)] uppercase tracking-wider text-xs sm:text-sm ${
+                  className={`bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(16,185,129,0.3)] uppercase tracking-wider text-xs sm:text-sm ${
                     isMobileView ? 'py-2.5 px-4 flex-1' : 'py-3.5 sm:py-4 px-6 sm:px-8'
                   }`}
                 >
@@ -827,9 +827,9 @@ export default function App() {
           {/* Customize What You Track Selection Box */}
           <div className={`w-full ${isMobileView ? '' : 'max-w-3xl'} text-left`}>
             <details className="group bg-[#131b2f] border border-slate-700/50 rounded-2xl overflow-hidden shadow-xl transition-all duration-300">
-              <summary className="flex cursor-pointer items-center justify-between px-4 py-3 font-bold text-slate-300 hover:text-orange-400 transition-colors list-none">
+              <summary className="flex cursor-pointer items-center justify-between px-4 py-3 font-bold text-slate-300 hover:text-emerald-400 transition-colors list-none">
                 <span className="flex items-center gap-2 uppercase tracking-widest text-xs">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                   </svg>
                   ⚙️ Select Metrics to Track ({selectedMetrics.length}/{AVAILABLE_METRICS.length} Active)
@@ -850,7 +850,7 @@ export default function App() {
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
                       isEditOrderMode 
                         ? 'bg-amber-500/20 border-amber-500/60 text-amber-400 shadow-sm' 
-                        : 'bg-[#0b101e] border-slate-700/60 text-slate-300 hover:text-white hover:border-orange-500/50'
+                        : 'bg-[#0b101e] border-slate-700/60 text-slate-300 hover:text-white hover:border-emerald-500/50'
                     }`}
                   >
                     {isEditOrderMode ? '🔒 Done Reordering' : '✏️ Rearrange Order'}
@@ -872,13 +872,13 @@ export default function App() {
                           onClick={() => toggleMetric(m.id)}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
                             active
-                              ? 'bg-gradient-to-r from-orange-500/20 to-red-500/20 border-orange-500/60 text-white shadow-sm'
+                              ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/60 text-white shadow-sm'
                               : 'bg-[#0b101e] border-slate-800 text-slate-500 hover:text-slate-300'
                           }`}
                         >
                           <span>{m.icon}</span>
                           <span>{m.name}</span>
-                          <span className={`w-2 h-2 rounded-full ${active ? 'bg-orange-400 shadow-[0_0_6px_rgba(249,115,22,0.8)]' : 'bg-slate-700'}`}></span>
+                          <span className={`w-2 h-2 rounded-full ${active ? 'bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.8)]' : 'bg-slate-700'}`}></span>
                         </button>
 
                         {isEditOrderMode && active && (
@@ -894,7 +894,7 @@ export default function App() {
                                 changeMetricOrder(m.id, parseInt(e.target.value));
                               }}
                               onClick={(e) => e.stopPropagation()}
-                              className="bg-slate-800 border border-slate-700 text-orange-400 font-black text-xs rounded px-1 py-0.5 focus:outline-none focus:border-orange-500 cursor-pointer"
+                              className="bg-slate-800 border border-slate-700 text-emerald-400 font-black text-xs rounded px-1 py-0.5 focus:outline-none focus:border-emerald-500 cursor-pointer"
                             >
                               {selectedMetrics.map((_, idx) => (
                                 <option key={idx + 1} value={idx + 1}>
@@ -908,7 +908,7 @@ export default function App() {
                                 onClick={(e) => moveMetricUp(m.id, e)}
                                 disabled={orderIndex <= 0}
                                 title="Move Up"
-                                className="px-1 py-0.5 text-slate-400 hover:text-orange-400 disabled:opacity-30 font-black text-[10px] cursor-pointer"
+                                className="px-1 py-0.5 text-slate-400 hover:text-emerald-400 disabled:opacity-30 font-black text-[10px] cursor-pointer"
                               >
                                 ◄
                               </button>
@@ -917,7 +917,7 @@ export default function App() {
                                 onClick={(e) => moveMetricDown(m.id, e)}
                                 disabled={orderIndex >= selectedMetrics.length - 1}
                                 title="Move Down"
-                                className="px-1 py-0.5 text-slate-400 hover:text-orange-400 disabled:opacity-30 font-black text-[10px] cursor-pointer"
+                                className="px-1 py-0.5 text-slate-400 hover:text-emerald-400 disabled:opacity-30 font-black text-[10px] cursor-pointer"
                               >
                                 ►
                               </button>
@@ -930,7 +930,7 @@ export default function App() {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-2 border-t border-slate-800/80 text-[11px]">
-                  <button type="button" onClick={selectAllMetrics} className="text-orange-400 hover:text-orange-300 font-bold cursor-pointer">Select All</button>
+                  <button type="button" onClick={selectAllMetrics} className="text-emerald-400 hover:text-emerald-300 font-bold cursor-pointer">Select All</button>
                   <span className="text-slate-600">•</span>
                   <button type="button" onClick={resetDefaultMetrics} className="text-slate-400 hover:text-white font-medium cursor-pointer">Reset Defaults</button>
                 </div>
@@ -941,7 +941,7 @@ export default function App() {
           {/* Expandable "How Tracking Works" Box */}
           <div className={`w-full ${isMobileView ? '' : 'max-w-3xl'} text-left`}>
             <details className="group bg-[#131b2f] border border-slate-700/50 rounded-xl overflow-hidden shadow-lg transition-all duration-300">
-              <summary className="flex cursor-pointer items-center justify-between px-4 py-3 font-bold text-slate-400 hover:text-orange-400 transition-colors list-none">
+              <summary className="flex cursor-pointer items-center justify-between px-4 py-3 font-bold text-slate-400 hover:text-emerald-400 transition-colors list-none">
                 <span className="flex items-center gap-2 uppercase tracking-widest text-[11px]">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -982,10 +982,10 @@ export default function App() {
                   <img 
                     src={stats.current.avatarUrl} 
                     alt={stats.current.username} 
-                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-2 border-orange-500/60 shadow-lg shadow-orange-500/20 object-cover"
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-2 border-emerald-500/60 shadow-lg shadow-emerald-500/20 object-cover"
                   />
                 ) : (
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-orange-500/20">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-emerald-500/20">
                     {stats.current.username.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -1008,24 +1008,24 @@ export default function App() {
                     key="winRate"
                     onClick={() => toggleExpandMetric('winRate')}
                     className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
                     }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                       </svg>
                     </div>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         {isEditOrderMode && (
-                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
                             #{orderIndex + 1}
                           </span>
                         )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Win Rate</p>
                       </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
                         {expandedMetric === 'winRate' ? '▲ Hide' : '▼ Expand'}
                       </span>
                     </div>
@@ -1059,7 +1059,7 @@ export default function App() {
                     key="kdRatio"
                     onClick={() => toggleExpandMetric('kdRatio')}
                     className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
                     }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -1070,13 +1070,13 @@ export default function App() {
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         {isEditOrderMode && (
-                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
                             #{orderIndex + 1}
                           </span>
                         )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">KDA Ratio</p>
                       </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
                         {expandedMetric === 'kdRatio' ? '▲ Hide' : '▼ Expand'}
                       </span>
                     </div>
@@ -1110,7 +1110,7 @@ export default function App() {
                     key="heroDamage"
                     onClick={() => toggleExpandMetric('heroDamage')}
                     className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
                     }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -1121,17 +1121,17 @@ export default function App() {
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         {isEditOrderMode && (
-                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
                             #{orderIndex + 1}
                           </span>
                         )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Damage / 10m</p>
                       </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
                         {expandedMetric === 'heroDamage' ? '▲ Hide' : '▼ Expand'}
                       </span>
                     </div>
-                    <p className={`font-black text-orange-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                    <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                       {typeof stats.current.heroDamage === 'number' ? stats.current.heroDamage.toLocaleString() : (stats.current.heroDamage || 'N/A')}
                     </p>
                     
@@ -1139,7 +1139,7 @@ export default function App() {
                       <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                         <div className="flex justify-between text-slate-300 font-medium">
                           <span>Total Damage Output:</span>
-                          <span className="font-bold text-orange-400">{(stats.current.totalHeroDamageRaw || 0).toLocaleString()}</span>
+                          <span className="font-bold text-emerald-400">{(stats.current.totalHeroDamageRaw || 0).toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between text-slate-300 font-medium">
                           <span>Avg Damage / Match:</span>
@@ -1157,7 +1157,7 @@ export default function App() {
                     key="healing"
                     onClick={() => toggleExpandMetric('healing')}
                     className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
                     }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -1168,13 +1168,13 @@ export default function App() {
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         {isEditOrderMode && (
-                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
                             #{orderIndex + 1}
                           </span>
                         )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Healing / 10m</p>
                       </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
                         {expandedMetric === 'healing' ? '▲ Hide' : '▼ Expand'}
                       </span>
                     </div>
@@ -1204,7 +1204,7 @@ export default function App() {
                     key="damageBlocked"
                     onClick={() => toggleExpandMetric('damageBlocked')}
                     className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
                     }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -1215,13 +1215,13 @@ export default function App() {
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         {isEditOrderMode && (
-                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
                             #{orderIndex + 1}
                           </span>
                         )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Dmg Blocked / 10m</p>
                       </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
                         {expandedMetric === 'damageBlocked' ? '▲ Hide' : '▼ Expand'}
                       </span>
                     </div>
@@ -1251,7 +1251,7 @@ export default function App() {
                     key="accuracy"
                     onClick={() => toggleExpandMetric('accuracy')}
                     className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
                     }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -1263,13 +1263,13 @@ export default function App() {
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         {isEditOrderMode && (
-                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
                             #{orderIndex + 1}
                           </span>
                         )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Accuracy</p>
                       </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
                         {expandedMetric === 'accuracy' ? '▲ Hide' : '▼ Expand'}
                       </span>
                     </div>
@@ -1303,7 +1303,7 @@ export default function App() {
                     key="mvp"
                     onClick={() => toggleExpandMetric('mvp')}
                     className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
                     }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-amber-400 font-black text-4xl">
@@ -1312,13 +1312,13 @@ export default function App() {
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         {isEditOrderMode && (
-                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
                             #{orderIndex + 1}
                           </span>
                         )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">MVPs</p>
                       </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
                         {expandedMetric === 'mvp' ? '▲ Hide' : '▼ Expand'}
                       </span>
                     </div>
@@ -1346,7 +1346,7 @@ export default function App() {
                     key="svp"
                     onClick={() => toggleExpandMetric('svp')}
                     className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
                     }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-purple-400 font-black text-4xl">
@@ -1355,13 +1355,13 @@ export default function App() {
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         {isEditOrderMode && (
-                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
                             #{orderIndex + 1}
                           </span>
                         )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">SVPs</p>
                       </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
                         {expandedMetric === 'svp' ? '▲ Hide' : '▼ Expand'}
                       </span>
                     </div>
@@ -1389,7 +1389,7 @@ export default function App() {
                     key="timePlayed"
                     onClick={() => toggleExpandMetric('timePlayed')}
                     className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
                     }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -1400,13 +1400,13 @@ export default function App() {
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         {isEditOrderMode && (
-                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
                             #{orderIndex + 1}
                           </span>
                         )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Playtime</p>
                       </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
                         {expandedMetric === 'timePlayed' ? '▲ Hide' : '▼ Expand'}
                       </span>
                     </div>
@@ -1434,11 +1434,11 @@ export default function App() {
                     key="matchesPlayed"
                     onClick={() => toggleExpandMetric('matchesPlayed')}
                     className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-orange-500/60 hover:shadow-lg hover:shadow-orange-500/10'
+                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
                     }`}
                   >
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
@@ -1446,13 +1446,13 @@ export default function App() {
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         {isEditOrderMode && (
-                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
                             #{orderIndex + 1}
                           </span>
                         )}
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Matches & Wins</p>
                       </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-orange-400 transition-colors">
+                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
                         {expandedMetric === 'matchesPlayed' ? '▲ Hide' : '▼ Expand'}
                       </span>
                     </div>
@@ -1491,7 +1491,7 @@ export default function App() {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         {isEditOrderMode && (
-                          <span className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
                             #{orderIndex + 1}
                           </span>
                         )}
@@ -1517,7 +1517,7 @@ export default function App() {
                             <div className="p-3 border-t border-slate-700/50 bg-[#0b101e] grid grid-cols-2 gap-y-2.5 gap-x-3 text-left">
                               <div>
                                 <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Win Rate</p>
-                                <p className="text-sm font-black text-orange-400">{hero.winRate}%</p>
+                                <p className="text-sm font-black text-emerald-400">{hero.winRate}%</p>
                               </div>
                               <div>
                                 <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">KDA Ratio</p>
@@ -1560,7 +1560,7 @@ export default function App() {
               <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
                   Matches & Wins
-                  <span className="text-[10px] text-orange-400 font-semibold bg-orange-500/10 px-2 py-0.5 rounded-full border border-orange-500/20">
+                  <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                     {stats.current.winRate}% WR
                   </span>
                 </span>
@@ -1593,7 +1593,7 @@ export default function App() {
               <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Damage</span>
                 <div className="mt-2 flex items-baseline gap-1 truncate">
-                  <span className="text-lg sm:text-xl md:text-2xl font-black text-orange-400 truncate">
+                  <span className="text-lg sm:text-xl md:text-2xl font-black text-emerald-400 truncate">
                     {typeof stats.current.heroDamage === 'number' 
                       ? stats.current.heroDamage.toLocaleString() 
                       : (stats.current.heroDamage || 'N/A')}
@@ -1624,7 +1624,7 @@ export default function App() {
                   <select 
                     value={timeframe} 
                     onChange={(e) => setTimeframe(e.target.value)}
-                    className={`bg-[#131b2f] border border-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-500 text-white text-xs font-bold cursor-pointer shadow-lg ${
+                    className={`bg-[#131b2f] border border-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:border-emerald-500 text-white text-xs font-bold cursor-pointer shadow-lg ${
                       isMobileView ? 'w-full' : ''
                     }`}
                   >
@@ -1639,7 +1639,7 @@ export default function App() {
                   <div className="bg-[#131b2f] p-4 sm:p-6 rounded-2xl border border-slate-700/50 shadow-xl">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Win Rate Progression</h3>
-                      <div className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]"></div>
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
                     </div>
                     <div className={isMobileView ? 'h-48' : 'h-72'}>
                       <ResponsiveContainer width="100%" height="100%">
@@ -1688,20 +1688,20 @@ export default function App() {
         {/* Auto-Update Permission Consent Modal */}
         {showAutoUpdateModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-[#131b2f] border border-orange-500/50 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl shadow-orange-500/20 text-left space-y-6 relative overflow-hidden">
+            <div className="bg-[#131b2f] border border-emerald-500/50 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl shadow-emerald-500/20 text-left space-y-6 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-4 opacity-10">
-                <svg className="w-24 h-24 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-24 h-24 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white text-2xl shadow-lg shadow-orange-500/30">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-2xl shadow-lg shadow-emerald-500/30">
                   ⚡
                 </div>
                 <div>
                   <h3 className="text-xl font-black text-white uppercase tracking-wider">Auto-Update Permission</h3>
-                  <p className="text-xs text-orange-400 font-bold">Meowdy 5000's Stat Tracker</p>
+                  <p className="text-xs text-emerald-400 font-bold">Meowdy 5000's Stat Tracker</p>
                 </div>
               </div>
 
@@ -1725,7 +1725,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setAutoUpdatePermission('enabled')}
-                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-orange-500/30 cursor-pointer text-center"
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-500/30 cursor-pointer text-center"
                 >
                   ⚡ Enable Auto-Updates
                 </button>
@@ -1753,16 +1753,16 @@ export default function App() {
         {/* Installing Update Overlay */}
         {isApplyingUpdate && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-lg animate-in fade-in duration-300">
-            <div className="bg-[#131b2f] border-2 border-orange-500 rounded-3xl p-8 max-w-md w-full text-center space-y-5 shadow-2xl shadow-orange-500/30">
-              <div className="w-16 h-16 rounded-full bg-orange-500/20 border-2 border-orange-500 flex items-center justify-center text-3xl mx-auto animate-bounce">
+            <div className="bg-[#131b2f] border-2 border-emerald-500 rounded-3xl p-8 max-w-md w-full text-center space-y-5 shadow-2xl shadow-emerald-500/30">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center text-3xl mx-auto animate-bounce">
                 ⚡
               </div>
               <div>
                 <h3 className="text-xl font-black text-white uppercase tracking-wider">Installing Update</h3>
-                <p className="text-sm font-bold text-orange-400 mt-1">{updateStatusMsg}</p>
+                <p className="text-sm font-bold text-emerald-400 mt-1">{updateStatusMsg}</p>
               </div>
               <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                <div className="bg-gradient-to-r from-orange-500 to-red-500 h-full w-full animate-pulse"></div>
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full w-full animate-pulse"></div>
               </div>
             </div>
           </div>
