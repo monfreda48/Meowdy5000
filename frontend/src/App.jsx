@@ -180,6 +180,71 @@ export default function App() {
     }
   });
   const [showWhyPermission, setShowWhyPermission] = useState(false);
+  const [trackedPlayers, setTrackedPlayers] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tracked_players_list');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+
+  const saveTrackedStatSnapshot = async (playerStats) => {
+    if (!playerStats?.current) return;
+    const entry = {
+      username: playerStats.current.username,
+      timestamp: new Date().toISOString(),
+      winRate: playerStats.current.winRate,
+      kdRatio: playerStats.current.kdRatio,
+      topHero: playerStats.current.topHero,
+      rank: playerStats.current.rank
+    };
+
+    try {
+      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        await Filesystem.appendFile({
+          path: `tracked_stats_${playerStats.current.username.toLowerCase()}.json`,
+          data: JSON.stringify(entry) + '\n',
+          directory: 'DATA'
+        });
+      }
+    } catch (err) {
+      console.warn('[DataFile] Filesystem save note:', err);
+    }
+
+    try {
+      const storageKey = `player_file_data_${playerStats.current.username.toLowerCase()}`;
+      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      existing.push(entry);
+      localStorage.setItem(storageKey, JSON.stringify(existing));
+    } catch (e) {}
+  };
+
+  const handleToggleTrackPlayer = (username) => {
+    if (!username) return;
+    const key = username.toLowerCase();
+    const isNowTracked = !trackedPlayers[key];
+    const updated = { ...trackedPlayers, [key]: isNowTracked };
+    setTrackedPlayers(updated);
+    try {
+      localStorage.setItem('tracked_players_list', JSON.stringify(updated));
+    } catch (e) {}
+
+    if (isNowTracked && stats?.current) {
+      saveTrackedStatSnapshot(stats);
+      setUpdateToast({
+        type: 'success',
+        message: `⚡ ${username} is now tracked! Stat point snapshot saved to data file.`
+      });
+      setTimeout(() => setUpdateToast(null), 4000);
+    } else {
+      setUpdateToast({
+        type: 'info',
+        message: `ℹ️ Tracking paused for ${username}.`
+      });
+      setTimeout(() => setUpdateToast(null), 3000);
+    }
+  };
 
   const grantStoragePermission = async () => {
     try {
@@ -649,6 +714,12 @@ export default function App() {
       }
 
       setStats(data);
+      if (data?.current?.username) {
+        const uKey = data.current.username.toLowerCase();
+        if (trackedPlayers[uKey]) {
+          saveTrackedStatSnapshot(data);
+        }
+      }
     } catch (err) {
       setError(err.message);
       setLastCapturedError({
@@ -1126,8 +1197,9 @@ export default function App() {
           <div className={`animate-in fade-in slide-in-from-bottom-8 duration-700 ${isMobileView ? 'space-y-5' : 'space-y-8'}`}>
             
             {/* Player Header Banner */}
-            <div className={`bg-[#131b2f] rounded-2xl border border-slate-700/50 shadow-2xl flex flex-col items-center text-center gap-3 ${
-              isMobileView ? 'p-4' : 'p-6 md:p-8 md:flex-row md:justify-between md:text-left'
+            {/* Player Header Banner with Interactive Track Player Switch */}
+            <div className={`bg-[#131b2f] rounded-2xl border border-slate-700/50 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 ${
+              isMobileView ? 'p-4 text-center' : 'p-6 md:p-8 text-left'
             }`}>
               <div className="flex items-center gap-4">
                 {stats.current.avatarUrl ? (
@@ -1142,10 +1214,101 @@ export default function App() {
                   </div>
                 )}
                 <div>
-                  <h2 className={`font-black text-white ${isMobileView ? 'text-2xl' : 'text-4xl'}`}>{stats.current.username}</h2>
+                  <h2 className={`font-black text-white ${isMobileView ? 'text-2xl' : 'text-3xl'}`}>{stats.current.username}</h2>
                   <p className="text-slate-400 uppercase tracking-widest text-xs mt-0.5 font-bold">
                     {stats.current.rank}
                   </p>
+                </div>
+              </div>
+
+              {/* Interactive Track Player Toggle Checkbox / Button */}
+              <button
+                onClick={() => handleToggleTrackPlayer(stats.current.username)}
+                className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2.5 cursor-pointer shadow-lg border ${
+                  trackedPlayers[stats.current.username?.toLowerCase()]
+                    ? 'bg-emerald-500/20 border-emerald-500/80 text-emerald-400 shadow-emerald-500/20 hover:bg-emerald-500/30'
+                    : 'bg-slate-800/90 hover:bg-slate-800 border-slate-700/80 text-slate-300 hover:text-white'
+                }`}
+              >
+                <span className={`w-5 h-5 rounded-md flex items-center justify-center text-xs font-black border transition-all ${
+                  trackedPlayers[stats.current.username?.toLowerCase()]
+                    ? 'bg-emerald-500 border-emerald-400 text-black'
+                    : 'border-slate-600 bg-slate-900 text-transparent'
+                }`}>
+                  ✓
+                </span>
+                <span>
+                  {trackedPlayers[stats.current.username?.toLowerCase()] ? 'Tracked • Snapshot Data Active' : 'Track Player Progress'}
+                </span>
+              </button>
+            </div>
+
+            {/* Progress & Performance Focus Insights */}
+            <div className="bg-[#131b2f] border border-emerald-500/30 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📈</span>
+                  <h3 className="text-base font-black text-white uppercase tracking-wider">
+                    Progress & Performance Insights
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-slate-400 font-bold">
+                    {trackedPlayers[stats.current.username?.toLowerCase()] 
+                      ? 'Tracking Enabled • Data File Snapshots Active' 
+                      : 'Enable "Track Player Progress" above to log performance snapshots to data file'}
+                  </span>
+                </div>
+              </div>
+
+              {/* What to Focus On Coaching Advice */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-[#0f1526] border border-slate-700/60 p-4 rounded-xl space-y-2">
+                  <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
+                    <span>🎯</span>
+                    <span>What You Should Focus On Next:</span>
+                  </div>
+                  <ul className="space-y-2 text-slate-300 text-xs leading-relaxed">
+                    {parseFloat(stats.current.winRate || 0) < 50 ? (
+                      <li className="flex items-start gap-2">
+                        <span className="text-amber-400 font-bold">•</span>
+                        <span><strong>Objective Control:</strong> Win Rate is {stats.current.winRate}%. Prioritize team group-ups before contesting objective points.</span>
+                      </li>
+                    ) : (
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-400 font-bold">•</span>
+                        <span><strong>Maintain Momentum:</strong> Solid Win Rate ({stats.current.winRate}%). Keep leveraging main hero compositions during ranked matches.</span>
+                      </li>
+                    )}
+
+                    {parseFloat(stats.current.kdRatio || 0) < 2.5 ? (
+                      <li className="flex items-start gap-2">
+                        <span className="text-amber-400 font-bold">•</span>
+                        <span><strong>K/D/A Positioning:</strong> K/D ratio is {stats.current.kdRatio}. Focus on defensive cover and saving escape abilities.</span>
+                      </li>
+                    ) : (
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-400 font-bold">•</span>
+                        <span><strong>Strong Combat Efficiency:</strong> High K/D ratio ({stats.current.kdRatio}). Focus on coordinated ultimate callouts with teammates.</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+
+                <div className="bg-[#0f1526] border border-slate-700/60 p-4 rounded-xl space-y-2">
+                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
+                    <span>📊</span>
+                    <span>Stat Snapshot File Status:</span>
+                  </div>
+                  <div className="text-xs text-slate-300 space-y-2 leading-relaxed">
+                    <p>
+                      <strong>Current Snapshot:</strong> {stats.current.winRate}% Win Rate | {stats.current.kdRatio} K/D/A | Top Hero: {stats.current.topHero}
+                    </p>
+                    <p className="text-[11px] text-slate-400">
+                      📂 Saved to local data file <code className="text-emerald-400">tracked_stats_{stats.current.username.toLowerCase()}.json</code> on device.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
