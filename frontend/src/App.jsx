@@ -208,8 +208,11 @@ export default function App() {
     }
   };
 
-  const checkForUpdates = async () => {
+  const [updateToast, setUpdateToast] = useState(null);
+
+  const checkForUpdates = async (isManual = false) => {
     setCheckingUpdate(true);
+    setUpdateToast(null);
     try {
       const res = await fetch(getApiUrl('/api/check-update'));
       const data = await res.json();
@@ -218,17 +221,27 @@ export default function App() {
       const pref = localStorage.getItem('auto_update_preference');
       const lastAttempted = sessionStorage.getItem('last_attempted_update_sha');
 
-      if (!pref) {
-        setShowAutoUpdateModal(true);
-      } else if (pref === 'enabled' && data.hasUpdate) {
-        if (data.latestVersion && data.latestVersion === lastAttempted) {
-          console.warn('[AutoUpdate] Already attempted update to commit', data.latestVersion, 'in this session. Skipping to prevent update loop.');
-        } else {
-          applyUpdateNow(data.latestVersion);
+      if (data.hasUpdate) {
+        setUpdateToast({ type: 'update', message: `⚡ New update available! (Latest Commit: ${data.latestVersion})` });
+        if (!pref) {
+          setShowAutoUpdateModal(true);
+        } else if (pref === 'enabled') {
+          if (data.latestVersion && data.latestVersion === lastAttempted) {
+            console.warn('[AutoUpdate] Already attempted update to commit', data.latestVersion, 'in this session. Skipping to prevent update loop.');
+          } else {
+            applyUpdateNow(data.latestVersion);
+          }
         }
+      } else if (isManual) {
+        setUpdateToast({ type: 'success', message: `✅ Your app is up to date! (Current Commit: ${data.localVersion || 'Latest'})` });
+        setTimeout(() => setUpdateToast(null), 4000);
       }
     } catch (err) {
       console.error('Failed to check for updates:', err);
+      if (isManual) {
+        setUpdateToast({ type: 'error', message: '❌ Could not connect to update server.' });
+        setTimeout(() => setUpdateToast(null), 4000);
+      }
     } finally {
       setCheckingUpdate(false);
     }
@@ -291,22 +304,22 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* GitHub Update Check Button */}
+            {/* Check for Updates Button */}
             <button
-              onClick={checkForUpdates}
+              onClick={() => checkForUpdates(true)}
               disabled={checkingUpdate}
-              title="Check GitHub for App Updates"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-inner disabled:opacity-50 ${
+              title="Check GitHub for Latest App Updates"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-inner disabled:opacity-50 cursor-pointer ${
                 updateInfo?.hasUpdate 
                   ? 'bg-orange-500/20 border-orange-500/70 text-orange-400 animate-pulse' 
                   : 'bg-[#131b2f] border-slate-700/60 text-slate-300 hover:text-white hover:border-orange-500/50'
               }`}
             >
-              <svg className={`h-4 w-4 text-orange-400 ${checkingUpdate ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              <svg className={`h-3.5 w-3.5 text-orange-400 ${checkingUpdate ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
               <span>
-                {checkingUpdate ? 'Checking...' : updateInfo?.hasUpdate ? 'Update Available!' : 'GitHub Sync'}
+                {checkingUpdate ? 'Checking...' : updateInfo?.hasUpdate ? 'Update Available!' : 'Check for Updates'}
               </span>
               {updateInfo?.hasUpdate && (
                 <span className="w-2 h-2 rounded-full bg-orange-400 animate-ping"></span>
@@ -403,6 +416,20 @@ export default function App() {
       <main className={`mx-auto px-3 sm:px-6 py-3 sm:py-10 transition-all duration-300 ${
         isMobileView ? 'max-w-md py-2' : 'max-w-6xl'
       }`}>
+
+        {/* Update Feedback Toast Banner */}
+        {updateToast && (
+          <div className={`w-full p-3.5 rounded-2xl mb-4 text-xs sm:text-sm font-bold flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg ${
+            updateToast.type === 'success'
+              ? 'bg-emerald-500/10 border border-emerald-500/40 text-emerald-400'
+              : updateToast.type === 'error'
+              ? 'bg-red-500/10 border border-red-500/40 text-red-400'
+              : 'bg-orange-500/10 border border-orange-500/40 text-orange-400'
+          }`}>
+            <span>{updateToast.message}</span>
+            <button onClick={() => setUpdateToast(null)} className="text-slate-400 hover:text-white text-xs">✕</button>
+          </div>
+        )}
 
         {/* App Update Available Banner (Mobile & Desktop) */}
         {updateInfo?.hasUpdate && (
