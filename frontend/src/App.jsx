@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Filesystem } from '@capacitor/filesystem';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Browser } from '@capacitor/browser';
 
 const AVAILABLE_METRICS = [
@@ -165,6 +165,9 @@ export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [updateInfo, setUpdateInfo] = useState(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [readyToInstallUpdate, setReadyToInstallUpdate] = useState(null);
   const [hasStoragePermission, setHasStoragePermission] = useState(() => {
     try {
       return localStorage.getItem('storage_permission_granted') === 'true';
@@ -407,24 +410,59 @@ export default function App() {
     if (attemptedSha) {
       try { sessionStorage.setItem('last_attempted_update_sha', attemptedSha); } catch (e) {}
     }
-    setIsApplyingUpdate(true);
 
-    // Native Mobile Android APK Self-Update
+    const apkUrl = updateInfo?.apkUrl || 'https://github.com/monfreda48/Meowdy5000/releases/download/v1.0.0/app-debug.apk';
+
+    // 1. Native Mobile Android Background APK Download & Install Consent
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-      setUpdateStatusMsg('📱 Launching Android APK Package Installer...');
+      setIsDownloadingUpdate(true);
+      setDownloadProgress(15);
+      setUpdateToast({ type: 'update', message: '⚡ Downloading update package in background...' });
+
       try {
-        const apkUrl = updateInfo?.apkUrl || 'https://github.com/monfreda48/Meowdy5000/releases/download/v1.0.0/app-debug.apk';
-        await Browser.open({ url: apkUrl });
-        setUpdateStatusMsg('✅ Package installer launched! Confirm installation to complete update.');
-      } catch (e) {
-        window.open('https://github.com/monfreda48/Meowdy5000/releases', '_system');
-      } finally {
-        setTimeout(() => setIsApplyingUpdate(false), 2000);
+        const res = await Filesystem.downloadFile({
+          url: apkUrl,
+          path: 'Meowdy5000-Update.apk',
+          directory: Directory.Cache,
+          progress: true
+        });
+
+        console.log('[BackgroundDownload] Download complete:', res);
+        setDownloadProgress(100);
+        setIsDownloadingUpdate(false);
+
+        let fileUri = res.path || '';
+        if (!fileUri) {
+          try {
+            const uriRes = await Filesystem.getUri({
+              path: 'Meowdy5000-Update.apk',
+              directory: Directory.Cache
+            });
+            fileUri = uriRes.uri;
+          } catch (e) {}
+        }
+
+        setReadyToInstallUpdate({
+          apkUrl,
+          fileUri: fileUri || apkUrl,
+          latestVersion: attemptedSha
+        });
+        setUpdateToast({ type: 'success', message: '✅ Download complete! Confirm installation to update.' });
+
+      } catch (dlErr) {
+        console.warn('[BackgroundDownload] Download error, using direct prompt:', dlErr);
+        setIsDownloadingUpdate(false);
+        setReadyToInstallUpdate({
+          apkUrl,
+          fileUri: apkUrl,
+          latestVersion: attemptedSha
+        });
       }
       return;
     }
 
-    // Web / Local Server Self-Update
+    // 2. Web / Local Server Self-Update
+    setIsApplyingUpdate(true);
     setUpdateStatusMsg('⚡ Fetching and installing latest update from GitHub...');
     try {
       const res = await fetch(getApiUrl('/api/apply-update'), { method: 'POST' });
@@ -449,6 +487,26 @@ export default function App() {
       }, 1000);
     } finally {
       setTimeout(() => setIsApplyingUpdate(false), 2000);
+    }
+  };
+
+  const executeInstallUpdate = async () => {
+    if (!readyToInstallUpdate) return;
+    const { fileUri, apkUrl } = readyToInstallUpdate;
+    setReadyToInstallUpdate(null);
+    setIsApplyingUpdate(true);
+    setUpdateStatusMsg('📱 Launching Android Package Installer...');
+
+    try {
+      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        await Browser.open({ url: fileUri || apkUrl });
+      } else {
+        window.open(apkUrl, '_blank');
+      }
+    } catch (e) {
+      window.open('https://github.com/monfreda48/Meowdy5000/releases', '_blank');
+    } finally {
+      setTimeout(() => setIsApplyingUpdate(false), 3000);
     }
   };
 
@@ -2060,6 +2118,69 @@ export default function App() {
                     🚫 Don't Ask Again
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Background Download Progress Indicator */}
+        {isDownloadingUpdate && (
+          <div className="fixed bottom-4 right-4 z-[99999] bg-[#0f1526] border-2 border-emerald-500/80 p-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-4">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm animate-spin">
+              ⚡
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">Downloading Update in Background...</h4>
+              <p className="text-[10px] text-slate-400">You can continue using the app while downloading</p>
+            </div>
+          </div>
+        )}
+
+        {/* Installation Consent Modal (Asks Permission Once Downloaded) */}
+        {readyToInstallUpdate && (
+          <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 select-none">
+            <div className="bg-[#0f1526] border-2 border-emerald-500/80 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-6 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/60 flex items-center justify-center text-3xl mx-auto shadow-lg shadow-emerald-500/20 animate-bounce">
+                🚀
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-xl font-black text-white uppercase tracking-wider">
+                  Release Download Complete!
+                </h3>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  The latest release package has been downloaded in the background. Would you like to install and launch the update now?
+                </p>
+              </div>
+
+              <div className="bg-[#131b2f] border border-slate-700/60 p-3 rounded-xl text-left text-xs space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Target Commit:</span>
+                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || 'v1.0.0'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Status:</span>
+                  <span className="text-emerald-400 font-bold">Ready to Install</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setReadyToInstallUpdate(null)}
+                  className="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer text-center"
+                >
+                  Later
+                </button>
+
+                <button
+                  type="button"
+                  onClick={executeInstallUpdate}
+                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/30 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <span>🚀</span>
+                  <span>Install & Launch Now</span>
+                </button>
               </div>
             </div>
           </div>
