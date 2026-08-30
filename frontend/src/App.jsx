@@ -563,6 +563,27 @@ export default function App() {
     }
   };
 
+  const selectAllMetrics = () => {
+    const allIds = AVAILABLE_METRICS.map(m => m.id);
+    setSelectedMetrics(allIds);
+    if (hasStoragePermission) {
+      try { localStorage.setItem('tracked_metrics', JSON.stringify(allIds)); } catch (e) { }
+    }
+  };
+
+  const [autoUpdatePref, setAutoUpdatePref] = useState(() => {
+    try {
+      return localStorage.getItem('auto_update_preference') || 'enabled';
+    } catch (e) {
+      return 'enabled';
+    }
+  });
+  const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
+  const [updateStatusMsg, setUpdateStatusMsg] = useState('');
+  const [showUpToDateModal, setShowUpToDateModal] = useState(false);
+  const [upToDateDetails, setUpToDateDetails] = useState(null);
+  const [activeUserTab, setActiveUserTab] = useState('live');
+  const [showAutoUpdateModal, setShowAutoUpdateModal] = useState(false);
   const [networkStatus, setNetworkStatus] = useState({ connected: true, connectionType: 'unknown' });
   const [deviceInfo, setDeviceInfo] = useState(null);
   const [appInfo, setAppInfo] = useState(null);
