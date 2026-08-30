@@ -489,6 +489,38 @@ export default function App() {
     return `${base}${endpoint}`;
   };
 
+  const cleanupOldApkFiles = async () => {
+    if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return;
+    try {
+      const directories = [Directory.Cache, Directory.Data, Directory.Documents];
+      for (const dir of directories) {
+        try {
+          const res = await Filesystem.readdir({ path: '', directory: dir });
+          if (res && res.files) {
+            for (const file of res.files) {
+              const filename = typeof file === 'string' ? file : (file.name || file.path || '');
+              if (filename && (filename.endsWith('.apk') || filename.includes('Meowdy5000-Update'))) {
+                try {
+                  await Filesystem.deleteFile({ path: filename, directory: dir });
+                  console.log(`[ApkCleanup] Cleaned up old APK file: ${filename} from ${dir}`);
+                } catch (delErr) {
+                  console.warn(`[ApkCleanup] Failed to delete ${filename}:`, delErr);
+                }
+              }
+            }
+          }
+        } catch (dirErr) {
+          // ignore directory errors if empty or inaccessible
+        }
+      }
+      try {
+        await Filesystem.deleteFile({ path: 'Meowdy5000-Update.apk', directory: Directory.Cache });
+      } catch (e) {}
+    } catch (e) {
+      console.warn('[ApkCleanup] Cleanup error:', e);
+    }
+  };
+
   const applyUpdateNow = async (targetSha = null) => {
     const attemptedSha = targetSha || updateInfo?.latestVersion;
     if (attemptedSha) {
@@ -499,6 +531,7 @@ export default function App() {
 
     // 1. Native Mobile Android Background APK Download & Install Consent
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      await cleanupOldApkFiles();
       setIsDownloadingUpdate(true);
       setDownloadProgress(15);
       setUpdateToast({ type: 'update', message: '⚡ Downloading update package in background...' });
@@ -584,6 +617,9 @@ export default function App() {
     try {
       if (window.Capacitor && window.Capacitor.isNativePlatform()) {
         await Browser.open({ url: fileUri || apkUrl });
+        setTimeout(() => {
+          cleanupOldApkFiles();
+        }, 10000);
       } else {
         window.open(apkUrl, '_blank');
       }
@@ -834,7 +870,16 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    cleanupOldApkFiles();
     checkForUpdates();
+  }, []);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      cleanupOldApkFiles();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   const fetchStats = async (e, overrideQuery = null, overrideSeason = null) => {
