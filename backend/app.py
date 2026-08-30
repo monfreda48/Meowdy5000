@@ -170,9 +170,15 @@ def scrape_tracker_gg_api(username, season=None):
                 except:
                     pass
             
+            # Extract ALL hero segments and role segments without truncation
             hero_list = []
+            all_hero_segments = []
+            role_segments = []
+
             for seg in segments:
-                if seg.get('type') == 'hero':
+                seg_type = seg.get('type')
+                if seg_type == 'hero':
+                    all_hero_segments.append(seg)
                     name = seg.get('metadata', {}).get('name', 'Unknown')
                     st = seg.get('stats', {})
                     matches = st.get('matchesPlayed', {}).get('value', 0)
@@ -186,10 +192,14 @@ def scrape_tracker_gg_api(username, season=None):
                         "matches": int(matches if matches else 0),
                         "winRate": round(float(h_win_rate if h_win_rate else 0.0), 1),
                         "kda": round(float(h_kda if h_kda else 0.0), 2),
-                        "timePlayed": time_played
+                        "timePlayed": time_played,
+                        "rawStats": st,
+                        "rawMetadata": seg.get('metadata', {})
                     })
+                elif seg_type == 'role':
+                    role_segments.append(seg)
             
-            # Sort descending by matches and format into detailed list
+            # Sort descending by matches
             hero_list = sorted(hero_list, key=lambda x: x['matches'], reverse=True)
             top_3_detailed = hero_list[:3]
             top_3_names = [h['name'] for h in top_3_detailed]
@@ -219,6 +229,10 @@ def scrape_tracker_gg_api(username, season=None):
                 "kdRatio": str(round(kd_ratio, 2)),
                 "topHero": top_hero_str,
                 "topHeroesDetailed": top_3_detailed,
+                "allHeroesFull": hero_list,
+                "roleSegments": role_segments,
+                "allSegments": segments,
+                "rawTrackerData": data,
                 "matchesPlayed": int(stats.get('matchesPlayed', {}).get('value', 0) if isinstance(stats.get('matchesPlayed'), dict) else (stats.get('matchesPlayed') or 0)),
                 "matchesWon": int(stats.get('matchesWon', {}).get('value', 0) if isinstance(stats.get('matchesWon'), dict) else (stats.get('matchesWon') or 0)),
                 "kills": int(stats.get('kills', {}).get('value', 0) if isinstance(stats.get('kills'), dict) else (stats.get('kills') or 0)),
@@ -253,7 +267,7 @@ def scrape_rivals_meta_api(query, season=None):
     """Scrapes player data, rank ratings, and hero statistics from RivalsMeta.com."""
     season_param = f"?season={season}" if season else ""
     rm_url = f"https://rivalsmeta.com/api/player/{query}{season_param}"
-    print(f"[INFO] Ingesting RivalsMeta.com data for {query}...")
+    print(f"[INFO] Ingesting RivalsMeta.com raw data for {query}...")
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -290,7 +304,8 @@ def scrape_rivals_meta_api(query, season=None):
                         "name": HERO_MAP.get(str(h_id), f"Hero #{h_id}"),
                         "matches": h_matches,
                         "winRate": h_win_rate,
-                        "kda": h_kda
+                        "kda": h_kda,
+                        "rawHeroData": h_data
                     })
 
             hero_list = sorted(hero_list, key=lambda x: x['matches'], reverse=True)
@@ -309,7 +324,7 @@ def scrape_rivals_meta_api(query, season=None):
                 "kdRatio": str(kd_ratio),
                 "topHero": ", ".join(top_names) if top_names else "Unknown",
                 "heroes": hero_list,
-                "rawData": data
+                "rawRivalsMetaData": data
             }
     except Exception as e:
         print(f"[ERROR] RivalsMeta Scraping Exception: {e}")
@@ -360,7 +375,7 @@ def get_stats():
     rm_data = scrape_rivals_meta_api(query, season=season)
     if rm_data.get("success"):
         final_data["sources"].append("RivalsMeta.com")
-        final_data["rawSourcesData"]["rivalsMeta"] = rm_data.get("rawData")
+        final_data["rawSourcesData"]["rivalsMeta"] = rm_data.get("rawRivalsMetaData")
         if rm_data.get("username"): final_data["username"] = rm_data["username"]
         if rm_data.get("rank"): final_data["rank"] = rm_data["rank"]
         if rm_data.get("winRate"): final_data["winRate"] = rm_data["winRate"]
@@ -379,7 +394,10 @@ def get_stats():
     
     if tracker_data.get("success"):
         final_data["sources"].append("Tracker.gg")
-        final_data["rawSourcesData"]["trackerGg"] = tracker_data
+        final_data["rawSourcesData"]["trackerGg"] = tracker_data.get("rawTrackerData")
+        final_data["allHeroesFull"] = tracker_data.get("allHeroesFull", [])
+        final_data["roleSegments"] = tracker_data.get("roleSegments", [])
+        final_data["allSegments"] = tracker_data.get("allSegments", [])
         if tracker_data.get("avatarUrl"): final_data["avatarUrl"] = tracker_data["avatarUrl"]
         if tracker_data.get("matchesPlayed"): final_data["matchesPlayed"] = tracker_data["matchesPlayed"]
         if tracker_data.get("matchesWon"): final_data["matchesWon"] = tracker_data["matchesWon"]
