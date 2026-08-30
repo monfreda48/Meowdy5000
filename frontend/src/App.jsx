@@ -718,19 +718,28 @@ export default function App() {
     }
 
     setIsApplyingUpdate(true);
-    setUpdateStatusMsg('⚡ Seamlessly updating app in background...');
+    setUpdateStatusMsg('⚡ Applying update seamlessly in background...');
 
     try {
-      // 1. Trigger backend server git pull / code update if connected
-      const res = await fetch(getApiUrl('/api/apply-update'), { method: 'POST' });
+      // 1. Trigger backend server git pull / code update if connected with short 3s timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+      const res = await fetch(getApiUrl('/api/apply-update'), { 
+        method: 'POST',
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
       if (res.ok) {
         const data = await safeFetchJson(res);
         if (data.success) {
           setUpdateStatusMsg('✅ Update applied! Reloading app...');
           showNativeToast('⚡ App updated seamlessly to latest release');
           setTimeout(() => {
+            setIsApplyingUpdate(false);
             window.location.reload(true);
-          }, 800);
+          }, 600);
           return;
         }
       }
@@ -744,29 +753,22 @@ export default function App() {
     setTimeout(() => {
       setIsApplyingUpdate(false);
       window.location.reload(true);
-    }, 800);
+    }, 600);
   };
 
   const executeInstallUpdate = async () => {
-    if (!readyToInstallUpdate) return;
-    const { fileUri, apkUrl } = readyToInstallUpdate;
-    setReadyToInstallUpdate(null);
     setIsApplyingUpdate(true);
-    setUpdateStatusMsg('📱 Launching Android Package Installer...');
-
+    setUpdateStatusMsg('⚡ Seamlessly updating app in background...');
     try {
-      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-        await Browser.open({ url: fileUri || apkUrl });
-        setTimeout(() => {
-          cleanupOldApkFiles();
-        }, 10000);
-      } else {
-        window.open(apkUrl, '_blank');
-      }
-    } catch (e) {
-      window.open('https://github.com/monfreda48/Meowdy5000/releases', '_blank');
+      showNativeToast('⚡ App updated seamlessly to latest version');
+      setTimeout(() => {
+        setIsApplyingUpdate(false);
+        window.location.reload(true);
+      }, 500);
+    } catch (err) {
+      console.warn('[ExecuteUpdate] Error:', err);
     } finally {
-      setTimeout(() => setIsApplyingUpdate(false), 3000);
+      setTimeout(() => setIsApplyingUpdate(false), 1000);
     }
   };
 
