@@ -515,11 +515,33 @@ export default function App() {
 
   const [isTrackingMode, setIsTrackingMode] = useState(() => {
     try {
-      return localStorage.getItem('tracking_mode_enabled') === 'true';
+      const saved = localStorage.getItem('tracking_mode_enabled');
+      if (saved !== null) return saved === 'true';
+      return true; // Default to TRUE (Tracking ON by default!)
     } catch (e) {
-      return false;
+      return true;
     }
   });
+
+  const [defaultTrackingPref, setDefaultTrackingPref] = useState(() => {
+    try {
+      return localStorage.getItem('tracking_mode_default_pref') || 'enabled';
+    } catch (e) {
+      return 'enabled';
+    }
+  });
+
+  const handleUpdateDefaultTrackingPref = (pref) => {
+    setDefaultTrackingPref(pref);
+    try {
+      localStorage.setItem('tracking_mode_default_pref', pref);
+      const isEnabled = pref === 'enabled';
+      setIsTrackingMode(isEnabled);
+      localStorage.setItem('tracking_mode_enabled', isEnabled ? 'true' : 'false');
+      triggerHaptic('success');
+      showNativeToast(`Default Tracking set to ${isEnabled ? '📥 ON' : '🚫 OFF'}`);
+    } catch (e) {}
+  };
 
   const downloadUserDataset = (data) => {
     try {
@@ -2926,6 +2948,55 @@ ${payload.stack || 'No stack trace available.'}
                     Disables background update popups. Updates will only run when manually clicking "Check for update".
                   </p>
                 </button>
+              </div>
+
+              {/* Default Tracking Mode Setting Card */}
+              <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                    <span>📥</span>
+                    <span>Default Tracking Mode</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-bold">App Preference</span>
+                </div>
+                
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Choose whether player searches auto-download a dataset file by default:
+                </p>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateDefaultTrackingPref('enabled')}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer font-bold text-xs flex flex-col justify-between gap-1.5 ${
+                      defaultTrackingPref === 'enabled'
+                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-md shadow-emerald-500/10'
+                        : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>📥 Tracking ON</span>
+                      {defaultTrackingPref === 'enabled' && <span className="text-[10px] text-emerald-400 font-black">✓ Default</span>}
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-normal">Auto-downloads dataset file on search</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateDefaultTrackingPref('disabled')}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer font-bold text-xs flex flex-col justify-between gap-1.5 ${
+                      defaultTrackingPref === 'disabled'
+                        ? 'bg-slate-800 border-slate-600 text-white shadow-md'
+                        : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>🚫 Tracking OFF</span>
+                      {defaultTrackingPref === 'disabled' && <span className="text-[10px] text-slate-300 font-black">✓ Default</span>}
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-normal">Standard search without dataset downloads</span>
+                  </button>
+                </div>
               </div>
 
               {/* System & Device Diagnostics Card (Powered by @capacitor/device & @capacitor/app) */}
