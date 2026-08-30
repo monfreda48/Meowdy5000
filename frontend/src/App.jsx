@@ -263,6 +263,24 @@ export default function App() {
     }
   };
 
+  const [showSplash, setShowSplash] = useState(true);
+  const [splashFading, setSplashFading] = useState(false);
+
+  useEffect(() => {
+    const fadeTimer = setTimeout(() => {
+      setSplashFading(true);
+    }, 2200);
+
+    const removeTimer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2800);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(removeTimer);
+    };
+  }, []);
+
   useEffect(() => {
     checkForUpdates();
   }, []);
@@ -307,6 +325,41 @@ export default function App() {
   return (
     <div className="min-h-[100dvh] mobile-safe-area bg-[#0b101e] text-slate-200 font-sans selection:bg-orange-500/30 transition-all duration-300">
       
+      {/* Opening Splash Screen Overlay */}
+      {showSplash && (
+        <div 
+          onClick={() => { setSplashFading(true); setTimeout(() => setShowSplash(false), 400); }}
+          className={`fixed inset-0 z-[9999] bg-[#0b101e] flex flex-col items-center justify-center p-6 text-center transition-all duration-700 cursor-pointer select-none ${
+            splashFading ? 'opacity-0 pointer-events-none scale-105' : 'opacity-100'
+          }`}
+        >
+          <div className="absolute w-80 h-80 rounded-full bg-gradient-to-tr from-orange-500/20 via-red-500/10 to-transparent blur-3xl animate-pulse"></div>
+
+          <div className="relative z-10 flex flex-col items-center space-y-5 max-w-sm">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center font-black text-white text-3xl shadow-2xl shadow-orange-500/40 border border-orange-400/30 transform hover:scale-105 transition-transform duration-500">
+              SP
+            </div>
+
+            <div className="space-y-2">
+              <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-wider animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                Meowdy 5000's Stat Tracker
+              </h1>
+              <p className="text-xs sm:text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500 uppercase tracking-widest animate-in fade-in slide-in-from-bottom-6 duration-1000">
+                SNACK HARD, TRACK HARD
+              </p>
+            </div>
+
+            <div className="w-48 h-1 bg-slate-800 rounded-full overflow-hidden mt-4 border border-slate-700/50">
+              <div className="h-full bg-gradient-to-r from-orange-500 via-red-500 to-orange-400 rounded-full animate-pulse w-full"></div>
+            </div>
+            
+            <p className="text-[10px] text-slate-500 font-medium tracking-wider uppercase pt-2">
+              Tap to Skip • Season 9.5 Active
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Top Navigation Bar */}
       <nav className="border-b border-slate-800 bg-[#0f1526]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-3 sm:px-6 py-2 sm:py-3.5 flex items-center justify-between gap-3">
