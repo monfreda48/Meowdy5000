@@ -593,7 +593,7 @@ export default function App() {
   const downloadUserDataset = (data) => {
     try {
       const username = data.current?.username || 'Player';
-      const seasonName = data.current?.season || season || 'Current';
+      const seasonName = data.current?.season || 'Season 1';
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 
       const datasetObj = {
