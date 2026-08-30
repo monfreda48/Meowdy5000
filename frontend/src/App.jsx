@@ -617,12 +617,15 @@ export default function App() {
     const text = await res.text();
     const isHtml = text.trim().startsWith('<') || text.toLowerCase().includes('<!doctype html');
     if (isHtml) {
-      throw new Error(`Server returned HTML instead of JSON. Ensure Python Flask backend server (port 5000) is running.`);
+      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        throw new Error(`Unable to reach backend server (port 5000). Please check your network connection or configure your server IP in Menu (⚙️) -> Backend Server URL.`);
+      }
+      throw new Error(`Server returned HTML instead of JSON. Ensure Python Flask backend server (port 5000) is running on http://localhost:5000.`);
     }
     try {
       return JSON.parse(text);
     } catch (e) {
-      throw new Error(`Invalid JSON response: ${text.slice(0, 80)}`);
+      throw new Error(`Invalid JSON response from server.`);
     }
   };
 
