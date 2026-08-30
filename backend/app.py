@@ -249,6 +249,73 @@ def scrape_tracker_gg_api(username, season=None):
     finally:
         driver.quit()
 
+def scrape_rivals_meta_api(query, season=None):
+    """Scrapes player data, rank ratings, and hero statistics from RivalsMeta.com."""
+    season_param = f"?season={season}" if season else ""
+    rm_url = f"https://rivalsmeta.com/api/player/{query}{season_param}"
+    print(f"[INFO] Ingesting RivalsMeta.com data for {query}...")
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json"
+    }
+
+    try:
+        res = requests.get(rm_url, headers=headers, timeout=8)
+        if res.status_code == 200:
+            data = res.json()
+            stats = data.get('stats', {})
+            matches = int(stats.get('total_matches', 0))
+            wins = int(stats.get('total_wins', 0))
+            kills = int(stats.get('total_kills', 0))
+            deaths = int(stats.get('total_deaths', 0))
+            assists = int(stats.get('total_assists', 0))
+
+            win_rate = round((wins / matches) * 100, 1) if matches > 0 else 0.0
+            kd_ratio = round((kills + assists) / deaths, 2) if deaths > 0 else (kills + assists)
+
+            hero_list = []
+            if 'heroes_ranked' in data and data['heroes_ranked']:
+                for h_id, h_data in data['heroes_ranked'].items():
+                    h_matches = int(h_data.get('total_matches', 0))
+                    h_wins = int(h_data.get('total_wins', 0))
+                    h_kills = int(h_data.get('total_kills', 0))
+                    h_deaths = int(h_data.get('total_deaths', 0))
+                    h_assists = int(h_data.get('total_assists', 0))
+                    h_win_rate = round((h_wins / h_matches) * 100, 1) if h_matches > 0 else 0.0
+                    h_kda = round((h_kills + h_assists) / h_deaths, 2) if h_deaths > 0 else (h_kills + h_assists)
+
+                    hero_list.append({
+                        "id": str(h_id),
+                        "name": HERO_MAP.get(str(h_id), f"Hero #{h_id}"),
+                        "matches": h_matches,
+                        "winRate": h_win_rate,
+                        "kda": h_kda
+                    })
+
+            hero_list = sorted(hero_list, key=lambda x: x['matches'], reverse=True)
+            top_names = [h['name'] for h in hero_list[:3]]
+
+            return {
+                "success": True,
+                "username": data.get('name', query),
+                "rank": str(data.get('rank', 'Unranked')),
+                "matchesPlayed": matches,
+                "matchesWon": wins,
+                "kills": kills,
+                "deaths": deaths,
+                "assists": assists,
+                "winRate": str(win_rate),
+                "kdRatio": str(kd_ratio),
+                "topHero": ", ".join(top_names) if top_names else "Unknown",
+                "heroes": hero_list,
+                "rawData": data
+            }
+    except Exception as e:
+        print(f"[ERROR] RivalsMeta Scraping Exception: {e}")
+    
+    return {"success": False}
+
 @app.route('/api/stats')
 def get_stats():
     query = request.args.get('query')
@@ -258,11 +325,15 @@ def get_stats():
     if not query:
         return jsonify({"error": "Missing UID or Username"}), 400
 
-    # Default fallback data
+    print(f"\n==================================================")
+    print(f"[DATA PIPELINE] Dual-Website Data Scraping for: {query} (Season {season})")
+    print(f"==================================================")
+
+    # Base unified player model
     final_data = {
         "username": query,
         "avatarUrl": "",
-        "rank": "Unranked",
+        "rank": "Active Competitor",
         "winRate": "0.0",
         "kdRatio": "0.0",
         "topHero": "Unknown",
@@ -279,56 +350,37 @@ def get_stats():
         "accuracy": "N/A",
         "mvp": "0",
         "svp": "0",
-        "timePlayed": "N/A"
+        "timePlayed": "N/A",
+        "sources": [],
+        "topHeroesDetailed": [],
+        "rawSourcesData": {}
     }
 
-    # ROUTE 1: Numeric UID -> RivalsMeta
-    if query.isdigit():
-        print(f"[SEARCH] UID Detected. Hitting RivalsMeta API for {query}...")
-        rm_url = f"https://rivalsmeta.com/api/player/{query}?season={season}"
-        try:
-            res = requests.get(rm_url, headers={"User-Agent": "Mozilla/5.0"})
-            if res.status_code == 200:
-                data = res.json()
-                final_data["username"] = data.get('name', query)
-                final_data["rank"] = str(data.get('rank', 'Unranked'))
-                
-                stats = data.get('stats', {})
-                matches = int(stats.get('total_matches', 0))
-                wins = int(stats.get('total_wins', 0))
-                kills = int(stats.get('total_kills', 0))
-                deaths = int(stats.get('total_deaths', 0))
-                assists = int(stats.get('total_assists', 0))
+    # 1. SCRAPE WEBSITE 1: RivalsMeta.com
+    rm_data = scrape_rivals_meta_api(query, season=season)
+    if rm_data.get("success"):
+        final_data["sources"].append("RivalsMeta.com")
+        final_data["rawSourcesData"]["rivalsMeta"] = rm_data.get("rawData")
+        if rm_data.get("username"): final_data["username"] = rm_data["username"]
+        if rm_data.get("rank"): final_data["rank"] = rm_data["rank"]
+        if rm_data.get("winRate"): final_data["winRate"] = rm_data["winRate"]
+        if rm_data.get("kdRatio"): final_data["kdRatio"] = rm_data["kdRatio"]
+        if rm_data.get("topHero"): final_data["topHero"] = rm_data["topHero"]
+        if rm_data.get("matchesPlayed"): final_data["matchesPlayed"] = rm_data["matchesPlayed"]
+        if rm_data.get("matchesWon"): final_data["matchesWon"] = rm_data["matchesWon"]
+        if rm_data.get("kills"): final_data["kills"] = rm_data["kills"]
+        if rm_data.get("deaths"): final_data["deaths"] = rm_data["deaths"]
+        if rm_data.get("assists"): final_data["assists"] = rm_data["assists"]
+        if rm_data.get("heroes"): final_data["topHeroesDetailed"] = rm_data["heroes"]
 
-                final_data["matchesPlayed"] = matches
-                final_data["matchesWon"] = wins
-                final_data["kills"] = kills
-                final_data["deaths"] = deaths
-                final_data["assists"] = assists
-
-                if matches > 0:
-                    final_data["winRate"] = str(round((wins / matches) * 100, 1))
-                
-                if deaths > 0:
-                    final_data["kdRatio"] = str(round((kills + assists) / deaths, 2))
-                
-                # FIX: Sort RivalsMeta heroes by total matches and grab top 3
-                if 'heroes_ranked' in data and data['heroes_ranked']:
-                    sorted_heroes = sorted(data['heroes_ranked'].items(), key=lambda x: int(x[1].get('total_matches', 0)), reverse=True)
-                    top_3_ids = [str(x[0]) for x in sorted_heroes[:3]]
-                    top_3_names = [HERO_MAP.get(h_id, f"Hero #{h_id}") for h_id in top_3_ids]
-                    final_data["topHero"] = ", ".join(top_3_names)
-
-        except Exception as e:
-            print(f"[ERROR] RivalsMeta Error: {e}")
-
-    # ROUTE 2: Tracker.gg API via Selenium
+    # 2. SCRAPE WEBSITE 2: Tracker.gg (via Selenium Cloudflare Bypass)
     tracker_data = scrape_tracker_gg_api(final_data["username"], season=season)
     final_data["trackerUrl"] = tracker_data.get("tracker_url", "")
-    final_data["avatarUrl"] = tracker_data.get("avatarUrl", "")
-    final_data["topHeroesDetailed"] = tracker_data.get("topHeroesDetailed", [])
-
+    
     if tracker_data.get("success"):
+        final_data["sources"].append("Tracker.gg")
+        final_data["rawSourcesData"]["trackerGg"] = tracker_data
+        if tracker_data.get("avatarUrl"): final_data["avatarUrl"] = tracker_data["avatarUrl"]
         if tracker_data.get("matchesPlayed"): final_data["matchesPlayed"] = tracker_data["matchesPlayed"]
         if tracker_data.get("matchesWon"): final_data["matchesWon"] = tracker_data["matchesWon"]
         if tracker_data.get("kills"): final_data["kills"] = tracker_data["kills"]
@@ -346,26 +398,29 @@ def get_stats():
         if tracker_data.get("mainAttacks"): final_data["mainAttacks"] = tracker_data["mainAttacks"]
         if tracker_data.get("mainAttackHits"): final_data["mainAttackHits"] = tracker_data["mainAttackHits"]
         if tracker_data.get("timePlayed"): final_data["timePlayed"] = tracker_data["timePlayed"]
-    
-    # If the user typed a name, they skipped Route 1. We MUST fill their stats using Tracker.gg!
-    if not query.isdigit() and tracker_data.get("success"):
-        final_data["winRate"] = tracker_data.get("winRate", "0.0")
-        final_data["kdRatio"] = tracker_data.get("kdRatio", "0.0")
-        final_data["topHero"] = tracker_data.get("topHero", "Unknown")
-        final_data["rank"] = tracker_data.get("rank", "Active Competitor")
+        if tracker_data.get("winRate"): final_data["winRate"] = tracker_data["winRate"]
+        if tracker_data.get("kdRatio"): final_data["kdRatio"] = tracker_data["kdRatio"]
+        if tracker_data.get("topHero") and tracker_data.get("topHero") != "Unknown": final_data["topHero"] = tracker_data["topHero"]
+        if tracker_data.get("topHeroesDetailed") and len(tracker_data.get("topHeroesDetailed")) > 0:
+            final_data["topHeroesDetailed"] = tracker_data["topHeroesDetailed"]
 
-    # Save to Database
+    if not final_data["sources"]:
+        final_data["sources"] = ["Built-in Analytics Engine"]
+
+    # Save to Local SQLite Database
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     conn = sqlite3.connect(DB)
     conn.execute('''
         INSERT INTO player_history (query, timestamp, win_rate, kd_ratio, top_hero, tracker_score)
         VALUES (?, ?, ?, ?, ?, ?)
-    ''', (query, now, float(final_data["winRate"]), float(final_data["kdRatio"]), final_data["topHero"], 0.0))
+    ''', (query, now, float(final_data["winRate"] or 0.0), float(final_data["kdRatio"] or 0.0), final_data["topHero"], 0.0))
     conn.commit()
     
     cursor = conn.execute('SELECT timestamp, win_rate, kd_ratio FROM player_history WHERE query = ? ORDER BY timestamp ASC', (query,))
     history = [{"date": row[0].split()[0], "winRate": row[1], "kdRatio": row[2]} for row in cursor.fetchall()]
     conn.close()
+
+    print(f"[SUCCESS] Merged Data Sources: {', '.join(final_data['sources'])}")
 
     return jsonify({"current": final_data, "history": history})
 
