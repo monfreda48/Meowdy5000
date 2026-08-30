@@ -179,6 +179,7 @@ export default function App() {
       return true;
     }
   });
+  const [showWhyPermission, setShowWhyPermission] = useState(false);
 
   const grantStoragePermission = async () => {
     try {
@@ -2076,25 +2077,61 @@ export default function App() {
                   💾 Storage & Persistence
                 </span>
 
-                <button
-                  onClick={() => { setIsMenuOpen(false); grantStoragePermission(); }}
-                  className="w-full bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-sm">
-                      💾
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-white group-hover:text-blue-400 transition-colors">
-                        Storage Write Permission
-                      </h4>
-                      <p className="text-[10px] text-slate-400">
-                        Status: <span className={hasStoragePermission ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>{hasStoragePermission ? 'Granted' : 'Action Needed'}</span>
-                      </p>
-                    </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => { setIsMenuOpen(false); grantStoragePermission(); }}
+                      className="flex-1 bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-sm">
+                          💾
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white group-hover:text-blue-400 transition-colors">
+                            Storage Write Permission
+                          </h4>
+                          <p className="text-[10px] text-slate-400">
+                            Status: <span className={hasStoragePermission ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>{hasStoragePermission ? 'Granted' : 'Action Needed'}</span>
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-xs text-slate-500 group-hover:text-blue-400 font-bold">→</span>
+                    </button>
+
+                    <button
+                      onClick={() => setShowWhyPermission(!showWhyPermission)}
+                      className={`px-3 py-3 rounded-xl border font-black text-xs transition-all flex items-center justify-center cursor-pointer shrink-0 shadow-sm ${
+                        showWhyPermission 
+                          ? 'bg-blue-500/30 border-blue-400 text-white shadow-md scale-105' 
+                          : 'bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/40 text-blue-400 hover:text-white'
+                      }`}
+                      title="Why is storage write permission required?"
+                    >
+                      <span>Why?</span>
+                    </button>
                   </div>
-                  <span className="text-xs text-slate-500 group-hover:text-blue-400 font-bold">→</span>
-                </button>
+
+                  {/* Expandable Permission Explanation Box */}
+                  {showWhyPermission && (
+                    <div className="bg-[#131b2f] border border-blue-500/40 p-3.5 rounded-xl space-y-2 text-xs animate-in fade-in slide-in-from-top-2">
+                      <div className="flex items-center gap-1.5 text-blue-400 font-bold text-xs uppercase tracking-wider">
+                        <span>💡</span>
+                        <span>Why Permission is Required:</span>
+                      </div>
+                      <ul className="space-y-1.5 text-slate-300 text-[11px] leading-relaxed">
+                        <li className="flex items-start gap-1.5">
+                          <span className="text-emerald-400 font-bold">1.</span>
+                          <span><strong className="text-white">Download & Install Updates:</strong> Saves release APK packages to your device so you can update in 1 click.</span>
+                        </li>
+                        <li className="flex items-start gap-1.5">
+                          <span className="text-emerald-400 font-bold">2.</span>
+                          <span><strong className="text-white">Local Tracking Data Files:</strong> Creates local data snapshot files to track daily Win Rate and KDA history over time.</span>
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Drawer Group 3: Diagnostics & Feedback */}
