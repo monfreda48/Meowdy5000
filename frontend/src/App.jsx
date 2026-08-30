@@ -383,6 +383,87 @@ export default function App() {
     }
   };
 
+  // Error Telemetry & Reporting State
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportNotes, setReportNotes] = useState('');
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [lastCapturedError, setLastCapturedError] = useState(null);
+
+  const sendErrorReport = async (payload) => {
+    try {
+      const fullPayload = {
+        error: payload.error || 'Unknown Client Error',
+        stack: payload.stack || '',
+        notes: payload.notes || '',
+        platform: window.Capacitor && window.Capacitor.isNativePlatform() ? 'Android Native APK' : 'Web Browser',
+        userAgent: navigator.userAgent
+      };
+
+      await fetch(getApiUrl('/api/report-error'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fullPayload)
+      });
+      console.log('✅ Error report successfully sent to developer telemetry server.');
+      return true;
+    } catch (err) {
+      console.warn('Could not send error report to backend telemetry endpoint:', err);
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    const handleGlobalError = (event) => {
+      const errorObj = {
+        error: event.message || 'Unhandled Window Error',
+        stack: event.error?.stack || `${event.filename}:${event.lineno}:${event.colno}`,
+        notes: 'Auto-caught unhandled runtime exception'
+      };
+      setLastCapturedError(errorObj);
+      sendErrorReport(errorObj);
+    };
+
+    const handleUnhandledRejection = (event) => {
+      const errorObj = {
+        error: event.reason?.message || String(event.reason) || 'Unhandled Promise Rejection',
+        stack: event.reason?.stack || '',
+        notes: 'Auto-caught unhandled promise rejection'
+      };
+      setLastCapturedError(errorObj);
+      sendErrorReport(errorObj);
+    };
+
+    window.addEventListener('error', handleGlobalError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleGlobalError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
+  const handleManualSubmitReport = async (e) => {
+    if (e) e.preventDefault();
+    setIsSubmittingReport(true);
+    const payload = {
+      error: lastCapturedError?.error || error || 'User Submitted Issue Report',
+      stack: lastCapturedError?.stack || '',
+      notes: reportNotes || 'User submitted feedback/error report via UI.'
+    };
+
+    const sent = await sendErrorReport(payload);
+    setIsSubmittingReport(false);
+    setShowReportModal(false);
+    setReportNotes('');
+
+    if (sent) {
+      setUpdateToast({ type: 'success', message: '✅ Error report sent! Thank you for helping us fix it.' });
+    } else {
+      setUpdateToast({ type: 'success', message: '✅ Report logged locally. Thank you!' });
+    }
+    setTimeout(() => setUpdateToast(null), 4000);
+  };
+
   const [showSplash, setShowSplash] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
 
@@ -530,6 +611,16 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Report Issue Button */}
+            <button
+              onClick={() => setShowReportModal(true)}
+              title="Report an issue or bug directly to developers"
+              className="bg-[#131b2f] border border-slate-700/60 text-slate-300 hover:text-white hover:border-emerald-500/50 text-xs px-2.5 sm:px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+            >
+              <span className="text-amber-400 font-bold">⚠️</span>
+              <span className="hidden sm:inline">Report Issue</span>
+            </button>
+
             {/* Check for Updates Button */}
             <button
               onClick={() => checkForUpdates(true)}
@@ -1764,6 +1855,81 @@ export default function App() {
               <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
                 <div className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full w-full animate-pulse"></div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error Reporting Modal */}
+        {showReportModal && (
+          <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+            <div className="bg-[#0f1526] border border-slate-700/80 rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold">
+                    ⚠️
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-white uppercase tracking-wider">Report an Issue</h3>
+                    <p className="text-[11px] text-slate-400">Error logs will be sent directly to the developer</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowReportModal(false)}
+                  className="text-slate-400 hover:text-white text-lg font-bold px-2 py-0.5 rounded-lg hover:bg-slate-800"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {lastCapturedError && (
+                <div className="bg-[#0b101e] border border-red-500/30 rounded-xl p-3 space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-red-400">Captured Error Log:</span>
+                  <p className="text-xs font-mono text-slate-300 break-words line-clamp-3">
+                    {lastCapturedError.error}
+                  </p>
+                </div>
+              )}
+
+              <form onSubmit={handleManualSubmitReport} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                    Describe what happened (Optional)
+                  </label>
+                  <textarea
+                    value={reportNotes}
+                    onChange={(e) => setReportNotes(e.target.value)}
+                    placeholder="e.g. App froze when searching player name or metrics disappeared..."
+                    rows="3"
+                    className="w-full bg-[#0b101e] border border-slate-700 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-all resize-none"
+                  ></textarea>
+                </div>
+
+                <div className="flex items-center justify-end gap-2.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowReportModal(false)}
+                    className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white font-bold text-xs uppercase cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingReport}
+                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-emerald-500/20 cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isSubmittingReport ? (
+                      <>
+                        <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>Sending...</span>
+                      </>
+                    ) : (
+                      <span>Send Error Report</span>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

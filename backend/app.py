@@ -42,6 +42,17 @@ def init_db():
             tracker_score REAL
         )
     ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS error_reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME,
+            error_message TEXT,
+            stack_trace TEXT,
+            user_notes TEXT,
+            user_agent TEXT,
+            platform TEXT
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -434,6 +445,70 @@ def apply_update():
             "success": False,
             "error": str(e)
         }), 500
+
+@app.route('/api/report-error', methods=['POST', 'GET'])
+def report_error():
+    """Receives error reports from frontend clients and logs them for developer resolution."""
+    if request.method == 'GET':
+        return jsonify({"status": "Error reporting endpoint active"})
+
+    data = request.json or {}
+    error_msg = data.get("error", "Unknown error")
+    stack_trace = data.get("stack", "")
+    user_notes = data.get("notes", "")
+    user_agent = request.headers.get("User-Agent", "Unknown")
+    platform = data.get("platform", "Web/Mobile")
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # 1. Save to Database
+    try:
+        conn = sqlite3.connect(DB)
+        conn.execute('''
+            INSERT INTO error_reports (timestamp, error_message, stack_trace, user_notes, user_agent, platform)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (timestamp, str(error_msg), str(stack_trace), str(user_notes), str(user_agent), str(platform)))
+        conn.commit()
+        conn.close()
+    except Exception as db_err:
+        print(f"[ErrorLogger] DB save error: {db_err}")
+
+    # 2. Write to persistent log file
+    try:
+        log_file = os.path.join(BASE_DIR, 'error_reports.log')
+        with open(log_file, 'a', encoding='utf-8') as f:
+            f.write(f"\n=== ERROR REPORT [{timestamp}] ===\n")
+            f.write(f"Platform: {platform}\n")
+            f.write(f"User Agent: {user_agent}\n")
+            f.write(f"Error: {error_msg}\n")
+            if user_notes:
+                f.write(f"User Notes: {user_notes}\n")
+            if stack_trace:
+                f.write(f"Stack Trace:\n{stack_trace}\n")
+            f.write("=" * 40 + "\n")
+    except Exception as log_err:
+        print(f"[ErrorLogger] File log error: {log_err}")
+
+    print(f"⚠️ [CLIENT ERROR REPORTED]: {error_msg}")
+    return jsonify({"success": True, "message": "Error report logged successfully."})
+
+@app.route('/api/error-reports', methods=['GET'])
+def get_error_reports():
+    """Returns stored error logs for inspection."""
+    conn = sqlite3.connect(DB)
+    cursor = conn.execute('SELECT id, timestamp, error_message, stack_trace, user_notes, platform FROM error_reports ORDER BY id DESC LIMIT 50')
+    reports = [
+        {
+            "id": row[0],
+            "timestamp": row[1],
+            "error": row[2],
+            "stack": row[3],
+            "notes": row[4],
+            "platform": row[5]
+        }
+        for row in cursor.fetchall()
+    ]
+    conn.close()
+    return jsonify(reports)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
