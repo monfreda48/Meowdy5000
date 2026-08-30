@@ -423,6 +423,18 @@ export default function App() {
     }
   };
 
+  const setAutoUpdatePermission = (preference) => {
+    try {
+      localStorage.setItem('auto_update_preference', preference);
+    } catch (e) {}
+    setAutoUpdatePref(preference);
+    setShowAutoUpdateModal(false);
+
+    if (preference === 'enabled' && updateInfo?.hasUpdate) {
+      applyUpdateNow(updateInfo?.latestVersion);
+    }
+  };
+
   const [updateToast, setUpdateToast] = useState(null);
 
   const checkForUpdates = async (isManual = false) => {
