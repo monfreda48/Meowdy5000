@@ -1470,7 +1470,9 @@ ${payload.stack || 'No stack trace available.'}
                 />
                 <span className="text-xs font-black uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5">
                   <span>{isTrackingMode ? '📥' : '🚫'}</span>
-                  <span>Tracking Mode</span>
+                  <span className={isTrackingMode ? 'text-emerald-300' : 'text-slate-400'}>
+                    Tracking {isTrackingMode ? 'ON' : 'OFF'}
+                  </span>
                 </span>
               </label>
 
