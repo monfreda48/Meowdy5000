@@ -168,6 +168,7 @@ export default function App() {
   const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [readyToInstallUpdate, setReadyToInstallUpdate] = useState(null);
+  const [showSnapshotHistoryModal, setShowSnapshotHistoryModal] = useState(false);
   const [hasStoragePermission, setHasStoragePermission] = useState(() => {
     try {
       return localStorage.getItem('storage_permission_granted') === 'true';
@@ -246,6 +247,62 @@ export default function App() {
         message: `ℹ️ Tracking paused for ${username}.`
       });
       setTimeout(() => setUpdateToast(null), 3000);
+    }
+  };
+
+  const handleExportBackup = async () => {
+    try {
+      const backupData = {
+        app: "Meowdy 5000's Stat Tracker",
+        exportedAt: new Date().toISOString(),
+        trackedPlayers: trackedPlayers,
+        selectedMetrics: selectedMetrics,
+        playerDataFiles: {}
+      };
+
+      Object.keys(trackedPlayers).forEach(username => {
+        const key = `player_file_data_${username.toLowerCase()}`;
+        try {
+          const raw = localStorage.getItem(key);
+          if (raw) backupData.playerDataFiles[username] = JSON.parse(raw);
+        } catch (e) {}
+      });
+
+      const jsonStr = JSON.stringify(backupData, null, 2);
+
+      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        await Filesystem.writeFile({
+          path: 'Meowdy5000_Backup.json',
+          data: jsonStr,
+          directory: Directory.Documents
+        });
+        setUpdateToast({ type: 'success', message: '✅ Backup file exported to Documents/Meowdy5000_Backup.json!' });
+      } else {
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Meowdy5000_Backup_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        setUpdateToast({ type: 'success', message: '✅ Backup downloaded as JSON file!' });
+      }
+      setTimeout(() => setUpdateToast(null), 4000);
+    } catch (err) {
+      console.error('Export backup error:', err);
+      setUpdateToast({ type: 'error', message: '⚠️ Failed to export backup file.' });
+    }
+  };
+
+  const openExternalUrl = async (url) => {
+    try {
+      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        await Browser.open({ url });
+      } else {
+        window.open(url, '_blank');
+      }
+    } catch (e) {
+      window.open(url, '_blank');
     }
   };
 
@@ -2415,6 +2472,25 @@ export default function App() {
                       </ul>
                     </div>
                   )}
+
+                  {/* Export Data Backup Button */}
+                  <button
+                    onClick={() => { setIsMenuOpen(false); handleExportBackup(); }}
+                    className="w-full bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
+                        📥
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
+                          Export Data Backup File
+                        </h4>
+                        <p className="text-[10px] text-slate-400">Save tracked stats & configs to JSON file</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">→</span>
+                  </button>
                 </div>
               </div>
 
@@ -2463,6 +2539,49 @@ export default function App() {
                     {isMobileView ? 'Mobile' : 'Desktop'}
                   </button>
                 </div>
+              </div>
+
+              {/* Drawer Group 4: Community & Meta Resources */}
+              <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                  🌐 Community & Esports Meta Wiki
+                </span>
+
+                <button
+                  onClick={() => { setIsMenuOpen(false); openExternalUrl('https://tracker.gg/marvel-rivals'); }}
+                  className="w-full bg-[#131b2f] hover:bg-purple-500/10 border border-slate-700/80 hover:border-purple-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-sm">
+                      🌐
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white group-hover:text-purple-400 transition-colors">
+                        Marvel Rivals Tracker.gg
+                      </h4>
+                      <p className="text-[10px] text-slate-400 font-medium">Open in-app official leaderboards</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-500 group-hover:text-purple-400 font-bold">↗</span>
+                </button>
+
+                <button
+                  onClick={() => { setIsMenuOpen(false); openExternalUrl('https://liquipedia.net/marvelrivals/Hero_ID'); }}
+                  className="w-full bg-[#131b2f] hover:bg-cyan-500/10 border border-slate-700/80 hover:border-cyan-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-sm">
+                      📖
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white group-hover:text-cyan-400 transition-colors">
+                        Liquipedia Hero Meta Wiki
+                      </h4>
+                      <p className="text-[10px] text-slate-400 font-medium">Open hero ability & ID database</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-500 group-hover:text-cyan-400 font-bold">↗</span>
+                </button>
               </div>
             </div>
 
