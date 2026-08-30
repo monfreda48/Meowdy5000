@@ -65,6 +65,40 @@ export default function App() {
   useEffect(() => {
     fetchDynamicSeasons();
   }, []);
+
+  // Recent Searches State & Helpers
+  const [recentSearches, setRecentSearches] = useState(() => {
+    try {
+      const saved = localStorage.getItem('recent_player_searches');
+      return saved ? JSON.parse(saved) : ['Meowdy', 'Necros', 'Bogur'];
+    } catch (e) {
+      return ['Meowdy', 'Necros', 'Bogur'];
+    }
+  });
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  const addRecentSearch = (searchQuery) => {
+    if (!searchQuery || !searchQuery.trim()) return;
+    const cleanQuery = searchQuery.trim();
+    setRecentSearches(prev => {
+      const filtered = prev.filter(q => q.toLowerCase() !== cleanQuery.toLowerCase());
+      const updated = [cleanQuery, ...filtered].slice(0, 3);
+      try { localStorage.setItem('recent_player_searches', JSON.stringify(updated)); } catch (e) {}
+      return updated;
+    });
+  };
+
+  const clearRecentSearches = (e) => {
+    if (e) e.stopPropagation();
+    setRecentSearches([]);
+    try { localStorage.removeItem('recent_player_searches'); } catch (e) {}
+  };
+
+  const selectRecentSearch = (searchQuery) => {
+    setQuery(searchQuery);
+    setIsSearchFocused(false);
+    fetchStats(null, searchQuery, season);
+  };
   
   const toggleExpandMetric = (id) => {
     setExpandedMetric(prev => prev === id ? null : id);
@@ -535,6 +569,7 @@ export default function App() {
     const activeSeason = overrideSeason !== null ? overrideSeason : season;
     if (!activeQuery) return;
     
+    addRecentSearch(activeQuery);
     setLoading(true);
     setError(null);
 
@@ -911,16 +946,53 @@ export default function App() {
             <div className={`flex bg-[#131b2f] p-2.5 sm:p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${
               isMobileView ? 'flex-col gap-2' : 'flex-col md:flex-row gap-3'
             }`}>
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Enter Username or UID..."
-                className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white placeholder-slate-500 ${
-                  isMobileView ? 'py-2.5 text-sm' : 'py-3.5 sm:py-4 text-base sm:text-lg flex-1'
-                }`}
-                required
-              />
+              <div className="flex-1 relative w-full">
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onClick={() => setIsSearchFocused(true)}
+                  onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                  placeholder="Enter Username or UID..."
+                  className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white placeholder-slate-500 ${
+                    isMobileView ? 'py-2.5 text-sm' : 'py-3.5 sm:py-4 text-base sm:text-lg'
+                  }`}
+                  required
+                />
+
+                {/* Recent Searches Quick Access Bar */}
+                {isSearchFocused && recentSearches.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-2 z-50 bg-[#0f1526] border border-emerald-500/40 rounded-xl p-2.5 shadow-2xl shadow-emerald-500/10 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200 text-left">
+                    <div className="flex items-center justify-between px-1">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+                        <span>🕒</span> Recent Searches
+                      </span>
+                      <button
+                        type="button"
+                        onMouseDown={clearRecentSearches}
+                        className="text-[10px] text-slate-500 hover:text-red-400 font-bold uppercase transition-colors cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {recentSearches.slice(0, 3).map((item, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onMouseDown={() => selectRecentSearch(item)}
+                          className="bg-[#131b2f] hover:bg-emerald-500/20 border border-slate-700 hover:border-emerald-500/60 text-slate-200 hover:text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                        >
+                          <span className="text-emerald-400 text-[10px]">🔍</span>
+                          <span>{item}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className={`flex gap-2 ${isMobileView ? 'w-full' : ''}`}>
                 <select 
                   value={season} 
