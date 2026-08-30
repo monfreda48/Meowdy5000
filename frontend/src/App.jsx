@@ -507,6 +507,7 @@ export default function App() {
   });
   const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
   const [updateStatusMsg, setUpdateStatusMsg] = useState('');
+  const [activeUserTab, setActiveUserTab] = useState('live');
   const [showAutoUpdateModal, setShowAutoUpdateModal] = useState(false);
   const [networkStatus, setNetworkStatus] = useState({ connected: true, connectionType: 'unknown' });
   const [deviceInfo, setDeviceInfo] = useState(null);
@@ -1774,7 +1775,49 @@ ${payload.stack || 'No stack trace available.'}
               </button>
             </div>
 
-            {/* Progress & Performance Focus Insights */}
+            {/* User View Navigation Tabs: Live Performance vs Saved Data over Time */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#131b2f] p-2 rounded-2xl border border-slate-700/60 shadow-xl">
+              <div className="flex items-center gap-1.5 bg-[#0b101e] p-1.5 rounded-xl border border-slate-800 flex-1 sm:flex-initial">
+                <button
+                  type="button"
+                  onClick={() => setActiveUserTab('live')}
+                  className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                    activeUserTab === 'live'
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  }`}
+                >
+                  <span>📊 Live Performance</span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setActiveUserTab('history')}
+                  className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                    activeUserTab === 'history'
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  }`}
+                >
+                  <span>📜 Saved Data Over Time ({stats.history?.length || 0})</span>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 px-2">
+                <button
+                  type="button"
+                  onClick={() => downloadUserDataset(stats)}
+                  className="px-4 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-400 font-bold text-xs uppercase cursor-pointer flex items-center gap-1.5 transition-all shadow-sm"
+                >
+                  <span>📥 Export Full Dataset (.json)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Tab 1: Live Performance & Metrics */}
+            {activeUserTab === 'live' && (
+              <div className="space-y-6 animate-in fade-in duration-300">
+                {/* Progress & Performance Focus Insights */}
             <div className="bg-[#131b2f] border border-emerald-500/30 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
                 <div className="flex items-center gap-2">
@@ -2524,6 +2567,131 @@ ${payload.stack || 'No stack trace available.'}
                     </div>
                   </div>
 
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 2: Saved Data Over Time View */}
+            {activeUserTab === 'history' && (
+              <div className="space-y-6 animate-in fade-in duration-300 text-left">
+                {/* Historical Overview Card */}
+                <div className="bg-[#131b2f] border border-slate-700/60 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                    <div>
+                      <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
+                        <span>📜 Saved Player Datasets & Historical Timeline</span>
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1">
+                        All snapshots and historical metric data saved by RivalsTracker for <strong className="text-emerald-400">{stats.current.username}</strong>
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => copyDiagnosticLog(stats)}
+                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-400 text-xs font-bold uppercase cursor-pointer"
+                      >
+                        📋 Copy Raw JSON
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => downloadUserDataset(stats)}
+                        className="px-3.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/60 text-emerald-300 font-bold text-xs uppercase cursor-pointer"
+                      >
+                        📥 Download Dataset
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Summary Stats Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
+                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Total Snapshots</span>
+                      <p className="text-xl font-black text-emerald-400">{stats.history?.length || 0}</p>
+                    </div>
+                    <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
+                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Current Win Rate</span>
+                      <p className="text-xl font-black text-white">{stats.current.winRate ? `${stats.current.winRate}%` : 'N/A'}</p>
+                    </div>
+                    <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
+                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Current KD Ratio</span>
+                      <p className="text-xl font-black text-teal-400">{stats.current.kdRatio || 'N/A'}</p>
+                    </div>
+                    <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
+                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Current Rank</span>
+                      <p className="text-xl font-black text-amber-400">{stats.current.rank || 'Unranked'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Detailed Snapshot History Table */}
+                <div className="bg-[#131b2f] border border-slate-700/60 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                      <span>🕒 Saved Snapshot History Log</span>
+                    </h4>
+                    <span className="text-[11px] text-slate-400 font-bold">
+                      {stats.history?.length || 0} Saved Snapshots
+                    </span>
+                  </div>
+
+                  {stats.history && stats.history.length > 0 ? (
+                    <div className="overflow-x-auto rounded-xl border border-slate-800">
+                      <table className="w-full text-left text-xs text-slate-300">
+                        <thead className="bg-[#0b101e] text-[10px] uppercase font-black text-slate-400 border-b border-slate-800">
+                          <tr>
+                            <th className="py-3 px-4">#</th>
+                            <th className="py-3 px-4">Timestamp / Date</th>
+                            <th className="py-3 px-4">Win Rate</th>
+                            <th className="py-3 px-4">KD Ratio</th>
+                            <th className="py-3 px-4">Top Hero</th>
+                            <th className="py-3 px-4">Tracker Score</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60 font-mono">
+                          {stats.history.map((entry, idx) => (
+                            <tr key={entry.id || idx} className="hover:bg-slate-800/40 transition-colors">
+                              <td className="py-3 px-4 text-slate-500 font-bold">{idx + 1}</td>
+                              <td className="py-3 px-4 text-white font-sans">{entry.timestamp ? new Date(entry.timestamp).toLocaleString() : 'Recorded'}</td>
+                              <td className="py-3 px-4 text-emerald-400 font-bold">{entry.win_rate !== undefined ? `${entry.win_rate}%` : (entry.winRate ? `${entry.winRate}%` : 'N/A')}</td>
+                              <td className="py-3 px-4 text-teal-400 font-bold">{entry.kd_ratio !== undefined ? entry.kd_ratio : (entry.kdRatio || 'N/A')}</td>
+                              <td className="py-3 px-4 text-amber-300 font-sans font-bold">{entry.top_hero || entry.topHero || 'N/A'}</td>
+                              <td className="py-3 px-4 text-purple-400 font-bold">{entry.tracker_score || entry.trackerScore || 'N/A'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="bg-[#0f1526] p-6 rounded-xl text-center border border-slate-800 space-y-2">
+                      <span className="text-3xl">📥</span>
+                      <p className="text-xs text-slate-400">No previous snapshot history found for this user.</p>
+                      <p className="text-[11px] text-emerald-400 font-bold">Turn Tracking Mode ON to record daily performance logs over time.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Raw Saved JSON Data Viewer */}
+                <div className="bg-[#131b2f] border border-slate-700/60 rounded-2xl p-5 sm:p-6 shadow-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                      <span>💻 Saved Raw JSON Inspector</span>
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => copyDiagnosticLog(stats)}
+                      className="text-xs text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer"
+                    >
+                      📋 Copy Full JSON
+                    </button>
+                  </div>
+                  
+                  <div className="bg-[#0b101e] border border-slate-800 rounded-xl p-4 max-h-96 overflow-y-auto font-mono text-xs text-slate-300 select-all leading-relaxed">
+                    <pre className="whitespace-pre-wrap break-words">{JSON.stringify(stats, null, 2)}</pre>
+                  </div>
                 </div>
               </div>
             )}
