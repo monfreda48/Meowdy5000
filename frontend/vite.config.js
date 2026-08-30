@@ -17,6 +17,9 @@ export default defineConfig({
     'import.meta.env.VITE_APP_COMMIT_SHA': JSON.stringify(commitSha)
   },
   server: {
+    watch: {
+      ignored: ['**/android/**', '**/*.apk']
+    },
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:5000',
