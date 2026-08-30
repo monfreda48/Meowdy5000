@@ -3791,7 +3791,7 @@ ${payload.stack || 'No stack trace available.'}
                 <div className="flex items-center justify-between text-xs text-slate-400">
                   <span className="font-bold text-slate-300">App Version</span>
                   <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono font-bold text-[11px]">
-                    v1.0.0 (ac332a4)
+                    v1.0.4 ({getAppLocalSha()})
                   </span>
                 </div>
                 <a
