@@ -21,7 +21,7 @@ const triggerHaptic = async (type = 'light') => {
         await Haptics.impact({ style: ImpactStyle.Light });
       }
     }
-  } catch (e) {}
+  } catch (e) { }
 };
 
 const showNativeToast = async (text) => {
@@ -33,7 +33,7 @@ const showNativeToast = async (text) => {
         position: 'bottom'
       });
     }
-  } catch (e) {}
+  } catch (e) { }
 };
 
 
@@ -63,15 +63,15 @@ const DEFAULT_SEASONS = [
   { id: '12', name: 'Season 6.0', status: 'past' },
   { id: '11', name: 'Season 5.5', status: 'past' },
   { id: '10', name: 'Season 5.0', status: 'past' },
-  { id: '9',  name: 'Season 4.5', status: 'past' },
-  { id: '8',  name: 'Season 4.0', status: 'past' },
-  { id: '7',  name: 'Season 3.5', status: 'past' },
-  { id: '6',  name: 'Season 3.0', status: 'past' },
-  { id: '5',  name: 'Season 2.5', status: 'past' },
-  { id: '4',  name: 'Season 2.0', status: 'past' },
-  { id: '3',  name: 'Season 1.5', status: 'past' },
-  { id: '2',  name: 'Season 1.0', status: 'past' },
-  { id: '1',  name: 'Season 0 (Launch)', status: 'past' }
+  { id: '9', name: 'Season 4.5', status: 'past' },
+  { id: '8', name: 'Season 4.0', status: 'past' },
+  { id: '7', name: 'Season 3.5', status: 'past' },
+  { id: '6', name: 'Season 3.0', status: 'past' },
+  { id: '5', name: 'Season 2.5', status: 'past' },
+  { id: '4', name: 'Season 2.0', status: 'past' },
+  { id: '3', name: 'Season 1.5', status: 'past' },
+  { id: '2', name: 'Season 1.0', status: 'past' },
+  { id: '1', name: 'Season 0 (Launch)', status: 'past' }
 ];
 
 export default function App() {
@@ -120,7 +120,7 @@ export default function App() {
     setRecentSearches(prev => {
       const filtered = prev.filter(q => q.toLowerCase() !== cleanQuery.toLowerCase());
       const updated = [cleanQuery, ...filtered].slice(0, 3);
-      try { localStorage.setItem('recent_player_searches', JSON.stringify(updated)); } catch (e) {}
+      try { localStorage.setItem('recent_player_searches', JSON.stringify(updated)); } catch (e) { }
       return updated;
     });
   };
@@ -128,7 +128,7 @@ export default function App() {
   const clearRecentSearches = (e) => {
     if (e) e.stopPropagation();
     setRecentSearches([]);
-    try { localStorage.removeItem('recent_player_searches'); } catch (e) {}
+    try { localStorage.removeItem('recent_player_searches'); } catch (e) { }
   };
 
   const selectRecentSearch = (searchQuery) => {
@@ -136,7 +136,7 @@ export default function App() {
     setIsSearchFocused(false);
     fetchStats(null, searchQuery, season);
   };
-  
+
   const toggleExpandMetric = (id) => {
     setExpandedMetric(prev => prev === id ? null : id);
   };
@@ -162,7 +162,7 @@ export default function App() {
     if (!isPulling || window.scrollY > 0) return;
     const currentY = e.touches[0].clientY;
     const distance = currentY - touchStartRef.current;
-    
+
     if (distance > 0) {
       const dampenedDistance = Math.min(distance * 0.45, 110);
       setPullDistance(dampenedDistance);
@@ -172,11 +172,11 @@ export default function App() {
   const handleTouchEnd = async () => {
     if (!isPulling) return;
     setIsPulling(false);
-    
+
     if (pullDistance >= PULL_THRESHOLD && !isRefreshing && !loading) {
       setIsRefreshing(true);
       setPullDistance(50);
-      
+
       try {
         if (query) {
           await fetchStats(null, query, season);
@@ -259,7 +259,7 @@ export default function App() {
       const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
       existing.push(entry);
       localStorage.setItem(storageKey, JSON.stringify(existing));
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const handleToggleTrackPlayer = (username) => {
@@ -270,7 +270,7 @@ export default function App() {
     setTrackedPlayers(updated);
     try {
       localStorage.setItem('tracked_players_list', JSON.stringify(updated));
-    } catch (e) {}
+    } catch (e) { }
 
     if (isNowTracked && stats?.current) {
       saveTrackedStatSnapshot(stats);
@@ -303,7 +303,7 @@ export default function App() {
         try {
           const raw = localStorage.getItem(key);
           if (raw) backupData.playerDataFiles[username] = JSON.parse(raw);
-        } catch (e) {}
+        } catch (e) { }
       });
 
       const jsonStr = JSON.stringify(backupData, null, 2);
@@ -320,7 +320,7 @@ export default function App() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Meowdy5000_Backup_${new Date().toISOString().slice(0,10)}.json`;
+        a.download = `Meowdy5000_Backup_${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
         setUpdateToast({ type: 'success', message: '✅ Backup downloaded as JSON file!' });
@@ -373,11 +373,11 @@ export default function App() {
         try {
           const status = await Filesystem.checkPermissions();
           console.log('[NativePermission] Filesystem checkPermissions:', status);
-          
+
           if (status.publicStorage !== 'granted') {
             const reqStatus = await Filesystem.requestPermissions();
             console.log('[NativePermission] Filesystem requestPermissions:', reqStatus);
-            
+
             if (reqStatus.publicStorage === 'granted') {
               setUpdateToast({ type: 'success', message: '✅ Android OS Storage Permission Granted!' });
             } else {
@@ -393,7 +393,7 @@ export default function App() {
         if (navigator.storage && navigator.storage.persist) {
           try {
             await navigator.storage.persist();
-          } catch (e) {}
+          } catch (e) { }
         }
         setUpdateToast({ type: 'success', message: '✅ Storage Write Permission Granted!' });
       }
@@ -439,7 +439,7 @@ export default function App() {
     updated.splice(targetIndex, 0, moved);
     setSelectedMetrics(updated);
 
-    try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) {}
+    try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) { }
   };
 
   const moveMetricUp = (id, e) => {
@@ -451,7 +451,7 @@ export default function App() {
     updated[index] = updated[index - 1];
     updated[index - 1] = temp;
     setSelectedMetrics(updated);
-    try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) {}
+    try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) { }
   };
 
   const moveMetricDown = (id, e) => {
@@ -463,7 +463,7 @@ export default function App() {
     updated[index] = updated[index + 1];
     updated[index + 1] = temp;
     setSelectedMetrics(updated);
-    try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) {}
+    try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (err) { }
   };
 
   const toggleMetric = (id) => {
@@ -476,7 +476,7 @@ export default function App() {
     }
     setSelectedMetrics(updated);
     if (hasStoragePermission) {
-      try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (e) {}
+      try { localStorage.setItem('tracked_metrics', JSON.stringify(updated)); } catch (e) { }
     }
   };
 
@@ -486,7 +486,7 @@ export default function App() {
     const allIds = AVAILABLE_METRICS.map(m => m.id);
     setSelectedMetrics(allIds);
     if (hasStoragePermission) {
-      try { localStorage.setItem('tracked_metrics', JSON.stringify(allIds)); } catch (e) {}
+      try { localStorage.setItem('tracked_metrics', JSON.stringify(allIds)); } catch (e) { }
     }
   };
 
@@ -494,7 +494,7 @@ export default function App() {
     const allIds = AVAILABLE_METRICS.map(m => m.id);
     setSelectedMetrics(allIds);
     if (hasStoragePermission) {
-      try { localStorage.setItem('tracked_metrics', JSON.stringify(allIds)); } catch (e) {}
+      try { localStorage.setItem('tracked_metrics', JSON.stringify(allIds)); } catch (e) { }
     }
   };
 
@@ -587,17 +587,15 @@ export default function App() {
       localStorage.setItem('tracking_mode_enabled', isEnabled ? 'true' : 'false');
       triggerHaptic('success');
       showNativeToast(`Default Tracking set to ${isEnabled ? '📥 ON' : '🚫 OFF'}`);
-    } catch (e) {}
+    } catch (e) { }
   };
-
-
 
   const downloadUserDataset = (data) => {
     try {
       const username = data.current?.username || 'Player';
       const seasonName = data.current?.season || season || 'Current';
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      
+
       const datasetObj = {
         metadata: {
           app: "Meowdy 5000 Rivals Tracker",
@@ -648,7 +646,7 @@ export default function App() {
       localStorage.setItem('backend_server_url', trimmed);
       triggerHaptic('success');
       showNativeToast(`Backend URL set: ${trimmed || 'Default Host'}`);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const getApiUrl = (endpoint) => {
@@ -704,7 +702,7 @@ export default function App() {
       }
       try {
         await Filesystem.deleteFile({ path: 'Meowdy5000-Update.apk', directory: Directory.Cache });
-      } catch (e) {}
+      } catch (e) { }
     } catch (e) {
       console.warn('[ApkCleanup] Cleanup error:', e);
     }
@@ -713,10 +711,10 @@ export default function App() {
   const applyUpdateNow = async (targetSha = null) => {
     const attemptedSha = targetSha || updateInfo?.latestVersion;
     if (attemptedSha) {
-      try { 
-        sessionStorage.setItem('last_attempted_update_sha', attemptedSha); 
+      try {
+        sessionStorage.setItem('last_attempted_update_sha', attemptedSha);
         localStorage.setItem('installed_commit_sha', attemptedSha);
-      } catch (e) {}
+      } catch (e) { }
     }
 
     setIsApplyingUpdate(true);
@@ -727,7 +725,7 @@ export default function App() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-      const res = await fetch(getApiUrl('/api/apply-update'), { 
+      const res = await fetch(getApiUrl('/api/apply-update'), {
         method: 'POST',
         signal: controller.signal
       });
@@ -780,7 +778,7 @@ export default function App() {
     try {
       const savedCommit = localStorage.getItem('installed_commit_sha');
       if (savedCommit) return savedCommit;
-    } catch (e) {}
+    } catch (e) { }
     return import.meta.env.VITE_APP_COMMIT_SHA || '664d25b';
   };
 
@@ -791,16 +789,18 @@ export default function App() {
     try {
       let latestSha = '';
       let latestMessage = '';
+      let commitUrl = '';
 
-      // 1. Fetch directly from GitHub REST API with fresh cache
+      // 1. Fetch directly from GitHub REST API
       try {
-        const ghRes = await fetch(`https://api.github.com/repos/monfreda48/Meowdy5000/commits/main?t=${Date.now()}`, {
+        const ghRes = await fetch('https://api.github.com/repos/monfreda48/Meowdy5000/commits/main', {
           headers: { 'Accept': 'application/vnd.github.v3+json' }
         });
         if (ghRes.ok) {
           const ghData = await ghRes.json();
           latestSha = (ghData.sha || '').slice(0, 7);
           latestMessage = ghData.commit?.message?.split('\n')[0] || '';
+          commitUrl = ghData.html_url || 'https://github.com/monfreda48/Meowdy5000';
         }
       } catch (ghErr) {
         console.warn('Direct GitHub API check error:', ghErr);
@@ -814,32 +814,29 @@ export default function App() {
           backendData = await backendRes.json();
           if (!latestSha && backendData?.latestVersion) latestSha = backendData.latestVersion;
         }
-      } catch (e) {}
+      } catch (e) { }
 
       const localSha = getAppLocalSha(backendData);
+      const lastAttempted = (sessionStorage.getItem('last_attempted_update_sha') || '').slice(0, 7);
 
-      // If we have a latestSha and it differs, OR if user explicitly requested an update re-sync
-      const isNewer = Boolean(
-        latestSha && 
-        localSha && 
-        localSha.toLowerCase().slice(0, 7) !== latestSha.toLowerCase().slice(0, 7)
+      const hasUpdate = Boolean(
+        latestSha &&
+        localSha &&
+        localSha.toLowerCase().slice(0, 7) !== latestSha.toLowerCase().slice(0, 7) &&
+        (!lastAttempted || lastAttempted.toLowerCase() !== latestSha.toLowerCase())
       );
 
-      if (isNewer) {
-        setUpdateToast({ type: 'success', message: `⚡ Update found (${latestSha}): "${latestMessage}". Installing...` });
+      if (hasUpdate) {
+        setUpdateToast({ type: 'update', message: `⚡ Update found (${latestSha})! Starting one-click installation...` });
         await applyUpdateNow(latestSha);
-      } else if (latestSha) {
-        setUpdateToast({ type: 'success', message: `✅ App is on latest version (${localSha}). Syncing code bundle...` });
-        await applyUpdateNow(latestSha || localSha);
       } else {
-        // Fallback force reload to ensure latest webview bundle
-        setUpdateToast({ type: 'update', message: `⚡ Reloading to verify latest release bundle...` });
-        await applyUpdateNow(localSha);
+        setUpdateToast({ type: 'success', message: `✅ App is up to date! (Current Commit: ${localSha})` });
+        setTimeout(() => setUpdateToast(null), 4000);
       }
     } catch (err) {
       console.error('One-click update error:', err);
       setUpdateToast({ type: 'error', message: '❌ Error connecting to update service.' });
-      setTimeout(() => setUpdateToast(null), 3000);
+      setTimeout(() => setUpdateToast(null), 4000);
     } finally {
       setCheckingUpdate(false);
     }
@@ -848,15 +845,17 @@ export default function App() {
   const setAutoUpdatePermission = (preference) => {
     try {
       localStorage.setItem('auto_update_preference', preference);
-    } catch (e) {}
+    } catch (e) { }
     setAutoUpdatePref(preference);
     setShowAutoUpdateModal(false);
-    triggerHaptic('success');
-    showNativeToast(`Auto-Update policy set to ${preference}`);
-  };
 
-  const handleSaveAutoUpdatePref = (preference) => {
-    setAutoUpdatePermission(preference);
+    setUpdateToast({
+      type: 'success',
+      message: preference === 'enabled'
+        ? '⚙️ Auto-update enabled. You will be prompted when new releases are available.'
+        : '⚙️ Auto-update preference updated.'
+    });
+    setTimeout(() => setUpdateToast(null), 3500);
   };
 
   const [updateToast, setUpdateToast] = useState(null);
@@ -900,8 +899,8 @@ export default function App() {
       const lastAttempted = (sessionStorage.getItem('last_attempted_update_sha') || '').slice(0, 7);
 
       const hasUpdate = Boolean(
-        latestSha && 
-        localSha && 
+        latestSha &&
+        localSha &&
         localSha.toLowerCase().slice(0, 7) !== latestSha.toLowerCase().slice(0, 7) &&
         (!lastAttempted || lastAttempted.toLowerCase() !== latestSha.toLowerCase())
       );
@@ -954,7 +953,7 @@ export default function App() {
     const errorTitle = encodeURIComponent(`[Bug Report] ${payload.error || 'Client Exception'}`);
     const commitSha = import.meta.env.VITE_APP_COMMIT_SHA || '6f36886';
     const platform = window.Capacitor && window.Capacitor.isNativePlatform() ? 'Android Native APK' : 'Web Browser';
-    
+
     const bodyText = `### 🐛 Error Report Details
 
 **Error Message:** ${payload.error || 'N/A'}
@@ -973,7 +972,7 @@ ${payload.stack || 'No stack trace available.'}
 *Reported via RivalsTracker Client Telemetry*`;
 
     const githubIssueUrl = `https://github.com/monfreda48/Meowdy5000/issues/new?title=${errorTitle}&body=${encodeURIComponent(bodyText)}`;
-    
+
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
       Browser.open({ url: githubIssueUrl });
     } else {
@@ -987,7 +986,7 @@ ${payload.stack || 'No stack trace available.'}
       navigator.clipboard.writeText(text);
       setUpdateToast({ type: 'success', message: '📋 Diagnostic log copied to clipboard!' });
       setTimeout(() => setUpdateToast(null), 3000);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const sendErrorReport = async (payload) => {
@@ -1006,7 +1005,7 @@ ${payload.stack || 'No stack trace available.'}
       const existingQueue = JSON.parse(localStorage.getItem('error_report_queue') || '[]');
       existingQueue.unshift(fullPayload);
       localStorage.setItem('error_report_queue', JSON.stringify(existingQueue.slice(0, 20)));
-    } catch (e) {}
+    } catch (e) { }
 
     try {
       const res = await fetch(getApiUrl('/api/report-error'), {
@@ -1124,7 +1123,7 @@ ${payload.stack || 'No stack trace available.'}
             return newStatus;
           });
         });
-      } catch (e) {}
+      } catch (e) { }
     };
 
     setupNetwork();
@@ -1159,7 +1158,7 @@ ${payload.stack || 'No stack trace available.'}
             CapApp.minimizeApp();
           }
         });
-      } catch (e) {}
+      } catch (e) { }
     };
 
     setupCapApp();
@@ -1176,7 +1175,7 @@ ${payload.stack || 'No stack trace available.'}
       try {
         const info = await Device.getInfo();
         setDeviceInfo(info);
-      } catch (e) {}
+      } catch (e) { }
     };
     fetchDeviceInfo();
   }, []);
@@ -1207,7 +1206,7 @@ ${payload.stack || 'No stack trace available.'}
     const activeQuery = overrideQuery !== null ? overrideQuery : query;
     const activeSeason = overrideSeason !== null ? overrideSeason : season;
     if (!activeQuery) return;
-    
+
     addRecentSearch(activeQuery);
     setLoading(true);
     setError(null);
@@ -1245,17 +1244,17 @@ ${payload.stack || 'No stack trace available.'}
   const getFilteredHistory = () => {
     if (!stats?.history) return [];
     if (timeframe === 'all') return stats.history;
-    
+
     const now = new Date();
     const cutoff = new Date();
     if (timeframe === '7d') cutoff.setDate(now.getDate() - 7);
     if (timeframe === '30d') cutoff.setDate(now.getDate() - 30);
-    
+
     return stats.history.filter(entry => new Date(entry.date) >= cutoff);
   };
 
   return (
-    <div 
+    <div
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -1270,45 +1269,43 @@ ${payload.stack || 'No stack trace available.'}
       )}
 
       {/* Pull to Refresh Indicator */}
-      <div 
+      <div
         className="w-full flex flex-col items-center justify-center overflow-hidden transition-all duration-150 pointer-events-none sticky top-0 z-50"
-        style={{ 
+        style={{
           height: `${pullDistance}px`,
           opacity: Math.min(pullDistance / PULL_THRESHOLD, 1)
         }}
       >
         <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#131b2f] border border-emerald-500/50 text-emerald-400 text-xs font-bold shadow-xl backdrop-blur-md">
-          <svg 
-            className={`w-4 h-4 text-emerald-500 transition-transform duration-200 ${
-              isRefreshing ? 'animate-spin' : ''
-            }`}
+          <svg
+            className={`w-4 h-4 text-emerald-500 transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''
+              }`}
             style={{
               transform: isRefreshing ? 'none' : `rotate(${Math.min(pullDistance / PULL_THRESHOLD, 1) * 360}deg)`
             }}
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor" 
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
             strokeWidth="2.5"
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
           <span>
-            {isRefreshing 
-              ? 'Refreshing Stats...' 
-              : pullDistance >= PULL_THRESHOLD 
-              ? 'Release to Refresh' 
-              : 'Pull down to refresh'}
+            {isRefreshing
+              ? 'Refreshing Stats...'
+              : pullDistance >= PULL_THRESHOLD
+                ? 'Release to Refresh'
+                : 'Pull down to refresh'}
           </span>
         </div>
       </div>
-      
+
       {/* Opening Splash Screen Overlay */}
       {showSplash && (
-        <div 
+        <div
           onClick={() => { setSplashFading(true); setTimeout(() => setShowSplash(false), 400); }}
-          className={`fixed inset-0 z-[9999] bg-[#0b101e] flex flex-col items-center justify-center p-6 text-center transition-all duration-700 cursor-pointer select-none ${
-            splashFading ? 'opacity-0 pointer-events-none scale-105' : 'opacity-100'
-          }`}
+          className={`fixed inset-0 z-[9999] bg-[#0b101e] flex flex-col items-center justify-center p-6 text-center transition-all duration-700 cursor-pointer select-none ${splashFading ? 'opacity-0 pointer-events-none scale-105' : 'opacity-100'
+            }`}
         >
           <div className="absolute w-80 h-80 rounded-full bg-gradient-to-tr from-emerald-500/20 via-teal-500/10 to-transparent blur-3xl animate-pulse"></div>
 
@@ -1356,7 +1353,7 @@ ${payload.stack || 'No stack trace available.'}
             <div className="w-48 h-1 bg-slate-800 rounded-full overflow-hidden mt-4 border border-slate-700/50">
               <div className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 rounded-full animate-pulse w-full"></div>
             </div>
-            
+
             <p className="text-[10px] text-slate-500 font-medium tracking-wider uppercase pt-2">
               Tap to Skip • {currentSeasonName} Current
             </p>
@@ -1398,51 +1395,49 @@ ${payload.stack || 'No stack trace available.'}
             </span>
           </div>
 
-        {/* Right Nav Menu & Desktop Error Reports Button */}
-        <div className="flex items-center gap-2">
-          {!isMobileView && (
-            <button
-              onClick={openErrorReportsViewer}
-              className="hidden md:flex items-center gap-2 bg-[#131b2f] hover:bg-slate-800 border border-slate-700/80 hover:border-amber-500/60 text-slate-300 hover:text-amber-400 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md group"
-              title="View all client & system error reports logged in backend database"
-            >
-              <span className="text-amber-400 group-hover:scale-110 transition-transform">📜</span>
-              <span>View Error Reports</span>
-            </button>
-          )}
-
-          <button
-            onClick={() => setIsMenuOpen(true)}
-            className="flex items-center gap-2 bg-[#131b2f] hover:bg-slate-800 border border-slate-700/80 hover:border-emerald-500/60 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer relative shadow-md group"
-          >
-            <svg className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-            <span className="hidden sm:inline text-xs font-bold text-slate-300 group-hover:text-white uppercase tracking-wider">
-              Menu
-            </span>
-            {updateInfo?.hasUpdate && (
-              <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
+          {/* Right Nav Menu & Desktop Error Reports Button */}
+          <div className="flex items-center gap-2">
+            {!isMobileView && (
+              <button
+                onClick={openErrorReportsViewer}
+                className="hidden md:flex items-center gap-2 bg-[#131b2f] hover:bg-slate-800 border border-slate-700/80 hover:border-amber-500/60 text-slate-300 hover:text-amber-400 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md group"
+                title="View all client & system error reports logged in backend database"
+              >
+                <span className="text-amber-400 group-hover:scale-110 transition-transform">📜</span>
+                <span>View Error Reports</span>
+              </button>
             )}
-          </button>
+
+            <button
+              onClick={() => setIsMenuOpen(true)}
+              className="flex items-center gap-2 bg-[#131b2f] hover:bg-slate-800 border border-slate-700/80 hover:border-emerald-500/60 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer relative shadow-md group"
+            >
+              <svg className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <span className="hidden sm:inline text-xs font-bold text-slate-300 group-hover:text-white uppercase tracking-wider">
+                Menu
+              </span>
+              {updateInfo?.hasUpdate && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
 
       {/* Main Layout Container */}
-      <main className={`mx-auto px-2.5 sm:px-6 py-3 sm:py-10 transition-all duration-300 w-full ${
-        isMobileView ? 'max-w-full sm:max-w-md py-2' : 'max-w-6xl'
-      }`}>
+      <main className={`mx-auto px-2.5 sm:px-6 py-3 sm:py-10 transition-all duration-300 w-full ${isMobileView ? 'max-w-full sm:max-w-md py-2' : 'max-w-6xl'
+        }`}>
 
         {/* Update Feedback Toast Banner */}
         {updateToast && (
-          <div className={`w-full p-3.5 rounded-2xl mb-4 text-xs sm:text-sm font-bold flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg ${
-            updateToast.type === 'success'
+          <div className={`w-full p-3.5 rounded-2xl mb-4 text-xs sm:text-sm font-bold flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg ${updateToast.type === 'success'
               ? 'bg-emerald-500/10 border border-emerald-500/40 text-emerald-400'
               : updateToast.type === 'error'
-              ? 'bg-red-500/10 border border-red-500/40 text-red-400'
-              : 'bg-emerald-500/10 border border-emerald-500/40 text-emerald-400'
-          }`}>
+                ? 'bg-red-500/10 border border-red-500/40 text-red-400'
+                : 'bg-emerald-500/10 border border-emerald-500/40 text-emerald-400'
+            }`}>
             <span>{updateToast.message}</span>
             <button onClick={() => setUpdateToast(null)} className="text-slate-400 hover:text-white text-xs">✕</button>
           </div>
@@ -1456,8 +1451,8 @@ ${payload.stack || 'No stack trace available.'}
               </svg>
               Mobile Preview Active
             </span>
-            <button 
-              onClick={() => setIsMobileView(false)} 
+            <button
+              onClick={() => setIsMobileView(false)}
               className="text-slate-400 hover:text-white underline text-[11px]"
             >
               Switch to Desktop
@@ -1467,9 +1462,8 @@ ${payload.stack || 'No stack trace available.'}
 
         {/* Header & Search Section */}
         <div className={`flex flex-col items-center text-center ${isMobileView ? 'space-y-2' : 'space-y-3 sm:space-y-6'}`}>
-          <h1 className={`font-black tracking-tight text-white uppercase w-full ${
-            isMobileView ? 'text-xl sm:text-3xl' : 'text-2xl sm:text-5xl md:text-6xl lg:text-7xl'
-          }`}>
+          <h1 className={`font-black tracking-tight text-white uppercase w-full ${isMobileView ? 'text-xl sm:text-3xl' : 'text-2xl sm:text-5xl md:text-6xl lg:text-7xl'
+            }`}>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">SNACK HARD, TRACK HARD</span>
           </h1>
 
@@ -1480,27 +1474,24 @@ ${payload.stack || 'No stack trace available.'}
           </div>
 
           <form onSubmit={fetchStats} className={`w-full ${isMobileView ? 'mt-1' : 'max-w-3xl mt-3 sm:mt-8'}`}>
-            <div className={`flex bg-[#131b2f] p-2.5 sm:p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${
-              isMobileView ? 'flex-col gap-2' : 'flex-col md:flex-row items-center gap-3'
-            }`}>
+            <div className={`flex bg-[#131b2f] p-2.5 sm:p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${isMobileView ? 'flex-col gap-2' : 'flex-col md:flex-row items-center gap-3'
+              }`}>
               {/* Checkbox to the left of the search bar for Tracking Mode */}
-              <label 
-                htmlFor="trackingCheckboxInput"
-                className={`flex items-center gap-2 px-3.5 py-2.5 sm:py-3.5 rounded-xl border transition-all shrink-0 select-none cursor-pointer ${
-                  isTrackingMode 
-                    ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/60 text-white shadow-md shadow-emerald-500/10' 
+              <div
+                className={`flex items-center gap-2 px-3.5 py-2.5 sm:py-3.5 rounded-xl border transition-all shrink-0 select-none ${isTrackingMode
+                    ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/60 text-white shadow-md shadow-emerald-500/10'
                     : 'bg-[#0b101e] border-slate-700/60 text-slate-400 hover:text-slate-200'
-                }`}
+                  }`}
                 title={isTrackingMode ? "Tracking Mode Active: Datasets auto-download on search" : "Tracking Mode Off: Searches do not download datasets"}
               >
-                <input 
+                <input
                   type="checkbox"
                   id="trackingCheckboxInput"
                   checked={isTrackingMode}
                   onChange={(e) => {
                     const val = e.target.checked;
                     setIsTrackingMode(val);
-                    try { localStorage.setItem('tracking_mode_enabled', val ? 'true' : 'false'); } catch (err) {}
+                    try { localStorage.setItem('tracking_mode_enabled', val ? 'true' : 'false'); } catch (err) { }
                     triggerHaptic('light');
                     showNativeToast(`Tracking Mode ${val ? '📥 ON' : '🚫 OFF'}`);
                     setUpdateToast({
@@ -1511,13 +1502,23 @@ ${payload.stack || 'No stack trace available.'}
                   }}
                   className="w-4 h-4 rounded border-slate-700 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900 bg-slate-900 cursor-pointer accent-emerald-500"
                 />
-                <span className="text-xs font-black uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5 cursor-pointer">
+                <label htmlFor="trackingCheckboxInput" className="text-xs font-black uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5 cursor-pointer">
                   <span>{isTrackingMode ? '📥' : '🚫'}</span>
                   <span className={isTrackingMode ? 'text-emerald-300' : 'text-slate-400'}>
                     Tracking {isTrackingMode ? 'ON' : 'OFF'}
                   </span>
-                </span>
-              </label>
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => { triggerHaptic('light'); setShowAutoUpdateModal(true); }}
+                  title="Click to change default tracking mode preference in Options"
+                  className="text-[10px] text-slate-400 hover:text-emerald-400 font-bold ml-1 pl-2 border-l border-slate-700/80 cursor-pointer flex items-center gap-1 group"
+                >
+                  <span className="group-hover:rotate-45 transition-transform">⚙️</span>
+                  <span className="hidden sm:inline">Default: <strong className={defaultTrackingPref === 'enabled' ? 'text-emerald-400' : 'text-slate-400'}>{defaultTrackingPref === 'enabled' ? 'ON' : 'OFF'}</strong></span>
+                </button>
+              </div>
 
               <div className="flex-1 relative w-full">
                 <input
@@ -1528,9 +1529,8 @@ ${payload.stack || 'No stack trace available.'}
                   onClick={() => setIsSearchFocused(true)}
                   onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
                   placeholder="Enter Username or UID..."
-                  className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white placeholder-slate-500 ${
-                    isMobileView ? 'py-2.5 text-sm' : 'py-3.5 sm:py-4 text-base sm:text-lg'
-                  }`}
+                  className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white placeholder-slate-500 ${isMobileView ? 'py-2.5 text-sm' : 'py-3.5 sm:py-4 text-base sm:text-lg'
+                    }`}
                   required
                 />
 
@@ -1567,8 +1567,8 @@ ${payload.stack || 'No stack trace available.'}
                 )}
               </div>
               <div className={`flex gap-2 ${isMobileView ? 'w-full' : ''}`}>
-                <select 
-                  value={season} 
+                <select
+                  value={season}
                   onChange={(e) => {
                     const selectedSeason = e.target.value;
                     setSeason(selectedSeason);
@@ -1576,9 +1576,8 @@ ${payload.stack || 'No stack trace available.'}
                       fetchStats(null, query, selectedSeason);
                     }
                   }}
-                  className={`bg-[#0b101e] border border-slate-700/50 rounded-xl px-3 focus:outline-none focus:border-emerald-500 text-white cursor-pointer text-xs sm:text-sm ${
-                    isMobileView ? 'py-2.5 flex-1' : 'py-3.5 sm:py-4'
-                  }`}
+                  className={`bg-[#0b101e] border border-slate-700/50 rounded-xl px-3 focus:outline-none focus:border-emerald-500 text-white cursor-pointer text-xs sm:text-sm ${isMobileView ? 'py-2.5 flex-1' : 'py-3.5 sm:py-4'
+                    }`}
                 >
                   {seasonsList.map(s => (
                     <option key={s.id} value={s.id}>
@@ -1587,12 +1586,11 @@ ${payload.stack || 'No stack trace available.'}
                   ))}
                   <option value="">Current Season</option>
                 </select>
-                <button 
+                <button
                   type="submit"
                   disabled={loading}
-                  className={`bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(16,185,129,0.3)] uppercase tracking-wider text-xs sm:text-sm ${
-                    isMobileView ? 'py-2.5 px-4 flex-1' : 'py-3.5 sm:py-4 px-6 sm:px-8'
-                  }`}
+                  className={`bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(16,185,129,0.3)] uppercase tracking-wider text-xs sm:text-sm ${isMobileView ? 'py-2.5 px-4 flex-1' : 'py-3.5 sm:py-4 px-6 sm:px-8'
+                    }`}
                 >
                   {loading ? 'Scanning...' : 'Search'}
                 </button>
@@ -1614,27 +1612,26 @@ ${payload.stack || 'No stack trace available.'}
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </summary>
-              
+
               <div className="p-4 bg-[#0f1526] border-t border-slate-700/50 space-y-3">
                 <div className="flex items-center justify-between pb-1">
                   <p className="text-xs text-slate-400">
                     Toggle stats & rearrange display order. Changes persist automatically:
                   </p>
-                  <button 
-                    type="button" 
-                    onClick={() => setIsEditOrderMode(!isEditOrderMode)} 
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                      isEditOrderMode 
-                        ? 'bg-amber-500/20 border-amber-500/60 text-amber-400 shadow-sm' 
+                  <button
+                    type="button"
+                    onClick={() => setIsEditOrderMode(!isEditOrderMode)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${isEditOrderMode
+                        ? 'bg-amber-500/20 border-amber-500/60 text-amber-400 shadow-sm'
                         : 'bg-[#0b101e] border-slate-700/60 text-slate-300 hover:text-white hover:border-emerald-500/50'
-                    }`}
+                      }`}
                   >
                     {isEditOrderMode ? '🔒 Done Reordering' : '✏️ Rearrange Order'}
                   </button>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  {(isEditOrderMode 
+                  {(isEditOrderMode
                     ? [...selectedMetrics.map(id => AVAILABLE_METRICS.find(m => m.id === id)).filter(Boolean), ...AVAILABLE_METRICS.filter(m => !selectedMetrics.includes(m.id))]
                     : AVAILABLE_METRICS
                   ).map((m) => {
@@ -1646,11 +1643,10 @@ ${payload.stack || 'No stack trace available.'}
                         <button
                           type="button"
                           onClick={() => toggleMetric(m.id)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                            active
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${active
                               ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/60 text-white shadow-sm'
                               : 'bg-[#0b101e] border-slate-800 text-slate-500 hover:text-slate-300'
-                          }`}
+                            }`}
                         >
                           <span>{m.icon}</span>
                           <span>{m.name}</span>
@@ -1658,8 +1654,8 @@ ${payload.stack || 'No stack trace available.'}
                         </button>
 
                         {isEditOrderMode && active && (
-                          <div 
-                            onClick={(e) => e.stopPropagation()} 
+                          <div
+                            onClick={(e) => e.stopPropagation()}
                             className="flex items-center gap-1 bg-[#0b101e] border border-slate-700/80 rounded-xl px-1.5 py-1"
                           >
                             <span className="text-[10px] text-slate-400 font-bold uppercase">Order:</span>
@@ -1743,7 +1739,7 @@ ${payload.stack || 'No stack trace available.'}
                 </svg>
                 <span className="font-bold">{error}</span>
               </div>
-              
+
               <button
                 onClick={() => {
                   setReportNotes(`Error encountered: ${error}`);
@@ -1761,17 +1757,16 @@ ${payload.stack || 'No stack trace available.'}
         {/* Dashboard Results */}
         {stats && !loading && (
           <div className={`animate-in fade-in slide-in-from-bottom-8 duration-700 ${isMobileView ? 'space-y-5' : 'space-y-8'}`}>
-            
+
             {/* Player Header Banner */}
             {/* Player Header Banner with Interactive Track Player Switch */}
-            <div className={`bg-[#131b2f] rounded-2xl border border-slate-700/50 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 ${
-              isMobileView ? 'p-4 text-center' : 'p-6 md:p-8 text-left'
-            }`}>
+            <div className={`bg-[#131b2f] rounded-2xl border border-slate-700/50 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 ${isMobileView ? 'p-4 text-center' : 'p-6 md:p-8 text-left'
+              }`}>
               <div className="flex items-center gap-4">
                 {stats.current.avatarUrl ? (
-                  <img 
-                    src={stats.current.avatarUrl} 
-                    alt={stats.current.username} 
+                  <img
+                    src={stats.current.avatarUrl}
+                    alt={stats.current.username}
                     className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-2 border-emerald-500/60 shadow-lg shadow-emerald-500/20 object-cover"
                   />
                 ) : (
@@ -1799,17 +1794,15 @@ ${payload.stack || 'No stack trace available.'}
               {/* Interactive Track Player Toggle Checkbox / Button */}
               <button
                 onClick={() => handleToggleTrackPlayer(stats.current.username)}
-                className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2.5 cursor-pointer shadow-lg border ${
-                  trackedPlayers[stats.current.username?.toLowerCase()]
+                className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2.5 cursor-pointer shadow-lg border ${trackedPlayers[stats.current.username?.toLowerCase()]
                     ? 'bg-emerald-500/20 border-emerald-500/80 text-emerald-400 shadow-emerald-500/20 hover:bg-emerald-500/30'
                     : 'bg-slate-800/90 hover:bg-slate-800 border-slate-700/80 text-slate-300 hover:text-white'
-                }`}
+                  }`}
               >
-                <span className={`w-5 h-5 rounded-md flex items-center justify-center text-xs font-black border transition-all ${
-                  trackedPlayers[stats.current.username?.toLowerCase()]
+                <span className={`w-5 h-5 rounded-md flex items-center justify-center text-xs font-black border transition-all ${trackedPlayers[stats.current.username?.toLowerCase()]
                     ? 'bg-emerald-500 border-emerald-400 text-black'
                     : 'border-slate-600 bg-slate-900 text-transparent'
-                }`}>
+                  }`}>
                   ✓
                 </span>
                 <span>
@@ -1824,23 +1817,21 @@ ${payload.stack || 'No stack trace available.'}
                 <button
                   type="button"
                   onClick={() => setActiveUserTab('live')}
-                  className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                    activeUserTab === 'live'
+                  className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${activeUserTab === 'live'
                       ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                  }`}
+                    }`}
                 >
                   <span>📊 Live Performance</span>
                 </button>
-                
+
                 <button
                   type="button"
                   onClick={() => setActiveUserTab('history')}
-                  className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                    activeUserTab === 'history'
+                  className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${activeUserTab === 'history'
                       ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                  }`}
+                    }`}
                 >
                   <span>📜 Saved Data Over Time ({stats.history?.length || 0})</span>
                 </button>
@@ -1861,893 +1852,880 @@ ${payload.stack || 'No stack trace available.'}
             {activeUserTab === 'live' && (
               <div className="space-y-6 animate-in fade-in duration-300">
                 {/* Progress & Performance Focus Insights */}
-            <div className="bg-[#131b2f] border border-emerald-500/30 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">📈</span>
-                  <h3 className="text-base font-black text-white uppercase tracking-wider">
-                    Progress & Performance Insights
-                  </h3>
+                <div className="bg-[#131b2f] border border-emerald-500/30 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">📈</span>
+                      <h3 className="text-base font-black text-white uppercase tracking-wider">
+                        Progress & Performance Insights
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                      <span className="text-slate-400 font-bold">
+                        {trackedPlayers[stats.current.username?.toLowerCase()]
+                          ? 'Tracking Enabled • Data File Snapshots Active'
+                          : 'Enable "Track Player Progress" above to log performance snapshots to data file'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* What to Focus On Coaching Advice */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-[#0f1526] border border-slate-700/60 p-4 rounded-xl space-y-2">
+                      <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
+                        <span>🎯</span>
+                        <span>What You Should Focus On Next:</span>
+                      </div>
+                      <ul className="space-y-2 text-slate-300 text-xs leading-relaxed">
+                        {parseFloat(stats.current.winRate || 0) < 50 ? (
+                          <li className="flex items-start gap-2">
+                            <span className="text-amber-400 font-bold">•</span>
+                            <span><strong>Objective Control:</strong> Win Rate is {stats.current.winRate}%. Prioritize team group-ups before contesting objective points.</span>
+                          </li>
+                        ) : (
+                          <li className="flex items-start gap-2">
+                            <span className="text-emerald-400 font-bold">•</span>
+                            <span><strong>Maintain Momentum:</strong> Solid Win Rate ({stats.current.winRate}%). Keep leveraging main hero compositions during ranked matches.</span>
+                          </li>
+                        )}
+
+                        {parseFloat(stats.current.kdRatio || 0) < 2.5 ? (
+                          <li className="flex items-start gap-2">
+                            <span className="text-amber-400 font-bold">•</span>
+                            <span><strong>K/D/A Positioning:</strong> K/D ratio is {stats.current.kdRatio}. Focus on defensive cover and saving escape abilities.</span>
+                          </li>
+                        ) : (
+                          <li className="flex items-start gap-2">
+                            <span className="text-emerald-400 font-bold">•</span>
+                            <span><strong>Strong Combat Efficiency:</strong> High K/D ratio ({stats.current.kdRatio}). Focus on coordinated ultimate callouts with teammates.</span>
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+
+                    <div className="bg-[#0f1526] border border-slate-700/60 p-4 rounded-xl space-y-2">
+                      <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
+                        <span>📊</span>
+                        <span>Stat Snapshot File Status:</span>
+                      </div>
+                      <div className="text-xs text-slate-300 space-y-2 leading-relaxed">
+                        <p>
+                          <strong>Current Snapshot:</strong> {stats.current.winRate}% Win Rate | {stats.current.kdRatio} K/D/A | Top Hero: {stats.current.topHero}
+                        </p>
+                        <p className="text-[11px] text-slate-400">
+                          📂 Saved to local data file <code className="text-emerald-400">tracked_stats_{stats.current.username.toLowerCase()}.json</code> on device.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span className="text-slate-400 font-bold">
-                    {trackedPlayers[stats.current.username?.toLowerCase()] 
-                      ? 'Tracking Enabled • Data File Snapshots Active' 
-                      : 'Enable "Track Player Progress" above to log performance snapshots to data file'}
-                  </span>
-                </div>
-              </div>
 
-              {/* What to Focus On Coaching Advice */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-[#0f1526] border border-slate-700/60 p-4 rounded-xl space-y-2">
-                  <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
-                    <span>🎯</span>
-                    <span>What You Should Focus On Next:</span>
-                  </div>
-                  <ul className="space-y-2 text-slate-300 text-xs leading-relaxed">
-                    {parseFloat(stats.current.winRate || 0) < 50 ? (
-                      <li className="flex items-start gap-2">
-                        <span className="text-amber-400 font-bold">•</span>
-                        <span><strong>Objective Control:</strong> Win Rate is {stats.current.winRate}%. Prioritize team group-ups before contesting objective points.</span>
-                      </li>
-                    ) : (
-                      <li className="flex items-start gap-2">
-                        <span className="text-emerald-400 font-bold">•</span>
-                        <span><strong>Maintain Momentum:</strong> Solid Win Rate ({stats.current.winRate}%). Keep leveraging main hero compositions during ranked matches.</span>
-                      </li>
-                    )}
-
-                    {parseFloat(stats.current.kdRatio || 0) < 2.5 ? (
-                      <li className="flex items-start gap-2">
-                        <span className="text-amber-400 font-bold">•</span>
-                        <span><strong>K/D/A Positioning:</strong> K/D ratio is {stats.current.kdRatio}. Focus on defensive cover and saving escape abilities.</span>
-                      </li>
-                    ) : (
-                      <li className="flex items-start gap-2">
-                        <span className="text-emerald-400 font-bold">•</span>
-                        <span><strong>Strong Combat Efficiency:</strong> High K/D ratio ({stats.current.kdRatio}). Focus on coordinated ultimate callouts with teammates.</span>
-                      </li>
-                    )}
-                  </ul>
-                </div>
-
-                <div className="bg-[#0f1526] border border-slate-700/60 p-4 rounded-xl space-y-2">
-                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
-                    <span>📊</span>
-                    <span>Stat Snapshot File Status:</span>
-                  </div>
-                  <div className="text-xs text-slate-300 space-y-2 leading-relaxed">
-                    <p>
-                      <strong>Current Snapshot:</strong> {stats.current.winRate}% Win Rate | {stats.current.kdRatio} K/D/A | Top Hero: {stats.current.topHero}
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      📂 Saved to local data file <code className="text-emerald-400">tracked_stats_{stats.current.username.toLowerCase()}.json</code> on device.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Primary Tracked Metrics Grid */}
-            <div className={`grid gap-4 ${
-              isMobileView ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:gap-6'
-            }`}>
-              {selectedMetrics.map((metricId, orderIndex) => {
-                if (metricId === 'winRate') return (
-                  <div 
-                    key="winRate"
-                    onClick={() => toggleExpandMetric('winRate')}
-                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
-                    }`}
-                  >
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                      </svg>
-                    </div>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        {isEditOrderMode && (
-                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
-                            #{orderIndex + 1}
-                          </span>
-                        )}
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Win Rate</p>
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                        {expandedMetric === 'winRate' ? '▲ Hide' : '▼ Expand'}
-                      </span>
-                    </div>
-                    <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>{stats.current.winRate}%</p>
-                    
-                    {expandedMetric === 'winRate' && (
-                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Total Matches:</span>
-                          <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
-                        </div>
-                        <div className="flex justify-between text-emerald-400 font-medium">
-                          <span>Victories (Wins):</span>
-                          <span className="font-bold">{stats.current.matchesWon}</span>
-                        </div>
-                        <div className="flex justify-between text-red-400 font-medium">
-                          <span>Defeats (Losses):</span>
-                          <span className="font-bold">{stats.current.matchesPlayed - stats.current.matchesWon}</span>
-                        </div>
-                        <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden flex mt-2">
-                          <div className="bg-emerald-500 h-full" style={{ width: `${stats.current.winRate}%` }}></div>
-                          <div className="bg-red-500 h-full flex-1"></div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-
-                if (metricId === 'kdRatio') return (
-                  <div 
-                    key="kdRatio"
-                    onClick={() => toggleExpandMetric('kdRatio')}
-                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
-                    }`}
-                  >
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    </div>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        {isEditOrderMode && (
-                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
-                            #{orderIndex + 1}
-                          </span>
-                        )}
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">KDA Ratio</p>
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                        {expandedMetric === 'kdRatio' ? '▲ Hide' : '▼ Expand'}
-                      </span>
-                    </div>
-                    <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>{stats.current.kdRatio}</p>
-                    
-                    {expandedMetric === 'kdRatio' && (
-                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Eliminations (Kills):</span>
-                          <span className="font-bold text-emerald-400">{(stats.current.kills || 0).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Assists:</span>
-                          <span className="font-bold text-blue-400">{(stats.current.assists || 0).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Deaths:</span>
-                          <span className="font-bold text-red-400">{(stats.current.deaths || 0).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-400 pt-1 border-t border-slate-800">
-                          <span>Pure K/D Ratio:</span>
-                          <span className="font-bold text-white">{((stats.current.kills || 0) / (stats.current.deaths || 1)).toFixed(2)}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-
-                if (metricId === 'heroDamage') return (
-                  <div 
-                    key="heroDamage"
-                    onClick={() => toggleExpandMetric('heroDamage')}
-                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
-                    }`}
-                  >
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-                      </svg>
-                    </div>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        {isEditOrderMode && (
-                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
-                            #{orderIndex + 1}
-                          </span>
-                        )}
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Damage / 10m</p>
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                        {expandedMetric === 'heroDamage' ? '▲ Hide' : '▼ Expand'}
-                      </span>
-                    </div>
-                    <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                      {typeof stats.current.heroDamage === 'number' ? stats.current.heroDamage.toLocaleString() : (stats.current.heroDamage || 'N/A')}
-                    </p>
-                    
-                    {expandedMetric === 'heroDamage' && (
-                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Total Damage Output:</span>
-                          <span className="font-bold text-emerald-400">{(stats.current.totalHeroDamageRaw || 0).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Avg Damage / Match:</span>
-                          <span className="font-bold text-white">
-                            {stats.current.matchesPlayed ? Math.round(stats.current.totalHeroDamageRaw / stats.current.matchesPlayed).toLocaleString() : 0}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-
-                if (metricId === 'healing') return (
-                  <div 
-                    key="healing"
-                    onClick={() => toggleExpandMetric('healing')}
-                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
-                    }`}
-                  >
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                    </div>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        {isEditOrderMode && (
-                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
-                            #{orderIndex + 1}
-                          </span>
-                        )}
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Healing / 10m</p>
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                        {expandedMetric === 'healing' ? '▲ Hide' : '▼ Expand'}
-                      </span>
-                    </div>
-                    <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                      {stats.current.healing || 'N/A'}
-                    </p>
-                    
-                    {expandedMetric === 'healing' && (
-                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Total Healing Output:</span>
-                          <span className="font-bold text-emerald-400">{(stats.current.totalHeroHealRaw || 0).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Avg Healing / Match:</span>
-                          <span className="font-bold text-white">
-                            {stats.current.matchesPlayed ? Math.round(stats.current.totalHeroHealRaw / stats.current.matchesPlayed).toLocaleString() : 0}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-
-                if (metricId === 'damageBlocked') return (
-                  <div 
-                    key="damageBlocked"
-                    onClick={() => toggleExpandMetric('damageBlocked')}
-                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
-                    }`}
-                  >
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
-                    </div>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        {isEditOrderMode && (
-                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
-                            #{orderIndex + 1}
-                          </span>
-                        )}
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Dmg Blocked / 10m</p>
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                        {expandedMetric === 'damageBlocked' ? '▲ Hide' : '▼ Expand'}
-                      </span>
-                    </div>
-                    <p className={`font-black text-purple-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                      {stats.current.damageBlocked || 'N/A'}
-                    </p>
-                    
-                    {expandedMetric === 'damageBlocked' && (
-                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Total Damage Blocked:</span>
-                          <span className="font-bold text-purple-400">{(stats.current.totalDamageTakenRaw || 0).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Avg Blocked / Match:</span>
-                          <span className="font-bold text-white">
-                            {stats.current.matchesPlayed ? Math.round(stats.current.totalDamageTakenRaw / stats.current.matchesPlayed).toLocaleString() : 0}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-
-                if (metricId === 'accuracy') return (
-                  <div 
-                    key="accuracy"
-                    onClick={() => toggleExpandMetric('accuracy')}
-                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
-                    }`}
-                  >
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    </div>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        {isEditOrderMode && (
-                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
-                            #{orderIndex + 1}
-                          </span>
-                        )}
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Accuracy</p>
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                        {expandedMetric === 'accuracy' ? '▲ Hide' : '▼ Expand'}
-                      </span>
-                    </div>
-                    <p className={`font-black text-yellow-400 ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
-                      {stats.current.accuracy || 'N/A'}
-                    </p>
-                    
-                    {expandedMetric === 'accuracy' && (
-                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Primary Attack Hits:</span>
-                          <span className="font-bold text-yellow-400">{(stats.current.mainAttackHits || 0).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Total Shots Fired:</span>
-                          <span className="font-bold text-white">{(stats.current.mainAttacks || 0).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-400 font-medium">
-                          <span>Missed Shots:</span>
-                          <span className="font-bold text-red-400">
-                            {((stats.current.mainAttacks || 0) - (stats.current.mainAttackHits || 0)).toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-
-                if (metricId === 'mvp') return (
-                  <div 
-                    key="mvp"
-                    onClick={() => toggleExpandMetric('mvp')}
-                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
-                    }`}
-                  >
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-amber-400 font-black text-4xl">
-                      👑
-                    </div>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        {isEditOrderMode && (
-                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
-                            #{orderIndex + 1}
-                          </span>
-                        )}
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">MVPs</p>
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                        {expandedMetric === 'mvp' ? '▲ Hide' : '▼ Expand'}
-                      </span>
-                    </div>
-                    <p className={`font-black text-amber-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                      {stats.current.mvp || '0'}
-                    </p>
-                    
-                    {expandedMetric === 'mvp' && (
-                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>MVP Performance Trophies:</span>
-                          <span className="font-bold text-amber-400">{stats.current.mvp}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Total Matches Played:</span>
-                          <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-
-                if (metricId === 'svp') return (
-                  <div 
-                    key="svp"
-                    onClick={() => toggleExpandMetric('svp')}
-                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
-                    }`}
-                  >
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-purple-400 font-black text-4xl">
-                      🌟
-                    </div>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        {isEditOrderMode && (
-                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
-                            #{orderIndex + 1}
-                          </span>
-                        )}
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">SVPs</p>
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                        {expandedMetric === 'svp' ? '▲ Hide' : '▼ Expand'}
-                      </span>
-                    </div>
-                    <p className={`font-black text-purple-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                      {stats.current.svp || '0'}
-                    </p>
-                    
-                    {expandedMetric === 'svp' && (
-                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>SVP Team Honors:</span>
-                          <span className="font-bold text-purple-400">{stats.current.svp}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Total Matches Played:</span>
-                          <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-
-                if (metricId === 'timePlayed') return (
-                  <div 
-                    key="timePlayed"
-                    onClick={() => toggleExpandMetric('timePlayed')}
-                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
-                    }`}
-                  >
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        {isEditOrderMode && (
-                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
-                            #{orderIndex + 1}
-                          </span>
-                        )}
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Playtime</p>
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                        {expandedMetric === 'timePlayed' ? '▲ Hide' : '▼ Expand'}
-                      </span>
-                    </div>
-                    <p className={`font-black text-sky-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                      {stats.current.timePlayed || 'N/A'}
-                    </p>
-                    
-                    {expandedMetric === 'timePlayed' && (
-                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Total Recorded Hours:</span>
-                          <span className="font-bold text-sky-400">{stats.current.timePlayed}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Matches Tracked:</span>
-                          <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-
-                if (metricId === 'matchesPlayed') return (
-                  <div 
-                    key="matchesPlayed"
-                    onClick={() => toggleExpandMetric('matchesPlayed')}
-                    className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${
-                      isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
-                    }`}
-                  >
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        {isEditOrderMode && (
-                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
-                            #{orderIndex + 1}
-                          </span>
-                        )}
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Matches & Wins</p>
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                        {expandedMetric === 'matchesPlayed' ? '▲ Hide' : '▼ Expand'}
-                      </span>
-                    </div>
-                    <p className={`font-black text-white ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                      {stats.current.matchesWon} <span className="text-sm font-bold text-slate-400">Wins</span> / {stats.current.matchesPlayed} <span className="text-sm font-bold text-slate-400">Total</span>
-                    </p>
-
-                    {expandedMetric === 'matchesPlayed' && (
-                      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="flex justify-between text-emerald-400 font-medium">
-                          <span>Victories:</span>
-                          <span className="font-bold">{stats.current.matchesWon}</span>
-                        </div>
-                        <div className="flex justify-between text-red-400 font-medium">
-                          <span>Defeats:</span>
-                          <span className="font-bold">{stats.current.matchesPlayed - stats.current.matchesWon}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300 font-medium">
-                          <span>Win Rate:</span>
-                          <span className="font-bold text-white">{stats.current.winRate}%</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-
-                if (metricId === 'topHeroes') return (
-                  <div key="topHeroes" className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group transition-all duration-300 ${
-                    isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50'
+                {/* Primary Tracked Metrics Grid */}
+                <div className={`grid gap-4 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:gap-6'
                   }`}>
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                      </svg>
-                    </div>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        {isEditOrderMode && (
-                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
-                            #{orderIndex + 1}
-                          </span>
-                        )}
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Top Heroes</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col gap-2 relative z-10">
-                      {stats.current.topHeroesDetailed && stats.current.topHeroesDetailed.length > 0 ? (
-                        stats.current.topHeroesDetailed.map((hero, index) => (
-                          <details key={index} className="group bg-[#0f1526] rounded-xl border border-slate-700/50 overflow-hidden shadow-sm">
-                            <summary className="cursor-pointer flex items-center justify-between p-2.5 hover:bg-slate-800/50 transition-colors list-none">
-                              <div className="flex items-center gap-2.5">
-                                <div className="w-5 h-5 rounded bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-400 shadow-inner">
-                                  {index + 1}
-                                </div>
-                                <span className="text-base font-black text-emerald-400 truncate">{hero.name}</span>
-                              </div>
-                              <svg className="w-4 h-4 text-slate-500 transition-transform duration-300 group-open:-rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                              </svg>
-                            </summary>
-                            <div className="p-3 border-t border-slate-700/50 bg-[#0b101e] grid grid-cols-2 gap-y-2.5 gap-x-3 text-left">
-                              <div>
-                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Win Rate</p>
-                                <p className="text-sm font-black text-emerald-400">{hero.winRate}%</p>
-                              </div>
-                              <div>
-                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">KDA Ratio</p>
-                                <p className="text-sm font-black text-blue-400">{hero.kda}</p>
-                              </div>
-                              <div>
-                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Matches</p>
-                                <p className="text-xs font-bold text-slate-200">{hero.matches}</p>
-                              </div>
-                              <div>
-                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Playtime</p>
-                                <p className="text-xs font-bold text-slate-200">{hero.timePlayed}</p>
-                              </div>
-                            </div>
-                          </details>
-                        ))
-                      ) : (
-                        <div className="flex flex-col gap-2">
-                          {stats.current.topHero.split(', ').map((hero, index) => (
-                            <div key={index} className="flex items-center gap-2.5">
-                              <div className="w-5 h-5 rounded bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-400">
-                                {index + 1}
-                              </div>
-                              <span className="text-lg font-black text-emerald-400 truncate">{hero}</span>
-                            </div>
-                          ))}
+                  {selectedMetrics.map((metricId, orderIndex) => {
+                    if (metricId === 'winRate') return (
+                      <div
+                        key="winRate"
+                        onClick={() => toggleExpandMetric('winRate')}
+                        className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
+                          }`}
+                      >
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                          </svg>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            {isEditOrderMode && (
+                              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                                #{orderIndex + 1}
+                              </span>
+                            )}
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Win Rate</p>
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                            {expandedMetric === 'winRate' ? '▲ Hide' : '▼ Expand'}
+                          </span>
+                        </div>
+                        <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>{stats.current.winRate}%</p>
 
-            {/* Detailed Combat Telemetry Grid */}
-            <div className={`grid gap-3 bg-[#131b2f] p-4 sm:p-5 rounded-2xl border border-slate-700/50 shadow-xl ${
-              isMobileView ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
-            }`}>
-              {/* Card 1: Matches & Wins */}
-              <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                  Matches & Wins
-                  <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                    {stats.current.winRate}% WR
-                  </span>
-                </span>
-                <div className="mt-2 flex items-baseline gap-2 flex-wrap">
-                  <span className="text-xl sm:text-2xl font-black text-white">{stats.current.matchesWon || 0}</span>
-                  <span className="text-xs text-emerald-400 font-bold">Wins</span>
-                  <span className="text-slate-600 text-xs font-bold">•</span>
-                  <span className="text-xs text-slate-400 font-medium">{stats.current.matchesPlayed || 0} Total</span>
-                </div>
-              </div>
-
-              {/* Card 2: KDA Breakdown */}
-              <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                  Combat K / D / A
-                  <span className="text-[10px] text-blue-400 font-semibold bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
-                    {stats.current.kdRatio} KDA
-                  </span>
-                </span>
-                <div className="mt-2 flex items-center gap-1.5 text-xs sm:text-sm font-black flex-wrap">
-                  <span className="text-emerald-400 font-black">{stats.current.kills?.toLocaleString() || 0} <span className="text-[10px] text-slate-500 font-normal">K</span></span>
-                  <span className="text-slate-600 font-normal">/</span>
-                  <span className="text-red-400 font-black">{stats.current.deaths?.toLocaleString() || 0} <span className="text-[10px] text-slate-500 font-normal">D</span></span>
-                  <span className="text-slate-600 font-normal">/</span>
-                  <span className="text-blue-400 font-black">{stats.current.assists?.toLocaleString() || 0} <span className="text-[10px] text-slate-500 font-normal">A</span></span>
-                </div>
-              </div>
-
-              {/* Card 3: Hero Damage */}
-              <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Damage</span>
-                <div className="mt-2 flex items-baseline gap-1 truncate">
-                  <span className="text-lg sm:text-xl md:text-2xl font-black text-emerald-400 truncate">
-                    {typeof stats.current.heroDamage === 'number' 
-                      ? stats.current.heroDamage.toLocaleString() 
-                      : (stats.current.heroDamage || 'N/A')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 4: Total Playtime */}
-              <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Playtime</span>
-                <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-lg sm:text-xl md:text-2xl font-black text-blue-400">
-                    {stats.current.timePlayed || 'N/A'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Tab 2: Saved Data Over Time (Graphical Progress & Trends Dashboard) */}
-        {activeUserTab === 'history' && (
-          <div className="space-y-6 animate-in fade-in duration-300 text-left">
-            
-            {/* Header & Timeframe Selector Card */}
-            <div className="bg-[#131b2f] border border-slate-700/60 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-                <div>
-                  <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
-                    <span>📈 Player Progress & Trends Over Time</span>
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Visual performance progression charts logged for <strong className="text-emerald-400">{stats.current.username}</strong>
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <select 
-                    value={timeframe} 
-                    onChange={(e) => setTimeframe(e.target.value)}
-                    className="bg-[#0b101e] border border-slate-700/80 rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500 text-white text-xs font-bold cursor-pointer shadow-md"
-                  >
-                    <option value="all">All-Time History</option>
-                    <option value="30d">Past 30 Days</option>
-                    <option value="7d">Past 7 Days</option>
-                  </select>
-
-                  <button
-                    type="button"
-                    onClick={() => downloadUserDataset(stats)}
-                    className="px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/60 text-emerald-300 font-bold text-xs uppercase cursor-pointer transition-all"
-                  >
-                    📥 Export Data File
-                  </button>
-                </div>
-              </div>
-
-              {/* Progress Summary Metrics Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Snapshots Logged</span>
-                  <p className="text-xl font-black text-emerald-400">{stats.history?.length || 0}</p>
-                </div>
-                <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Current Win Rate</span>
-                  <p className="text-xl font-black text-white">{stats.current.winRate ? `${stats.current.winRate}%` : 'N/A'}</p>
-                </div>
-                <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Current KD Ratio</span>
-                  <p className="text-xl font-black text-teal-400">{stats.current.kdRatio || 'N/A'}</p>
-                </div>
-                <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
-                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Rank Division</span>
-                  <p className="text-xl font-black text-amber-400 truncate">{stats.current.rank || 'Unranked'}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Performance Trends Line Graphs over Time */}
-            {stats.history && stats.history.length > 0 ? (
-              <div className="space-y-6">
-                <div className={`grid gap-4 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2 lg:gap-6'}`}>
-                  
-                  {/* Graph 1: Win Rate Progression (%) over Time */}
-                  <div className="bg-[#131b2f] p-4 sm:p-6 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-xs font-black text-slate-300 uppercase tracking-widest flex items-center gap-2">
-                          <span>📊 Win Rate Progression Over Time (%)</span>
-                        </h4>
-                        <p className="text-[10px] text-slate-400 mt-0.5">Historical win percentage trajectory across logged searches</p>
+                        {expandedMetric === 'winRate' && (
+                          <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Total Matches:</span>
+                              <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
+                            </div>
+                            <div className="flex justify-between text-emerald-400 font-medium">
+                              <span>Victories (Wins):</span>
+                              <span className="font-bold">{stats.current.matchesWon}</span>
+                            </div>
+                            <div className="flex justify-between text-red-400 font-medium">
+                              <span>Defeats (Losses):</span>
+                              <span className="font-bold">{stats.current.matchesPlayed - stats.current.matchesWon}</span>
+                            </div>
+                            <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden flex mt-2">
+                              <div className="bg-emerald-500 h-full" style={{ width: `${stats.current.winRate}%` }}></div>
+                              <div className="bg-red-500 h-full flex-1"></div>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></div>
-                    </div>
+                    );
 
-                    <div className={isMobileView ? 'h-52' : 'h-72'}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={getFilteredHistory()} margin={{ top: 10, right: 15, bottom: 5, left: -20 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                          <XAxis dataKey="date" stroke="#64748b" tick={{fill: '#64748b', fontSize: 10}} tickLine={false} axisLine={false} />
-                          <YAxis stroke="#64748b" domain={['auto', 'auto']} tick={{fill: '#64748b', fontSize: 10}} tickLine={false} axisLine={false} />
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: '#0f1526', border: '1px solid #334155', borderRadius: '12px', color: '#f8fafc', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', fontSize: '12px' }}
-                            itemStyle={{ color: '#fb923c', fontWeight: 'bold' }}
-                            formatter={(value) => [`${value}%`, 'Win Rate']}
-                          />
-                          <Line type="monotone" dataKey="winRate" stroke="#fb923c" strokeWidth={3} dot={{ fill: '#0f1526', stroke: '#fb923c', strokeWidth: 2, r: 4 }} activeDot={{ r: 7, fill: '#fb923c' }} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
+                    if (metricId === 'kdRatio') return (
+                      <div
+                        key="kdRatio"
+                        onClick={() => toggleExpandMetric('kdRatio')}
+                        className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
+                          }`}
+                      >
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                          </svg>
+                        </div>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            {isEditOrderMode && (
+                              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                                #{orderIndex + 1}
+                              </span>
+                            )}
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">KDA Ratio</p>
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                            {expandedMetric === 'kdRatio' ? '▲ Hide' : '▼ Expand'}
+                          </span>
+                        </div>
+                        <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>{stats.current.kdRatio}</p>
 
-                  {/* Graph 2: K/D Ratio Progression over Time */}
-                  <div className="bg-[#131b2f] p-4 sm:p-6 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-xs font-black text-slate-300 uppercase tracking-widest flex items-center gap-2">
-                          <span>🎯 K/D Ratio Progression Over Time</span>
-                        </h4>
-                        <p className="text-[10px] text-slate-400 mt-0.5">Combat efficiency and elimination ratio over time</p>
+                        {expandedMetric === 'kdRatio' && (
+                          <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Eliminations (Kills):</span>
+                              <span className="font-bold text-emerald-400">{(stats.current.kills || 0).toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Assists:</span>
+                              <span className="font-bold text-blue-400">{(stats.current.assists || 0).toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Deaths:</span>
+                              <span className="font-bold text-red-400">{(stats.current.deaths || 0).toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between text-slate-400 pt-1 border-t border-slate-800">
+                              <span>Pure K/D Ratio:</span>
+                              <span className="font-bold text-white">{((stats.current.kills || 0) / (stats.current.deaths || 1)).toFixed(2)}</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
-                    </div>
+                    );
 
-                    <div className={isMobileView ? 'h-52' : 'h-72'}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={getFilteredHistory()} margin={{ top: 10, right: 15, bottom: 5, left: -20 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                          <XAxis dataKey="date" stroke="#64748b" tick={{fill: '#64748b', fontSize: 10}} tickLine={false} axisLine={false} />
-                          <YAxis stroke="#64748b" domain={['auto', 'auto']} tick={{fill: '#64748b', fontSize: 10}} tickLine={false} axisLine={false} />
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: '#0f1526', border: '1px solid #334155', borderRadius: '12px', color: '#f8fafc', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', fontSize: '12px' }}
-                            itemStyle={{ color: '#60a5fa', fontWeight: 'bold' }}
-                            formatter={(value) => [value, 'K/D Ratio']}
-                          />
-                          <Line type="monotone" dataKey="kdRatio" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#0f1526', stroke: '#3b82f6', strokeWidth: 2, r: 4 }} activeDot={{ r: 7, fill: '#3b82f6' }} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
+                    if (metricId === 'heroDamage') return (
+                      <div
+                        key="heroDamage"
+                        onClick={() => toggleExpandMetric('heroDamage')}
+                        className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
+                          }`}
+                      >
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                          </svg>
+                        </div>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            {isEditOrderMode && (
+                              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                                #{orderIndex + 1}
+                              </span>
+                            )}
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Damage / 10m</p>
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                            {expandedMetric === 'heroDamage' ? '▲ Hide' : '▼ Expand'}
+                          </span>
+                        </div>
+                        <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                          {typeof stats.current.heroDamage === 'number' ? stats.current.heroDamage.toLocaleString() : (stats.current.heroDamage || 'N/A')}
+                        </p>
 
+                        {expandedMetric === 'heroDamage' && (
+                          <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Total Damage Output:</span>
+                              <span className="font-bold text-emerald-400">{(stats.current.totalHeroDamageRaw || 0).toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Avg Damage / Match:</span>
+                              <span className="font-bold text-white">
+                                {stats.current.matchesPlayed ? Math.round(stats.current.totalHeroDamageRaw / stats.current.matchesPlayed).toLocaleString() : 0}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+
+                    if (metricId === 'healing') return (
+                      <div
+                        key="healing"
+                        onClick={() => toggleExpandMetric('healing')}
+                        className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
+                          }`}
+                      >
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                        </div>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            {isEditOrderMode && (
+                              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                                #{orderIndex + 1}
+                              </span>
+                            )}
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Healing / 10m</p>
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                            {expandedMetric === 'healing' ? '▲ Hide' : '▼ Expand'}
+                          </span>
+                        </div>
+                        <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                          {stats.current.healing || 'N/A'}
+                        </p>
+
+                        {expandedMetric === 'healing' && (
+                          <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Total Healing Output:</span>
+                              <span className="font-bold text-emerald-400">{(stats.current.totalHeroHealRaw || 0).toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Avg Healing / Match:</span>
+                              <span className="font-bold text-white">
+                                {stats.current.matchesPlayed ? Math.round(stats.current.totalHeroHealRaw / stats.current.matchesPlayed).toLocaleString() : 0}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+
+                    if (metricId === 'damageBlocked') return (
+                      <div
+                        key="damageBlocked"
+                        onClick={() => toggleExpandMetric('damageBlocked')}
+                        className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
+                          }`}
+                      >
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                          </svg>
+                        </div>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            {isEditOrderMode && (
+                              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                                #{orderIndex + 1}
+                              </span>
+                            )}
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Dmg Blocked / 10m</p>
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                            {expandedMetric === 'damageBlocked' ? '▲ Hide' : '▼ Expand'}
+                          </span>
+                        </div>
+                        <p className={`font-black text-purple-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                          {stats.current.damageBlocked || 'N/A'}
+                        </p>
+
+                        {expandedMetric === 'damageBlocked' && (
+                          <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Total Damage Blocked:</span>
+                              <span className="font-bold text-purple-400">{(stats.current.totalDamageTakenRaw || 0).toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Avg Blocked / Match:</span>
+                              <span className="font-bold text-white">
+                                {stats.current.matchesPlayed ? Math.round(stats.current.totalDamageTakenRaw / stats.current.matchesPlayed).toLocaleString() : 0}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+
+                    if (metricId === 'accuracy') return (
+                      <div
+                        key="accuracy"
+                        onClick={() => toggleExpandMetric('accuracy')}
+                        className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
+                          }`}
+                      >
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </div>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            {isEditOrderMode && (
+                              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                                #{orderIndex + 1}
+                              </span>
+                            )}
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Accuracy</p>
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                            {expandedMetric === 'accuracy' ? '▲ Hide' : '▼ Expand'}
+                          </span>
+                        </div>
+                        <p className={`font-black text-yellow-400 ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
+                          {stats.current.accuracy || 'N/A'}
+                        </p>
+
+                        {expandedMetric === 'accuracy' && (
+                          <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Primary Attack Hits:</span>
+                              <span className="font-bold text-yellow-400">{(stats.current.mainAttackHits || 0).toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Total Shots Fired:</span>
+                              <span className="font-bold text-white">{(stats.current.mainAttacks || 0).toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between text-slate-400 font-medium">
+                              <span>Missed Shots:</span>
+                              <span className="font-bold text-red-400">
+                                {((stats.current.mainAttacks || 0) - (stats.current.mainAttackHits || 0)).toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+
+                    if (metricId === 'mvp') return (
+                      <div
+                        key="mvp"
+                        onClick={() => toggleExpandMetric('mvp')}
+                        className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
+                          }`}
+                      >
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-amber-400 font-black text-4xl">
+                          👑
+                        </div>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            {isEditOrderMode && (
+                              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                                #{orderIndex + 1}
+                              </span>
+                            )}
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">MVPs</p>
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                            {expandedMetric === 'mvp' ? '▲ Hide' : '▼ Expand'}
+                          </span>
+                        </div>
+                        <p className={`font-black text-amber-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                          {stats.current.mvp || '0'}
+                        </p>
+
+                        {expandedMetric === 'mvp' && (
+                          <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>MVP Performance Trophies:</span>
+                              <span className="font-bold text-amber-400">{stats.current.mvp}</span>
+                            </div>
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Total Matches Played:</span>
+                              <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+
+                    if (metricId === 'svp') return (
+                      <div
+                        key="svp"
+                        onClick={() => toggleExpandMetric('svp')}
+                        className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
+                          }`}
+                      >
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-purple-400 font-black text-4xl">
+                          🌟
+                        </div>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            {isEditOrderMode && (
+                              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                                #{orderIndex + 1}
+                              </span>
+                            )}
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">SVPs</p>
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                            {expandedMetric === 'svp' ? '▲ Hide' : '▼ Expand'}
+                          </span>
+                        </div>
+                        <p className={`font-black text-purple-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                          {stats.current.svp || '0'}
+                        </p>
+
+                        {expandedMetric === 'svp' && (
+                          <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>SVP Team Honors:</span>
+                              <span className="font-bold text-purple-400">{stats.current.svp}</span>
+                            </div>
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Total Matches Played:</span>
+                              <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+
+                    if (metricId === 'timePlayed') return (
+                      <div
+                        key="timePlayed"
+                        onClick={() => toggleExpandMetric('timePlayed')}
+                        className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
+                          }`}
+                      >
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            {isEditOrderMode && (
+                              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                                #{orderIndex + 1}
+                              </span>
+                            )}
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Playtime</p>
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                            {expandedMetric === 'timePlayed' ? '▲ Hide' : '▼ Expand'}
+                          </span>
+                        </div>
+                        <p className={`font-black text-sky-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                          {stats.current.timePlayed || 'N/A'}
+                        </p>
+
+                        {expandedMetric === 'timePlayed' && (
+                          <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Total Recorded Hours:</span>
+                              <span className="font-bold text-sky-400">{stats.current.timePlayed}</span>
+                            </div>
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Matches Tracked:</span>
+                              <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+
+                    if (metricId === 'matchesPlayed') return (
+                      <div
+                        key="matchesPlayed"
+                        onClick={() => toggleExpandMetric('matchesPlayed')}
+                        className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
+                          }`}
+                      >
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            {isEditOrderMode && (
+                              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                                #{orderIndex + 1}
+                              </span>
+                            )}
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Matches & Wins</p>
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                            {expandedMetric === 'matchesPlayed' ? '▲ Hide' : '▼ Expand'}
+                          </span>
+                        </div>
+                        <p className={`font-black text-white ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                          {stats.current.matchesWon} <span className="text-sm font-bold text-slate-400">Wins</span> / {stats.current.matchesPlayed} <span className="text-sm font-bold text-slate-400">Total</span>
+                        </p>
+
+                        {expandedMetric === 'matchesPlayed' && (
+                          <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="flex justify-between text-emerald-400 font-medium">
+                              <span>Victories:</span>
+                              <span className="font-bold">{stats.current.matchesWon}</span>
+                            </div>
+                            <div className="flex justify-between text-red-400 font-medium">
+                              <span>Defeats:</span>
+                              <span className="font-bold">{stats.current.matchesPlayed - stats.current.matchesWon}</span>
+                            </div>
+                            <div className="flex justify-between text-slate-300 font-medium">
+                              <span>Win Rate:</span>
+                              <span className="font-bold text-white">{stats.current.winRate}%</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+
+                    if (metricId === 'topHeroes') return (
+                      <div key="topHeroes" className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50'
+                        }`}>
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                          </svg>
+                        </div>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            {isEditOrderMode && (
+                              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-black animate-pulse">
+                                #{orderIndex + 1}
+                              </span>
+                            )}
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Top Heroes</p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2 relative z-10">
+                          {stats.current.topHeroesDetailed && stats.current.topHeroesDetailed.length > 0 ? (
+                            stats.current.topHeroesDetailed.map((hero, index) => (
+                              <details key={index} className="group bg-[#0f1526] rounded-xl border border-slate-700/50 overflow-hidden shadow-sm">
+                                <summary className="cursor-pointer flex items-center justify-between p-2.5 hover:bg-slate-800/50 transition-colors list-none">
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="w-5 h-5 rounded bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-400 shadow-inner">
+                                      {index + 1}
+                                    </div>
+                                    <span className="text-base font-black text-emerald-400 truncate">{hero.name}</span>
+                                  </div>
+                                  <svg className="w-4 h-4 text-slate-500 transition-transform duration-300 group-open:-rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                  </svg>
+                                </summary>
+                                <div className="p-3 border-t border-slate-700/50 bg-[#0b101e] grid grid-cols-2 gap-y-2.5 gap-x-3 text-left">
+                                  <div>
+                                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Win Rate</p>
+                                    <p className="text-sm font-black text-emerald-400">{hero.winRate}%</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">KDA Ratio</p>
+                                    <p className="text-sm font-black text-blue-400">{hero.kda}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Matches</p>
+                                    <p className="text-xs font-bold text-slate-200">{hero.matches}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Playtime</p>
+                                    <p className="text-xs font-bold text-slate-200">{hero.timePlayed}</p>
+                                  </div>
+                                </div>
+                              </details>
+                            ))
+                          ) : (
+                            <div className="flex flex-col gap-2">
+                              {stats.current.topHero.split(', ').map((hero, index) => (
+                                <div key={index} className="flex items-center gap-2.5">
+                                  <div className="w-5 h-5 rounded bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-400">
+                                    {index + 1}
+                                  </div>
+                                  <span className="text-lg font-black text-emerald-400 truncate">{hero}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
-                {/* Historical Progress Log Table */}
-                <div className="bg-[#131b2f] border border-slate-700/60 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-                      <span>🕒 Snapshot History Log Over Time</span>
-                    </h4>
-                    <span className="text-[11px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                      {stats.history?.length || 0} Data Records
+                {/* Detailed Combat Telemetry Grid */}
+                <div className={`grid gap-3 bg-[#131b2f] p-4 sm:p-5 rounded-2xl border border-slate-700/50 shadow-xl ${isMobileView ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+                  }`}>
+                  {/* Card 1: Matches & Wins */}
+                  <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                      Matches & Wins
+                      <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                        {stats.current.winRate}% WR
+                      </span>
                     </span>
+                    <div className="mt-2 flex items-baseline gap-2 flex-wrap">
+                      <span className="text-xl sm:text-2xl font-black text-white">{stats.current.matchesWon || 0}</span>
+                      <span className="text-xs text-emerald-400 font-bold">Wins</span>
+                      <span className="text-slate-600 text-xs font-bold">•</span>
+                      <span className="text-xs text-slate-400 font-medium">{stats.current.matchesPlayed || 0} Total</span>
+                    </div>
                   </div>
 
-                  <div className="overflow-x-auto rounded-xl border border-slate-800">
-                    <table className="w-full text-left text-xs text-slate-300">
-                      <thead className="bg-[#0b101e] text-[10px] uppercase font-black text-slate-400 border-b border-slate-800">
-                        <tr>
-                          <th className="py-3 px-4">#</th>
-                          <th className="py-3 px-4">Date & Time Logged</th>
-                          <th className="py-3 px-4">Win Rate (%)</th>
-                          <th className="py-3 px-4">K/D Ratio</th>
-                          <th className="py-3 px-4">Top Main Hero</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-800/60 font-mono">
-                        {stats.history.map((entry, idx) => (
-                          <tr key={entry.id || idx} className="hover:bg-slate-800/40 transition-colors">
-                            <td className="py-3.5 px-4 text-slate-500 font-bold">{idx + 1}</td>
-                            <td className="py-3.5 px-4 text-white font-sans font-bold">{entry.timestamp ? new Date(entry.timestamp).toLocaleString() : (entry.date || 'Recorded')}</td>
-                            <td className="py-3.5 px-4 text-emerald-400 font-bold">{entry.win_rate !== undefined ? `${entry.win_rate}%` : (entry.winRate ? `${entry.winRate}%` : 'N/A')}</td>
-                            <td className="py-3.5 px-4 text-teal-400 font-bold">{entry.kd_ratio !== undefined ? entry.kd_ratio : (entry.kdRatio || 'N/A')}</td>
-                            <td className="py-3.5 px-4 text-amber-300 font-sans font-bold">{entry.top_hero || entry.topHero || 'N/A'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  {/* Card 2: KDA Breakdown */}
+                  <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                      Combat K / D / A
+                      <span className="text-[10px] text-blue-400 font-semibold bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
+                        {stats.current.kdRatio} KDA
+                      </span>
+                    </span>
+                    <div className="mt-2 flex items-center gap-1.5 text-xs sm:text-sm font-black flex-wrap">
+                      <span className="text-emerald-400 font-black">{stats.current.kills?.toLocaleString() || 0} <span className="text-[10px] text-slate-500 font-normal">K</span></span>
+                      <span className="text-slate-600 font-normal">/</span>
+                      <span className="text-red-400 font-black">{stats.current.deaths?.toLocaleString() || 0} <span className="text-[10px] text-slate-500 font-normal">D</span></span>
+                      <span className="text-slate-600 font-normal">/</span>
+                      <span className="text-blue-400 font-black">{stats.current.assists?.toLocaleString() || 0} <span className="text-[10px] text-slate-500 font-normal">A</span></span>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Hero Damage */}
+                  <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Damage</span>
+                    <div className="mt-2 flex items-baseline gap-1 truncate">
+                      <span className="text-lg sm:text-xl md:text-2xl font-black text-emerald-400 truncate">
+                        {typeof stats.current.heroDamage === 'number'
+                          ? stats.current.heroDamage.toLocaleString()
+                          : (stats.current.heroDamage || 'N/A')}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card 4: Total Playtime */}
+                  <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Playtime</span>
+                    <div className="mt-2 flex items-baseline gap-1">
+                      <span className="text-lg sm:text-xl md:text-2xl font-black text-blue-400">
+                        {stats.current.timePlayed || 'N/A'}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="bg-[#131b2f] p-8 rounded-2xl text-center border border-slate-700/60 space-y-3 shadow-xl">
-                <span className="text-4xl">📈</span>
-                <h4 className="text-base font-black text-white uppercase tracking-wider">No Historical Snapshots Logged Yet</h4>
-                <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-                  Search for this player while <strong className="text-emerald-400">Tracking Mode</strong> is enabled to build their visual performance progress graph over time.
-                </p>
               </div>
             )}
 
-            {/* Optional Collapsible Technical Raw Data Inspector */}
-            <details className="group bg-[#131b2f] border border-slate-700/40 rounded-2xl overflow-hidden shadow-lg transition-all duration-300">
-              <summary className="flex cursor-pointer items-center justify-between px-5 py-3.5 font-bold text-slate-400 hover:text-emerald-400 transition-colors list-none">
-                <span className="flex items-center gap-2 uppercase tracking-widest text-[11px]">
-                  <span>💻</span>
-                  <span>Developer Technical Data Payload (Raw JSON Inspector)</span>
-                </span>
-                <svg className="w-4 h-4 transition-transform duration-300 group-open:-rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </summary>
-              <div className="p-4 bg-[#0b101e] border-t border-slate-800 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-400">Complete raw JSON dataset structure:</span>
-                  <button
-                    type="button"
-                    onClick={() => copyDiagnosticLog(stats)}
-                    className="text-xs text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer"
-                  >
-                    📋 Copy Full JSON
-                  </button>
-                </div>
-                <div className="max-h-80 overflow-y-auto font-mono text-xs text-slate-300 select-all leading-relaxed p-3 bg-black/40 rounded-xl border border-slate-800">
-                  <pre className="whitespace-pre-wrap break-words">{JSON.stringify(stats, null, 2)}</pre>
-                </div>
-              </div>
-            </details>
+            {/* Tab 2: Saved Data Over Time (Graphical Progress & Trends Dashboard) */}
+            {activeUserTab === 'history' && (
+              <div className="space-y-6 animate-in fade-in duration-300 text-left">
 
+                {/* Header & Timeframe Selector Card */}
+                <div className="bg-[#131b2f] border border-slate-700/60 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                    <div>
+                      <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
+                        <span>📈 Player Progress & Trends Over Time</span>
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Visual performance progression charts logged for <strong className="text-emerald-400">{stats.current.username}</strong>
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <select
+                        value={timeframe}
+                        onChange={(e) => setTimeframe(e.target.value)}
+                        className="bg-[#0b101e] border border-slate-700/80 rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500 text-white text-xs font-bold cursor-pointer shadow-md"
+                      >
+                        <option value="all">All-Time History</option>
+                        <option value="30d">Past 30 Days</option>
+                        <option value="7d">Past 7 Days</option>
+                      </select>
+
+                      <button
+                        type="button"
+                        onClick={() => downloadUserDataset(stats)}
+                        className="px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/60 text-emerald-300 font-bold text-xs uppercase cursor-pointer transition-all"
+                      >
+                        📥 Export Data File
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Progress Summary Metrics Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
+                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Snapshots Logged</span>
+                      <p className="text-xl font-black text-emerald-400">{stats.history?.length || 0}</p>
+                    </div>
+                    <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
+                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Current Win Rate</span>
+                      <p className="text-xl font-black text-white">{stats.current.winRate ? `${stats.current.winRate}%` : 'N/A'}</p>
+                    </div>
+                    <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
+                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Current KD Ratio</span>
+                      <p className="text-xl font-black text-teal-400">{stats.current.kdRatio || 'N/A'}</p>
+                    </div>
+                    <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
+                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Rank Division</span>
+                      <p className="text-xl font-black text-amber-400 truncate">{stats.current.rank || 'Unranked'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Performance Trends Line Graphs over Time */}
+                {stats.history && stats.history.length > 0 ? (
+                  <div className="space-y-6">
+                    <div className={`grid gap-4 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2 lg:gap-6'}`}>
+
+                      {/* Graph 1: Win Rate Progression (%) over Time */}
+                      <div className="bg-[#131b2f] p-4 sm:p-6 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="text-xs font-black text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                              <span>📊 Win Rate Progression Over Time (%)</span>
+                            </h4>
+                            <p className="text-[10px] text-slate-400 mt-0.5">Historical win percentage trajectory across logged searches</p>
+                          </div>
+                          <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></div>
+                        </div>
+
+                        <div className={isMobileView ? 'h-52' : 'h-72'}>
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={getFilteredHistory()} margin={{ top: 10, right: 15, bottom: 5, left: -20 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                              <XAxis dataKey="date" stroke="#64748b" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} />
+                              <YAxis stroke="#64748b" domain={['auto', 'auto']} tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} />
+                              <Tooltip
+                                contentStyle={{ backgroundColor: '#0f1526', border: '1px solid #334155', borderRadius: '12px', color: '#f8fafc', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', fontSize: '12px' }}
+                                itemStyle={{ color: '#fb923c', fontWeight: 'bold' }}
+                                formatter={(value) => [`${value}%`, 'Win Rate']}
+                              />
+                              <Line type="monotone" dataKey="winRate" stroke="#fb923c" strokeWidth={3} dot={{ fill: '#0f1526', stroke: '#fb923c', strokeWidth: 2, r: 4 }} activeDot={{ r: 7, fill: '#fb923c' }} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+
+                      {/* Graph 2: K/D Ratio Progression over Time */}
+                      <div className="bg-[#131b2f] p-4 sm:p-6 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="text-xs font-black text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                              <span>🎯 K/D Ratio Progression Over Time</span>
+                            </h4>
+                            <p className="text-[10px] text-slate-400 mt-0.5">Combat efficiency and elimination ratio over time</p>
+                          </div>
+                          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
+                        </div>
+
+                        <div className={isMobileView ? 'h-52' : 'h-72'}>
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={getFilteredHistory()} margin={{ top: 10, right: 15, bottom: 5, left: -20 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                              <XAxis dataKey="date" stroke="#64748b" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} />
+                              <YAxis stroke="#64748b" domain={['auto', 'auto']} tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} />
+                              <Tooltip
+                                contentStyle={{ backgroundColor: '#0f1526', border: '1px solid #334155', borderRadius: '12px', color: '#f8fafc', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', fontSize: '12px' }}
+                                itemStyle={{ color: '#60a5fa', fontWeight: 'bold' }}
+                                formatter={(value) => [value, 'K/D Ratio']}
+                              />
+                              <Line type="monotone" dataKey="kdRatio" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#0f1526', stroke: '#3b82f6', strokeWidth: 2, r: 4 }} activeDot={{ r: 7, fill: '#3b82f6' }} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* Historical Progress Log Table */}
+                    <div className="bg-[#131b2f] border border-slate-700/60 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                          <span>🕒 Snapshot History Log Over Time</span>
+                        </h4>
+                        <span className="text-[11px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                          {stats.history?.length || 0} Data Records
+                        </span>
+                      </div>
+
+                      <div className="overflow-x-auto rounded-xl border border-slate-800">
+                        <table className="w-full text-left text-xs text-slate-300">
+                          <thead className="bg-[#0b101e] text-[10px] uppercase font-black text-slate-400 border-b border-slate-800">
+                            <tr>
+                              <th className="py-3 px-4">#</th>
+                              <th className="py-3 px-4">Date & Time Logged</th>
+                              <th className="py-3 px-4">Win Rate (%)</th>
+                              <th className="py-3 px-4">K/D Ratio</th>
+                              <th className="py-3 px-4">Top Main Hero</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-800/60 font-mono">
+                            {stats.history.map((entry, idx) => (
+                              <tr key={entry.id || idx} className="hover:bg-slate-800/40 transition-colors">
+                                <td className="py-3.5 px-4 text-slate-500 font-bold">{idx + 1}</td>
+                                <td className="py-3.5 px-4 text-white font-sans font-bold">{entry.timestamp ? new Date(entry.timestamp).toLocaleString() : (entry.date || 'Recorded')}</td>
+                                <td className="py-3.5 px-4 text-emerald-400 font-bold">{entry.win_rate !== undefined ? `${entry.win_rate}%` : (entry.winRate ? `${entry.winRate}%` : 'N/A')}</td>
+                                <td className="py-3.5 px-4 text-teal-400 font-bold">{entry.kd_ratio !== undefined ? entry.kd_ratio : (entry.kdRatio || 'N/A')}</td>
+                                <td className="py-3.5 px-4 text-amber-300 font-sans font-bold">{entry.top_hero || entry.topHero || 'N/A'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-[#131b2f] p-8 rounded-2xl text-center border border-slate-700/60 space-y-3 shadow-xl">
+                    <span className="text-4xl">📈</span>
+                    <h4 className="text-base font-black text-white uppercase tracking-wider">No Historical Snapshots Logged Yet</h4>
+                    <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                      Search for this player while <strong className="text-emerald-400">Tracking Mode</strong> is enabled to build their visual performance progress graph over time.
+                    </p>
+                  </div>
+                )}
+
+                {/* Optional Collapsible Technical Raw Data Inspector */}
+                <details className="group bg-[#131b2f] border border-slate-700/40 rounded-2xl overflow-hidden shadow-lg transition-all duration-300">
+                  <summary className="flex cursor-pointer items-center justify-between px-5 py-3.5 font-bold text-slate-400 hover:text-emerald-400 transition-colors list-none">
+                    <span className="flex items-center gap-2 uppercase tracking-widest text-[11px]">
+                      <span>💻</span>
+                      <span>Developer Technical Data Payload (Raw JSON Inspector)</span>
+                    </span>
+                    <svg className="w-4 h-4 transition-transform duration-300 group-open:-rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </summary>
+                  <div className="p-4 bg-[#0b101e] border-t border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-400">Complete raw JSON dataset structure:</span>
+                      <button
+                        type="button"
+                        onClick={() => copyDiagnosticLog(stats)}
+                        className="text-xs text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer"
+                      >
+                        📋 Copy Full JSON
+                      </button>
+                    </div>
+                    <div className="max-h-80 overflow-y-auto font-mono text-xs text-slate-300 select-all leading-relaxed p-3 bg-black/40 rounded-xl border border-slate-800">
+                      <pre className="whitespace-pre-wrap break-words">{JSON.stringify(stats, null, 2)}</pre>
+                    </div>
+                  </div>
+                </details>
+
+              </div>
+            )}
           </div>
         )}
-      </div>
-    )}
 
         {/* Background Download Progress Indicator */}
         {isDownloadingUpdate && (
@@ -2769,7 +2747,7 @@ ${payload.stack || 'No stack trace available.'}
               <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/60 flex items-center justify-center text-3xl mx-auto shadow-lg shadow-emerald-500/20 animate-bounce">
                 🚀
               </div>
-              
+
               <div className="space-y-2">
                 <h3 className="text-xl font-black text-white uppercase tracking-wider">
                   Release Download Complete!
@@ -2811,13 +2789,239 @@ ${payload.stack || 'No stack trace available.'}
             </div>
           </div>
         )}
+        {/* Auto-Update Settings Preference Modal */}
+        {showAutoUpdateModal && (
+          <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 select-none modal-safe-area">
+            <div className="bg-[#0f1526] border border-slate-700/80 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-400 text-xl font-bold">
+                    ⚙️
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-white uppercase tracking-wider">Auto-Update Settings</h3>
+                    <p className="text-xs text-slate-400">Configure background update behavior & preferences</p>
+                  </div>
+                </div>
 
+                <button
+                  onClick={() => setShowAutoUpdateModal(false)}
+                  className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Mode Selection Cards */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => { triggerHaptic('light'); setAutoUpdatePermission('silent'); }}
+                  className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-1 ${autoUpdatePref === 'silent'
+                      ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-lg shadow-emerald-500/10'
+                      : 'bg-[#131b2f] border-slate-700/80 hover:border-emerald-500/50 text-slate-300'
+                    }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm text-emerald-400 flex items-center gap-2">
+                      <span>⚡</span> Silent Background Auto-Update
+                    </span>
+                    {autoUpdatePref === 'silent' && <span className="text-xs font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/40">Active</span>}
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Automatically checks, downloads, and installs latest update releases seamlessly in the background.
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => { triggerHaptic('light'); setAutoUpdatePermission('enabled'); }}
+                  className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-1 ${autoUpdatePref === 'enabled' || (!autoUpdatePref && autoUpdatePref !== 'silent' && autoUpdatePref !== 'never_ask')
+                      ? 'bg-teal-500/15 border-teal-500 text-white shadow-lg shadow-teal-500/10'
+                      : 'bg-[#131b2f] border-slate-700/80 hover:border-teal-500/50 text-slate-300'
+                    }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm text-teal-400 flex items-center gap-2">
+                      <span>🔔</span> Prompt for Updates (Recommended)
+                    </span>
+                    {(autoUpdatePref === 'enabled' || (!autoUpdatePref && autoUpdatePref !== 'silent' && autoUpdatePref !== 'never_ask')) && (
+                      <span className="text-xs font-bold bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-full border border-teal-500/40">Active</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Automatically checks for updates on startup, resume, and network reconnect, showing a 1-click update banner when ready.
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => { triggerHaptic('light'); setAutoUpdatePermission('never_ask'); }}
+                  className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-1 ${autoUpdatePref === 'never_ask'
+                      ? 'bg-amber-500/15 border-amber-500 text-white shadow-lg shadow-amber-500/10'
+                      : 'bg-[#131b2f] border-slate-700/80 hover:border-amber-500/50 text-slate-300'
+                    }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm text-amber-400 flex items-center gap-2">
+                      <span>🛑</span> Manual Updates Only
+                    </span>
+                    {autoUpdatePref === 'never_ask' && <span className="text-xs font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/40">Active</span>}
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Disables background update popups. Updates will only run when manually clicking "Check for update".
+                  </p>
+                </button>
+              </div>
+
+              {/* Default Tracking Mode Setting Card */}
+              <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                    <span>📥</span>
+                    <span>Default Tracking Mode</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-bold">App Preference</span>
+                </div>
+
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Choose whether player searches auto-download a dataset file by default:
+                </p>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateDefaultTrackingPref('enabled')}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer font-bold text-xs flex flex-col justify-between gap-1.5 ${defaultTrackingPref === 'enabled'
+                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-md shadow-emerald-500/10'
+                        : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:text-slate-200'
+                      }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>📥 Tracking ON</span>
+                      {defaultTrackingPref === 'enabled' && <span className="text-[10px] text-emerald-400 font-black">✓ Default</span>}
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-normal">Auto-downloads dataset file on search</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateDefaultTrackingPref('disabled')}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer font-bold text-xs flex flex-col justify-between gap-1.5 ${defaultTrackingPref === 'disabled'
+                        ? 'bg-slate-800 border-slate-600 text-white shadow-md'
+                        : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:text-slate-200'
+                      }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>🚫 Tracking OFF</span>
+                      {defaultTrackingPref === 'disabled' && <span className="text-[10px] text-slate-300 font-black">✓ Default</span>}
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-normal">Standard search without dataset downloads</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Backend Server Connection URL Card */}
+              <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-teal-400 flex items-center gap-1.5">
+                    <span>🌐</span>
+                    <span>Backend Server Connection URL</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-bold">Port 5000</span>
+                </div>
+
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Specify your custom Python Flask Backend Server IP / Domain for Android APK:
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={backendBaseUrl}
+                    onChange={(e) => setBackendBaseUrl(e.target.value)}
+                    placeholder={window.Capacitor?.isNativePlatform() ? "http://10.0.2.2:5000 or http://192.168.1.X:5000" : "http://localhost:5000"}
+                    className="flex-1 bg-[#0b101e] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-teal-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSaveBackendBaseUrl(backendBaseUrl)}
+                    className="px-3.5 py-2 rounded-xl bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/60 text-teal-300 font-bold text-xs uppercase cursor-pointer transition-all shrink-0"
+                  >
+                    Save URL
+                  </button>
+                </div>
+              </div>
+
+              {/* Android Native Storage Access Permission Card */}
+              <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                    <span>📁</span>
+                    <span>Android System Storage Access</span>
+                  </span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${storagePermissionStatus === 'granted' || storagePermissionStatus === 'web_granted'
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                      : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                    }`}>
+                    {storagePermissionStatus === 'granted' || storagePermissionStatus === 'web_granted' ? 'Granted ✓' : 'Permission Required'}
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Grants native Android system-level file access to save downloaded player dataset `.json` files into your device's Downloads directory:
+                </p>
+
+                <button
+                  type="button"
+                  onClick={requestNativeStoragePermission}
+                  className={`w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2 ${storagePermissionStatus === 'granted' || storagePermissionStatus === 'web_granted'
+                      ? 'bg-emerald-500/20 border border-emerald-500/60 text-emerald-300 hover:bg-emerald-500/30'
+                      : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white shadow-amber-500/20'
+                    }`}
+                >
+                  <span>📁</span>
+                  <span>
+                    {storagePermissionStatus === 'granted' || storagePermissionStatus === 'web_granted'
+                      ? '✓ Grant Android System Storage Access (Granted)'
+                      : '📁 Grant Android System Storage Access'}
+                  </span>
+                </button>
+              </div>
+
+              {/* System & Device Diagnostics Card (Powered by @capacitor/device & @capacitor/app) */}
+              {deviceInfo && (
+                <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-4 space-y-2 text-xs">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-teal-400 block border-b border-slate-800 pb-1.5">
+                    📱 Device & Native System Diagnostics
+                  </span>
+                  <div className="grid grid-cols-2 gap-2 text-slate-300">
+                    <div><span className="text-slate-500">Platform:</span> <strong className="text-white">{deviceInfo.platform || 'Web'}</strong></div>
+                    <div><span className="text-slate-500">OS Version:</span> <strong className="text-white">{deviceInfo.osVersion || 'Unknown'}</strong></div>
+                    <div><span className="text-slate-500">Model:</span> <strong className="text-white">{deviceInfo.model || 'Browser'}</strong></div>
+                    <div><span className="text-slate-500">Manufacturer:</span> <strong className="text-white">{deviceInfo.manufacturer || 'Generic'}</strong></div>
+                    {appInfo && (
+                      <div className="col-span-2"><span className="text-slate-500">App Build Version:</span> <strong className="text-emerald-400 font-mono">{appInfo.version} ({appInfo.build})</strong></div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-2 border-t border-slate-800 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowAutoUpdateModal(false)}
+                  className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Installing Update Overlay */}
         {isApplyingUpdate && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-lg animate-in fade-in duration-300">
             <div className="bg-[#131b2f] border-2 border-emerald-500 rounded-3xl p-8 max-w-md w-full text-center space-y-5 shadow-2xl shadow-emerald-500/30 relative">
-              <button 
+              <button
                 onClick={() => setIsApplyingUpdate(false)}
                 className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer transition-all"
                 title="Close"
@@ -2859,7 +3063,7 @@ ${payload.stack || 'No stack trace available.'}
                     <p className="text-xs text-slate-400">Dispatch diagnostic logs & stack traces directly to GitHub</p>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => setShowReportModal(false)}
                   className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
                 >
@@ -2949,7 +3153,7 @@ ${payload.stack || 'No stack trace available.'}
                     <p className="text-xs text-slate-400">Live error diagnostic telemetry stored in SQLite database</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleFetchErrorReports}
@@ -2959,7 +3163,7 @@ ${payload.stack || 'No stack trace available.'}
                     <span className={isLoadingReports ? 'animate-spin' : ''}>🔄</span>
                     <span>Refresh</span>
                   </button>
-                  <button 
+                  <button
                     onClick={() => setShowViewReportsModal(false)}
                     className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
                   >
@@ -2983,7 +3187,7 @@ ${payload.stack || 'No stack trace available.'}
                   </div>
                 ) : (
                   fetchedReports.map((report) => (
-                    <div 
+                    <div
                       key={report.id}
                       className="bg-[#131b2f] border border-slate-700/60 hover:border-amber-500/40 p-4 rounded-2xl space-y-2.5 transition-all text-xs"
                     >
@@ -3043,412 +3247,399 @@ ${payload.stack || 'No stack trace available.'}
           </div>
         )}
 
-      {/* Slide-Out Side Hamburger Drawer Menu */}
-      {isMenuOpen && (
-        <div 
-          onClick={() => setIsMenuOpen(false)}
-          className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex justify-end animate-in fade-in duration-300 select-none modal-safe-area"
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm bg-[#0f1526] border-l border-slate-700/80 h-full flex flex-col justify-between overflow-y-auto shadow-2xl animate-in slide-in-from-right duration-300 drawer-safe-area"
+        {/* Slide-Out Side Hamburger Drawer Menu */}
+        {isMenuOpen && (
+          <div
+            onClick={() => setIsMenuOpen(false)}
+            className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex justify-end animate-in fade-in duration-300 select-none modal-safe-area"
           >
-            {/* Drawer Header */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-xs tracking-tighter border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
-                    M5
-                  </div>
-                  <div>
-                    <h3 className="text-base font-black text-white uppercase tracking-wider">Settings & Tools</h3>
-                    <p className="text-[11px] text-slate-400 font-medium">Control panel & app configurations</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {/* Drawer Group 1: Preferences & App Configurations */}
-              <div className="space-y-3">
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                  ⚙️ App Preferences & Server Config
-                </span>
-
-                {/* Default Tracking Mode Card */}
-                <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-3.5 space-y-2 text-left">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
-                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <span>📥</span> Default Tracking Mode
-                    </span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${
-                      defaultTrackingPref === 'enabled'
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                        : 'bg-slate-800 text-slate-400 border-slate-700'
-                    }`}>
-                      {defaultTrackingPref === 'enabled' ? 'ON by Default' : 'OFF by Default'}
-                    </span>
-                  </div>
-
-                  <p className="text-[11px] text-slate-400">Choose default tracking state when launching the app:</p>
-
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateDefaultTrackingPref('enabled')}
-                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer font-bold text-xs flex flex-col justify-between gap-1 ${
-                        defaultTrackingPref === 'enabled'
-                          ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300 shadow-md shadow-emerald-500/10'
-                          : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>📥 Tracking ON</span>
-                        {defaultTrackingPref === 'enabled' && <span className="text-[10px] text-emerald-400 font-black">✓</span>}
-                      </div>
-                      <span className="text-[9px] text-slate-400 font-normal">Auto-download dataset on search</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateDefaultTrackingPref('disabled')}
-                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer font-bold text-xs flex flex-col justify-between gap-1 ${
-                        defaultTrackingPref === 'disabled'
-                          ? 'bg-slate-800 border-slate-600 text-white shadow-md'
-                          : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>🚫 Tracking OFF</span>
-                        {defaultTrackingPref === 'disabled' && <span className="text-[10px] text-slate-300 font-black">✓</span>}
-                      </div>
-                      <span className="text-[9px] text-slate-400 font-normal">Search without auto-download</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Backend Server Connection URL Card */}
-                <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-3.5 space-y-2 text-left">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
-                    <span className="text-xs font-bold text-teal-400 flex items-center gap-1.5">
-                      <span>🌐</span> Backend Server Connection URL
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono">Port 5000</span>
-                  </div>
-
-                  <p className="text-[11px] text-slate-300 leading-relaxed">
-                    Custom Flask Backend Server IP / Domain for Android APK:
-                  </p>
-
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={backendBaseUrl}
-                      onChange={(e) => setBackendBaseUrl(e.target.value)}
-                      placeholder={window.Capacitor?.isNativePlatform() ? "http://10.0.2.2:5000 or http://192.168.1.X:5000" : "http://localhost:5000"}
-                      className="flex-1 bg-[#0b101e] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-teal-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleSaveBackendBaseUrl(backendBaseUrl)}
-                      className="px-3 py-2 rounded-xl bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/60 text-teal-300 font-bold text-xs uppercase cursor-pointer transition-all shrink-0"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </div>
-
-                {/* Auto-Update Preference Selector Card */}
-                <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-3.5 space-y-2 text-left">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
-                    <span className="text-xs font-bold text-purple-400 flex items-center gap-1.5">
-                      <span>⚡</span> Background Auto-Update Policy
-                    </span>
-                    <span className="text-[10px] text-emerald-400 font-bold">Silent Reload</span>
-                  </div>
-
-                  <div className="space-y-1.5 pt-1">
-                    {[
-                      { id: 'enabled', title: '⚡ Always Auto-Update (Recommended)', desc: 'App checks and updates seamlessly in background' },
-                      { id: 'ask', title: '❓ Ask Before Installing', desc: 'Display notification toast when new commit is published' },
-                      { id: 'never_ask', title: '🚫 Never Check Automatically', desc: 'Manual updates only via Check for Update button' }
-                    ].map((opt) => (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => handleSaveAutoUpdatePref(opt.id)}
-                        className={`w-full p-2.5 rounded-xl border text-left transition-all cursor-pointer font-bold text-xs flex items-center justify-between gap-2 ${
-                          autoUpdatePref === opt.id
-                            ? 'bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-md'
-                            : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:text-slate-200'
-                        }`}
-                      >
-                        <div>
-                          <div className="text-white text-xs">{opt.title}</div>
-                          <div className="text-[9px] text-slate-400 font-normal">{opt.desc}</div>
-                        </div>
-                        {autoUpdatePref === opt.id && <span className="text-purple-400 font-bold">✓</span>}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Drawer Group 2: App Updates & Maintenance */}
-              <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                  ⚡ App Maintenance
-                </span>
-
-                <button
-                  onClick={() => { setIsMenuOpen(false); handleOneClickUpdate(); }}
-                  disabled={checkingUpdate || isApplyingUpdate}
-                  className="w-full bg-[#131b2f] hover:bg-emerald-500/10 border border-slate-700/80 hover:border-emerald-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
-                >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm bg-[#0f1526] border-l border-slate-700/80 h-full flex flex-col justify-between overflow-y-auto shadow-2xl animate-in slide-in-from-right duration-300 drawer-safe-area"
+            >
+              {/* Drawer Header */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
-                      ⚡
+                    <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-xs tracking-tighter border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                      M5
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
-                        Check for Updates Now
-                      </h4>
-                      <p className="text-[10px] text-slate-400">Fetch & apply latest release from GitHub</p>
+                      <h3 className="text-base font-black text-white uppercase tracking-wider">Settings & Tools</h3>
+                      <p className="text-[11px] text-slate-400 font-medium">Control panel & app configurations</p>
                     </div>
                   </div>
-                  <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">→</span>
-                </button>
-              </div>
-
-              {/* Drawer Group 3: Storage & Permissions */}
-              <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                  💾 System Storage Access
-                </span>
-
-                <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-3.5 space-y-2.5 text-left">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
-                    <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                      <span>📁</span> Android System Storage Access
-                    </span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${
-                      storagePermissionStatus === 'granted' || storagePermissionStatus === 'web_granted'
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                        : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                    }`}>
-                      {storagePermissionStatus === 'granted' || storagePermissionStatus === 'web_granted' ? 'Granted ✓' : 'Permission Required'}
-                    </span>
-                  </div>
-
-                  <p className="text-[11px] text-slate-300 leading-relaxed">
-                    Grants native Android file access to save downloaded player dataset `.json` files into Downloads:
-                  </p>
-
                   <button
-                    type="button"
-                    onClick={requestNativeStoragePermission}
-                    className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 ${
-                      storagePermissionStatus === 'granted' || storagePermissionStatus === 'web_granted'
-                        ? 'bg-emerald-500/20 border border-emerald-500/60 text-emerald-300 hover:bg-emerald-500/30'
-                        : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white'
-                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
                   >
-                    <span>📁</span>
-                    <span>
-                      {storagePermissionStatus === 'granted' || storagePermissionStatus === 'web_granted'
-                        ? '✓ Android Storage Access Granted'
-                        : '📁 Grant Android System Storage Access'}
-                    </span>
+                    ✕
                   </button>
+                </div>
+
+                {/* Drawer Group 1: App Updates */}
+                <div className="space-y-2.5">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                    ⚡ App Updates & Maintenance
+                  </span>
 
                   <button
-                    onClick={() => { setIsMenuOpen(false); handleExportBackup(); }}
-                    className="w-full bg-[#0b101e] hover:bg-slate-800/80 border border-slate-700/80 p-2.5 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer mt-2"
+                    onClick={() => { setIsMenuOpen(false); handleOneClickUpdate(); }}
+                    disabled={checkingUpdate || isApplyingUpdate}
+                    className="w-full bg-[#131b2f] hover:bg-emerald-500/10 border border-slate-700/80 hover:border-emerald-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-emerald-400 text-sm">📥</span>
-                      <span className="text-xs font-bold text-white group-hover:text-emerald-400">Export Data Backup File</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
+                        ⚡
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
+                          Check for update
+                        </h4>
+                        <p className="text-[10px] text-slate-400">Check, download & install latest release</p>
+                      </div>
                     </div>
                     <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">→</span>
                   </button>
-                </div>
-              </div>
 
-              {/* Drawer Group 3: Diagnostics & Feedback */}
-              <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                  🛠️ Developer Tools & Issue Reporting
-                </span>
-
-                <button
-                  onClick={() => { setIsMenuOpen(false); openErrorReportsViewer(); }}
-                  className="w-full bg-[#131b2f] hover:bg-amber-500/10 border border-slate-700/80 hover:border-amber-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
-                      📜
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">
-                        View Error Reports Log
-                      </h4>
-                      <p className="text-[10px] text-slate-400">Inspect all client & system diagnostic logs</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-slate-500 group-hover:text-amber-400 font-bold">→</span>
-                </button>
-
-                <button
-                  onClick={() => { setIsMenuOpen(false); setShowReportModal(true); }}
-                  className="w-full bg-[#131b2f] hover:bg-amber-500/10 border border-slate-700/80 hover:border-amber-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
-                      ⚠️
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">
-                        Report an Issue / Bug
-                      </h4>
-                      <p className="text-[10px] text-slate-400">Send diagnostic stack trace to developers</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-slate-500 group-hover:text-amber-400 font-bold">→</span>
-                </button>
-
-                <div className="bg-[#131b2f] border border-slate-700/80 p-3 rounded-xl flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-sm">
-                      📱
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-white">View Mode Preview</h4>
-                      <p className="text-[10px] text-slate-400">Toggle mobile responsive testing frame</p>
-                    </div>
-                  </div>
                   <button
-                    onClick={() => setIsMobileView(!isMobileView)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
-                      isMobileView 
-                        ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-400' 
-                        : 'bg-slate-800 border-slate-700 text-slate-300'
-                    }`}
+                    onClick={() => { setIsMenuOpen(false); setShowAutoUpdateModal(true); }}
+                    className="w-full bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
                   >
-                    {isMobileView ? 'Mobile' : 'Desktop'}
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-sm">
+                        ⚙️
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white group-hover:text-teal-400 transition-colors">
+                          Auto-Update Settings
+                        </h4>
+                        <p className="text-[10px] text-slate-400">
+                          Status: <span className="text-emerald-400 font-bold">{autoUpdatePref === 'enabled' ? 'Enabled' : autoUpdatePref === 'never_ask' ? 'Off' : 'Ask on startup'}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 group-hover:text-teal-400 font-bold">→</span>
+                  </button>
+                </div>
+
+                {/* Drawer Group 2: Storage & Data */}
+                <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                    💾 Storage & Persistence
+                  </span>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => { setIsMenuOpen(false); grantStoragePermission(); }}
+                        className="flex-1 bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-sm">
+                            💾
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-white group-hover:text-blue-400 transition-colors">
+                              Storage Write Permission
+                            </h4>
+                            <p className="text-[10px] text-slate-400">
+                              Status: <span className={hasStoragePermission ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>{hasStoragePermission ? 'Granted' : 'Action Needed'}</span>
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-xs text-slate-500 group-hover:text-blue-400 font-bold">→</span>
+                      </button>
+
+                      <button
+                        onClick={() => setShowWhyPermission(!showWhyPermission)}
+                        className={`px-3 py-3 rounded-xl border font-black text-xs transition-all flex items-center justify-center cursor-pointer shrink-0 shadow-sm ${showWhyPermission
+                            ? 'bg-blue-500/30 border-blue-400 text-white shadow-md scale-105'
+                            : 'bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/40 text-blue-400 hover:text-white'
+                          }`}
+                        title="Why is storage write permission required?"
+                      >
+                        <span>Why?</span>
+                      </button>
+                    </div>
+
+                    {/* Expandable Permission Explanation Box */}
+                    {showWhyPermission && (
+                      <div className="bg-[#131b2f] border border-blue-500/40 p-3.5 rounded-xl space-y-2 text-xs animate-in fade-in slide-in-from-top-2">
+                        <div className="flex items-center gap-1.5 text-blue-400 font-bold text-xs uppercase tracking-wider">
+                          <span>💡</span>
+                          <span>Why Permission is Required:</span>
+                        </div>
+                        <ul className="space-y-1.5 text-slate-300 text-[11px] leading-relaxed">
+                          <li className="flex items-start gap-1.5">
+                            <span className="text-emerald-400 font-bold">1.</span>
+                            <span><strong className="text-white">Download & Install Updates:</strong> Saves release APK packages to your device so you can update in 1 click.</span>
+                          </li>
+                          <li className="flex items-start gap-1.5">
+                            <span className="text-emerald-400 font-bold">2.</span>
+                            <span><strong className="text-white">Local Tracking Data Files:</strong> Creates local data snapshot files to track daily Win Rate and KDA history over time.</span>
+                          </li>
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Export Data Backup Button */}
+                    <button
+                      onClick={() => { setIsMenuOpen(false); handleExportBackup(); }}
+                      className="w-full bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
+                          📥
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
+                            Export Data Backup File
+                          </h4>
+                          <p className="text-[10px] text-slate-400">Save tracked stats & configs to JSON file</p>
+                        </div>
+                      </div>
+                      <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">→</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Drawer Group 3: Diagnostics & Feedback */}
+                <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                    🛠️ Developer Tools & Issue Reporting
+                  </span>
+
+                  <button
+                    onClick={() => { setIsMenuOpen(false); openErrorReportsViewer(); }}
+                    className="w-full bg-[#131b2f] hover:bg-amber-500/10 border border-slate-700/80 hover:border-amber-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
+                        📜
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">
+                          View Error Reports Log
+                        </h4>
+                        <p className="text-[10px] text-slate-400">Inspect all client & system diagnostic logs</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 group-hover:text-amber-400 font-bold">→</span>
+                  </button>
+
+                  <button
+                    onClick={() => { setIsMenuOpen(false); setShowReportModal(true); }}
+                    className="w-full bg-[#131b2f] hover:bg-amber-500/10 border border-slate-700/80 hover:border-amber-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
+                        ⚠️
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">
+                          Report an Issue / Bug
+                        </h4>
+                        <p className="text-[10px] text-slate-400">Send diagnostic stack trace to developers</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 group-hover:text-amber-400 font-bold">→</span>
+                  </button>
+
+                  <div className="bg-[#131b2f] border border-slate-700/80 p-3 rounded-xl flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-sm">
+                        📱
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white">View Mode Preview</h4>
+                        <p className="text-[10px] text-slate-400">Toggle mobile responsive testing frame</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setIsMobileView(!isMobileView)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${isMobileView
+                          ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-400'
+                          : 'bg-slate-800 border-slate-700 text-slate-300'
+                        }`}
+                    >
+                      {isMobileView ? 'Mobile' : 'Desktop'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Drawer Group 4: Community & Meta Resources */}
+                <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                    🌐 Community & Esports Meta Resources
+                  </span>
+
+                  {/* Resource 1: RivalsMeta.com */}
+                  <button
+                    onClick={() => { setIsMenuOpen(false); openExternalUrl('https://rivalsmeta.com'); }}
+                    className="w-full bg-[#131b2f] hover:bg-emerald-500/10 border border-slate-700/80 hover:border-emerald-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
+                        ⚔️
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
+                          Rivals Meta (RivalsMeta.com)
+                        </h4>
+                        <p className="text-[10px] text-slate-400 font-medium">Hero tier lists, win rates & player matchups</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">↗</span>
+                  </button>
+
+                  {/* Resource 2: RivalsTracker.com */}
+                  <button
+                    onClick={() => { setIsMenuOpen(false); openExternalUrl('https://rivalstracker.com'); }}
+                    className="w-full bg-[#131b2f] hover:bg-amber-500/10 border border-slate-700/80 hover:border-amber-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
+                        🎯
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">
+                          RivalsTracker.com
+                        </h4>
+                        <p className="text-[10px] text-slate-400 font-medium">Player leaderboards & community stat tracking</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 group-hover:text-amber-400 font-bold">↗</span>
+                  </button>
+
+                  {/* Resource 3: Tracker.gg */}
+                  <button
+                    onClick={() => { setIsMenuOpen(false); openExternalUrl('https://tracker.gg/marvel-rivals'); }}
+                    className="w-full bg-[#131b2f] hover:bg-purple-500/10 border border-slate-700/80 hover:border-purple-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-sm">
+                        🌐
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white group-hover:text-purple-400 transition-colors">
+                          Marvel Rivals Tracker.gg
+                        </h4>
+                        <p className="text-[10px] text-slate-400 font-medium">Official player profiles & global leaderboards</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 group-hover:text-purple-400 font-bold">↗</span>
+                  </button>
+
+                  {/* Resource 4: Liquipedia Wiki */}
+                  <button
+                    onClick={() => { setIsMenuOpen(false); openExternalUrl('https://liquipedia.net/marvelrivals/Hero_ID'); }}
+                    className="w-full bg-[#131b2f] hover:bg-cyan-500/10 border border-slate-700/80 hover:border-cyan-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-sm">
+                        📖
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white group-hover:text-cyan-400 transition-colors">
+                          Liquipedia Hero Meta Wiki
+                        </h4>
+                        <p className="text-[10px] text-slate-400 font-medium">Esports tournaments, team rosters & hero IDs</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 group-hover:text-cyan-400 font-bold">↗</span>
                   </button>
                 </div>
               </div>
 
-              {/* Drawer Group 4: Community & Meta Resources */}
-              <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                  🌐 Community & Esports Meta Resources
-                </span>
-
-                {/* Resource 1: RivalsMeta.com */}
-                <button
-                  onClick={() => { setIsMenuOpen(false); openExternalUrl('https://rivalsmeta.com'); }}
-                  className="w-full bg-[#131b2f] hover:bg-emerald-500/10 border border-slate-700/80 hover:border-emerald-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+              {/* Drawer Footer */}
+              <div className="pt-6 border-t border-slate-800/80 text-center space-y-3">
+                <div className="flex items-center justify-between text-xs text-slate-400">
+                  <span className="font-bold text-slate-300">App Version</span>
+                  <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono font-bold text-[11px]">
+                    v1.0.0 (ac332a4)
+                  </span>
+                </div>
+                <a
+                  href="https://github.com/monfreda48/Meowdy5000"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white font-bold text-xs uppercase tracking-wider transition-all text-center"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
-                      ⚔️
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
-                        Rivals Meta (RivalsMeta.com)
-                      </h4>
-                      <p className="text-[10px] text-slate-400 font-medium">Hero tier lists, win rates & player matchups</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">↗</span>
-                </button>
-
-                {/* Resource 2: RivalsTracker.com */}
-                <button
-                  onClick={() => { setIsMenuOpen(false); openExternalUrl('https://rivalstracker.com'); }}
-                  className="w-full bg-[#131b2f] hover:bg-amber-500/10 border border-slate-700/80 hover:border-amber-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
-                      🎯
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">
-                        RivalsTracker.com
-                      </h4>
-                      <p className="text-[10px] text-slate-400 font-medium">Player leaderboards & community stat tracking</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-slate-500 group-hover:text-amber-400 font-bold">↗</span>
-                </button>
-
-                {/* Resource 3: Tracker.gg */}
-                <button
-                  onClick={() => { setIsMenuOpen(false); openExternalUrl('https://tracker.gg/marvel-rivals'); }}
-                  className="w-full bg-[#131b2f] hover:bg-purple-500/10 border border-slate-700/80 hover:border-purple-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-sm">
-                      🌐
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-white group-hover:text-purple-400 transition-colors">
-                        Marvel Rivals Tracker.gg
-                      </h4>
-                      <p className="text-[10px] text-slate-400 font-medium">Official player profiles & global leaderboards</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-slate-500 group-hover:text-purple-400 font-bold">↗</span>
-                </button>
-
-                {/* Resource 4: Liquipedia Wiki */}
-                <button
-                  onClick={() => { setIsMenuOpen(false); openExternalUrl('https://liquipedia.net/marvelrivals/Hero_ID'); }}
-                  className="w-full bg-[#131b2f] hover:bg-cyan-500/10 border border-slate-700/80 hover:border-cyan-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-sm">
-                      📖
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-white group-hover:text-cyan-400 transition-colors">
-                        Liquipedia Hero Meta Wiki
-                      </h4>
-                      <p className="text-[10px] text-slate-400 font-medium">Esports tournaments, team rosters & hero IDs</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-slate-500 group-hover:text-cyan-400 font-bold">↗</span>
-                </button>
+                  🔗 View GitHub Repository
+                </a>
               </div>
-            </div>
-
-            {/* Drawer Footer */}
-            <div className="pt-6 border-t border-slate-800/80 text-center space-y-3">
-              <div className="flex items-center justify-between text-xs text-slate-400">
-                <span className="font-bold text-slate-300">App Version</span>
-                <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono font-bold text-[11px]">
-                  v1.0.0 (ac332a4)
-                </span>
-              </div>
-              <a
-                href="https://github.com/monfreda48/Meowdy5000"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white font-bold text-xs uppercase tracking-wider transition-all text-center"
-              >
-                🔗 View GitHub Repository
-              </a>
             </div>
           </div>
+        )}
+
+        {/* Community & Esports Meta Resources Footer Bar */}
+        <div className="mt-12 pt-6 border-t border-slate-800/80 space-y-4 text-left">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <span>🌐</span> Community & Esports Meta Section
+            </h4>
+            <span className="text-[10px] text-slate-500 font-bold">Official Web Resources</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <button
+              onClick={() => openExternalUrl('https://rivalsmeta.com')}
+              className="bg-[#131b2f] hover:bg-emerald-500/15 border border-slate-700/60 hover:border-emerald-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-2 truncate">
+                <span className="text-sm">⚔️</span>
+                <div className="truncate">
+                  <span className="text-xs font-bold text-white group-hover:text-emerald-400 block truncate">Rivals Meta</span>
+                  <span className="text-[9px] text-slate-400 block font-mono">rivalsmeta.com</span>
+                </div>
+              </div>
+              <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold shrink-0">↗</span>
+            </button>
+
+            <button
+              onClick={() => openExternalUrl('https://rivalstracker.com')}
+              className="bg-[#131b2f] hover:bg-amber-500/15 border border-slate-700/60 hover:border-amber-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-2 truncate">
+                <span className="text-sm">🎯</span>
+                <div className="truncate">
+                  <span className="text-xs font-bold text-white group-hover:text-amber-400 block truncate">RivalsTracker</span>
+                  <span className="text-[9px] text-slate-400 block font-mono">rivalstracker.com</span>
+                </div>
+              </div>
+              <span className="text-xs text-slate-500 group-hover:text-amber-400 font-bold shrink-0">↗</span>
+            </button>
+
+            <button
+              onClick={() => openExternalUrl('https://tracker.gg/marvel-rivals')}
+              className="bg-[#131b2f] hover:bg-purple-500/15 border border-slate-700/60 hover:border-purple-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-2 truncate">
+                <span className="text-sm">🌐</span>
+                <div className="truncate">
+                  <span className="text-xs font-bold text-white group-hover:text-purple-400 block truncate">Tracker.gg</span>
+                  <span className="text-[9px] text-slate-400 block font-mono">tracker.gg</span>
+                </div>
+              </div>
+              <span className="text-xs text-slate-500 group-hover:text-purple-400 font-bold shrink-0">↗</span>
+            </button>
+
+            <button
+              onClick={() => openExternalUrl('https://liquipedia.net/marvelrivals/Hero_ID')}
+              className="bg-[#131b2f] hover:bg-cyan-500/15 border border-slate-700/60 hover:border-cyan-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer shadow-sm"
+            >
+              <div className="flex items-center gap-2 truncate">
+                <span className="text-sm">📖</span>
+                <div className="truncate">
+                  <span className="text-xs font-bold text-white group-hover:text-cyan-400 block truncate">Liquipedia Wiki</span>
+                  <span className="text-[9px] text-slate-400 block font-mono">liquipedia.net</span>
+                </div>
+              </div>
+              <span className="text-xs text-slate-500 group-hover:text-cyan-400 font-bold shrink-0">↗</span>
+            </button>
+          </div>
         </div>
-      )}
-
-
 
         {/* App Footer & Version Badge */}
         <footer className="mt-6 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-xs">
@@ -3463,10 +3654,10 @@ ${payload.stack || 'No stack trace available.'}
               v1.0.0 (91a57ab)
             </span>
             <span>•</span>
-            <a 
-              href="https://github.com/monfreda48/Meowdy5000" 
-              target="_blank" 
-              rel="noopener noreferrer" 
+            <a
+              href="https://github.com/monfreda48/Meowdy5000"
+              target="_blank"
+              rel="noopener noreferrer"
               className="hover:text-emerald-400 transition-colors"
             >
               GitHub Repository
