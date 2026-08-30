@@ -2509,201 +2509,209 @@ ${payload.stack || 'No stack trace available.'}
                 </div>
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Performance Trends Charts */}
-            {stats.history && stats.history.length > 0 && (
-              <div className="pt-4">
-                
-                <div className={`flex justify-between items-center mb-4 gap-3 ${
-                  isMobileView ? 'flex-col items-start' : 'flex-col md:flex-row md:items-center'
-                }`}>
-                  <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider">Performance Trends</h2>
-                  
+        {/* Tab 2: Saved Data Over Time (Graphical Progress & Trends Dashboard) */}
+        {activeUserTab === 'history' && (
+          <div className="space-y-6 animate-in fade-in duration-300 text-left">
+            
+            {/* Header & Timeframe Selector Card */}
+            <div className="bg-[#131b2f] border border-slate-700/60 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                <div>
+                  <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
+                    <span>📈 Player Progress & Trends Over Time</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Visual performance progression charts logged for <strong className="text-emerald-400">{stats.current.username}</strong>
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
                   <select 
                     value={timeframe} 
                     onChange={(e) => setTimeframe(e.target.value)}
-                    className={`bg-[#131b2f] border border-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:border-emerald-500 text-white text-xs font-bold cursor-pointer shadow-lg ${
-                      isMobileView ? 'w-full' : ''
-                    }`}
+                    className="bg-[#0b101e] border border-slate-700/80 rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500 text-white text-xs font-bold cursor-pointer shadow-md"
                   >
                     <option value="all">All-Time History</option>
                     <option value="30d">Past 30 Days</option>
                     <option value="7d">Past 7 Days</option>
                   </select>
-                </div>
 
+                  <button
+                    type="button"
+                    onClick={() => downloadUserDataset(stats)}
+                    className="px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/60 text-emerald-300 font-bold text-xs uppercase cursor-pointer transition-all"
+                  >
+                    📥 Export Data File
+                  </button>
+                </div>
+              </div>
+
+              {/* Progress Summary Metrics Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
+                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Snapshots Logged</span>
+                  <p className="text-xl font-black text-emerald-400">{stats.history?.length || 0}</p>
+                </div>
+                <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
+                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Current Win Rate</span>
+                  <p className="text-xl font-black text-white">{stats.current.winRate ? `${stats.current.winRate}%` : 'N/A'}</p>
+                </div>
+                <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
+                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Current KD Ratio</span>
+                  <p className="text-xl font-black text-teal-400">{stats.current.kdRatio || 'N/A'}</p>
+                </div>
+                <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
+                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Rank Division</span>
+                  <p className="text-xl font-black text-amber-400 truncate">{stats.current.rank || 'Unranked'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Performance Trends Line Graphs over Time */}
+            {stats.history && stats.history.length > 0 ? (
+              <div className="space-y-6">
                 <div className={`grid gap-4 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2 lg:gap-6'}`}>
                   
-                  <div className="bg-[#131b2f] p-4 sm:p-6 rounded-2xl border border-slate-700/50 shadow-xl">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Win Rate Progression</h3>
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+                  {/* Graph 1: Win Rate Progression (%) over Time */}
+                  <div className="bg-[#131b2f] p-4 sm:p-6 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-xs font-black text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                          <span>📊 Win Rate Progression Over Time (%)</span>
+                        </h4>
+                        <p className="text-[10px] text-slate-400 mt-0.5">Historical win percentage trajectory across logged searches</p>
+                      </div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></div>
                     </div>
-                    <div className={isMobileView ? 'h-48' : 'h-72'}>
+
+                    <div className={isMobileView ? 'h-52' : 'h-72'}>
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={getFilteredHistory()} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
+                        <LineChart data={getFilteredHistory()} margin={{ top: 10, right: 15, bottom: 5, left: -20 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
                           <XAxis dataKey="date" stroke="#64748b" tick={{fill: '#64748b', fontSize: 10}} tickLine={false} axisLine={false} />
                           <YAxis stroke="#64748b" domain={['auto', 'auto']} tick={{fill: '#64748b', fontSize: 10}} tickLine={false} axisLine={false} />
                           <Tooltip 
                             contentStyle={{ backgroundColor: '#0f1526', border: '1px solid #334155', borderRadius: '12px', color: '#f8fafc', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', fontSize: '12px' }}
                             itemStyle={{ color: '#fb923c', fontWeight: 'bold' }}
+                            formatter={(value) => [`${value}%`, 'Win Rate']}
                           />
-                          <Line type="monotone" dataKey="winRate" stroke="#fb923c" strokeWidth={3} dot={{ fill: '#0f1526', stroke: '#fb923c', strokeWidth: 2, r: 4 }} activeDot={{ r: 6, fill: '#fb923c' }} />
+                          <Line type="monotone" dataKey="winRate" stroke="#fb923c" strokeWidth={3} dot={{ fill: '#0f1526', stroke: '#fb923c', strokeWidth: 2, r: 4 }} activeDot={{ r: 7, fill: '#fb923c' }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
 
-                  <div className="bg-[#131b2f] p-4 sm:p-6 rounded-2xl border border-slate-700/50 shadow-xl">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">KDA Ratio Progression</h3>
-                      <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
+                  {/* Graph 2: K/D Ratio Progression over Time */}
+                  <div className="bg-[#131b2f] p-4 sm:p-6 rounded-2xl border border-slate-700/50 shadow-xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-xs font-black text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                          <span>🎯 K/D Ratio Progression Over Time</span>
+                        </h4>
+                        <p className="text-[10px] text-slate-400 mt-0.5">Combat efficiency and elimination ratio over time</p>
+                      </div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
                     </div>
-                    <div className={isMobileView ? 'h-48' : 'h-72'}>
+
+                    <div className={isMobileView ? 'h-52' : 'h-72'}>
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={getFilteredHistory()} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
+                        <LineChart data={getFilteredHistory()} margin={{ top: 10, right: 15, bottom: 5, left: -20 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
                           <XAxis dataKey="date" stroke="#64748b" tick={{fill: '#64748b', fontSize: 10}} tickLine={false} axisLine={false} />
                           <YAxis stroke="#64748b" domain={['auto', 'auto']} tick={{fill: '#64748b', fontSize: 10}} tickLine={false} axisLine={false} />
                           <Tooltip 
                             contentStyle={{ backgroundColor: '#0f1526', border: '1px solid #334155', borderRadius: '12px', color: '#f8fafc', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', fontSize: '12px' }}
                             itemStyle={{ color: '#60a5fa', fontWeight: 'bold' }}
+                            formatter={(value) => [value, 'K/D Ratio']}
                           />
-                          <Line type="monotone" dataKey="kdRatio" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#0f1526', stroke: '#3b82f6', strokeWidth: 2, r: 4 }} activeDot={{ r: 6, fill: '#3b82f6' }} />
+                          <Line type="monotone" dataKey="kdRatio" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#0f1526', stroke: '#3b82f6', strokeWidth: 2, r: 4 }} activeDot={{ r: 7, fill: '#3b82f6' }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
 
                 </div>
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* Tab 2: Saved Data Over Time View */}
-            {activeUserTab === 'history' && (
-              <div className="space-y-6 animate-in fade-in duration-300 text-left">
-                {/* Historical Overview Card */}
+                {/* Historical Progress Log Table */}
                 <div className="bg-[#131b2f] border border-slate-700/60 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-                    <div>
-                      <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
-                        <span>📜 Saved Player Datasets & Historical Timeline</span>
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-1">
-                        All snapshots and historical metric data saved by RivalsTracker for <strong className="text-emerald-400">{stats.current.username}</strong>
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => copyDiagnosticLog(stats)}
-                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-400 text-xs font-bold uppercase cursor-pointer"
-                      >
-                        📋 Copy Raw JSON
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => downloadUserDataset(stats)}
-                        className="px-3.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/60 text-emerald-300 font-bold text-xs uppercase cursor-pointer"
-                      >
-                        📥 Download Dataset
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Summary Stats Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
-                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Total Snapshots</span>
-                      <p className="text-xl font-black text-emerald-400">{stats.history?.length || 0}</p>
-                    </div>
-                    <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
-                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Current Win Rate</span>
-                      <p className="text-xl font-black text-white">{stats.current.winRate ? `${stats.current.winRate}%` : 'N/A'}</p>
-                    </div>
-                    <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
-                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Current KD Ratio</span>
-                      <p className="text-xl font-black text-teal-400">{stats.current.kdRatio || 'N/A'}</p>
-                    </div>
-                    <div className="bg-[#0f1526] p-3.5 rounded-xl border border-slate-800 space-y-1">
-                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Current Rank</span>
-                      <p className="text-xl font-black text-amber-400">{stats.current.rank || 'Unranked'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Detailed Snapshot History Table */}
-                <div className="bg-[#131b2f] border border-slate-700/60 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                     <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-                      <span>🕒 Saved Snapshot History Log</span>
+                      <span>🕒 Snapshot History Log Over Time</span>
                     </h4>
-                    <span className="text-[11px] text-slate-400 font-bold">
-                      {stats.history?.length || 0} Saved Snapshots
+                    <span className="text-[11px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                      {stats.history?.length || 0} Data Records
                     </span>
                   </div>
 
-                  {stats.history && stats.history.length > 0 ? (
-                    <div className="overflow-x-auto rounded-xl border border-slate-800">
-                      <table className="w-full text-left text-xs text-slate-300">
-                        <thead className="bg-[#0b101e] text-[10px] uppercase font-black text-slate-400 border-b border-slate-800">
-                          <tr>
-                            <th className="py-3 px-4">#</th>
-                            <th className="py-3 px-4">Timestamp / Date</th>
-                            <th className="py-3 px-4">Win Rate</th>
-                            <th className="py-3 px-4">KD Ratio</th>
-                            <th className="py-3 px-4">Top Hero</th>
-                            <th className="py-3 px-4">Tracker Score</th>
+                  <div className="overflow-x-auto rounded-xl border border-slate-800">
+                    <table className="w-full text-left text-xs text-slate-300">
+                      <thead className="bg-[#0b101e] text-[10px] uppercase font-black text-slate-400 border-b border-slate-800">
+                        <tr>
+                          <th className="py-3 px-4">#</th>
+                          <th className="py-3 px-4">Date & Time Logged</th>
+                          <th className="py-3 px-4">Win Rate (%)</th>
+                          <th className="py-3 px-4">K/D Ratio</th>
+                          <th className="py-3 px-4">Top Main Hero</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60 font-mono">
+                        {stats.history.map((entry, idx) => (
+                          <tr key={entry.id || idx} className="hover:bg-slate-800/40 transition-colors">
+                            <td className="py-3.5 px-4 text-slate-500 font-bold">{idx + 1}</td>
+                            <td className="py-3.5 px-4 text-white font-sans font-bold">{entry.timestamp ? new Date(entry.timestamp).toLocaleString() : (entry.date || 'Recorded')}</td>
+                            <td className="py-3.5 px-4 text-emerald-400 font-bold">{entry.win_rate !== undefined ? `${entry.win_rate}%` : (entry.winRate ? `${entry.winRate}%` : 'N/A')}</td>
+                            <td className="py-3.5 px-4 text-teal-400 font-bold">{entry.kd_ratio !== undefined ? entry.kd_ratio : (entry.kdRatio || 'N/A')}</td>
+                            <td className="py-3.5 px-4 text-amber-300 font-sans font-bold">{entry.top_hero || entry.topHero || 'N/A'}</td>
                           </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800/60 font-mono">
-                          {stats.history.map((entry, idx) => (
-                            <tr key={entry.id || idx} className="hover:bg-slate-800/40 transition-colors">
-                              <td className="py-3 px-4 text-slate-500 font-bold">{idx + 1}</td>
-                              <td className="py-3 px-4 text-white font-sans">{entry.timestamp ? new Date(entry.timestamp).toLocaleString() : 'Recorded'}</td>
-                              <td className="py-3 px-4 text-emerald-400 font-bold">{entry.win_rate !== undefined ? `${entry.win_rate}%` : (entry.winRate ? `${entry.winRate}%` : 'N/A')}</td>
-                              <td className="py-3 px-4 text-teal-400 font-bold">{entry.kd_ratio !== undefined ? entry.kd_ratio : (entry.kdRatio || 'N/A')}</td>
-                              <td className="py-3 px-4 text-amber-300 font-sans font-bold">{entry.top_hero || entry.topHero || 'N/A'}</td>
-                              <td className="py-3 px-4 text-purple-400 font-bold">{entry.tracker_score || entry.trackerScore || 'N/A'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="bg-[#0f1526] p-6 rounded-xl text-center border border-slate-800 space-y-2">
-                      <span className="text-3xl">📥</span>
-                      <p className="text-xs text-slate-400">No previous snapshot history found for this user.</p>
-                      <p className="text-[11px] text-emerald-400 font-bold">Turn Tracking Mode ON to record daily performance logs over time.</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Raw Saved JSON Data Viewer */}
-                <div className="bg-[#131b2f] border border-slate-700/60 rounded-2xl p-5 sm:p-6 shadow-xl space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-                      <span>💻 Saved Raw JSON Inspector</span>
-                    </h4>
-                    <button
-                      type="button"
-                      onClick={() => copyDiagnosticLog(stats)}
-                      className="text-xs text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer"
-                    >
-                      📋 Copy Full JSON
-                    </button>
-                  </div>
-                  
-                  <div className="bg-[#0b101e] border border-slate-800 rounded-xl p-4 max-h-96 overflow-y-auto font-mono text-xs text-slate-300 select-all leading-relaxed">
-                    <pre className="whitespace-pre-wrap break-words">{JSON.stringify(stats, null, 2)}</pre>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
+            ) : (
+              <div className="bg-[#131b2f] p-8 rounded-2xl text-center border border-slate-700/60 space-y-3 shadow-xl">
+                <span className="text-4xl">📈</span>
+                <h4 className="text-base font-black text-white uppercase tracking-wider">No Historical Snapshots Logged Yet</h4>
+                <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                  Search for this player while <strong className="text-emerald-400">Tracking Mode</strong> is enabled to build their visual performance progress graph over time.
+                </p>
+              </div>
             )}
+
+            {/* Optional Collapsible Technical Raw Data Inspector */}
+            <details className="group bg-[#131b2f] border border-slate-700/40 rounded-2xl overflow-hidden shadow-lg transition-all duration-300">
+              <summary className="flex cursor-pointer items-center justify-between px-5 py-3.5 font-bold text-slate-400 hover:text-emerald-400 transition-colors list-none">
+                <span className="flex items-center gap-2 uppercase tracking-widest text-[11px]">
+                  <span>💻</span>
+                  <span>Developer Technical Data Payload (Raw JSON Inspector)</span>
+                </span>
+                <svg className="w-4 h-4 transition-transform duration-300 group-open:-rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </summary>
+              <div className="p-4 bg-[#0b101e] border-t border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">Complete raw JSON dataset structure:</span>
+                  <button
+                    type="button"
+                    onClick={() => copyDiagnosticLog(stats)}
+                    className="text-xs text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer"
+                  >
+                    📋 Copy Full JSON
+                  </button>
+                </div>
+                <div className="max-h-80 overflow-y-auto font-mono text-xs text-slate-300 select-all leading-relaxed p-3 bg-black/40 rounded-xl border border-slate-800">
+                  <pre className="whitespace-pre-wrap break-words">{JSON.stringify(stats, null, 2)}</pre>
+                </div>
+              </div>
+            </details>
+
+          </div>
+        )}
 
           </div>
         )}
