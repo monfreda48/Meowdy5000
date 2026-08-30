@@ -512,6 +512,55 @@ export default function App() {
   const [deviceInfo, setDeviceInfo] = useState(null);
   const [appInfo, setAppInfo] = useState(null);
 
+  const [isTrackingMode, setIsTrackingMode] = useState(() => {
+    try {
+      return localStorage.getItem('tracking_mode_enabled') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const downloadUserDataset = (data) => {
+    try {
+      const username = data.current?.username || 'Player';
+      const seasonName = data.current?.season || season || 'Current';
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      
+      const datasetObj = {
+        metadata: {
+          app: "Meowdy 5000 Rivals Tracker",
+          downloadedAt: new Date().toISOString(),
+          player: username,
+          season: seasonName,
+          platform: data.current?.platform || 'All'
+        },
+        playerSummary: data.current || {},
+        metrics: data.metrics || {},
+        heroes: data.heroes || [],
+        matchHistory: data.history || []
+      };
+
+      const jsonStr = JSON.stringify(datasetObj, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const filename = `RivalsTracker_${username}_Season${seasonName}_${timestamp}.json`;
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showNativeToast(`📥 Dataset downloaded for ${username}`);
+      setUpdateToast({ type: 'success', message: `📥 Dataset downloaded for ${username} (${filename})` });
+      setTimeout(() => setUpdateToast(null), 4000);
+    } catch (err) {
+      console.error('Failed to download player dataset:', err);
+    }
+  };
+
   const [backendBaseUrl, setBackendBaseUrl] = useState(() => {
     try {
       return localStorage.getItem('backend_server_url') || '';
@@ -1125,6 +1174,9 @@ ${payload.stack || 'No stack trace available.'}
         if (trackedPlayers[uKey]) {
           saveTrackedStatSnapshot(data);
         }
+        if (isTrackingMode) {
+          downloadUserDataset(data);
+        }
       }
     } catch (err) {
       setError(err.message);
@@ -1377,8 +1429,38 @@ ${payload.stack || 'No stack trace available.'}
 
           <form onSubmit={fetchStats} className={`w-full ${isMobileView ? 'mt-1' : 'max-w-3xl mt-3 sm:mt-8'}`}>
             <div className={`flex bg-[#131b2f] p-2.5 sm:p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${
-              isMobileView ? 'flex-col gap-2' : 'flex-col md:flex-row gap-3'
+              isMobileView ? 'flex-col gap-2' : 'flex-col md:flex-row items-center gap-3'
             }`}>
+              {/* Checkbox to the left of the search bar for Tracking Mode */}
+              <label 
+                className={`flex items-center gap-2 px-3.5 py-2.5 sm:py-3.5 rounded-xl border transition-all cursor-pointer shrink-0 select-none ${
+                  isTrackingMode 
+                    ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/60 text-white shadow-md shadow-emerald-500/10' 
+                    : 'bg-[#0b101e] border-slate-700/60 text-slate-400 hover:text-slate-200'
+                }`}
+                title={isTrackingMode ? "Tracking Mode Active: Datasets auto-download on search" : "Tracking Mode Off: Searches do not download datasets"}
+              >
+                <input 
+                  type="checkbox"
+                  checked={isTrackingMode}
+                  onChange={(e) => {
+                    const val = e.target.checked;
+                    setIsTrackingMode(val);
+                    try { localStorage.setItem('tracking_mode_enabled', val ? 'true' : 'false'); } catch (err) {}
+                    setUpdateToast({
+                      type: val ? 'success' : 'update',
+                      message: val ? '📥 Tracking Mode ON: User dataset will auto-download on each search.' : '🚫 Tracking Mode OFF: Datasets will not download.'
+                    });
+                    setTimeout(() => setUpdateToast(null), 3000);
+                  }}
+                  className="w-4 h-4 rounded border-slate-700 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900 bg-slate-900 cursor-pointer accent-emerald-500"
+                />
+                <span className="text-xs font-black uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5">
+                  <span>{isTrackingMode ? '📥' : '🚫'}</span>
+                  <span>Tracking Mode</span>
+                </span>
+              </label>
+
               <div className="flex-1 relative w-full">
                 <input
                   type="text"
