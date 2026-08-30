@@ -561,7 +561,10 @@ export default function App() {
   const applyUpdateNow = async (targetSha = null) => {
     const attemptedSha = targetSha || updateInfo?.latestVersion;
     if (attemptedSha) {
-      try { sessionStorage.setItem('last_attempted_update_sha', attemptedSha); } catch (e) {}
+      try { 
+        sessionStorage.setItem('last_attempted_update_sha', attemptedSha); 
+        localStorage.setItem('installed_commit_sha', attemptedSha);
+      } catch (e) {}
     }
 
     const apkUrl = updateInfo?.apkUrl || 'https://github.com/monfreda48/Meowdy5000/releases/download/v1.0.0/app-debug.apk';
@@ -667,6 +670,16 @@ export default function App() {
     }
   };
 
+  const getAppLocalSha = (backendData = null) => {
+    if (backendData?.currentVersion) return backendData.currentVersion;
+    if (backendData?.localVersion) return backendData.localVersion;
+    try {
+      const savedCommit = localStorage.getItem('installed_commit_sha');
+      if (savedCommit) return savedCommit;
+    } catch (e) {}
+    return import.meta.env.VITE_APP_COMMIT_SHA || '664d25b';
+  };
+
   const handleOneClickUpdate = async () => {
     setCheckingUpdate(true);
     setUpdateToast({ type: 'update', message: '🔍 Checking GitHub for latest app updates...' });
@@ -692,17 +705,24 @@ export default function App() {
       }
 
       // 2. Local commit check
-      let localSha = import.meta.env.VITE_APP_COMMIT_SHA || '98ac9c9';
+      let backendData = null;
       try {
         const backendRes = await fetch(getApiUrl('/api/check-update'));
         if (backendRes.ok) {
-          const backendData = await backendRes.json();
-          if (backendData.localVersion) localSha = backendData.localVersion;
-          if (!latestSha && backendData.latestVersion) latestSha = backendData.latestVersion;
+          backendData = await backendRes.json();
+          if (!latestSha && backendData?.latestVersion) latestSha = backendData.latestVersion;
         }
       } catch (e) {}
 
-      const hasUpdate = Boolean(latestSha && localSha && localSha.toLowerCase().slice(0, 7) !== latestSha.toLowerCase().slice(0, 7));
+      const localSha = getAppLocalSha(backendData);
+      const lastAttempted = (sessionStorage.getItem('last_attempted_update_sha') || '').slice(0, 7);
+
+      const hasUpdate = Boolean(
+        latestSha && 
+        localSha && 
+        localSha.toLowerCase().slice(0, 7) !== latestSha.toLowerCase().slice(0, 7) &&
+        (!lastAttempted || lastAttempted.toLowerCase() !== latestSha.toLowerCase())
+      );
 
       if (hasUpdate) {
         setUpdateToast({ type: 'update', message: `⚡ Update found (${latestSha})! Starting one-click installation...` });
@@ -762,19 +782,26 @@ export default function App() {
       }
 
       // 2. Query Flask backend endpoint if available
-      let localSha = import.meta.env.VITE_APP_COMMIT_SHA || '98ac9c9';
+      let backendData = null;
       try {
         const backendRes = await fetch(getApiUrl('/api/check-update'));
         if (backendRes.ok) {
-          const backendData = await backendRes.json();
-          if (backendData.localVersion) localSha = backendData.localVersion;
-          if (!latestSha && backendData.latestVersion) latestSha = backendData.latestVersion;
+          backendData = await backendRes.json();
+          if (!latestSha && backendData?.latestVersion) latestSha = backendData.latestVersion;
         }
       } catch (backendErr) {
         console.warn('Backend update check error:', backendErr);
       }
 
-      const hasUpdate = Boolean(latestSha && localSha && localSha.toLowerCase().slice(0, 7) !== latestSha.toLowerCase().slice(0, 7));
+      const localSha = getAppLocalSha(backendData);
+      const lastAttempted = (sessionStorage.getItem('last_attempted_update_sha') || '').slice(0, 7);
+
+      const hasUpdate = Boolean(
+        latestSha && 
+        localSha && 
+        localSha.toLowerCase().slice(0, 7) !== latestSha.toLowerCase().slice(0, 7) &&
+        (!lastAttempted || lastAttempted.toLowerCase() !== latestSha.toLowerCase())
+      );
 
       const updateData = {
         hasUpdate,
