@@ -352,7 +352,7 @@ def get_stats():
         final_data["winRate"] = tracker_data.get("winRate", "0.0")
         final_data["kdRatio"] = tracker_data.get("kdRatio", "0.0")
         final_data["topHero"] = tracker_data.get("topHero", "Unknown")
-        final_data["rank"] = "Tracker.gg Verified"
+        final_data["rank"] = tracker_data.get("rank", "Active Competitor")
 
     # Save to Database
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
