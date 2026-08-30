@@ -491,10 +491,7 @@ export default function App() {
       const lastAttempted = sessionStorage.getItem('last_attempted_update_sha');
 
       if (hasUpdate) {
-        setUpdateToast({ type: 'update', message: `⚡ New update available on GitHub! (Latest: ${latestSha})` });
-        if (!pref) {
-          setShowAutoUpdateModal(true);
-        } else if (pref === 'enabled') {
+        if (pref === 'enabled') {
           if (latestSha && latestSha === lastAttempted) {
             console.warn('[AutoUpdate] Already attempted update to commit', latestSha, 'in this session. Skipping to prevent loop.');
           } else {
@@ -2003,6 +2000,30 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {/* Subtle Non-Intrusive App Footer & Version Badge */}
+        <footer className="mt-12 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-xs">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-[9px] border border-emerald-500/40">
+              M5
+            </div>
+            <span className="font-bold text-slate-400">Meowdy 5000's Stat Tracker</span>
+          </div>
+          <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500">
+            <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+              v1.0.0 (91a57ab)
+            </span>
+            <span>•</span>
+            <a 
+              href="https://github.com/monfreda48/Meowdy5000" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="hover:text-emerald-400 transition-colors"
+            >
+              GitHub Repository
+            </a>
+          </div>
+        </footer>
 
       </main>
     </div>
