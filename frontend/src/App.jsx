@@ -51,34 +51,34 @@ const AVAILABLE_METRICS = [
   { id: 'matchesPlayed', name: 'Matches & Wins', icon: '🎮', category: 'Profile' },
 ];
 
+const DEFAULT_SEASONS = [
+  { id: '20', name: 'Season 10', status: 'upcoming' },
+  { id: '19', name: 'Season 9.5', status: 'current' },
+  { id: '18', name: 'Season 9.0', status: 'past' },
+  { id: '17', name: 'Season 8.5', status: 'past' },
+  { id: '16', name: 'Season 8.0', status: 'past' },
+  { id: '15', name: 'Season 7.5', status: 'past' },
+  { id: '14', name: 'Season 7.0', status: 'past' },
+  { id: '13', name: 'Season 6.5', status: 'past' },
+  { id: '12', name: 'Season 6.0', status: 'past' },
+  { id: '11', name: 'Season 5.5', status: 'past' },
+  { id: '10', name: 'Season 5.0', status: 'past' },
+  { id: '9',  name: 'Season 4.5', status: 'past' },
+  { id: '8',  name: 'Season 4.0', status: 'past' },
+  { id: '7',  name: 'Season 3.5', status: 'past' },
+  { id: '6',  name: 'Season 3.0', status: 'past' },
+  { id: '5',  name: 'Season 2.5', status: 'past' },
+  { id: '4',  name: 'Season 2.0', status: 'past' },
+  { id: '3',  name: 'Season 1.5', status: 'past' },
+  { id: '2',  name: 'Season 1.0', status: 'past' },
+  { id: '1',  name: 'Season 0 (Launch)', status: 'past' }
+];
+
 export default function App() {
   const [query, setQuery] = useState('');
   const [season, setSeason] = useState('19');
   const [timeframe, setTimeframe] = useState('all');
   const [expandedMetric, setExpandedMetric] = useState(null);
-  const DEFAULT_SEASONS = [
-    { id: '20', name: 'Season 10', status: 'upcoming' },
-    { id: '19', name: 'Season 9.5', status: 'current' },
-    { id: '18', name: 'Season 9.0', status: 'past' },
-    { id: '17', name: 'Season 8.5', status: 'past' },
-    { id: '16', name: 'Season 8.0', status: 'past' },
-    { id: '15', name: 'Season 7.5', status: 'past' },
-    { id: '14', name: 'Season 7.0', status: 'past' },
-    { id: '13', name: 'Season 6.5', status: 'past' },
-    { id: '12', name: 'Season 6.0', status: 'past' },
-    { id: '11', name: 'Season 5.5', status: 'past' },
-    { id: '10', name: 'Season 5.0', status: 'past' },
-    { id: '9',  name: 'Season 4.5', status: 'past' },
-    { id: '8',  name: 'Season 4.0', status: 'past' },
-    { id: '7',  name: 'Season 3.5', status: 'past' },
-    { id: '6',  name: 'Season 3.0', status: 'past' },
-    { id: '5',  name: 'Season 2.5', status: 'past' },
-    { id: '4',  name: 'Season 2.0', status: 'past' },
-    { id: '3',  name: 'Season 1.5', status: 'past' },
-    { id: '2',  name: 'Season 1.0', status: 'past' },
-    { id: '1',  name: 'Season 0 (Launch)', status: 'past' }
-  ];
-
   const [seasonsList, setSeasonsList] = useState(DEFAULT_SEASONS);
   const [currentSeasonName, setCurrentSeasonName] = useState('Season 9.5');
 
@@ -1080,9 +1080,7 @@ ${payload.stack || 'No stack trace available.'}
   useEffect(() => {
     cleanupOldApkFiles();
     checkForUpdates();
-  }, []);
 
-  useEffect(() => {
     const handleFocus = () => {
       cleanupOldApkFiles();
     };
