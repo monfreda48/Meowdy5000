@@ -854,16 +854,17 @@ export default function App() {
     return import.meta.env.VITE_APP_COMMIT_SHA || '664d25b';
   };
 
-  const handleOneClickUpdate = async () => {
-    triggerHaptic('light');
-    showNativeToast('🔍 Checking GitHub for updates...');
-    setCheckingUpdate(true);
-    setUpdateToast({ type: 'update', message: '🔍 Checking GitHub for latest app updates...' });
+  const checkForUpdates = async (isSilent = true) => {
+    if (!isSilent) {
+      triggerHaptic('light');
+      showNativeToast('🔍 Checking GitHub for updates...');
+      setCheckingUpdate(true);
+      setUpdateToast({ type: 'update', message: '🔍 Checking GitHub for latest app updates...' });
+    }
 
     try {
       let latestSha = '';
       let latestMessage = '';
-      let commitUrl = '';
 
       // 1. Fetch directly from GitHub REST API
       try {
@@ -874,7 +875,6 @@ export default function App() {
           const ghData = await ghRes.json();
           latestSha = (ghData.sha || '').slice(0, 7);
           latestMessage = ghData.commit?.message?.split('\n')[0] || '';
-          commitUrl = ghData.html_url || 'https://github.com/monfreda48/Meowdy5000';
         }
       } catch (ghErr) {
         console.warn('Direct GitHub API check error:', ghErr);
@@ -902,10 +902,10 @@ export default function App() {
 
       if (hasUpdate) {
         triggerHaptic('success');
-        showNativeToast(`⚡ Update found (${latestSha})! Installing...`);
-        setUpdateToast({ type: 'update', message: `⚡ Update found (${latestSha})! Starting seamless update...` });
+        showNativeToast(`⚡ Update found (${latestSha})! Auto-installing...`);
+        setUpdateToast({ type: 'update', message: `⚡ New fix commit found (${latestSha})! Auto-applying update...` });
         await applyUpdateNow(latestSha);
-      } else {
+      } else if (!isSilent) {
         triggerHaptic('success');
         showNativeToast('✅ Your app is up to date!');
         setUpToDateDetails({
@@ -918,15 +918,19 @@ export default function App() {
         setTimeout(() => setUpdateToast(null), 4000);
       }
     } catch (err) {
-      console.error('One-click update error:', err);
-      triggerHaptic('warning');
-      showNativeToast('❌ Error checking update server');
-      setUpdateToast({ type: 'error', message: '❌ Error connecting to update service.' });
-      setTimeout(() => setUpdateToast(null), 4000);
+      console.error('Update check error:', err);
+      if (!isSilent) {
+        triggerHaptic('warning');
+        showNativeToast('❌ Error checking update server');
+        setUpdateToast({ type: 'error', message: '❌ Error connecting to update service.' });
+        setTimeout(() => setUpdateToast(null), 4000);
+      }
     } finally {
-      setCheckingUpdate(false);
+      if (!isSilent) setCheckingUpdate(false);
     }
   };
+
+  const handleOneClickUpdate = () => checkForUpdates(false);
 
   const setAutoUpdatePermission = (preference) => {
     try {
@@ -945,89 +949,6 @@ export default function App() {
   };
 
   const [updateToast, setUpdateToast] = useState(null);
-
-  const checkForUpdates = async (isManual = false) => {
-    setCheckingUpdate(true);
-    setUpdateToast(null);
-    try {
-      let latestSha = '';
-      let latestMessage = '';
-      let commitUrl = '';
-
-      // 1. Fetch directly from GitHub REST API (CORS enabled, works everywhere on web & APK)
-      try {
-        const ghRes = await fetch('https://api.github.com/repos/monfreda48/Meowdy5000/commits/main', {
-          headers: { 'Accept': 'application/vnd.github.v3+json' }
-        });
-        if (ghRes.ok) {
-          const ghData = await ghRes.json();
-          latestSha = (ghData.sha || '').slice(0, 7);
-          latestMessage = ghData.commit?.message?.split('\n')[0] || '';
-          commitUrl = ghData.html_url || 'https://github.com/monfreda48/Meowdy5000';
-        }
-      } catch (ghErr) {
-        console.warn('Direct GitHub API check error:', ghErr);
-      }
-
-      // 2. Query Flask backend endpoint if available
-      let backendData = null;
-      try {
-        const backendRes = await fetch(getApiUrl('/api/check-update'));
-        if (backendRes.ok) {
-          backendData = await backendRes.json();
-          if (!latestSha && backendData?.latestVersion) latestSha = backendData.latestVersion;
-        }
-      } catch (backendErr) {
-        console.warn('Backend update check error:', backendErr);
-      }
-
-      const localSha = getAppLocalSha(backendData);
-      const lastAttempted = (sessionStorage.getItem('last_attempted_update_sha') || '').slice(0, 7);
-
-      const hasUpdate = Boolean(
-        latestSha &&
-        localSha &&
-        localSha.toLowerCase().slice(0, 7) !== latestSha.toLowerCase().slice(0, 7) &&
-        (!lastAttempted || lastAttempted.toLowerCase() !== latestSha.toLowerCase())
-      );
-
-      const updateData = {
-        hasUpdate,
-        localVersion: localSha,
-        latestVersion: latestSha || localSha,
-        latestMessage: latestMessage || 'Latest enhancements and bug fixes available on GitHub.',
-        commitUrl: commitUrl || 'https://github.com/monfreda48/Meowdy5000',
-        apkUrl: 'https://github.com/monfreda48/Meowdy5000/releases/download/v1.0.0/app-debug.apk',
-        repoUrl: 'https://github.com/monfreda48/Meowdy5000'
-      };
-
-      setUpdateInfo(updateData);
-
-      if (hasUpdate) {
-        triggerHaptic('success');
-        showNativeToast(`⚡ App Update Available (${latestSha})`);
-
-        if (autoUpdatePref !== 'never_ask') {
-          console.log(`[AutoUpdate] New release found (${latestSha}). Executing automated update...`);
-          setUpdateToast({ type: 'update', message: `⚡ New release found (${latestSha})! Automating update installation...` });
-          applyUpdateNow(latestSha);
-        } else if (isManual) {
-          setUpdateToast({ type: 'update', message: `⚡ Update available (${latestSha})! Click "Check for update" in menu to install.` });
-        }
-      } else if (isManual) {
-        setUpdateToast({ type: 'success', message: `✅ Your app is up to date! (Current Commit: ${localSha})` });
-        setTimeout(() => setUpdateToast(null), 4500);
-      }
-    } catch (err) {
-      console.error('Failed to check for updates:', err);
-      if (isManual) {
-        setUpdateToast({ type: 'error', message: '❌ Could not connect to update server.' });
-        setTimeout(() => setUpdateToast(null), 4500);
-      }
-    } finally {
-      setCheckingUpdate(false);
-    }
-  };
 
   // Error Telemetry & Reporting State
   const [showReportModal, setShowReportModal] = useState(false);
