@@ -570,6 +570,8 @@ export default function App() {
     }
   });
 
+
+
   const [defaultTrackingPref, setDefaultTrackingPref] = useState(() => {
     try {
       return localStorage.getItem('tracking_mode_default_pref') || 'enabled';
@@ -1053,31 +1055,7 @@ ${payload.stack || 'No stack trace available.'}
     };
   }, []);
 
-  const handleManualSubmitReport = async (e, mode = 'both') => {
-    if (e) e.preventDefault();
-    setIsSubmittingReport(true);
-    const payload = {
-      error: lastCapturedError?.error || error || 'User Submitted Issue Report',
-      stack: lastCapturedError?.stack || '',
-      notes: reportNotes || 'User submitted feedback/error report via UI.'
-    };
 
-    if (mode === 'github' || mode === 'both') {
-      openGitHubIssueForError(payload);
-    }
-
-    const sent = await sendErrorReport(payload);
-    setIsSubmittingReport(false);
-    setShowReportModal(false);
-    setReportNotes('');
-
-    if (sent) {
-      setUpdateToast({ type: 'success', message: '🚀 Error report submitted to developer telemetry & GitHub!' });
-    } else {
-      setUpdateToast({ type: 'success', message: '🚀 Report dispatched to GitHub & saved to local error queue.' });
-    }
-    setTimeout(() => setUpdateToast(null), 4500);
-  };
 
   const [showSplash, setShowSplash] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
