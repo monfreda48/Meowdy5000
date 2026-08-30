@@ -29,9 +29,9 @@ subprojects {
                 }
             }
         }
-        if (project.plugins.hasPlugin("kotlin-android") || project.plugins.hasPlugin("org.jetbrains.kotlin.android")) {
-            project.kotlin {
-                jvmToolchain(17)
+        if (project.extensions.findByName("kotlin") != null) {
+            project.extensions.configure("kotlin") { ext ->
+                ext.jvmToolchain(17)
             }
         }
     }
