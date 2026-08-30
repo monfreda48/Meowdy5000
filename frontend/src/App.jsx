@@ -705,21 +705,22 @@ export default function App() {
           <div className="absolute w-80 h-80 rounded-full bg-gradient-to-tr from-emerald-500/20 via-teal-500/10 to-transparent blur-3xl animate-pulse"></div>
 
           <div className="relative z-10 flex flex-col items-center space-y-5 max-w-sm">
-            <div className="w-24 h-24 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-4xl sm:text-5xl shadow-[0_0_35px_rgba(52,211,153,0.6)] border-2 border-emerald-500/60 transform hover:scale-105 transition-transform duration-500 drop-shadow-[0_0_15px_rgba(52,211,153,0.9)] tracking-tighter">
-              M5
+            <div className="w-24 h-24 rounded-full bg-black flex items-center justify-center font-black text-[#00ff88] text-4xl sm:text-5xl shadow-[0_0_50px_#00ff88,0_0_20px_#00ff88] border-2 border-[#00ff88] transform hover:scale-105 transition-transform duration-500 drop-shadow-[0_0_15px_#00ff88] tracking-tighter relative group">
+              <span className="relative z-10 drop-shadow-[0_0_10px_#00ff88]">M5</span>
+              <div className="absolute inset-0 rounded-full bg-[#00ff88]/25 blur-md animate-pulse"></div>
             </div>
 
             <div className="space-y-2">
               <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-wider animate-in fade-in slide-in-from-bottom-4 duration-1000">
                 Meowdy 5000's Stat Tracker
               </h1>
-              <p className="text-xs sm:text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500 uppercase tracking-widest animate-in fade-in slide-in-from-bottom-6 duration-1000">
+              <p className="text-xs sm:text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00ff88] to-teal-400 uppercase tracking-widest animate-in fade-in slide-in-from-bottom-6 duration-1000">
                 SNACK HARD, TRACK HARD
               </p>
             </div>
 
             <div className="w-48 h-1 bg-slate-800 rounded-full overflow-hidden mt-4 border border-slate-700/50">
-              <div className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 rounded-full animate-pulse w-full"></div>
+              <div className="h-full bg-gradient-to-r from-[#00ff88] via-teal-400 to-[#00ff88] rounded-full animate-pulse w-full"></div>
             </div>
             
             <p className="text-[10px] text-slate-500 font-medium tracking-wider uppercase pt-2">
@@ -733,8 +734,8 @@ export default function App() {
       <nav className="border-b border-slate-800 bg-[#0f1526]/80 backdrop-blur-md sticky top-0 z-50 overflow-x-hidden">
         <div className="max-w-6xl mx-auto px-2.5 sm:px-6 py-2 sm:py-3.5 flex items-center justify-between gap-1.5 sm:gap-3">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-xs sm:text-sm tracking-tighter shadow-[0_0_15px_rgba(52,211,153,0.5)] border border-emerald-500/50 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]">
-              M5
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black flex items-center justify-center font-black text-[#00ff88] text-xs sm:text-sm tracking-tighter shadow-[0_0_20px_#00ff88,0_0_8px_#00ff88] border border-[#00ff88] shrink-0 drop-shadow-[0_0_8px_#00ff88] relative">
+              <span className="relative z-10 drop-shadow-[0_0_6px_#00ff88]">M5</span>
             </div>
             <span className="text-xs sm:text-lg md:text-xl font-black tracking-wider text-white uppercase truncate">
               <span className="sm:hidden">MEOWDY 5000</span>
@@ -2003,7 +2004,7 @@ export default function App() {
         {/* Subtle Non-Intrusive App Footer & Version Badge */}
         <footer className="mt-12 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-xs">
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-[9px] border border-emerald-500/40">
+            <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center font-black text-[#00ff88] text-[9px] border border-[#00ff88] shadow-[0_0_10px_#00ff88]">
               M5
             </div>
             <span className="font-bold text-slate-400">Meowdy 5000's Stat Tracker</span>
