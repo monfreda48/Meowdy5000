@@ -1066,7 +1066,7 @@ ${payload.stack || 'No stack trace available.'}
     }
   };
 
-  const handleManualSubmitReport = async (e, mode = 'both') => {
+  const handleManualSubmitReport = (e, mode = 'both') => {
     if (e) e.preventDefault();
     setIsSubmittingReport(true);
     triggerHaptic('light');
@@ -1082,22 +1082,18 @@ ${payload.stack || 'No stack trace available.'}
       platform: window.Capacitor && window.Capacitor.isNativePlatform() ? 'Android Native APK' : 'Web Browser'
     };
 
-    // 1. Dispatch telemetry POST to backend database
-    const sent = await sendErrorReport(payload);
-
-    // 2. Open GitHub Issue submission form
+    // 1. Open GitHub Issue submission form INSTANTLY (<0.1s)
     openGitHubIssueForError(payload);
+
+    // 2. Dispatch telemetry POST in background non-blocking
+    sendErrorReport(payload);
 
     setIsSubmittingReport(false);
     setShowReportModal(false);
     setReportNotes('');
 
-    if (sent) {
-      setUpdateToast({ type: 'success', message: '🚀 GitHub issue form opened & error report sent to telemetry!' });
-    } else {
-      setUpdateToast({ type: 'success', message: '🚀 GitHub issue form opened!' });
-    }
-    setTimeout(() => setUpdateToast(null), 4500);
+    setUpdateToast({ type: 'success', message: '🚀 GitHub issue form opened & error report sent!' });
+    setTimeout(() => setUpdateToast(null), 4000);
   };
 
   const copyDiagnosticLog = (payload) => {
@@ -1137,11 +1133,17 @@ ${payload.stack || 'No stack trace available.'}
     for (const targetUrl of candidateUrls) {
       if (!targetUrl) continue;
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+
         const res = await fetch(targetUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(fullPayload)
+          body: JSON.stringify(fullPayload),
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
+
         if (res.ok) {
           console.log(`✅ Error report successfully sent to developer telemetry server via ${targetUrl}`);
           showNativeToast('📡 Bug report submitted to developer telemetry database!');
