@@ -849,24 +849,6 @@ export default function App() {
         </div>
       </nav>
 
-      {/* GitHub Update Notification Banner */}
-      {updateInfo?.hasUpdate && (
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-2.5 px-4 text-center text-xs sm:text-sm font-bold flex items-center justify-center gap-3 shadow-lg">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-            New update available on GitHub! ({updateInfo.latestVersion} - {updateInfo.latestMessage})
-          </span>
-          <a
-            href={updateInfo.commitUrl || updateInfo.repoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-3 py-1 bg-black/30 hover:bg-black/50 text-white rounded-lg transition-colors border border-white/20 uppercase text-[11px] tracking-wider"
-          >
-            View on GitHub
-          </a>
-        </div>
-      )}
-
       {/* Main Layout Container */}
       <main className={`mx-auto px-2.5 sm:px-6 py-3 sm:py-10 transition-all duration-300 w-full ${
         isMobileView ? 'max-w-full sm:max-w-md py-2' : 'max-w-6xl'
@@ -885,90 +867,6 @@ export default function App() {
             <button onClick={() => setUpdateToast(null)} className="text-slate-400 hover:text-white text-xs">✕</button>
           </div>
         )}
-
-        {/* App Update Available Banner (Mobile & Desktop) */}
-        {updateInfo?.hasUpdate && (
-          <div className="w-full bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-emerald-500/20 border-2 border-emerald-500 rounded-2xl p-3.5 sm:p-4 shadow-2xl shadow-emerald-500/20 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3.5 animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="flex items-center gap-3 text-left w-full sm:w-auto">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-xl shrink-0 shadow-md shadow-emerald-500/40">
-                🚀
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h4 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">New App Update Available!</h4>
-                  <span className="text-[10px] bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold">
-                    v{updateInfo.latestVersion}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-300 mt-0.5 font-medium line-clamp-1">
-                  {updateInfo.latestMessage || 'Latest enhancements and bug fixes available on GitHub.'}
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
-              <button
-                onClick={() => applyUpdateNow()}
-                disabled={isApplyingUpdate}
-                className="w-full sm:w-auto px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-emerald-500/30 text-center shrink-0 cursor-pointer disabled:opacity-50"
-              >
-                {isApplyingUpdate ? 'Installing...' : '⚡ Apply Web Update'}
-              </button>
-              <a
-                href={updateInfo.apkUrl || 'https://github.com/monfreda48/Meowdy5000/releases'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3.5 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/50 text-emerald-300 text-xs font-black uppercase tracking-wider transition-all text-center shrink-0"
-              >
-                📱 Download APK
-              </a>
-              <a
-                href={updateInfo.commitUrl || updateInfo.repoUrl || 'https://github.com/monfreda48/Meowdy5000'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-2 rounded-xl bg-[#0b101e] hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold transition-all text-center shrink-0"
-              >
-                View Code
-              </a>
-            </div>
-          </div>
-        )}
-
-        {/* Local Storage Write Permission Request Banner */}
-        {showPermissionPrompt && (
-          <div className="w-full bg-gradient-to-r from-[#131b2f] via-[#1a2b4c] to-[#131b2f] border border-emerald-500/50 rounded-2xl p-4 sm:p-5 shadow-2xl shadow-emerald-500/10 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="flex items-start gap-3.5 text-left">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-xl shrink-0">
-                💾
-              </div>
-              <div>
-                <h4 className="text-base font-black text-white flex items-center gap-2">
-                  Local Storage Write Permission Request
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase font-bold">
-                    Data Safety
-                  </span>
-                </h4>
-                <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
-                  Meowdy 5000's Stat Tracker stores your performance history and metric preferences locally in your browser. Granting local storage write permission ensures your data is preserved across app updates!
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2.5 shrink-0 w-full md:w-auto">
-              <button
-                onClick={grantStoragePermission}
-                className="flex-1 md:flex-initial px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-emerald-500/20 cursor-pointer"
-              >
-                Grant Permission
-              </button>
-              <button
-                onClick={() => setShowPermissionPrompt(false)}
-                className="px-4 py-2.5 rounded-xl bg-[#0b101e] border border-slate-700/60 text-slate-400 hover:text-white text-xs font-bold transition-all cursor-pointer"
-              >
-                Dismiss
-              </button>
-            </div>
-          </div>
-        )}
-        
         {/* Mobile View Badge Indicator */}
         {isMobileView && (
           <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 px-3 py-2 rounded-xl text-xs text-emerald-400 font-medium">
