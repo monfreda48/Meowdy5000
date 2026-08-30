@@ -1341,23 +1341,26 @@ ${payload.stack || 'No stack trace available.'}
 
     const pInterval = setInterval(() => {
       setSearchProgress(prev => {
-        if (prev < 40) {
-          setSearchProgressMsg('Querying Rivals Meta API & Tracker.gg...');
-          return prev + 15;
-        } else if (prev < 75) {
-          setSearchProgressMsg('Scraping player summary & match history...');
+        if (prev < 35) {
+          setSearchProgressMsg('Connecting to Marvel Rivals backend API...');
           return prev + 10;
-        } else if (prev < 92) {
+        } else if (prev < 65) {
+          setSearchProgressMsg('Bypassing Cloudflare protection & querying Tracker.gg...');
+          return prev + 8;
+        } else if (prev < 85) {
+          setSearchProgressMsg('Scraping player summary & match history...');
+          return prev + 5;
+        } else if (prev < 94) {
           setSearchProgressMsg('Parsing hero stats & telemetry cards...');
-          return prev + 4;
+          return prev + 2;
         }
         return prev;
       });
-    }, 400);
+    }, 600);
 
     const timeoutId = setTimeout(() => {
       if (controller) controller.abort();
-    }, 12000);
+    }, 30000);
 
     try {
       const response = await fetch(
