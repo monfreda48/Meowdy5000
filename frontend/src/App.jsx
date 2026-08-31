@@ -2010,9 +2010,17 @@ ${payload.stack || 'No stack trace available.'}
                 )}
                 <div>
                   <h2 className={`font-black text-white ${isMobileView ? 'text-2xl' : 'text-3xl'}`}>{stats.current.username}</h2>
-                  <p className="text-slate-400 uppercase tracking-widest text-xs mt-0.5 font-bold">
-                    {stats.current.rank}
-                  </p>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <span className="bg-gradient-to-r from-blue-600/30 to-indigo-600/30 text-blue-300 border border-blue-500/50 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-blue-500/10">
+                      <span>💎</span>
+                      <span>{stats.current.rank || 'Unranked'}</span>
+                    </span>
+                    {stats.current.peakRank && stats.current.peakRank !== 'Unranked' && (
+                      <span className="bg-purple-500/10 text-purple-300 border border-purple-500/30 px-2.5 py-0.5 rounded-md text-[11px] font-bold">
+                        🏆 Peak: {stats.current.peakRank}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                     <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Data Sources:</span>
                     {(stats.current.sources && stats.current.sources.length > 0 ? stats.current.sources : ["Tracker.gg", "RivalsMeta.com"]).map((src, sIdx) => (

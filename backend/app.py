@@ -170,15 +170,43 @@ def scrape_tracker_gg_api(username, season=None):
                 except Exception:
                     pass
 
-            # Extract Rank Tier Name & Rating
+            # Extract Authentic Marvel Rivals Competitive Rank & Rank Score (RS)
             rank_name = "Unranked"
-            for r_key in ['rank', 'rankName', 'peakRank', 'competitiveRank']:
-                if r_key in stats:
-                    r_val = stats[r_key]
-                    if isinstance(r_val, dict):
-                        rank_name = r_val.get('displayValue') or r_val.get('value') or rank_name
-                    elif isinstance(r_val, str) and r_val:
-                        rank_name = r_val
+            peak_rank = "Unranked"
+            lifetime_peak_rank = "Unranked"
+
+            ranked_stat = stats.get('ranked', {})
+            if isinstance(ranked_stat, dict):
+                r_meta = ranked_stat.get('metadata', {})
+                tier_name = r_meta.get('tierName') or r_meta.get('tierShortName')
+                rs_val = ranked_stat.get('displayValue') or ranked_stat.get('value')
+                if tier_name:
+                    rank_name = f"{tier_name} ({rs_val} RS)" if rs_val else tier_name
+
+            peak_stat = stats.get('peakRanked', {})
+            if isinstance(peak_stat, dict):
+                p_meta = peak_stat.get('metadata', {})
+                p_tier = p_meta.get('tierName')
+                p_val = peak_stat.get('displayValue') or peak_stat.get('value')
+                if p_tier:
+                    peak_rank = f"{p_tier} ({p_val} RS)" if p_val else p_tier
+
+            life_stat = stats.get('lifetimePeakRanked', {})
+            if isinstance(life_stat, dict):
+                l_meta = life_stat.get('metadata', {})
+                l_tier = l_meta.get('tierName')
+                l_val = life_stat.get('displayValue') or life_stat.get('value')
+                if l_tier:
+                    lifetime_peak_rank = f"{l_tier} ({l_val} RS)" if l_val else l_tier
+
+            if rank_name == "Unranked":
+                for r_key in ['rank', 'rankName', 'competitiveRank']:
+                    if r_key in stats:
+                        r_val = stats[r_key]
+                        if isinstance(r_val, dict):
+                            rank_name = r_val.get('displayValue') or r_val.get('value') or rank_name
+                        elif isinstance(r_val, str) and r_val:
+                            rank_name = r_val
 
             # Extract ALL hero segments and role segments without truncation
             hero_list = []
@@ -236,6 +264,8 @@ def scrape_tracker_gg_api(username, season=None):
                 "success": True,
                 "avatarUrl": avatar_url,
                 "rank": rank_name,
+                "peakRank": peak_rank,
+                "lifetimePeakRank": lifetime_peak_rank,
                 "platformUserIdentifier": data.get('data', {}).get('platformInfo', {}).get('platformUserIdentifier', ''),
                 "platformUserId": data.get('data', {}).get('platformInfo', {}).get('platformUserId', ''),
                 "winRate": str(round(win_rate, 1)),
@@ -421,6 +451,8 @@ def get_stats():
         if tracker_data.get("kdRatio"): final_data["kdRatio"] = tracker_data["kdRatio"]
         if tracker_data.get("topHero") and tracker_data.get("topHero") != "Unknown": final_data["topHero"] = tracker_data["topHero"]
         if tracker_data.get("rank") and tracker_data.get("rank") != "Unranked": final_data["rank"] = tracker_data["rank"]
+        if tracker_data.get("peakRank"): final_data["peakRank"] = tracker_data["peakRank"]
+        if tracker_data.get("lifetimePeakRank"): final_data["lifetimePeakRank"] = tracker_data["lifetimePeakRank"]
         if tracker_data.get("topHeroesDetailed") and len(tracker_data.get("topHeroesDetailed")) > 0:
             final_data["topHeroesDetailed"] = tracker_data["topHeroesDetailed"]
 
