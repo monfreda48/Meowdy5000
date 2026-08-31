@@ -1,6 +1,15 @@
 {
   "java.import.gradle.enabled": true,
-  "gradle.nestedProjects": false,
+  "java.import.gradle.wrapper.enabled": true,
+  "java.project.importOnFirstTimeStartup": "automatic",
+  "java.import.exclusions": [
+    "**/node_modules/**",
+    "**/.git/**"
+  ],
+  "gradle.project.exclusions": [
+    "**/node_modules/**",
+    "**/frontend/node_modules/**"
+  ],
   "files.exclude": {
     "**/.git": true,
     "**/.svn": true,
@@ -8,5 +17,6 @@
     "**/CVS": true,
     "**/.DS_Store": true,
     "**/Thumbs.db": true
-  }
+  },
+  "java.configuration.updateBuildConfiguration": "automatic"
 }
