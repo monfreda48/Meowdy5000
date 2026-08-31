@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run on Android Device",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": [
+        "-Command",
+        "& 'C:\\Users\\User\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe' shell am start -n com.meowdy5000.stattracker/.MainActivity"
+      ]
+    }
+  ]
+}

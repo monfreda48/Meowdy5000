@@ -1,0 +1,33 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build",
+      "type": "shell",
+      "command": "npm --prefix frontend run build:android",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Install APK",
+      "type": "shell",
+      "command": "& 'C:\\Users\\User\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe' install -r 'frontend/android/app/build/outputs/apk/debug/app-debug.apk'",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run",
+      "type": "shell",
+      "command": "& 'C:\\Users\\User\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe' shell am start -n com.meowdy5000.stattracker/.MainActivity",
+      "problemMatcher": []
+    },
+    {
+      "label": "Stop",
+      "type": "shell",
+      "command": "& 'C:\\Users\\User\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe' shell am force-stop com.meowdy5000.stattracker",
+      "problemMatcher": []
+    }
+  ]
+}

@@ -10,6 +10,14 @@
   "java.diagnostics.filter": [
     "*"
   ],
+  "android.sdk": "C:\\Users\\User\\AppData\\Local\\Android\\Sdk",
+  "android.sdkPath": "C:\\Users\\User\\AppData\Local\\Android\\Sdk",
+  "androidBuild.sdkPath": "C:\\Users\\User\\AppData\\Local\\Android\\Sdk",
+  "androidBuild.androidDirPath": "frontend/android",
+  "androidBuild.projectPath": "frontend/android",
+  "androidBuild.apkPath": "frontend/android/app/build/outputs/apk/debug/app-debug.apk",
+  "androidBuild.packageName": "com.meowdy5000.stattracker",
+  "androidBuild.mainActivity": ".MainActivity",
   "capacitor.androidDirectory": "frontend/android",
   "capacitor.android.projectDirectory": "frontend/android",
   "capacitor.apkPath": "frontend/android/app/build/outputs/apk/debug/app-debug.apk",
