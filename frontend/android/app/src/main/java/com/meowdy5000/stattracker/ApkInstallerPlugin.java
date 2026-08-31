@@ -12,11 +12,54 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-@CapacitorPlugin(name = "ApkInstaller")
+@CapacitorPlugin(
+    name = "ApkInstaller",
+    permissions = {
+        @Permission(
+            alias = "storage",
+            strings = {
+                android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+            }
+        )
+    }
+)
 public class ApkInstallerPlugin extends Plugin {
+
+    @PluginMethod
+    public void requestStoragePermission(PluginCall call) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            JSObject ret = new JSObject();
+            ret.put("granted", true);
+            call.resolve(ret);
+            return;
+        }
+
+        if (getPermissionState("storage") != com.getcapacitor.PermissionState.GRANTED) {
+            requestPermissionForAlias("storage", call, "storagePermCallback");
+        } else {
+            JSObject ret = new JSObject();
+            ret.put("granted", true);
+            call.resolve(ret);
+        }
+    }
+
+    @PermissionCallback
+    private void storagePermCallback(PluginCall call) {
+        JSObject ret = new JSObject();
+        boolean granted = getPermissionState("storage") == com.getcapacitor.PermissionState.GRANTED;
+        ret.put("granted", granted);
+        call.resolve(ret);
+    }
 
     @PluginMethod
     public void installApk(PluginCall call) {
@@ -36,14 +79,13 @@ public class ApkInstallerPlugin extends Plugin {
                     permIntent.setData(Uri.parse("package:" + context.getPackageName()));
                     permIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     context.startActivity(permIntent);
-                    call.reject("Please enable 'Allow from this source' in Android Settings and tap Install again.");
+                    call.reject("UNKNOWN_SOURCES_REQUIRED");
                     return;
                 } catch (Exception e) {
-                    // Fallback to general Security Settings
                     Intent generalSettings = new Intent(Settings.ACTION_SECURITY_SETTINGS);
                     generalSettings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     context.startActivity(generalSettings);
-                    call.reject("Please enable 'Unknown Sources' in Android Security Settings.");
+                    call.reject("UNKNOWN_SOURCES_REQUIRED");
                     return;
                 }
             }
@@ -56,11 +98,24 @@ public class ApkInstallerPlugin extends Plugin {
                 return;
             }
 
+            // Stage to external cache if file is in internal private app storage
+            File targetFile = apkFile;
+            File extCache = context.getExternalCacheDir();
+            if (extCache != null && !apkFile.getAbsolutePath().startsWith(extCache.getAbsolutePath())) {
+                try {
+                    File destFile = new File(extCache, "update_" + apkFile.getName());
+                    copyFile(apkFile, destFile);
+                    targetFile = destFile;
+                } catch (Exception copyEx) {
+                    // Fallback to original file if copy fails
+                }
+            }
+
             Uri apkUri;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                apkUri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", apkFile);
+                apkUri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", targetFile);
             } else {
-                apkUri = Uri.fromFile(apkFile);
+                apkUri = Uri.fromFile(targetFile);
             }
 
             Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -75,6 +130,17 @@ public class ApkInstallerPlugin extends Plugin {
             call.resolve(ret);
         } catch (Exception e) {
             call.reject("Failed to launch APK installer: " + e.getMessage(), e);
+        }
+    }
+
+    private void copyFile(File src, File dst) throws Exception {
+        try (InputStream in = new FileInputStream(src);
+             OutputStream out = new FileOutputStream(dst)) {
+            byte[] buf = new byte[8192];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
         }
     }
 }

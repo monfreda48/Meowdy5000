@@ -274,6 +274,17 @@ export default function App() {
   const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [readyToInstallUpdate, setReadyToInstallUpdate] = useState(null);
+  const [nativeAppVersion, setNativeAppVersion] = useState(null);
+
+  useEffect(() => {
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      CapApp.getInfo().then(info => {
+        if (info && info.version) {
+          setNativeAppVersion(info.version);
+        }
+      }).catch(() => {});
+    }
+  }, []);
   const [showSnapshotHistoryModal, setShowSnapshotHistoryModal] = useState(false);
   const [showViewReportsModal, setShowViewReportsModal] = useState(false);
   const [fetchedReports, setFetchedReports] = useState([]);
@@ -862,6 +873,19 @@ export default function App() {
       const downloadUrl = readyToInstallUpdate?.apkUrl || 'https://github.com/monfreda48/Meowdy5000/releases/download/v1.0.14/app-debug.apk';
 
       try {
+        // Request Storage Permission from Android OS
+        try {
+          if (window.Capacitor.Plugins && window.Capacitor.Plugins.ApkInstaller && window.Capacitor.Plugins.ApkInstaller.requestStoragePermission) {
+            await window.Capacitor.Plugins.ApkInstaller.requestStoragePermission();
+          }
+          const permStatus = await Filesystem.checkPermissions();
+          if (permStatus.publicStorage !== 'granted') {
+            await Filesystem.requestPermissions();
+          }
+        } catch (permErr) {
+          console.warn('[StoragePermission] Permission request notice:', permErr);
+        }
+
         const response = await fetch(downloadUrl);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const blob = await response.blob();
@@ -882,12 +906,12 @@ export default function App() {
         await Filesystem.writeFile({
           path: fileName,
           data: base64Data,
-          directory: Directory.Cache
+          directory: Directory.Documents
         });
 
         const uriResult = await Filesystem.getUri({
           path: fileName,
-          directory: Directory.Cache
+          directory: Directory.Documents
         });
         
         let nativeFilePath = uriResult.uri;
@@ -908,7 +932,11 @@ export default function App() {
           openExternalUrl(downloadUrl);
         }
       } catch (err) {
-        console.warn('[ApkInstallError] Failed direct APK download, falling back to Browser:', err);
+        console.warn('[ApkInstallError] Failed direct APK download:', err);
+        if (err?.message === 'UNKNOWN_SOURCES_REQUIRED' || String(err).includes('UNKNOWN_SOURCES')) {
+          setUpdateToast({ type: 'warning', message: '⚠️ Please enable "Allow from this source" in Settings and tap Install again.' });
+          return;
+        }
         setUpdateToast({ type: 'info', message: '📦 Opening Android Package Installer download...' });
         openExternalUrl(downloadUrl);
       } finally {
@@ -983,6 +1011,7 @@ export default function App() {
   };
 
   const getAppVersionName = (backendData = null) => {
+    if (nativeAppVersion) return nativeAppVersion;
     try {
       const savedVer = localStorage.getItem('installed_version_name');
       if (savedVer) return savedVer;
