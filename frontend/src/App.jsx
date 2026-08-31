@@ -584,6 +584,33 @@ export default function App() {
   const [upToDateDetails, setUpToDateDetails] = useState(null);
   const [activeUserTab, setActiveUserTab] = useState('live');
   const [showAutoUpdateModal, setShowAutoUpdateModal] = useState(false);
+  const [activeStatReport, setActiveStatReport] = useState(null);
+
+  const reportSpecificStatInaccuracy = (statKey, statName, statValue) => {
+    triggerHaptic('warning');
+    const username = stats?.current?.username || 'Player';
+    const issueTitle = `[Stat Inaccuracy Report] ${statName}: ${statValue} for ${username}`;
+    const issueBody = `## ⚠️ Specific Stat Accuracy Flagged by User\n\n- **Player Username**: ${username}\n- **Flagged Stat**: ${statName}\n- **Reported Value**: ${statValue}\n- **App Version**: v${getAppVersionName()} (${getAppLocalSha()})\n- **Timestamp**: ${new Date().toISOString()}\n\nPlease review the web scraping parser logic in \`backend/app.py\` for this specific metric!`;
+    const issueUrl = `https://github.com/monfreda48/Meowdy5000/issues/new?title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}`;
+
+    try {
+      fetch(getApiUrl('/api/report-error'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          error_message: issueTitle,
+          stack_trace: `Stat Flagged: ${statName} = ${statValue}`,
+          user_notes: `User flagged accuracy for ${statName} on player ${username}`,
+          platform: window.Capacitor?.isNativePlatform() ? 'Android Native APK' : 'Web Browser'
+        }),
+        signal: AbortSignal.timeout(2000)
+      }).catch(() => {});
+    } catch (e) { }
+
+    openExternalUrl(issueUrl);
+    showNativeToast(`⚠️ Stat report launched on GitHub: ${statName}`);
+    setActiveStatReport(null);
+  };
   const [networkStatus, setNetworkStatus] = useState({ connected: true, connectionType: 'unknown' });
   const [deviceInfo, setDeviceInfo] = useState(null);
   const [appInfo, setAppInfo] = useState(null);
@@ -929,7 +956,7 @@ export default function App() {
       if (savedVer) return savedVer;
     } catch (e) { }
     if (backendData?.currentVersionName) return backendData.currentVersionName;
-    return '1.0.7';
+    return '1.0.8';
   };
 
   const checkForUpdates = async (isSilent = true) => {
@@ -2726,9 +2753,19 @@ ${payload.stack || 'No stack trace available.'}
                 <div className={`grid gap-3 bg-[#131b2f] p-4 sm:p-5 rounded-2xl border border-slate-700/50 shadow-xl ${isMobileView ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
                   }`}>
                   {/* Card 1: Matches & Wins */}
-                  <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between">
+                  <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between relative">
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                      Matches & Wins
+                      <span className="flex items-center gap-1.5">
+                        Matches & Wins
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setActiveStatReport(activeStatReport === 'matches' ? null : 'matches'); }}
+                          className="w-4 h-4 rounded-full bg-amber-500/20 hover:bg-amber-500/40 text-amber-400 border border-amber-500/40 flex items-center justify-center text-[10px] font-black transition-all cursor-pointer shadow-sm hover:scale-110 active:scale-95"
+                          title="Report inaccurate stat"
+                        >
+                          !
+                        </button>
+                      </span>
                       <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                         {stats.current.winRate}% WR
                       </span>
@@ -2739,12 +2776,34 @@ ${payload.stack || 'No stack trace available.'}
                       <span className="text-slate-600 text-xs font-bold">•</span>
                       <span className="text-xs text-slate-400 font-medium">{stats.current.matchesPlayed || 0} Total</span>
                     </div>
+                    {activeStatReport === 'matches' && (
+                      <div className="mt-2.5 p-2 bg-amber-500/10 border border-amber-500/40 rounded-xl flex items-center justify-between gap-2 animate-in fade-in zoom-in duration-200">
+                        <span className="text-[10px] text-amber-300 font-bold">This stat looks wrong?</span>
+                        <button
+                          type="button"
+                          onClick={() => reportSpecificStatInaccuracy('matches', 'Matches & Wins', `${stats.current.matchesWon} Wins / ${stats.current.matchesPlayed} Total (${stats.current.winRate}% WR)`)}
+                          className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-black text-[10px] uppercase tracking-wider transition-all shadow-md cursor-pointer shrink-0"
+                        >
+                          ⚠️ Report Accuracy Issue
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Card 2: KDA Breakdown */}
-                  <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between">
+                  <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between relative">
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                      Combat K / D / A
+                      <span className="flex items-center gap-1.5">
+                        Combat K / D / A
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setActiveStatReport(activeStatReport === 'kda' ? null : 'kda'); }}
+                          className="w-4 h-4 rounded-full bg-amber-500/20 hover:bg-amber-500/40 text-amber-400 border border-amber-500/40 flex items-center justify-center text-[10px] font-black transition-all cursor-pointer shadow-sm hover:scale-110 active:scale-95"
+                          title="Report inaccurate stat"
+                        >
+                          !
+                        </button>
+                      </span>
                       <span className="text-[10px] text-blue-400 font-semibold bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
                         {stats.current.kdRatio} KDA
                       </span>
@@ -2756,11 +2815,35 @@ ${payload.stack || 'No stack trace available.'}
                       <span className="text-slate-600 font-normal">/</span>
                       <span className="text-blue-400 font-black">{stats.current.assists?.toLocaleString() || 0} <span className="text-[10px] text-slate-500 font-normal">A</span></span>
                     </div>
+                    {activeStatReport === 'kda' && (
+                      <div className="mt-2.5 p-2 bg-amber-500/10 border border-amber-500/40 rounded-xl flex items-center justify-between gap-2 animate-in fade-in zoom-in duration-200">
+                        <span className="text-[10px] text-amber-300 font-bold">This stat looks wrong?</span>
+                        <button
+                          type="button"
+                          onClick={() => reportSpecificStatInaccuracy('kda', 'Combat KDA', `${stats.current.kills}K / ${stats.current.deaths}D / ${stats.current.assists}A (${stats.current.kdRatio} KDA)`)}
+                          className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-black text-[10px] uppercase tracking-wider transition-all shadow-md cursor-pointer shrink-0"
+                        >
+                          ⚠️ Report Accuracy Issue
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Card 3: Hero Damage */}
-                  <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between">
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Damage</span>
+                  <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between relative">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        Total Damage
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setActiveStatReport(activeStatReport === 'damage' ? null : 'damage'); }}
+                          className="w-4 h-4 rounded-full bg-amber-500/20 hover:bg-amber-500/40 text-amber-400 border border-amber-500/40 flex items-center justify-center text-[10px] font-black transition-all cursor-pointer shadow-sm hover:scale-110 active:scale-95"
+                          title="Report inaccurate stat"
+                        >
+                          !
+                        </button>
+                      </span>
+                    </span>
                     <div className="mt-2 flex items-baseline gap-1 truncate">
                       <span className="text-lg sm:text-xl md:text-2xl font-black text-emerald-400 truncate">
                         {typeof stats.current.heroDamage === 'number'
@@ -2768,16 +2851,52 @@ ${payload.stack || 'No stack trace available.'}
                           : (stats.current.heroDamage || 'N/A')}
                       </span>
                     </div>
+                    {activeStatReport === 'damage' && (
+                      <div className="mt-2.5 p-2 bg-amber-500/10 border border-amber-500/40 rounded-xl flex items-center justify-between gap-2 animate-in fade-in zoom-in duration-200">
+                        <span className="text-[10px] text-amber-300 font-bold">This stat looks wrong?</span>
+                        <button
+                          type="button"
+                          onClick={() => reportSpecificStatInaccuracy('damage', 'Total Damage', `${stats.current.heroDamage}`)}
+                          className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-black text-[10px] uppercase tracking-wider transition-all shadow-md cursor-pointer shrink-0"
+                        >
+                          ⚠️ Report Accuracy Issue
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Card 4: Total Playtime */}
-                  <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between">
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Playtime</span>
+                  <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between relative">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        Total Playtime
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setActiveStatReport(activeStatReport === 'playtime' ? null : 'playtime'); }}
+                          className="w-4 h-4 rounded-full bg-amber-500/20 hover:bg-amber-500/40 text-amber-400 border border-amber-500/40 flex items-center justify-center text-[10px] font-black transition-all cursor-pointer shadow-sm hover:scale-110 active:scale-95"
+                          title="Report inaccurate stat"
+                        >
+                          !
+                        </button>
+                      </span>
+                    </span>
                     <div className="mt-2 flex items-baseline gap-1">
                       <span className="text-lg sm:text-xl md:text-2xl font-black text-blue-400">
                         {stats.current.timePlayed || 'N/A'}
                       </span>
                     </div>
+                    {activeStatReport === 'playtime' && (
+                      <div className="mt-2.5 p-2 bg-amber-500/10 border border-amber-500/40 rounded-xl flex items-center justify-between gap-2 animate-in fade-in zoom-in duration-200">
+                        <span className="text-[10px] text-amber-300 font-bold">This stat looks wrong?</span>
+                        <button
+                          type="button"
+                          onClick={() => reportSpecificStatInaccuracy('playtime', 'Total Playtime', `${stats.current.timePlayed}`)}
+                          className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-black text-[10px] uppercase tracking-wider transition-all shadow-md cursor-pointer shrink-0"
+                        >
+                          ⚠️ Report Accuracy Issue
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -3019,7 +3138,7 @@ ${payload.stack || 'No stack trace available.'}
               <div className="bg-[#131b2f] border border-slate-700/60 p-3 rounded-xl text-left text-xs space-y-1">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Target Commit:</span>
-                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.7 (${getAppLocalSha()})`}</span>
+                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.8 (${getAppLocalSha()})`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Status:</span>
@@ -3305,13 +3424,13 @@ ${payload.stack || 'No stack trace available.'}
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Installed Version:</span>
                   <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
-                    {upToDateDetails?.currentSha || `v1.0.7 (${getAppLocalSha()})`}
+                    {upToDateDetails?.currentSha || `v1.0.8 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Latest Release SHA:</span>
                   <span className="font-mono text-teal-300 font-bold">
-                    {upToDateDetails?.latestSha || `v1.0.7 (${getAppLocalSha()})`}
+                    {upToDateDetails?.latestSha || `v1.0.8 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 {upToDateDetails?.commitMsg && (
