@@ -816,8 +816,10 @@ export default function App() {
 
   const getApiUrl = (endpoint) => {
     let base = backendBaseUrl;
-    if (!base && window.Capacitor && window.Capacitor.isNativePlatform()) {
-      base = 'http://10.0.2.2:5000';
+    if (!base) {
+      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        base = 'https://strong-tips-rule.loca.lt';
+      }
     }
     if (!base) return endpoint;
     const cleanBase = base.replace(/\/+$/, '');
@@ -975,7 +977,7 @@ export default function App() {
       if (savedVer) return savedVer;
     } catch (e) { }
     if (backendData?.currentVersionName) return backendData.currentVersionName;
-    return '1.0.10';
+    return '1.0.11';
   };
 
   const checkForUpdates = async (isSilent = true) => {
@@ -1471,7 +1473,13 @@ ${payload.stack || 'No stack trace available.'}
     try {
       const response = await fetch(
         getApiUrl(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`),
-        { signal: controller.signal }
+        {
+          signal: controller.signal,
+          headers: {
+            'bypass-tunnel-reminder': 'true',
+            'Accept': 'application/json'
+          }
+        }
       );
       clearTimeout(timeoutId);
       clearInterval(pInterval);
@@ -3182,7 +3190,7 @@ ${payload.stack || 'No stack trace available.'}
               <div className="bg-[#131b2f] border border-slate-700/60 p-3 rounded-xl text-left text-xs space-y-1">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Target Commit:</span>
-                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.10 (${getAppLocalSha()})`}</span>
+                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.11 (${getAppLocalSha()})`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Status:</span>
@@ -3468,13 +3476,13 @@ ${payload.stack || 'No stack trace available.'}
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Installed Version:</span>
                   <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
-                    {upToDateDetails?.currentSha || `v1.0.10 (${getAppLocalSha()})`}
+                    {upToDateDetails?.currentSha || `v1.0.11 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Latest Release SHA:</span>
                   <span className="font-mono text-teal-300 font-bold">
-                    {upToDateDetails?.latestSha || `v1.0.10 (${getAppLocalSha()})`}
+                    {upToDateDetails?.latestSha || `v1.0.11 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 {upToDateDetails?.commitMsg && (
