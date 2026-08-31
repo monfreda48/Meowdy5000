@@ -159,6 +159,65 @@ export default function App() {
   const toggleExpandMetric = (id) => {
     setExpandedMetric(prev => prev === id ? null : id);
   };
+
+  // Pinned Home Profile State & Helpers
+  const [pinnedHomeProfile, setPinnedHomeProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pinned_home_profile');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const [autoLoadHomeProfile, setAutoLoadHomeProfile] = useState(() => {
+    try {
+      return localStorage.getItem('auto_load_home_profile') === 'enabled';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const togglePinHomeProfile = (profileData = null) => {
+    triggerHaptic('light');
+    if (!profileData && !stats?.current) return;
+    const target = profileData || stats.current;
+    
+    const targetUser = target.username || query;
+    const isCurrentlyPinned = pinnedHomeProfile && pinnedHomeProfile.username?.toLowerCase() === targetUser.toLowerCase();
+
+    if (isCurrentlyPinned) {
+      setPinnedHomeProfile(null);
+      try { localStorage.removeItem('pinned_home_profile'); } catch (e) {}
+      showNativeToast('📌 Unpinned home profile');
+      setUpdateToast({ type: 'update', message: '📌 Home profile unpinned.' });
+      setTimeout(() => setUpdateToast(null), 3000);
+    } else {
+      const pinObj = {
+        username: targetUser,
+        rank: target.rank || 'Unranked',
+        peakRank: target.peakRank || '',
+        winRate: target.winRate || '0%',
+        kdRatio: target.kdRatio || '0.00',
+        avatarUrl: target.avatarUrl || '',
+        season: season || '19',
+        updatedAt: new Date().toISOString()
+      };
+      setPinnedHomeProfile(pinObj);
+      try { localStorage.setItem('pinned_home_profile', JSON.stringify(pinObj)); } catch (e) {}
+      showNativeToast(`📌 ${targetUser} pinned as Home Profile!`);
+      setUpdateToast({ type: 'success', message: `📌 ${targetUser} pinned as your Home Profile!` });
+      setTimeout(() => setUpdateToast(null), 3000);
+    }
+  };
+
+  const toggleAutoLoadHomeProfile = (e) => {
+    const val = e.target.checked;
+    setAutoLoadHomeProfile(val);
+    try { localStorage.setItem('auto_load_home_profile', val ? 'enabled' : 'disabled'); } catch (e) {}
+    showNativeToast(`⚡ Auto-load Home Profile ${val ? 'ON' : 'OFF'}`);
+  };
+
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -1426,6 +1485,12 @@ ${payload.stack || 'No stack trace available.'}
     cleanupOldApkFiles();
     checkForUpdates();
 
+    if (autoLoadHomeProfile && pinnedHomeProfile?.username) {
+      console.log(`[HomeProfile] Auto-loading pinned home profile: ${pinnedHomeProfile.username}`);
+      setQuery(pinnedHomeProfile.username);
+      fetchStats(null, pinnedHomeProfile.username, pinnedHomeProfile.season || season);
+    }
+
     const handleFocus = () => {
       cleanupOldApkFiles();
     };
@@ -2114,6 +2179,75 @@ ${payload.stack || 'No stack trace available.'}
               </button>
             </div>
           )}
+
+          {/* Pinned Home Profile Quick Lookup Card */}
+          {pinnedHomeProfile && (!stats || stats.current.username?.toLowerCase() !== pinnedHomeProfile.username?.toLowerCase()) && (
+            <div className={`w-full ${isMobileView ? '' : 'max-w-3xl'} bg-gradient-to-br from-[#131b2f] via-[#0f172a] to-[#0b101e] border-2 border-emerald-500/50 p-4 sm:p-5 rounded-2xl shadow-2xl shadow-emerald-500/10 space-y-3 text-left relative overflow-hidden group animate-in fade-in slide-in-from-top-2 duration-300`}>
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
+                <span className="text-7xl">⭐</span>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
+                <div className="flex items-center gap-3.5">
+                  {pinnedHomeProfile.avatarUrl ? (
+                    <img src={pinnedHomeProfile.avatarUrl} alt={pinnedHomeProfile.username} className="w-12 h-12 rounded-xl border border-emerald-500/60 object-cover shadow-md" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-white text-lg shadow-md">
+                      {pinnedHomeProfile.username.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded flex items-center gap-1">
+                        <span>⭐</span> Pinned Home Profile
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">Season {pinnedHomeProfile.season || season}</span>
+                    </div>
+                    <h3 className="font-black text-white text-xl tracking-tight mt-0.5">{pinnedHomeProfile.username}</h3>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuery(pinnedHomeProfile.username);
+                      fetchStats(null, pinnedHomeProfile.username, pinnedHomeProfile.season || season);
+                    }}
+                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs px-4 py-2.5 rounded-xl transition-all shadow-md shadow-emerald-500/20 uppercase tracking-wider flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95"
+                  >
+                    <span>⚡</span>
+                    <span>Quick Lookup</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => togglePinHomeProfile(pinnedHomeProfile)}
+                    title="Unpin Home Profile"
+                    className="bg-slate-800/80 hover:bg-red-500/20 border border-slate-700 hover:border-red-500/40 text-slate-400 hover:text-red-400 px-3 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={autoLoadHomeProfile}
+                    onChange={toggleAutoLoadHomeProfile}
+                    className="w-3.5 h-3.5 rounded border-slate-700 text-emerald-500 focus:ring-emerald-500 bg-slate-900 cursor-pointer accent-emerald-500"
+                  />
+                  <span className="text-[11px] font-bold text-slate-300">Auto-load this profile on app launch</span>
+                </label>
+                {pinnedHomeProfile.rank && (
+                  <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                    💎 {pinnedHomeProfile.rank}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Dashboard Results */}
@@ -2180,13 +2314,27 @@ ${payload.stack || 'No stack trace available.'}
                 </span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => sharePlayerStats()}
-                className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-blue-500/20 border border-blue-400/40 uppercase tracking-wider"
-              >
-                <span>📤 Share Stats</span>
-              </button>
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                <button
+                  type="button"
+                  onClick={() => togglePinHomeProfile(stats.current)}
+                  className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer shadow-lg border uppercase tracking-wider ${
+                    pinnedHomeProfile && pinnedHomeProfile.username?.toLowerCase() === stats.current.username?.toLowerCase()
+                      ? 'bg-amber-500/20 border-amber-500/80 text-amber-300 shadow-amber-500/20 hover:bg-amber-500/30'
+                      : 'bg-slate-800/90 hover:bg-slate-800 border-slate-700/80 text-slate-300 hover:text-white'
+                  }`}
+                >
+                  <span>{pinnedHomeProfile && pinnedHomeProfile.username?.toLowerCase() === stats.current.username?.toLowerCase() ? '⭐ Pinned Home Profile' : '📌 Pin to Home'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => sharePlayerStats()}
+                  className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-blue-500/20 border border-blue-400/40 uppercase tracking-wider"
+                >
+                  <span>📤 Share Stats</span>
+                </button>
+              </div>
             </div>
 
             {/* User View Navigation Tabs: Live Performance vs Saved Data over Time */}
