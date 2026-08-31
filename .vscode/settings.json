@@ -4,11 +4,15 @@
   "java.project.importOnFirstTimeStartup": "automatic",
   "java.import.exclusions": [
     "**/node_modules/**",
+    "**/frontend/node_modules/**",
     "**/.git/**"
   ],
   "gradle.project.exclusions": [
     "**/node_modules/**",
     "**/frontend/node_modules/**"
+  ],
+  "java.project.sourcePaths": [
+    "frontend/android/app/src/main/java"
   ],
   "files.exclude": {
     "**/.git": true,
