@@ -167,9 +167,19 @@ def scrape_tracker_gg_api(username, season=None):
                 try:
                     acc_pct = round((float(m_hits) / float(m_attacks)) * 100, 1)
                     accuracy_val = f"{acc_pct}%"
-                except:
+                except Exception:
                     pass
-            
+
+            # Extract Rank Tier Name & Rating
+            rank_name = "Unranked"
+            for r_key in ['rank', 'rankName', 'peakRank', 'competitiveRank']:
+                if r_key in stats:
+                    r_val = stats[r_key]
+                    if isinstance(r_val, dict):
+                        rank_name = r_val.get('displayValue') or r_val.get('value') or rank_name
+                    elif isinstance(r_val, str) and r_val:
+                        rank_name = r_val
+
             # Extract ALL hero segments and role segments without truncation
             hero_list = []
             all_hero_segments = []
@@ -225,6 +235,7 @@ def scrape_tracker_gg_api(username, season=None):
             return {
                 "success": True,
                 "avatarUrl": avatar_url,
+                "rank": rank_name,
                 "platformUserIdentifier": data.get('data', {}).get('platformInfo', {}).get('platformUserIdentifier', ''),
                 "platformUserId": data.get('data', {}).get('platformInfo', {}).get('platformUserId', ''),
                 "winRate": str(round(win_rate, 1)),
@@ -355,7 +366,7 @@ def get_stats():
     final_data = {
         "username": query,
         "avatarUrl": "",
-        "rank": "Active Competitor",
+        "rank": "Unranked",
         "winRate": "0.0",
         "kdRatio": "0.0",
         "topHero": "Unknown",
@@ -409,6 +420,7 @@ def get_stats():
         if tracker_data.get("winRate"): final_data["winRate"] = tracker_data["winRate"]
         if tracker_data.get("kdRatio"): final_data["kdRatio"] = tracker_data["kdRatio"]
         if tracker_data.get("topHero") and tracker_data.get("topHero") != "Unknown": final_data["topHero"] = tracker_data["topHero"]
+        if tracker_data.get("rank") and tracker_data.get("rank") != "Unranked": final_data["rank"] = tracker_data["rank"]
         if tracker_data.get("topHeroesDetailed") and len(tracker_data.get("topHeroesDetailed")) > 0:
             final_data["topHeroesDetailed"] = tracker_data["topHeroesDetailed"]
 
