@@ -1,7 +1,8 @@
 {
-  "java.import.gradle.enabled": true,
-  "java.import.gradle.wrapper.enabled": true,
-  "java.project.importOnFirstTimeStartup": "automatic",
+  "java.import.gradle.enabled": false,
+  "java.import.gradle.wrapper.enabled": false,
+  "java.project.importOnFirstTimeStartup": "disabled",
+  "java.autobuild.enabled": false,
   "java.import.exclusions": [
     "**/node_modules/**",
     "**/frontend/node_modules/**",
@@ -11,10 +12,6 @@
     "**/node_modules/**",
     "**/frontend/node_modules/**"
   ],
-  "java.project.sourcePaths": [
-    "frontend/android/app/src/main/java"
-  ],
-  "java.autobuild.enabled": false,
   "files.exclude": {
     "**/.git": true,
     "**/.svn": true,
