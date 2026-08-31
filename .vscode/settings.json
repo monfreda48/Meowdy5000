@@ -1,10 +1,11 @@
 {
   "java.import.gradle.enabled": false,
-  "java.project.sourcePaths": [
-    "frontend/android/app/src/main/java"
-  ],
   "java.project.importOnFirstTimeStartup": "disabled",
   "java.autobuild.enabled": false,
+  "java.showBuildStatusOnStart": "off",
+  "java.diagnostics.filter": [
+    "*"
+  ],
   "files.exclude": {
     "**/.git": true,
     "**/.svn": true,
