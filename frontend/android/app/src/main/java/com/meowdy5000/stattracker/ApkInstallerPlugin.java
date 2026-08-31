@@ -98,16 +98,27 @@ public class ApkInstallerPlugin extends Plugin {
                 return;
             }
 
-            // Stage to external cache if file is in internal private app storage
+            // Stage to external storage (updates folder or external cache) for PackageInstaller read access
             File targetFile = apkFile;
-            File extCache = context.getExternalCacheDir();
-            if (extCache != null && !apkFile.getAbsolutePath().startsWith(extCache.getAbsolutePath())) {
-                try {
-                    File destFile = new File(extCache, "update_" + apkFile.getName());
-                    copyFile(apkFile, destFile);
-                    targetFile = destFile;
-                } catch (Exception copyEx) {
-                    // Fallback to original file if copy fails
+            File extDir = context.getExternalFilesDir("updates");
+            if (extDir == null) {
+                extDir = context.getExternalCacheDir();
+            }
+            if (extDir != null) {
+                if (!extDir.exists()) {
+                    extDir.mkdirs();
+                }
+                if (!apkFile.getAbsolutePath().startsWith(extDir.getAbsolutePath())) {
+                    try {
+                        File destFile = new File(extDir, "update.apk");
+                        if (destFile.exists()) {
+                            destFile.delete();
+                        }
+                        copyFile(apkFile, destFile);
+                        targetFile = destFile;
+                    } catch (Exception copyEx) {
+                        // Fallback to original file if copy fails
+                    }
                 }
             }
 

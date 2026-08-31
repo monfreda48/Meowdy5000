@@ -1718,8 +1718,8 @@ ${payload.stack || 'No stack trace available.'}
               <span className="relative z-10 drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]">M5</span>
             </div>
             <span className="text-xs sm:text-lg md:text-xl font-black tracking-wider text-white uppercase truncate">
-              <span className="sm:hidden">MEOWDY 5000</span>
-              <span className="hidden sm:inline">MEOWDY 5000'S STAT TRACKER</span>
+              <span className="sm:hidden">M5 RIVALS TRACKER</span>
+              <span className="hidden sm:inline">M5 RIVALS TRACKER</span>
             </span>
           </div>
 
@@ -4182,7 +4182,7 @@ ${payload.stack || 'No stack trace available.'}
             <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center font-black text-[#00ff88] text-[9px] border border-[#00ff88] shadow-[0_0_10px_#00ff88]">
               M5
             </div>
-            <span className="font-bold text-slate-400">Meowdy 5000's Stat Tracker</span>
+            <span className="font-bold text-slate-400">Meowdy 5000's</span>
           </div>
           <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500">
             <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
