@@ -923,6 +923,15 @@ export default function App() {
     return (import.meta.env.VITE_APP_COMMIT_SHA || 'afab44e').slice(0, 7);
   };
 
+  const getAppVersionName = (backendData = null) => {
+    try {
+      const savedVer = localStorage.getItem('installed_version_name');
+      if (savedVer) return savedVer;
+    } catch (e) { }
+    if (backendData?.currentVersionName) return backendData.currentVersionName;
+    return '1.0.7';
+  };
+
   const checkForUpdates = async (isSilent = true) => {
     if (!isSilent) {
       triggerHaptic('light');
@@ -3010,7 +3019,7 @@ ${payload.stack || 'No stack trace available.'}
               <div className="bg-[#131b2f] border border-slate-700/60 p-3 rounded-xl text-left text-xs space-y-1">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Target Commit:</span>
-                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.5 (${getAppLocalSha()})`}</span>
+                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.7 (${getAppLocalSha()})`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Status:</span>
@@ -3296,13 +3305,13 @@ ${payload.stack || 'No stack trace available.'}
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Installed Version:</span>
                   <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
-                    {upToDateDetails?.currentSha || `v1.0.5 (${getAppLocalSha()})`}
+                    {upToDateDetails?.currentSha || `v1.0.7 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Latest Release SHA:</span>
                   <span className="font-mono text-teal-300 font-bold">
-                    {upToDateDetails?.latestSha || `v1.0.5 (${getAppLocalSha()})`}
+                    {upToDateDetails?.latestSha || `v1.0.7 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 {upToDateDetails?.commitMsg && (
@@ -3872,7 +3881,7 @@ ${payload.stack || 'No stack trace available.'}
                 <div className="flex items-center justify-between text-xs text-slate-400">
                   <span className="font-bold text-slate-300">App Version</span>
                   <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono font-bold text-[11px]">
-                    v1.0.5 ({getAppLocalSha()})
+                    v{getAppVersionName()} ({getAppLocalSha()})
                   </span>
                 </div>
                 <a
@@ -3966,7 +3975,7 @@ ${payload.stack || 'No stack trace available.'}
           </div>
           <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500">
             <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
-              v1.0.5 ({getAppLocalSha()})
+              v{getAppVersionName()} ({getAppLocalSha()})
             </span>
             <span>•</span>
             <a

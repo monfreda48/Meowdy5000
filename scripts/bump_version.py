@@ -41,7 +41,7 @@ def bump_version():
     with open(app_jsx_path, "r", encoding="utf-8") as f:
         jsx_content = f.read()
 
-    jsx_content = re.sub(r'v1\.0\.\d+', f'v{new_ver}', jsx_content)
+    jsx_content = re.sub(r'1\.0\.\d+', new_ver, jsx_content)
     with open(app_jsx_path, "w", encoding="utf-8") as f:
         f.write(jsx_content)
     print(f"[VERSION BUMP] App.jsx version strings updated to v{new_ver}")

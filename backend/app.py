@@ -547,10 +547,20 @@ def get_local_commit_sha():
         pass
     return CURRENT_VERSION_COMMIT
 
+def get_local_version_name():
+    """Gets current local version string from package.json."""
+    try:
+        with open("c:/Users/User/Desktop/RivalsTracker/frontend/package.json", "r", encoding="utf-8") as f:
+            pkg = json.load(f)
+            return pkg.get("version", "1.0.5")
+    except Exception:
+        return "1.0.5"
+
 @app.route('/api/check-update')
 def check_update():
     """Queries GitHub API for the latest commit on monfreda48/Meowdy5000 repo."""
     local_sha = get_local_commit_sha()
+    version_name = get_local_version_name()
     github_url = "https://api.github.com/repos/monfreda48/Meowdy5000/commits/main"
     try:
         res = requests.get(github_url, headers={"User-Agent": "Meowdy-5000-Stat-Tracker", "Accept": "application/vnd.github.v3+json"}, timeout=5)
@@ -567,6 +577,7 @@ def check_update():
             return jsonify({
                 "success": True,
                 "currentVersion": local_sha,
+                "currentVersionName": version_name,
                 "latestVersion": latest_sha,
                 "latestMessage": commit_msg,
                 "latestDate": commit_date,
