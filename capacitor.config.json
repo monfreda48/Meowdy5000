@@ -1,0 +1,12 @@
+{
+  "appId": "com.meowdy5000.stattracker",
+  "appName": "M5 Rivals Tracker",
+  "webDir": "frontend/dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}
