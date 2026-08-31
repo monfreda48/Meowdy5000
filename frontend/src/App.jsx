@@ -975,7 +975,7 @@ export default function App() {
       if (savedVer) return savedVer;
     } catch (e) { }
     if (backendData?.currentVersionName) return backendData.currentVersionName;
-    return '1.0.9';
+    return '1.0.10';
   };
 
   const checkForUpdates = async (isSilent = true) => {
@@ -1402,6 +1402,31 @@ ${payload.stack || 'No stack trace available.'}
     showNativeToast('🚫 Search cancelled');
   };
 
+  const MARVEL_LOADING_QUOTES = [
+    "👁️ Obtaining the Eye of Agamotto...",
+    "🔨 Bribing Eitri to forge Uru stats...",
+    "⚡ Charging Iron Man's Arc Reactor (400%)...",
+    "🕷️ Swiping Peter Parker's web-shooters...",
+    "🧪 Injecting Super Soldier Serum into backend...",
+    "💥 Hulk Smashed the web scraper API...",
+    "🛡️ Borrowing Captain America's Vibranium Shield...",
+    "🐱 Consulting Bast in Wakanda...",
+    "🌌 Stealing the Space Stone from Thanos...",
+    "📜 Reading the Darkhold for hidden KDA stats...",
+    "🌭 Deadpool stole the loading bar...",
+    "🎯 Hawkeye never misses a single match record...",
+    "🔮 Doctor Strange checking 14,000,605 stat timelines...",
+    "🐺 Wolverine is sharpening his Adamantium claws...",
+    "🚀 Rocket Raccoon is stealing a prosthetic arm...",
+    "🌴 Groot says: I AM GROOT (fetching data)...",
+    "🌀 Opening a Bifrost portal to Tracker.gg...",
+    "⚡ Thor summoned Lightning to speed up scraping..."
+  ];
+
+  const getRandomMarvelQuote = () => {
+    return MARVEL_LOADING_QUOTES[Math.floor(Math.random() * MARVEL_LOADING_QUOTES.length)];
+  };
+
   const fetchStats = async (e, overrideQuery = null, overrideSeason = null) => {
     if (e) e.preventDefault();
     const activeQuery = overrideQuery !== null ? overrideQuery : query;
@@ -1418,21 +1443,21 @@ ${payload.stack || 'No stack trace available.'}
     setLoading(true);
     setError(null);
     setSearchProgress(15);
-    setSearchProgressMsg('Connecting to Marvel Rivals backend API...');
+    setSearchProgressMsg("👁️ Obtaining Eye of Agamotto...");
 
     const pInterval = setInterval(() => {
       setSearchProgress(prev => {
         if (prev < 35) {
-          setSearchProgressMsg('Connecting to Marvel Rivals backend API...');
+          setSearchProgressMsg("👁️ Obtaining Eye of Agamotto...");
           return prev + 10;
         } else if (prev < 65) {
-          setSearchProgressMsg('Bypassing Cloudflare protection & querying Tracker.gg...');
+          setSearchProgressMsg("🔨 Bribing Eitri to forge Uru stats...");
           return prev + 8;
         } else if (prev < 85) {
-          setSearchProgressMsg('Scraping player summary & match history...');
+          setSearchProgressMsg("🔮 Doctor Strange checking 14,000,605 stat timelines...");
           return prev + 5;
         } else if (prev < 94) {
-          setSearchProgressMsg('Parsing hero stats & telemetry cards...');
+          setSearchProgressMsg("⚡ Charging Iron Man's Arc Reactor (400%)...");
           return prev + 2;
         }
         return prev;
@@ -1452,7 +1477,7 @@ ${payload.stack || 'No stack trace available.'}
       clearInterval(pInterval);
 
       setSearchProgress(95);
-      setSearchProgressMsg('Finalizing player dashboard...');
+      setSearchProgressMsg("🚀 Rocket Raccoon assembled your dashboard!");
 
       const data = await safeFetchJson(response);
 
@@ -1461,7 +1486,7 @@ ${payload.stack || 'No stack trace available.'}
       }
 
       setSearchProgress(100);
-      setSearchProgressMsg('Search Complete!');
+      setSearchProgressMsg('💥 Avengers Assembled! Stats Ready.');
       setStats(data);
 
       if (data?.current?.username) {
@@ -3157,7 +3182,7 @@ ${payload.stack || 'No stack trace available.'}
               <div className="bg-[#131b2f] border border-slate-700/60 p-3 rounded-xl text-left text-xs space-y-1">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Target Commit:</span>
-                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.9 (${getAppLocalSha()})`}</span>
+                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.10 (${getAppLocalSha()})`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Status:</span>
@@ -3443,13 +3468,13 @@ ${payload.stack || 'No stack trace available.'}
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Installed Version:</span>
                   <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
-                    {upToDateDetails?.currentSha || `v1.0.9 (${getAppLocalSha()})`}
+                    {upToDateDetails?.currentSha || `v1.0.10 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Latest Release SHA:</span>
                   <span className="font-mono text-teal-300 font-bold">
-                    {upToDateDetails?.latestSha || `v1.0.9 (${getAppLocalSha()})`}
+                    {upToDateDetails?.latestSha || `v1.0.10 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 {upToDateDetails?.commitMsg && (
