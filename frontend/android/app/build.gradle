@@ -25,6 +25,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    applicationVariants.all { variant ->
+        variant.assembleProvider.get().doLast {
+            copy {
+                from "${buildDir}/outputs/apk/${variant.buildType.name}"
+                into "${rootDir}/../../"
+                include "*.apk"
+            }
+        }
+    }
 }
 
 repositories {
