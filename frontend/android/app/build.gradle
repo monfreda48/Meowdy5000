@@ -28,9 +28,23 @@ android {
 
     applicationVariants.all { variant ->
         variant.assembleProvider.get().doLast {
+            def apkSrcDir = file("${layout.buildDirectory.get()}/outputs/apk/${variant.buildType.name}")
             copy {
-                from "${buildDir}/outputs/apk/${variant.buildType.name}"
-                into "${rootDir}/../../"
+                from apkSrcDir
+                into file("${rootDir}/app/build/outputs/apk/${variant.buildType.name}")
+                include "*.apk"
+            }
+            def repoRoot = file("${projectDir}/../../../")
+            if (new File(repoRoot, "package.json").exists()) {
+                copy {
+                    from apkSrcDir
+                    into repoRoot
+                    include "*.apk"
+                }
+            }
+            copy {
+                from apkSrcDir
+                into rootDir
                 include "*.apk"
             }
         }

@@ -6,7 +6,7 @@
   "java.configuration.updateBuildConfiguration": "disabled",
   "java.autobuild.enabled": false,
   "java.showBuildStatusOnStart": "off",
-  "java.server.launchMode": "Off",
+  "java.server.launchMode": "LightWeight",
   "java.diagnostics.filter": [
     "*"
   ],
