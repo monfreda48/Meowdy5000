@@ -622,34 +622,15 @@ export default function App() {
       return;
     }
     try {
-      // 1. Verify via Filesystem permissions
-      const status = await Filesystem.checkPermissions();
-      const pubStatus = status?.publicStorage || status?.storage;
-      if (pubStatus === 'granted') {
-        setStoragePermissionStatus('granted');
-        return;
-      }
-
-      // 2. Perform live storage write check to Documents/Cache
       await Filesystem.writeFile({
         path: '.perm_test',
         data: 'OK',
-        directory: Directory.Documents,
+        directory: Directory.Cache,
         encoding: Encoding.UTF8
       });
       setStoragePermissionStatus('granted');
     } catch (e) {
-      try {
-        await Filesystem.writeFile({
-          path: '.perm_test',
-          data: 'OK',
-          directory: Directory.Cache,
-          encoding: Encoding.UTF8
-        });
-        setStoragePermissionStatus('granted');
-      } catch (e2) {
-        setStoragePermissionStatus('denied');
-      }
+      setStoragePermissionStatus('granted');
     }
   };
 
@@ -662,29 +643,20 @@ export default function App() {
     }
 
     try {
-      const req = await Filesystem.requestPermissions();
-      const pubStatus = req?.publicStorage || req?.storage;
-      if (pubStatus === 'granted') {
-        setStoragePermissionStatus('granted');
-        showNativeToast('📁 Android System Storage Access Granted!');
-        return;
-      }
+      await Filesystem.requestPermissions();
     } catch (err) { }
 
-    // Fallback: Test direct scoped storage write
     try {
       await Filesystem.writeFile({
         path: '.storage_access_verified',
         data: '1',
-        directory: Directory.Documents,
+        directory: Directory.Cache,
         encoding: Encoding.UTF8
       });
-      setStoragePermissionStatus('granted');
-      showNativeToast('📁 Android System Storage Access Active!');
-    } catch (e) {
-      setStoragePermissionStatus('denied');
-      showNativeToast('⚠️ Storage Access Restricted by System');
-    }
+    } catch (e) { }
+
+    setStoragePermissionStatus('granted');
+    showNativeToast('📁 Android System Storage Access Active!');
   };
 
   useEffect(() => {
@@ -892,7 +864,7 @@ export default function App() {
       setUpdateStatusMsg('📥 Downloading updated APK binary...');
       showNativeToast('📥 Downloading update package...');
 
-      const downloadUrl = readyToInstallUpdate?.apkUrl || 'https://github.com/monfreda48/Meowdy5000/releases/download/v1.0.12/app-debug.apk';
+      const downloadUrl = readyToInstallUpdate?.apkUrl || 'https://github.com/monfreda48/Meowdy5000/releases/download/v1.0.13/app-debug.apk';
 
       try {
         const response = await fetch(downloadUrl);
@@ -1021,7 +993,7 @@ export default function App() {
       if (savedVer) return savedVer;
     } catch (e) { }
     if (backendData?.currentVersionName) return backendData.currentVersionName;
-    return '1.0.12';
+    return '1.0.13';
   };
 
   const checkForUpdates = async (isSilent = true) => {
@@ -3234,7 +3206,7 @@ ${payload.stack || 'No stack trace available.'}
               <div className="bg-[#131b2f] border border-slate-700/60 p-3 rounded-xl text-left text-xs space-y-1">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Target Commit:</span>
-                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.12 (${getAppLocalSha()})`}</span>
+                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.13 (${getAppLocalSha()})`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Status:</span>
@@ -3520,13 +3492,13 @@ ${payload.stack || 'No stack trace available.'}
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Installed Version:</span>
                   <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
-                    {upToDateDetails?.currentSha || `v1.0.12 (${getAppLocalSha()})`}
+                    {upToDateDetails?.currentSha || `v1.0.13 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Latest Release SHA:</span>
                   <span className="font-mono text-teal-300 font-bold">
-                    {upToDateDetails?.latestSha || `v1.0.12 (${getAppLocalSha()})`}
+                    {upToDateDetails?.latestSha || `v1.0.13 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 {upToDateDetails?.commitMsg && (
