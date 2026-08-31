@@ -35,5 +35,6 @@ frontend/android/.idea/
 .gradle/
 *.apk
 scratch/
+/android
 
 
