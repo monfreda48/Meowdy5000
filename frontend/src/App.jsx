@@ -1510,6 +1510,8 @@ ${payload.stack || 'No stack trace available.'}
   };
 
   const MARVEL_LOADING_QUOTES = [
+    "🕶️ Helping Daredevil find his keys...",
+    "🔑 Helping Daredevil find his keys...",
     "👁️ Obtaining the Eye of Agamotto...",
     "🔨 Bribing Eitri to forge Uru stats...",
     "⚡ Charging Iron Man's Arc Reactor (400%)...",
@@ -1527,11 +1529,23 @@ ${payload.stack || 'No stack trace available.'}
     "🚀 Rocket Raccoon is stealing a prosthetic arm...",
     "🌴 Groot says: I AM GROOT (fetching data)...",
     "🌀 Opening a Bifrost portal to Tracker.gg...",
-    "⚡ Thor summoned Lightning to speed up scraping..."
+    "⚡ Thor summoned Lightning to speed up scraping...",
+    "🐜 Ant-Man went subatomic to find missing data...",
+    "🧠 Professor X is telepathically reading the server database...",
+    "🏎️ Ghost Rider is doing a Penance Stare on bad KDA data...",
+    "🍕 Spider-Man: Peter Parker is delivering pizzas on the way...",
+    "🍏 Loki is shapeshifting into a fast database query...",
+    "💥 Punisher is eliminating 404 network timeout errors...",
+    "🏹 Kate Bishop shot an arrow through the lag spike...",
+    "🔮 Scarlet Witch altered reality to boost your KDA...",
+    "🤖 JARVIS is optimizing the cloud neural network...",
+    "🐱 Goose the Flerken swallowed the slow network packets...",
+    "🃏 Gambit is charging up your stat cards with kinetic energy..."
   ];
 
-  const getRandomMarvelQuote = () => {
-    return MARVEL_LOADING_QUOTES[Math.floor(Math.random() * MARVEL_LOADING_QUOTES.length)];
+  const getRandomMarvelQuote = (exclude = '') => {
+    const candidates = MARVEL_LOADING_QUOTES.filter(q => q !== exclude);
+    return candidates[Math.floor(Math.random() * candidates.length)];
   };
 
   const fetchStats = async (e, overrideQuery = null, overrideSeason = null) => {
@@ -1550,21 +1564,19 @@ ${payload.stack || 'No stack trace available.'}
     setLoading(true);
     setError(null);
     setSearchProgress(15);
-    setSearchProgressMsg("👁️ Obtaining Eye of Agamotto...");
+    const initialQuote = getRandomMarvelQuote();
+    setSearchProgressMsg(initialQuote);
 
     const pInterval = setInterval(() => {
       setSearchProgress(prev => {
+        setSearchProgressMsg(prevMsg => getRandomMarvelQuote(prevMsg));
         if (prev < 35) {
-          setSearchProgressMsg("👁️ Obtaining Eye of Agamotto...");
           return prev + 10;
         } else if (prev < 65) {
-          setSearchProgressMsg("🔨 Bribing Eitri to forge Uru stats...");
           return prev + 8;
         } else if (prev < 85) {
-          setSearchProgressMsg("🔮 Doctor Strange checking 14,000,605 stat timelines...");
           return prev + 5;
         } else if (prev < 94) {
-          setSearchProgressMsg("⚡ Charging Iron Man's Arc Reactor (400%)...");
           return prev + 2;
         }
         return prev;
