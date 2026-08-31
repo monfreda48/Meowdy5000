@@ -1,8 +1,12 @@
 {
   "java.import.gradle.enabled": false,
+  "java.import.maven.enabled": false,
+  "java.import.bloop.enabled": false,
   "java.project.importOnFirstTimeStartup": "disabled",
+  "java.configuration.updateBuildConfiguration": "disabled",
   "java.autobuild.enabled": false,
   "java.showBuildStatusOnStart": "off",
+  "java.server.launchMode": "Off",
   "java.diagnostics.filter": [
     "*"
   ],
@@ -19,6 +23,5 @@
     "**/CVS": true,
     "**/.DS_Store": true,
     "**/Thumbs.db": true
-  },
-  "java.configuration.updateBuildConfiguration": "automatic"
+  }
 }
