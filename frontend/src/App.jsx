@@ -883,7 +883,26 @@ export default function App() {
     }
 
     setIsApplyingUpdate(true);
-    setUpdateStatusMsg('⚡ Pulling latest release from GitHub & updating codebase...');
+    setUpdateStatusMsg('⚡ Preparing update installation...');
+
+    // On Native Android APK, launch Android Package Installer / APK Download
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      setUpdateStatusMsg('📦 Launching Android Package Installer...');
+      showNativeToast('📦 Opening Android Package Installer. Allow Unknown Sources if prompted.');
+      
+      const apkUrl = readyToInstallUpdate?.apkUrl || 'https://github.com/monfreda48/Meowdy5000/releases/latest';
+      try {
+        if (readyToInstallUpdate?.latestVersion) {
+          localStorage.setItem('installed_commit_sha', readyToInstallUpdate.latestVersion);
+        }
+      } catch (e) { }
+
+      setTimeout(() => {
+        setIsApplyingUpdate(false);
+        openExternalUrl(apkUrl);
+      }, 1000);
+      return;
+    }
 
     try {
       // 1. Trigger backend server git pull / code update if connected with 15s timeout
@@ -956,7 +975,7 @@ export default function App() {
       if (savedVer) return savedVer;
     } catch (e) { }
     if (backendData?.currentVersionName) return backendData.currentVersionName;
-    return '1.0.8';
+    return '1.0.9';
   };
 
   const checkForUpdates = async (isSilent = true) => {
@@ -3138,7 +3157,7 @@ ${payload.stack || 'No stack trace available.'}
               <div className="bg-[#131b2f] border border-slate-700/60 p-3 rounded-xl text-left text-xs space-y-1">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Target Commit:</span>
-                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.8 (${getAppLocalSha()})`}</span>
+                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.9 (${getAppLocalSha()})`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Status:</span>
@@ -3424,13 +3443,13 @@ ${payload.stack || 'No stack trace available.'}
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Installed Version:</span>
                   <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
-                    {upToDateDetails?.currentSha || `v1.0.8 (${getAppLocalSha()})`}
+                    {upToDateDetails?.currentSha || `v1.0.9 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Latest Release SHA:</span>
                   <span className="font-mono text-teal-300 font-bold">
-                    {upToDateDetails?.latestSha || `v1.0.8 (${getAppLocalSha()})`}
+                    {upToDateDetails?.latestSha || `v1.0.9 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 {upToDateDetails?.commitMsg && (
