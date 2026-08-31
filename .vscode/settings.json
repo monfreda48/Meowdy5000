@@ -1,8 +1,11 @@
 {
-  "java.import.gradle.enabled": false,
-  "java.import.gradle.wrapper.enabled": false,
-  "java.project.importOnFirstTimeStartup": "disabled",
-  "java.autobuild.enabled": false,
+  "java.import.gradle.enabled": true,
+  "java.import.gradle.wrapper.enabled": true,
+  "java.project.importOnFirstTimeStartup": "automatic",
+  "java.autobuild.enabled": true,
+  "java.project.sourcePaths": [
+    "frontend/android/app/src/main/java"
+  ],
   "java.import.exclusions": [
     "**/node_modules/**",
     "**/frontend/node_modules/**",
@@ -20,5 +23,5 @@
     "**/.DS_Store": true,
     "**/Thumbs.db": true
   },
-  "java.configuration.updateBuildConfiguration": "disabled"
+  "java.configuration.updateBuildConfiguration": "automatic"
 }
