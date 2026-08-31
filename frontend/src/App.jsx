@@ -887,22 +887,66 @@ export default function App() {
     setIsApplyingUpdate(true);
     setUpdateStatusMsg('⚡ Preparing update installation...');
 
-    // On Native Android APK, launch Android Package Installer / APK Download
+    // On Native Android APK, download APK and launch native Package Installer
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-      setUpdateStatusMsg('📦 Launching Android Package Installer...');
-      showNativeToast('📦 Opening Android Package Installer. Allow Unknown Sources if prompted.');
-      
-      const apkUrl = readyToInstallUpdate?.apkUrl || 'https://github.com/monfreda48/Meowdy5000/releases/latest';
+      setUpdateStatusMsg('📥 Downloading updated APK binary...');
+      showNativeToast('📥 Downloading update package...');
+
+      const downloadUrl = readyToInstallUpdate?.apkUrl || 'https://github.com/monfreda48/Meowdy5000/releases/download/v1.0.12/app-debug.apk';
+
       try {
+        const response = await fetch(downloadUrl);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const blob = await response.blob();
+
+        const reader = new FileReader();
+        const base64Promise = new Promise((resolve, reject) => {
+          reader.onloadend = () => {
+            const res = reader.result;
+            const base64Data = res.split(',')[1] || res;
+            resolve(base64Data);
+          };
+          reader.onerror = reject;
+        });
+        reader.readAsDataURL(blob);
+        const base64Data = await base64Promise;
+
+        const fileName = 'Meowdy5000-Update.apk';
+        await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data,
+          directory: Directory.Cache
+        });
+
+        const uriResult = await Filesystem.getUri({
+          path: fileName,
+          directory: Directory.Cache
+        });
+        
+        let nativeFilePath = uriResult.uri;
+        if (nativeFilePath.startsWith('file://')) {
+          nativeFilePath = nativeFilePath.replace('file://', '');
+        }
+
+        setUpdateStatusMsg('📦 Launching Android Package Installer...');
+        showNativeToast('📦 Opening Package Installer...');
+
         if (readyToInstallUpdate?.latestVersion) {
           localStorage.setItem('installed_commit_sha', readyToInstallUpdate.latestVersion);
         }
-      } catch (e) { }
 
-      setTimeout(() => {
-        setIsApplyingUpdate(false);
-        openExternalUrl(apkUrl);
-      }, 1000);
+        if (window.Capacitor.Plugins && window.Capacitor.Plugins.ApkInstaller) {
+          await window.Capacitor.Plugins.ApkInstaller.installApk({ filePath: nativeFilePath });
+        } else {
+          openExternalUrl(downloadUrl);
+        }
+      } catch (err) {
+        console.warn('[ApkInstallError] Failed direct APK download, falling back to Browser:', err);
+        setUpdateToast({ type: 'info', message: '📦 Opening Android Package Installer download...' });
+        openExternalUrl(downloadUrl);
+      } finally {
+        setTimeout(() => setIsApplyingUpdate(false), 1200);
+      }
       return;
     }
 
@@ -977,7 +1021,7 @@ export default function App() {
       if (savedVer) return savedVer;
     } catch (e) { }
     if (backendData?.currentVersionName) return backendData.currentVersionName;
-    return '1.0.11';
+    return '1.0.12';
   };
 
   const checkForUpdates = async (isSilent = true) => {
@@ -3190,7 +3234,7 @@ ${payload.stack || 'No stack trace available.'}
               <div className="bg-[#131b2f] border border-slate-700/60 p-3 rounded-xl text-left text-xs space-y-1">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Target Commit:</span>
-                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.11 (${getAppLocalSha()})`}</span>
+                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.12 (${getAppLocalSha()})`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Status:</span>
@@ -3476,13 +3520,13 @@ ${payload.stack || 'No stack trace available.'}
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Installed Version:</span>
                   <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
-                    {upToDateDetails?.currentSha || `v1.0.11 (${getAppLocalSha()})`}
+                    {upToDateDetails?.currentSha || `v1.0.12 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Latest Release SHA:</span>
                   <span className="font-mono text-teal-300 font-bold">
-                    {upToDateDetails?.latestSha || `v1.0.11 (${getAppLocalSha()})`}
+                    {upToDateDetails?.latestSha || `v1.0.12 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 {upToDateDetails?.commitMsg && (
