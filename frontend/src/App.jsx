@@ -720,12 +720,7 @@ export default function App() {
   const [isEditOrderMode, setIsEditOrderMode] = useState(false);
 
   const [selectedMetrics, setSelectedMetrics] = useState(() => {
-    try {
-      const saved = localStorage.getItem('tracked_metrics');
-      return saved ? JSON.parse(saved) : AVAILABLE_METRICS.map(m => m.id);
-    } catch (e) {
-      return AVAILABLE_METRICS.map(m => m.id);
-    }
+    return AVAILABLE_METRICS.map(m => m.id);
   });
 
   const changeMetricOrder = (id, targetPosition) => {
@@ -2296,7 +2291,7 @@ ${payload.stack || 'No stack trace available.'}
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                   </svg>
-                  ⚙️ Select Metrics to Track ({selectedMetrics.length}/{AVAILABLE_METRICS.length} Active)
+                  ⚡ All Available Metrics Tracked ({AVAILABLE_METRICS.length}/{AVAILABLE_METRICS.length} Active)
                 </span>
                 <svg className="w-4 h-4 text-slate-500 transition-transform duration-300 group-open:-rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
