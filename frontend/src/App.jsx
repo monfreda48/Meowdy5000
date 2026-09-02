@@ -338,24 +338,43 @@ export default function App() {
     const breakdown = stats?.current?.statBreakdown?.[metricKey];
     if (!breakdown) return null;
     
+    const isExpanded = expandedMetric === metricKey;
+    const siteNames = { trackerGg: 'Tracker.gg', rivalsMeta: 'RivalsMeta', rivalsTracker: 'RivalsTracker' };
+    const favValue = breakdown[favoriteSite] || stats?.current?.[metricKey] || 'N/A';
+
+    if (!isExpanded) {
+      return (
+        <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400 font-medium select-none">
+          <span className="flex items-center gap-1">
+            <span className="text-amber-400 font-bold">⭐</span>
+            <span className="font-bold text-slate-300">{siteNames[favoriteSite]}:</span>
+            <span className="text-emerald-400 font-mono font-bold">{favValue}</span>
+          </span>
+          <span className="text-slate-500 font-bold group-hover:text-emerald-400 transition-colors">
+            Tap to expand 3 sites →
+          </span>
+        </div>
+      );
+    }
+
     return (
-      <div className="mt-3 pt-2.5 border-t border-slate-700/60 space-y-1.5 text-[11px] select-none">
+      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-[11px] select-none animate-in fade-in duration-300">
         <div className="flex items-center justify-between text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-          <span>🌐 3-Site Data Breakdown:</span>
-          <span>Source Values</span>
+          <span>🌐 3-Site Data Comparison:</span>
+          <span className="text-amber-400 font-bold">Favorite: {siteNames[favoriteSite]}</span>
         </div>
         <div className="grid grid-cols-3 gap-1.5 text-center font-mono font-bold">
-          <div className="bg-[#0b101e] border border-emerald-500/30 p-1.5 rounded-lg">
-            <span className="block text-[9px] text-emerald-400 font-sans font-normal">Tracker.gg</span>
-            <span className="text-white text-xs">{breakdown.trackerGg || 'N/A'}</span>
+          <div className={`p-2 rounded-xl border transition-all ${favoriteSite === 'trackerGg' ? 'bg-emerald-500/15 border-emerald-500/60 shadow-md shadow-emerald-500/10' : 'bg-[#0b101e] border-slate-800'}`}>
+            <span className="block text-[9px] text-emerald-400 font-sans font-bold uppercase tracking-wider">Tracker.gg</span>
+            <span className="text-white text-xs sm:text-sm font-black">{breakdown.trackerGg || 'N/A'}</span>
           </div>
-          <div className="bg-[#0b101e] border border-teal-500/30 p-1.5 rounded-lg">
-            <span className="block text-[9px] text-teal-400 font-sans font-normal">RivalsMeta</span>
-            <span className="text-white text-xs">{breakdown.rivalsMeta || 'N/A'}</span>
+          <div className={`p-2 rounded-xl border transition-all ${favoriteSite === 'rivalsMeta' ? 'bg-teal-500/15 border-teal-500/60 shadow-md shadow-teal-500/10' : 'bg-[#0b101e] border-slate-800'}`}>
+            <span className="block text-[9px] text-teal-400 font-sans font-bold uppercase tracking-wider">RivalsMeta</span>
+            <span className="text-white text-xs sm:text-sm font-black">{breakdown.rivalsMeta || 'N/A'}</span>
           </div>
-          <div className="bg-[#0b101e] border border-blue-500/30 p-1.5 rounded-lg">
-            <span className="block text-[9px] text-blue-400 font-sans font-normal">RivalsTracker</span>
-            <span className="text-white text-xs">{breakdown.rivalsTracker || 'N/A'}</span>
+          <div className={`p-2 rounded-xl border transition-all ${favoriteSite === 'rivalsTracker' ? 'bg-blue-500/15 border-blue-500/60 shadow-md shadow-blue-500/10' : 'bg-[#0b101e] border-slate-800'}`}>
+            <span className="block text-[9px] text-blue-400 font-sans font-bold uppercase tracking-wider">RivalsTracker</span>
+            <span className="text-white text-xs sm:text-sm font-black">{breakdown.rivalsTracker || 'N/A'}</span>
           </div>
         </div>
       </div>
@@ -2739,6 +2758,59 @@ ${payload.stack || 'No stack trace available.'}
                         </p>
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* Favorite Primary Site Selection Bar for Minimized Cards */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#131b2f] p-3.5 sm:p-4 rounded-2xl border border-slate-700/60 shadow-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm border border-amber-500/30 shrink-0">
+                      ⭐
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                        <span>Minimized Card Primary Site</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                          {favoriteSite === 'trackerGg' ? 'Tracker.gg' : favoriteSite === 'rivalsMeta' ? 'RivalsMeta' : 'RivalsTracker'}
+                        </span>
+                      </h4>
+                      <p className="text-[10px] text-slate-400 font-medium">Select which site's stat value displays when cards are minimized. Tap cards to expand all 3 sites!</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 bg-[#0b101e] p-1.5 rounded-xl border border-slate-800 shrink-0 w-full sm:w-auto">
+                    <button
+                      type="button"
+                      onClick={() => handleSetFavoriteSite('trackerGg')}
+                      className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'trackerGg'
+                          ? 'bg-emerald-500/20 border border-emerald-500/60 text-emerald-400 shadow-sm'
+                          : 'text-slate-400 hover:text-white'
+                        }`}
+                    >
+                      Tracker.gg
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSetFavoriteSite('rivalsMeta')}
+                      className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'rivalsMeta'
+                          ? 'bg-teal-500/20 border border-teal-500/60 text-teal-400 shadow-sm'
+                          : 'text-slate-400 hover:text-white'
+                        }`}
+                    >
+                      RivalsMeta
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSetFavoriteSite('rivalsTracker')}
+                      className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'rivalsTracker'
+                          ? 'bg-blue-500/20 border border-blue-500/60 text-blue-400 shadow-sm'
+                          : 'text-slate-400 hover:text-white'
+                        }`}
+                    >
+                      RivalsTracker
+                    </button>
                   </div>
                 </div>
 
