@@ -2687,6 +2687,84 @@ ${payload.stack || 'No stack trace available.'}
               </div>
             </div>
 
+            {/* 3-Site Profile Webpage Selection Buttons Card */}
+            <div className="bg-[#131b2f] border border-slate-700/60 p-4 sm:p-5 rounded-2xl shadow-xl space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
+                    <span className="text-emerald-400">🌐</span>
+                    <span>View Web Profile Page across 3 Tracking Sites</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-medium">Select which site's official web profile page you would like to open:</p>
+                </div>
+                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full self-start sm:self-auto">
+                  3 Profile Links Available
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    const url = stats.current.siteUrls?.trackerGg || stats.current.trackerUrl || `https://tracker.gg/marvel-rivals/profile/ign/${encodeURIComponent(stats.current.username)}/overview`;
+                    openExternalUrl(url);
+                    showNativeToast('🌐 Opening Tracker.gg profile webpage...');
+                  }}
+                  className="flex items-center justify-between bg-[#0b101e] hover:bg-emerald-500/20 border border-emerald-500/40 hover:border-emerald-500 text-emerald-400 p-3 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md group"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-base group-hover:scale-110 transition-transform">🌐</span>
+                    <div className="text-left">
+                      <span className="block text-white font-black">Tracker.gg</span>
+                      <span className="text-[9px] text-emerald-400 font-normal">tracker.gg/marvel-rivals</span>
+                    </div>
+                  </div>
+                  <span className="text-xs font-black text-slate-500 group-hover:text-emerald-300">Open ↗</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    const url = stats.current.siteUrls?.rivalsMeta || `https://rivalsmeta.com/player/${encodeURIComponent(stats.current.username)}`;
+                    openExternalUrl(url);
+                    showNativeToast('⚔️ Opening RivalsMeta.com profile webpage...');
+                  }}
+                  className="flex items-center justify-between bg-[#0b101e] hover:bg-teal-500/20 border border-teal-500/40 hover:border-teal-500 text-teal-400 p-3 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md group"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-base group-hover:scale-110 transition-transform">⚔️</span>
+                    <div className="text-left">
+                      <span className="block text-white font-black">RivalsMeta</span>
+                      <span className="text-[9px] text-teal-400 font-normal">rivalsmeta.com/player</span>
+                    </div>
+                  </div>
+                  <span className="text-xs font-black text-slate-500 group-hover:text-teal-300">Open ↗</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    const url = stats.current.siteUrls?.rivalsTracker || `https://rivalstracker.com/player/${encodeURIComponent(stats.current.username)}`;
+                    openExternalUrl(url);
+                    showNativeToast('🎯 Opening RivalsTracker.com profile webpage...');
+                  }}
+                  className="flex items-center justify-between bg-[#0b101e] hover:bg-blue-500/20 border border-blue-500/40 hover:border-blue-500 text-blue-400 p-3 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md group"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-base group-hover:scale-110 transition-transform">🎯</span>
+                    <div className="text-left">
+                      <span className="block text-white font-black">RivalsTracker</span>
+                      <span className="text-[9px] text-blue-400 font-normal">rivalstracker.com/player</span>
+                    </div>
+                  </div>
+                  <span className="text-xs font-black text-slate-500 group-hover:text-blue-300">Open ↗</span>
+                </button>
+              </div>
+            </div>
+
             {/* User View Navigation Tabs: Live Performance vs Saved Data over Time */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#131b2f] p-2 rounded-2xl border border-slate-700/60 shadow-xl">
               <div className="flex items-center gap-1.5 bg-[#0b101e] p-1.5 rounded-xl border border-slate-800 flex-1 sm:flex-initial">

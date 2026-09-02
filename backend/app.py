@@ -653,6 +653,14 @@ def get_stats():
     }
     final_data["statBreakdown"] = stat_breakdown
 
+    import urllib.parse
+    encoded_query = urllib.parse.quote(query)
+    final_data["siteUrls"] = {
+        "trackerGg": tracker_data.get("tracker_url") or f"https://tracker.gg/marvel-rivals/profile/ign/{encoded_query}/overview",
+        "rivalsMeta": f"https://rivalsmeta.com/player/{resolved_uid or query}",
+        "rivalsTracker": f"https://rivalstracker.com/player/{encoded_query}"
+    }
+
     # Save to Local SQLite Database
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     conn = sqlite3.connect(DB)
