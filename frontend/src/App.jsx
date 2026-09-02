@@ -156,6 +156,21 @@ export default function App() {
     fetchStats(null, searchQuery, season);
   };
 
+  const [lookupQuery, setLookupQuery] = useState('');
+
+  const handleProfileLookup = (e) => {
+    if (e) e.preventDefault();
+    if (!lookupQuery || !lookupQuery.trim()) return;
+    const targetUser = lookupQuery.trim();
+    triggerHaptic('light');
+    setQuery(targetUser);
+    fetchStats(null, targetUser, season);
+    showNativeToast(`🔍 Profile Lookup: Viewing ${targetUser} (Untracked)`);
+    setUpdateToast({ type: 'update', message: `🔍 Quick Profile Lookup: Inspecting ${targetUser} (Untracked inspection mode).` });
+    setTimeout(() => setUpdateToast(null), 3500);
+    setLookupQuery('');
+  };
+
   const toggleExpandMetric = (id) => {
     setExpandedMetric(prev => prev === id ? null : id);
   };
@@ -2045,6 +2060,32 @@ ${payload.stack || 'No stack trace available.'}
               <span className="hidden sm:inline">M5 RIVALS TRACKER</span>
             </span>
           </div>
+
+          {/* Top Bar Quick Profile Lookup Search Bar */}
+          <form onSubmit={handleProfileLookup} className="flex-1 max-w-[200px] xs:max-w-xs sm:max-w-md mx-2">
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                value={lookupQuery}
+                onChange={(e) => setLookupQuery(e.target.value)}
+                placeholder="🔍 Profile Lookup (Untracked)..."
+                className="w-full bg-[#131b2f] border border-slate-700/70 hover:border-emerald-500/50 focus:border-emerald-500 rounded-xl py-1.5 pl-8 pr-12 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all shadow-inner"
+              />
+              <span className="absolute left-2.5 text-slate-400 text-xs pointer-events-none">🔍</span>
+              {lookupQuery.trim() ? (
+                <button
+                  type="submit"
+                  className="absolute right-1 px-2 py-0.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[10px] rounded-lg uppercase tracking-wider transition-all cursor-pointer shadow"
+                >
+                  Lookup
+                </button>
+              ) : (
+                <span className="absolute right-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline select-none">
+                  Inspect
+                </span>
+              )}
+            </div>
+          </form>
 
           {/* Right Nav Menu & Desktop Error Reports Button */}
           <div className="flex items-center gap-2">
