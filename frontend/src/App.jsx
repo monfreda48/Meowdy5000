@@ -81,13 +81,13 @@ const DEFAULT_SEASONS = [
 
 const getApiUrl = (path) => {
   try {
-    const customUrl = localStorage.getItem('backend_base_url');
+    const customUrl = localStorage.getItem('backend_base_url') || localStorage.getItem('backend_server_url');
     if (customUrl) {
       const base = customUrl.replace(/\/+$/, '');
       return `${base}${path.startsWith('/') ? path : '/' + path}`;
     }
   } catch (e) { }
-  if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+  if (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform()) {
     return `http://10.0.2.2:5000${path.startsWith('/') ? path : '/' + path}`;
   }
   return path;
@@ -216,6 +216,122 @@ export default function App() {
     setAutoLoadHomeProfile(val);
     try { localStorage.setItem('auto_load_home_profile', val ? 'enabled' : 'disabled'); } catch (e) {}
     showNativeToast(`⚡ Auto-load Home Profile ${val ? 'ON' : 'OFF'}`);
+  };
+
+  // User Selected Favorite Primary Site for Minimized Cards
+  const [favoriteSite, setFavoriteSite] = useState(() => {
+    try {
+      return localStorage.getItem('favorite_primary_site') || 'trackerGg';
+    } catch (e) {
+      return 'trackerGg';
+    }
+  });
+
+  const handleSetFavoriteSite = (siteKey) => {
+    triggerHaptic('light');
+    setFavoriteSite(siteKey);
+    try {
+      localStorage.setItem('favorite_primary_site', siteKey);
+    } catch (e) { }
+    const siteNames = { trackerGg: 'Tracker.gg', rivalsMeta: 'RivalsMeta.com', rivalsTracker: 'RivalsTracker.com' };
+    showNativeToast(`⭐ Primary Site set to ${siteNames[siteKey] || siteKey}`);
+    setUpdateToast({ type: 'success', message: `⭐ Minimized cards now display ${siteNames[siteKey] || siteKey} stats.` });
+    setTimeout(() => setUpdateToast(null), 3000);
+  };
+
+  // Claimed Profile & Tracking Source Selection State
+  const [claimedProfile, setClaimedProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem('claimed_profile');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const [showClaimModal, setShowClaimModal] = useState(false);
+
+  const [claimedSources, setClaimedSources] = useState(() => {
+    try {
+      const saved = localStorage.getItem('claimed_tracking_sources');
+      return saved ? JSON.parse(saved) : ['trackerGg', 'rivalsMeta', 'rivalsTracker'];
+    } catch (e) {
+      return ['trackerGg', 'rivalsMeta', 'rivalsTracker'];
+    }
+  });
+
+  const handleClaimProfile = (usernameToClaim = null, sourcesToTrack = null) => {
+    const targetUser = usernameToClaim || stats?.current?.username || query;
+    if (!targetUser) return;
+    const sources = sourcesToTrack || claimedSources;
+    const claimObj = {
+      username: targetUser,
+      claimedAt: new Date().toISOString(),
+      trackingSources: sources
+    };
+    setClaimedProfile(claimObj);
+    setClaimedSources(sources);
+    try {
+      localStorage.setItem('claimed_profile', JSON.stringify(claimObj));
+      localStorage.setItem('claimed_tracking_sources', JSON.stringify(sources));
+    } catch (e) { }
+
+    if (stats?.current) {
+      togglePinHomeProfile(stats.current);
+    }
+    showNativeToast(`👑 ${targetUser} claimed as primary profile!`);
+    setUpdateToast({ type: 'success', message: `👑 ${targetUser} claimed! Tracking sources: ${sources.length}/3 selected.` });
+    setTimeout(() => setUpdateToast(null), 3500);
+    setShowClaimModal(false);
+  };
+
+  const handleUnclaimProfile = () => {
+    setClaimedProfile(null);
+    try {
+      localStorage.removeItem('claimed_profile');
+    } catch (e) { }
+    showNativeToast('👑 Claimed profile released');
+    setUpdateToast({ type: 'update', message: '👑 Claimed profile released.' });
+    setTimeout(() => setUpdateToast(null), 3000);
+    setShowClaimModal(false);
+  };
+
+  const toggleTrackingSource = (sourceKey) => {
+    setClaimedSources(prev => {
+      let updated;
+      if (prev.includes(sourceKey)) {
+        if (prev.length === 1) {
+          showNativeToast('⚠️ At least 1 tracking source must be selected');
+          return prev;
+        }
+        updated = prev.filter(s => s !== sourceKey);
+      } else {
+        updated = [...prev, sourceKey];
+      }
+      try {
+        localStorage.setItem('claimed_tracking_sources', JSON.stringify(updated));
+        if (claimedProfile) {
+          const newClaimObj = { ...claimedProfile, trackingSources: updated };
+          setClaimedProfile(newClaimObj);
+          localStorage.setItem('claimed_profile', JSON.stringify(newClaimObj));
+        }
+      } catch (e) { }
+      return updated;
+    });
+  };
+
+  const getMinimizedStatValue = (metricKey, unit = '') => {
+    if (!stats?.rawSourcesData) {
+      const fallback = stats?.current?.[metricKey] || 'N/A';
+      return unit && !String(fallback).endsWith(unit) && fallback !== 'N/A' ? `${fallback}${unit}` : fallback;
+    }
+    const favoriteData = stats.rawSourcesData[favoriteSite];
+    if (favoriteData && favoriteData[metricKey] !== undefined && favoriteData[metricKey] !== null && favoriteData[metricKey] !== 'N/A' && favoriteData[metricKey] !== '0.0') {
+      const val = String(favoriteData[metricKey]);
+      return unit && !val.endsWith(unit) ? `${val}${unit}` : val;
+    }
+    const fallback = stats?.current?.[metricKey] || 'N/A';
+    return unit && !String(fallback).endsWith(unit) && fallback !== 'N/A' ? `${fallback}${unit}` : fallback;
   };
 
   const [stats, setStats] = useState(null);
@@ -835,7 +951,12 @@ export default function App() {
 
   const [backendBaseUrl, setBackendBaseUrl] = useState(() => {
     try {
-      return localStorage.getItem('backend_server_url') || '';
+      const stored = localStorage.getItem('backend_server_url') || localStorage.getItem('backend_base_url');
+      if (stored) return stored;
+      if (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform()) {
+        return 'http://10.0.2.2:5000';
+      }
+      return '';
     } catch (e) {
       return '';
     }
@@ -853,10 +974,8 @@ export default function App() {
 
   const getApiUrl = (endpoint) => {
     let base = backendBaseUrl;
-    if (!base) {
-      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-        base = 'https://strong-tips-rule.loca.lt';
-      }
+    if (!base && typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform()) {
+      base = 'http://10.0.2.2:5000';
     }
     if (!base) return endpoint;
     const cleanBase = base.replace(/\/+$/, '');
@@ -868,10 +987,7 @@ export default function App() {
     const text = await res.text();
     const isHtml = text.trim().startsWith('<') || text.toLowerCase().includes('<!doctype html');
     if (isHtml) {
-      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-        throw new Error(`Unable to reach backend server (port 5000). Please check your network connection or configure your server IP in Menu (⚙️) -> Backend Server URL.`);
-      }
-      throw new Error(`Server returned HTML instead of JSON. Ensure Python Flask backend server (port 5000) is running on http://localhost:5000.`);
+      throw new Error(`Server returned HTML instead of JSON. Please check your network connection or backend URL configuration.`);
     }
     try {
       return JSON.parse(text);
@@ -1269,18 +1385,17 @@ ${payload.stack || 'No stack trace available.'}
       localStorage.setItem('error_report_queue', JSON.stringify(existingQueue.slice(0, 20)));
     } catch (e) { }
 
-    const candidateUrls = [
-      getApiUrl('/api/report-error'),
-      '/api/report-error',
-      'http://localhost:5000/api/report-error',
-      'http://10.0.2.2:5000/api/report-error'
-    ];
+    const candidateUrls = [];
+    if (backendBaseUrl) {
+      candidateUrls.push(getApiUrl('/api/report-error'));
+    }
+    candidateUrls.push('/api/report-error');
 
     for (const targetUrl of candidateUrls) {
-      if (!targetUrl) continue;
+      if (!targetUrl || targetUrl === '/api/report-error' && !window.location.host) continue;
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
 
         const res = await fetch(targetUrl, {
           method: 'POST',
@@ -1291,14 +1406,15 @@ ${payload.stack || 'No stack trace available.'}
         clearTimeout(timeoutId);
 
         if (res.ok) {
-          console.log(`✅ Error report successfully sent to developer telemetry server via ${targetUrl}`);
-          showNativeToast('📡 Bug report submitted to developer telemetry database!');
+          console.log(`✅ Error report successfully sent to telemetry server via ${targetUrl}`);
+          showNativeToast('📡 Bug report saved to local telemetry queue!');
           return true;
         }
       } catch (err) {
-        console.warn(`Telemetry POST attempt to ${targetUrl} failed:`, err);
+        console.warn(`Telemetry POST attempt to ${targetUrl} skipped/failed:`, err);
       }
     }
+    showNativeToast('💾 Bug report saved locally to telemetry queue!');
     return false;
   };
 
@@ -1372,7 +1488,6 @@ ${payload.stack || 'No stack trace available.'}
               } else {
                 triggerHaptic('success');
                 showNativeToast('⚡ Network Reconnected');
-                checkForUpdates(false);
               }
             }
             return newStatus;
@@ -1401,8 +1516,7 @@ ${payload.stack || 'No stack trace available.'}
 
         appStateListener = await CapApp.addListener('appStateChange', ({ isActive }) => {
           if (isActive) {
-            console.log('[CapApp] App returned to foreground. Performing auto-update check...');
-            checkForUpdates(false);
+            console.log('[CapApp] App returned to foreground.');
           }
         });
 
@@ -1471,19 +1585,9 @@ ${payload.stack || 'No stack trace available.'}
     } catch (e) { }
   };
 
-  // 4. Periodic 3-Minute Background Auto-Update Check
-  useEffect(() => {
-    const interval = setInterval(() => {
-      console.log('[AutoUpdate] 3-minute scheduled background update check...');
-      checkForUpdates(false);
-    }, 3 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   useEffect(() => {
     cleanupOldApkFiles();
-    checkForUpdates();
+    checkForUpdates(true);
 
     if (autoLoadHomeProfile && pinnedHomeProfile?.username) {
       console.log(`[HomeProfile] Auto-loading pinned home profile: ${pinnedHomeProfile.username}`);
@@ -1548,6 +1652,93 @@ ${payload.stack || 'No stack trace available.'}
     return candidates[Math.floor(Math.random() * candidates.length)];
   };
 
+  const HERO_MAP_CLIENT = {
+    "1011": "Mantis", "1014": "The Punisher", "1015": "Magneto", "1016": "Spider-Man",
+    "1017": "Venom", "1018": "Rocket Raccoon", "1020": "Groot", "1021": "Captain America",
+    "1022": "Hela", "1023": "Iron Man", "1024": "Doctor Strange", "1025": "Hawkeye",
+    "1026": "Black Panther", "1027": "Loki", "1028": "Winter Soldier", "1029": "Hulk", "1030": "Magik",
+    "1031": "Moon Knight", "1032": "Luna Snow", "1033": "Squirrel Girl", "1034": "Iron Fist",
+    "1035": "Adam Warlock", "1036": "Jeff the Land Shark", "1037": "Psylocke", "1038": "Storm",
+    "1039": "Mister Fantastic", "1040": "Invisible Woman", "1041": "Star-Lord", "1042": "Thor",
+    "1043": "Namor", "1044": "Scarlet Witch", "1045": "Peni Parker", "1046": "The Thing",
+    "1047": "Human Torch", "1048": "Wolverine", "1049": "Cloak & Dagger", "1050": "Psylocke",
+    "1051": "Ultron", "1052": "Flynn"
+  };
+
+  const fetchDirectPlayerStats = async (queryVal, seasonVal, signal) => {
+    const seasonParam = seasonVal ? `?season=${encodeURIComponent(seasonVal)}` : '';
+    const rmUrl = `https://rivalsmeta.com/api/player/${encodeURIComponent(queryVal)}${seasonParam}`;
+    const res = await fetch(rmUrl, {
+      signal,
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error(`Player '${queryVal}' not found or public API error`);
+    const text = await res.text();
+    if (text.trim().startsWith('<') || text.toLowerCase().includes('<!doctype html')) {
+      throw new Error(`Player '${queryVal}' not found on public stats API.`);
+    }
+    const data = JSON.parse(text);
+    const statsObj = data.stats || {};
+    const matches = parseInt(statsObj.total_matches || 0, 10);
+    const wins = parseInt(statsObj.total_wins || 0, 10);
+    const kills = parseInt(statsObj.total_kills || 0, 10);
+    const deaths = parseInt(statsObj.total_deaths || 0, 10);
+    const assists = parseInt(statsObj.total_assists || 0, 10);
+
+    const winRateVal = matches > 0 ? ((wins / matches) * 100).toFixed(1) : "0.0";
+    const kdRatioVal = deaths > 0 ? ((kills + assists) / deaths).toFixed(2) : (kills + assists).toString();
+
+    const heroList = [];
+    if (data.heroes_ranked) {
+      Object.entries(data.heroes_ranked).forEach(([hId, hData]) => {
+        const hMatches = parseInt(hData.total_matches || 0, 10);
+        const hWins = parseInt(hData.total_wins || 0, 10);
+        const hKills = parseInt(hData.total_kills || 0, 10);
+        const hDeaths = parseInt(hData.total_deaths || 0, 10);
+        const hAssists = parseInt(hData.total_assists || 0, 10);
+        const hWinRate = hMatches > 0 ? parseFloat(((hWins / hMatches) * 100).toFixed(1)) : 0;
+        const hKda = hDeaths > 0 ? parseFloat(((hKills + hAssists) / hDeaths).toFixed(2)) : (hKills + hAssists);
+        heroList.push({
+          id: String(hId),
+          name: HERO_MAP_CLIENT[String(hId)] || `Hero #${hId}`,
+          matches: hMatches,
+          winRate: hWinRate,
+          kda: hKda,
+          rawHeroData: hData
+        });
+      });
+    }
+    heroList.sort((a, b) => b.matches - a.matches);
+    const topNames = heroList.slice(0, 3).map(h => h.name);
+
+    return {
+      username: data.name || queryVal,
+      avatarUrl: "",
+      rank: data.rank ? String(data.rank) : "Unranked",
+      winRate: String(winRateVal),
+      kdRatio: String(kdRatioVal),
+      topHero: topNames.join(", ") || "Unknown",
+      trackerScore: "N/A",
+      trackerUrl: `https://rivalsmeta.com/player/${encodeURIComponent(queryVal)}`,
+      matchesPlayed: matches,
+      matchesWon: wins,
+      kills,
+      deaths,
+      assists,
+      heroDamage: "N/A",
+      healing: "N/A",
+      damageBlocked: "N/A",
+      accuracy: "N/A",
+      mvp: "0",
+      svp: "0",
+      timePlayed: "N/A",
+      sources: ["RivalsMeta API"],
+      topHeroesDetailed: heroList.slice(0, 3),
+      allHeroesFull: heroList,
+      rawSourcesData: { rivalsMeta: data }
+    };
+  };
+
   const fetchStats = async (e, overrideQuery = null, overrideSeason = null) => {
     if (e) e.preventDefault();
     const activeQuery = overrideQuery !== null ? overrideQuery : query;
@@ -1588,34 +1779,43 @@ ${payload.stack || 'No stack trace available.'}
     }, 30000);
 
     try {
-      const response = await fetch(
-        getApiUrl(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`),
-        {
-          signal: controller.signal,
-          headers: {
-            'bypass-tunnel-reminder': 'true',
-            'Accept': 'application/json'
+      let data = null;
+      if (backendBaseUrl) {
+        try {
+          const response = await fetch(
+            getApiUrl(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`),
+            {
+              signal: controller.signal,
+              headers: {
+                'bypass-tunnel-reminder': 'true',
+                'Accept': 'application/json'
+              }
+            }
+          );
+          data = await safeFetchJson(response);
+          if (!response.ok) {
+            throw new Error(data?.error || 'Backend request failed');
           }
+        } catch (backendErr) {
+          console.warn('[FetchStats] Custom backend request failed, falling back to direct API fetch:', backendErr);
+          data = await fetchDirectPlayerStats(activeQuery, activeSeason, controller.signal);
         }
-      );
+      } else {
+        data = await fetchDirectPlayerStats(activeQuery, activeSeason, controller.signal);
+      }
+
       clearTimeout(timeoutId);
       clearInterval(pInterval);
 
       setSearchProgress(95);
       setSearchProgressMsg("🚀 Rocket Raccoon assembled your dashboard!");
 
-      const data = await safeFetchJson(response);
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch player stats.');
-      }
-
       setSearchProgress(100);
       setSearchProgressMsg('💥 Avengers Assembled! Stats Ready.');
       setStats(data);
 
-      if (data?.current?.username) {
-        const uKey = data.current.username.toLowerCase();
+      if (data?.current?.username || data?.username) {
+        const uKey = (data.current?.username || data.username).toLowerCase();
         if (trackedPlayers[uKey]) {
           saveTrackedStatSnapshot(data);
         }
@@ -3561,7 +3761,7 @@ ${payload.stack || 'No stack trace available.'}
                 </div>
 
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Specify your custom Python Flask Backend Server IP / Domain for Android APK:
+                  Optional: Specify a custom server IP / Domain if hosting a remote proxy. Leave blank for Standalone Direct Cloud Mode:
                 </p>
 
                 <div className="flex items-center gap-2">
@@ -3569,7 +3769,7 @@ ${payload.stack || 'No stack trace available.'}
                     type="text"
                     value={backendBaseUrl}
                     onChange={(e) => setBackendBaseUrl(e.target.value)}
-                    placeholder={window.Capacitor?.isNativePlatform() ? "http://10.0.2.2:5000 or http://192.168.1.X:5000" : "http://localhost:5000"}
+                    placeholder="https://your-custom-backend.com (Optional)"
                     className="flex-1 bg-[#0b101e] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-teal-500"
                   />
                   <button

@@ -121,20 +121,30 @@ def scrape_tracker_gg_api(username, season=None):
     safe_name = username.replace(" ", "%20")
     season_param = f"?season={season}" if season else ""
     
-    # Pointing the browser DIRECTLY at API JSON data!
-    api_url = f"https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/ign/{safe_name}{season_param}"
     profile_url = f"https://tracker.gg/marvel-rivals/profile/ign/{safe_name}/overview{season_param}"
-    
+    api_url = f"https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/ign/{safe_name}{season_param}"
+
     try:
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-        driver.get(api_url)
-        time.sleep(5) # Wait for Cloudflare to verify the browser
+        driver.get(profile_url)
+        time.sleep(3)
         
         try:
-            # The browser automatically wraps raw JSON in a <pre> tag, so we pull it out!
-            json_text = driver.find_element(By.TAG_NAME, "pre").text
-            data = json.loads(json_text)
+            js_script = f"return fetch('{api_url}').then(r => r.json()).catch(e => ({{error: e.toString()}}));"
+            data = driver.execute_script(js_script)
             
+            if not data or not isinstance(data, dict) or 'data' not in data:
+                driver.get(api_url)
+                time.sleep(3)
+                try:
+                    pre_elem = driver.find_element(By.TAG_NAME, "pre")
+                    data = json.loads(pre_elem.text)
+                except Exception:
+                    pass
+
+            if not data or not isinstance(data, dict):
+                return {"success": False, "tracker_url": profile_url}
+
             print("[SUCCESS] Tracker.gg API Bypassed Successfully!")
             
             # Drill into Tracker's standard API layout
@@ -720,4 +730,4 @@ def get_error_reports():
     return jsonify(reports)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)

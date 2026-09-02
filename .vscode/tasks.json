@@ -14,19 +14,19 @@
     {
       "label": "Install APK",
       "type": "shell",
-      "command": "& 'C:\\Users\\User\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe' install -r 'frontend/android/app/build/outputs/apk/debug/app-debug.apk'",
+      "command": "& 'C:/Users/User/AppData/Local/Android/Sdk/platform-tools/adb.exe' -s emulator-5554 install -r frontend/android/app/build/outputs/apk/debug/app-debug.apk",
       "problemMatcher": []
     },
     {
       "label": "Run",
       "type": "shell",
-      "command": "& 'C:\\Users\\User\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe' shell am start -n com.meowdy5000.stattracker/.MainActivity",
+      "command": "& 'C:/Users/User/AppData/Local/Android/Sdk/platform-tools/adb.exe' -s emulator-5554 shell am start -n com.meowdy5000.stattracker/.MainActivity",
       "problemMatcher": []
     },
     {
       "label": "Stop",
       "type": "shell",
-      "command": "& 'C:\\Users\\User\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe' shell am force-stop com.meowdy5000.stattracker",
+      "command": "& 'C:/Users/User/AppData/Local/Android/Sdk/platform-tools/adb.exe' -s emulator-5554 shell am force-stop com.meowdy5000.stattracker",
       "problemMatcher": []
     }
   ]

@@ -1,3 +1,6 @@
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+
 apply plugin: 'com.android.application'
 
 android {
@@ -22,25 +25,34 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
     applicationVariants.all { variant ->
-        variant.assembleProvider.get().doLast {
-            def apkSrcDir = file("${layout.buildDirectory.get()}/outputs/apk/${variant.buildType.name}")
-            def repoRoot = file("${projectDir}/../../../")
-            if (new File(repoRoot, "package.json").exists()) {
-                copy {
-                    from apkSrcDir
-                    into repoRoot
-                    include "*.apk"
+        def variantName = variant.buildType.name
+        def buildDirFile = layout.buildDirectory.get().asFile
+        def projectDirFile = projectDir
+        def rootDirFile = rootDir
+        variant.assembleProvider.configure { assembleTask ->
+            assembleTask.doLast {
+                def apkSrcDir = new File(buildDirFile, "outputs/apk/${variantName}")
+                def repoRoot = new File(projectDirFile, "../../../")
+                def copyApk = { File srcDir, File destDir ->
+                    if (srcDir.exists() && destDir.exists()) {
+                        srcDir.listFiles({ dir, name -> name.endsWith(".apk") } as FilenameFilter)?.each { apk ->
+                            Files.copy(
+                                apk.toPath(),
+                                new File(destDir, apk.name).toPath(),
+                                StandardCopyOption.REPLACE_EXISTING
+                            )
+                        }
+                    }
                 }
-            }
-            copy {
-                from apkSrcDir
-                into rootDir
-                include "*.apk"
+                if (new File(repoRoot, "package.json").exists()) {
+                    copyApk(apkSrcDir, repoRoot)
+                }
+                copyApk(apkSrcDir, rootDirFile)
             }
         }
     }
