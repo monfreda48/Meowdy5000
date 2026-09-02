@@ -280,7 +280,7 @@ export default function App() {
       togglePinHomeProfile(stats.current);
     }
     showNativeToast(`👑 ${targetUser} claimed as primary profile!`);
-    setUpdateToast({ type: 'success', message: `👑 ${targetUser} claimed! Tracking sources: ${sources.length}/3 selected.` });
+    setUpdateToast({ type: 'success', message: `👑 ${targetUser} claimed as primary profile! Auto-loads on startup.` });
     setTimeout(() => setUpdateToast(null), 3500);
     setShowClaimModal(false);
   };
@@ -290,8 +290,8 @@ export default function App() {
     try {
       localStorage.removeItem('claimed_profile');
     } catch (e) { }
-    showNativeToast('👑 Claimed profile released');
-    setUpdateToast({ type: 'update', message: '👑 Claimed profile released.' });
+    showNativeToast('👑 Claimed profile removed');
+    setUpdateToast({ type: 'update', message: '👑 Claimed profile removed.' });
     setTimeout(() => setUpdateToast(null), 3000);
     setShowClaimModal(false);
   };
@@ -1589,7 +1589,11 @@ ${payload.stack || 'No stack trace available.'}
     cleanupOldApkFiles();
     checkForUpdates(true);
 
-    if (autoLoadHomeProfile && pinnedHomeProfile?.username) {
+    if (claimedProfile?.username) {
+      console.log(`[ClaimedProfile] Auto-loading claimed profile: ${claimedProfile.username}`);
+      setQuery(claimedProfile.username);
+      fetchStats(null, claimedProfile.username, season);
+    } else if (autoLoadHomeProfile && pinnedHomeProfile?.username) {
       console.log(`[HomeProfile] Auto-loading pinned home profile: ${pinnedHomeProfile.username}`);
       setQuery(pinnedHomeProfile.username);
       fetchStats(null, pinnedHomeProfile.username, pinnedHomeProfile.season || season);
@@ -2460,6 +2464,51 @@ ${payload.stack || 'No stack trace available.'}
               </div>
             </div>
           )}
+
+          {/* Claim Your Profile Welcome Banner (shown when no stats & no profile claimed yet) */}
+          {!stats && !loading && !claimedProfile && (
+            <div className={`w-full ${isMobileView ? '' : 'max-w-3xl'} bg-gradient-to-br from-[#131b2f] via-[#0f172a] to-[#0b101e] border-2 border-emerald-500/60 p-6 sm:p-8 rounded-3xl shadow-2xl shadow-emerald-500/20 text-center space-y-4 my-4 animate-in fade-in slide-in-from-bottom-4 duration-500`}>
+              <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center text-3xl mx-auto shadow-lg shadow-emerald-500/30">
+                👑
+              </div>
+              <div className="space-y-1.5 max-w-md mx-auto">
+                <h3 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider">
+                  Claim Your Profile to Start Tracking
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300">
+                  Track your Marvel Rivals performance! Claim your in-game username to automatically load your stats dashboard whenever you open the app.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 max-w-md mx-auto">
+                <input
+                  type="text"
+                  placeholder="Enter your username to claim..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && query.trim()) {
+                      handleClaimProfile(query.trim());
+                      fetchStats(null, query.trim(), season);
+                    }
+                  }}
+                  className="w-full bg-[#0b101e] border border-slate-700/80 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (query.trim()) {
+                      handleClaimProfile(query.trim());
+                      fetchStats(null, query.trim(), season);
+                    }
+                  }}
+                  disabled={!query.trim()}
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 cursor-pointer disabled:opacity-50 shrink-0"
+                >
+                  Claim & Track
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Dashboard Results */}
@@ -2529,14 +2578,20 @@ ${payload.stack || 'No stack trace available.'}
               <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                 <button
                   type="button"
-                  onClick={() => togglePinHomeProfile(stats.current)}
+                  onClick={() => {
+                    if (claimedProfile?.username?.toLowerCase() === stats.current.username?.toLowerCase()) {
+                      handleUnclaimProfile();
+                    } else {
+                      handleClaimProfile(stats.current.username);
+                    }
+                  }}
                   className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer shadow-lg border uppercase tracking-wider ${
-                    pinnedHomeProfile && pinnedHomeProfile.username?.toLowerCase() === stats.current.username?.toLowerCase()
-                      ? 'bg-amber-500/20 border-amber-500/80 text-amber-300 shadow-amber-500/20 hover:bg-amber-500/30'
-                      : 'bg-slate-800/90 hover:bg-slate-800 border-slate-700/80 text-slate-300 hover:text-white'
+                    claimedProfile?.username?.toLowerCase() === stats.current.username?.toLowerCase()
+                      ? 'bg-emerald-500/20 border-emerald-500/80 text-emerald-300 shadow-emerald-500/20 hover:bg-emerald-500/30'
+                      : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 border-emerald-400/50 text-white'
                   }`}
                 >
-                  <span>{pinnedHomeProfile && pinnedHomeProfile.username?.toLowerCase() === stats.current.username?.toLowerCase() ? '⭐ Pinned Home Profile' : '📌 Pin to Home'}</span>
+                  <span>👑 {claimedProfile?.username?.toLowerCase() === stats.current.username?.toLowerCase() ? 'Claimed Profile ✓' : 'Claim Profile'}</span>
                 </button>
 
                 <button
@@ -4162,6 +4217,78 @@ ${payload.stack || 'No stack trace available.'}
                   >
                     ✕
                   </button>
+                </div>
+
+                {/* Drawer Group 0: Claimed Profile Management */}
+                <div className="space-y-2.5 bg-[#131b2f] border border-emerald-500/40 p-3.5 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
+                      <span>👑</span> My Claimed Profile
+                    </span>
+                    {claimedProfile?.username && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                        Auto-Loads
+                      </span>
+                    )}
+                  </div>
+
+                  {claimedProfile?.username ? (
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between bg-[#0b101e] border border-slate-700/60 p-2.5 rounded-xl">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-xs border border-emerald-500/30">
+                            👑
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black text-white">{claimedProfile.username}</h4>
+                            <p className="text-[10px] text-slate-400">
+                              Claimed: {claimedProfile.claimedAt ? new Date(claimedProfile.claimedAt).toLocaleDateString() : 'Active'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setQuery(claimedProfile.username);
+                            fetchStats(null, claimedProfile.username, season);
+                            setIsMenuOpen(false);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/50 font-bold text-[10px] uppercase cursor-pointer transition-all"
+                        >
+                          View Stats
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          handleUnclaimProfile();
+                          setIsMenuOpen(false);
+                        }}
+                        className="w-full py-2.5 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 text-red-400 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <span>🗑️</span>
+                        <span>Remove Claimed Profile</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 text-center py-1">
+                      <p className="text-xs text-slate-400">No profile claimed yet. Claim your username to auto-load your stats on launch!</p>
+                      <button
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          if (stats?.current?.username) {
+                            handleClaimProfile(stats.current.username);
+                          } else {
+                            setShowClaimModal(true);
+                          }
+                        }}
+                        className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-emerald-500/20 cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <span>👑</span>
+                        <span>{stats?.current?.username ? `Claim ${stats.current.username}` : 'Claim Profile Now'}</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Drawer Group 1: App Updates */}
