@@ -334,6 +334,34 @@ export default function App() {
     return unit && !String(fallback).endsWith(unit) && fallback !== 'N/A' ? `${fallback}${unit}` : fallback;
   };
 
+  const render3SiteBreakdown = (metricKey) => {
+    const breakdown = stats?.current?.statBreakdown?.[metricKey];
+    if (!breakdown) return null;
+    
+    return (
+      <div className="mt-3 pt-2.5 border-t border-slate-700/60 space-y-1.5 text-[11px] select-none">
+        <div className="flex items-center justify-between text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+          <span>🌐 3-Site Data Breakdown:</span>
+          <span>Source Values</span>
+        </div>
+        <div className="grid grid-cols-3 gap-1.5 text-center font-mono font-bold">
+          <div className="bg-[#0b101e] border border-emerald-500/30 p-1.5 rounded-lg">
+            <span className="block text-[9px] text-emerald-400 font-sans font-normal">Tracker.gg</span>
+            <span className="text-white text-xs">{breakdown.trackerGg || 'N/A'}</span>
+          </div>
+          <div className="bg-[#0b101e] border border-teal-500/30 p-1.5 rounded-lg">
+            <span className="block text-[9px] text-teal-400 font-sans font-normal">RivalsMeta</span>
+            <span className="text-white text-xs">{breakdown.rivalsMeta || 'N/A'}</span>
+          </div>
+          <div className="bg-[#0b101e] border border-blue-500/30 p-1.5 rounded-lg">
+            <span className="block text-[9px] text-blue-400 font-sans font-normal">RivalsTracker</span>
+            <span className="text-white text-xs">{breakdown.rivalsTracker || 'N/A'}</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -2765,6 +2793,7 @@ ${payload.stack || 'No stack trace available.'}
                             </div>
                           </div>
                         )}
+                        {render3SiteBreakdown('winRate')}
                       </div>
                     );
 
@@ -2815,6 +2844,7 @@ ${payload.stack || 'No stack trace available.'}
                             </div>
                           </div>
                         )}
+                        {render3SiteBreakdown('kdRatio')}
                       </div>
                     );
 
@@ -2861,6 +2891,7 @@ ${payload.stack || 'No stack trace available.'}
                             </div>
                           </div>
                         )}
+                        {render3SiteBreakdown('heroDamage')}
                       </div>
                     );
 
@@ -2907,6 +2938,7 @@ ${payload.stack || 'No stack trace available.'}
                             </div>
                           </div>
                         )}
+                        {render3SiteBreakdown('healing')}
                       </div>
                     );
 
@@ -2953,6 +2985,7 @@ ${payload.stack || 'No stack trace available.'}
                             </div>
                           </div>
                         )}
+                        {render3SiteBreakdown('damageBlocked')}
                       </div>
                     );
 
@@ -3004,6 +3037,7 @@ ${payload.stack || 'No stack trace available.'}
                             </div>
                           </div>
                         )}
+                        {render3SiteBreakdown('accuracy')}
                       </div>
                     );
 
@@ -3046,6 +3080,7 @@ ${payload.stack || 'No stack trace available.'}
                             </div>
                           </div>
                         )}
+                        {render3SiteBreakdown('mvp')}
                       </div>
                     );
 
@@ -3088,6 +3123,7 @@ ${payload.stack || 'No stack trace available.'}
                             </div>
                           </div>
                         )}
+                        {render3SiteBreakdown('svp')}
                       </div>
                     );
 
@@ -3132,6 +3168,7 @@ ${payload.stack || 'No stack trace available.'}
                             </div>
                           </div>
                         )}
+                        {render3SiteBreakdown('timePlayed')}
                       </div>
                     );
 
@@ -3181,6 +3218,7 @@ ${payload.stack || 'No stack trace available.'}
                             </div>
                           </div>
                         )}
+                        {render3SiteBreakdown('matchesPlayed')}
                       </div>
                     );
 

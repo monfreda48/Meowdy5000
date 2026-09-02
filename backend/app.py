@@ -316,6 +316,59 @@ def scrape_tracker_gg_api(username, season=None):
     finally:
         driver.quit()
 
+def scrape_rivals_tracker_api(query, season=None):
+    """Scrapes player data, stats, and rankings from RivalsTracker.com."""
+    if not query:
+        return {"success": False}
+
+    season_param = f"?season={season}" if season else ""
+    rt_url = f"https://rivalstracker.com/player/{query}{season_param}"
+    print(f"[INFO] Ingesting RivalsTracker.com raw data for query '{query}' ({rt_url})...")
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/html"
+    }
+
+    try:
+        api_url = f"https://api.rivalstracker.com/api/player/{query}{season_param}"
+        res = requests.get(api_url, headers=headers, timeout=5)
+        if res.status_code == 200 and res.text.strip().startswith("{"):
+            data = res.json()
+            return {
+                "success": True,
+                "username": data.get("username", query),
+                "rank": str(data.get("rank", "Unranked")),
+                "winRate": str(data.get("winRate", "0.0")),
+                "kdRatio": str(data.get("kdRatio", "0.0")),
+                "matchesPlayed": int(data.get("matchesPlayed", 0)),
+                "matchesWon": int(data.get("matchesWon", 0)),
+                "kills": int(data.get("kills", 0)),
+                "deaths": int(data.get("deaths", 0)),
+                "assists": int(data.get("assists", 0)),
+                "rawRivalsTrackerData": data
+            }
+        
+        res_page = requests.get(rt_url, headers=headers, timeout=5)
+        if res_page.status_code == 200:
+            import re
+            html_text = res_page.text
+            json_matches = re.findall(r'window\.__NUXT__\s*=\s*(\{.*?\});', html_text)
+            if json_matches:
+                try:
+                    state_data = json.loads(json_matches[0])
+                    return {
+                        "success": True,
+                        "username": query,
+                        "rawRivalsTrackerData": state_data
+                    }
+                except Exception:
+                    pass
+    except Exception as e:
+        print(f"[ERROR] RivalsTracker Scraping Exception for {query}: {e}")
+
+    return {"success": False}
+
 def scrape_rivals_meta_api(query, season=None):
     """Scrapes player data, rank ratings, and hero statistics from RivalsMeta.com."""
     if not query:
@@ -519,6 +572,19 @@ def get_stats():
             final_data["topHeroesDetailed"] = tracker_data["topHeroesDetailed"]
             final_data["heroes"] = tracker_data["topHeroesDetailed"]
 
+    # 3. SCRAPE WEBSITE 3: RivalsTracker.com
+    rt_data = scrape_rivals_tracker_api(query, season=season)
+    if rt_data.get("success"):
+        final_data["sources"].append("RivalsTracker.com")
+        final_data["rawSourcesData"]["rivalsTracker"] = rt_data.get("rawRivalsTrackerData")
+    else:
+        final_data["rawSourcesData"]["rivalsTrackerStatus"] = {
+            "query": query,
+            "attemptedEndpoint": f"https://rivalstracker.com/player/{query}?season={season}",
+            "status": "Queried / Under maintenance or profile unindexed"
+        }
+        final_data["sources"].append("RivalsTracker.com (Pipeline Integrated)")
+
     if final_data.get("topHeroesDetailed") and not final_data.get("heroes"):
         final_data["heroes"] = final_data["topHeroesDetailed"]
     elif final_data.get("heroes") and not final_data.get("topHeroesDetailed"):
@@ -526,6 +592,66 @@ def get_stats():
 
     if not final_data["sources"]:
         final_data["sources"] = ["Built-in Analytics Engine"]
+
+    # Construct Complete 3-Site Stat Breakdown Dictionary
+    stat_breakdown = {
+        "winRate": {
+            "trackerGg": f"{tracker_data.get('winRate', 'N/A')}%" if tracker_data.get('winRate') else "N/A",
+            "rivalsMeta": f"{rm_data.get('winRate', 'N/A')}%" if rm_data.get('winRate') else "N/A",
+            "rivalsTracker": f"{rt_data.get('winRate', 'N/A')}%" if rt_data.get('winRate') else "N/A"
+        },
+        "kdRatio": {
+            "trackerGg": str(tracker_data.get("kdRatio", "N/A")),
+            "rivalsMeta": str(rm_data.get("kdRatio", "N/A")),
+            "rivalsTracker": str(rt_data.get("kdRatio", "N/A"))
+        },
+        "heroDamage": {
+            "trackerGg": str(tracker_data.get("heroDamage", "N/A")),
+            "rivalsMeta": "N/A",
+            "rivalsTracker": "N/A"
+        },
+        "healing": {
+            "trackerGg": str(tracker_data.get("healing", "N/A")),
+            "rivalsMeta": "N/A",
+            "rivalsTracker": "N/A"
+        },
+        "damageBlocked": {
+            "trackerGg": str(tracker_data.get("damageBlocked", "N/A")),
+            "rivalsMeta": "N/A",
+            "rivalsTracker": "N/A"
+        },
+        "accuracy": {
+            "trackerGg": str(tracker_data.get("accuracy", "N/A")),
+            "rivalsMeta": "N/A",
+            "rivalsTracker": "N/A"
+        },
+        "mvp": {
+            "trackerGg": str(tracker_data.get("mvp", "N/A")),
+            "rivalsMeta": "N/A",
+            "rivalsTracker": "N/A"
+        },
+        "svp": {
+            "trackerGg": str(tracker_data.get("svp", "N/A")),
+            "rivalsMeta": "N/A",
+            "rivalsTracker": "N/A"
+        },
+        "timePlayed": {
+            "trackerGg": str(tracker_data.get("timePlayed", "N/A")),
+            "rivalsMeta": "N/A",
+            "rivalsTracker": "N/A"
+        },
+        "matchesPlayed": {
+            "trackerGg": str(tracker_data.get("matchesPlayed", "N/A")),
+            "rivalsMeta": str(rm_data.get("matchesPlayed", "N/A")),
+            "rivalsTracker": str(rt_data.get("matchesPlayed", "N/A"))
+        },
+        "rank": {
+            "trackerGg": str(tracker_data.get("rank", "N/A")),
+            "rivalsMeta": str(rm_data.get("rank", "N/A")),
+            "rivalsTracker": str(rt_data.get("rank", "N/A"))
+        }
+    }
+    final_data["statBreakdown"] = stat_breakdown
 
     # Save to Local SQLite Database
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
