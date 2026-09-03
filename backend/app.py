@@ -66,6 +66,16 @@ def init_db():
             platform TEXT
         )
     ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS claimed_profiles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            platform TEXT,
+            saved_url TEXT,
+            claimed_at DATETIME,
+            cached_stats TEXT
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -1169,6 +1179,90 @@ def get_stat_reports():
     ]
     conn.close()
     return jsonify(reports)
+
+@app.route('/api/claim-profile', methods=['GET', 'POST', 'DELETE'])
+def handle_claim_profile():
+    """
+    Handles claiming profiles and saving user-specific direct profile URLs:
+    - POST: Saves claimed profile with direct URL and cached stats for instant retrieval.
+    - GET: Retrieves saved profile & direct URL by username query.
+    - DELETE: Unclaims profile.
+    """
+    if request.method == 'POST':
+        data = request.json or {}
+        username = (data.get('username') or '').strip()
+        platform = data.get('platform', 'PC')
+        saved_url = data.get('savedUrl') or data.get('saved_url') or ''
+        cached_stats = json.dumps(data.get('cachedStats') or {})
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        if not username:
+            return jsonify({"error": "Username is required to claim a profile"}), 400
+
+        try:
+            conn = sqlite3.connect(DB)
+            conn.execute('''
+                INSERT INTO claimed_profiles (username, platform, saved_url, claimed_at, cached_stats)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(username) DO UPDATE SET
+                    platform = excluded.platform,
+                    saved_url = excluded.saved_url,
+                    claimed_at = excluded.claimed_at,
+                    cached_stats = excluded.cached_stats
+            ''', (username, platform, saved_url, timestamp, cached_stats))
+            conn.commit()
+            conn.close()
+            return jsonify({
+                "success": True,
+                "message": f"Profile '{username}' claimed successfully!",
+                "savedUrl": saved_url,
+                "claimedAt": timestamp
+            })
+        except Exception as e:
+            return jsonify({"error": f"Failed to claim profile: {str(e)}"}), 500
+
+    elif request.method == 'DELETE':
+        data = request.json or {}
+        username = (data.get('username') or request.args.get('username') or '').strip()
+        if not username:
+            return jsonify({"error": "Username is required"}), 400
+        try:
+            conn = sqlite3.connect(DB)
+            conn.execute('DELETE FROM claimed_profiles WHERE LOWER(username) = LOWER(?)', (username,))
+            conn.commit()
+            conn.close()
+            return jsonify({"success": True, "message": f"Profile '{username}' unclaimed."})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    else:
+        username = (request.args.get('username') or '').strip()
+        conn = sqlite3.connect(DB)
+        if username:
+            cursor = conn.execute('SELECT username, platform, saved_url, claimed_at, cached_stats FROM claimed_profiles WHERE LOWER(username) = LOWER(?)', (username,))
+            row = cursor.fetchone()
+            conn.close()
+            if row:
+                cached = {}
+                try: cached = json.loads(row[4]) if row[4] else {}
+                except: pass
+                return jsonify({
+                    "claimed": True,
+                    "username": row[0],
+                    "platform": row[1],
+                    "savedUrl": row[2],
+                    "claimedAt": row[3],
+                    "cachedStats": cached
+                })
+            return jsonify({"claimed": False})
+        else:
+            cursor = conn.execute('SELECT username, platform, saved_url, claimed_at FROM claimed_profiles ORDER BY id DESC LIMIT 20')
+            rows = cursor.fetchall()
+            conn.close()
+            return jsonify([
+                {"username": r[0], "platform": r[1], "savedUrl": r[2], "claimedAt": r[3]}
+                for r in rows
+            ])
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

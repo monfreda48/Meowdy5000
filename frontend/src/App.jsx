@@ -427,15 +427,34 @@ export default function App() {
     }
   });
 
-  const handleClaimProfile = (usernameToClaim = null, sourcesToTrack = null) => {
-    const targetUser = usernameToClaim || stats?.current?.username || query;
+  const handleClaimProfile = (targetDataOrUsername = null, sourcesToTrack = null) => {
+    let targetStats = null;
+    let targetUser = query;
+
+    if (targetDataOrUsername && typeof targetDataOrUsername === 'object') {
+      targetStats = targetDataOrUsername;
+      targetUser = targetStats.username;
+    } else if (typeof targetDataOrUsername === 'string' && targetDataOrUsername) {
+      targetUser = targetDataOrUsername;
+      targetStats = stats?.current;
+    } else if (stats?.current) {
+      targetStats = stats.current;
+      targetUser = targetStats.username;
+    }
+
     if (!targetUser) return;
     const sources = sourcesToTrack || claimedSources;
+    const savedUrl = targetStats?.siteUrls?.rivalsMeta || targetStats?.siteUrls?.trackerGg || targetStats?.trackerUrl || `https://tracker.gg/marvel-rivals/profile/ign/${encodeURIComponent(targetUser)}/overview`;
+    
     const claimObj = {
       username: targetUser,
+      platform: targetStats?.platform || selectedPlatform || 'PC',
+      savedUrl: savedUrl,
       claimedAt: new Date().toISOString(),
-      trackingSources: sources
+      trackingSources: sources,
+      cachedStats: targetStats
     };
+
     setClaimedProfile(claimObj);
     setClaimedSources(sources);
     try {
@@ -443,14 +462,26 @@ export default function App() {
       localStorage.setItem('claimed_tracking_sources', JSON.stringify(sources));
     } catch (e) { }
 
-    if (stats?.current) {
-      togglePinHomeProfile(stats.current);
-      saveTrackedStatSnapshot(stats);
-      if (isTrackingMode) downloadUserDataset(stats);
+    // Sync with backend API
+    if (backendBaseUrl) {
+      try {
+        fetch(getApiUrl('/api/claim-profile'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(claimObj)
+        }).catch(err => console.warn('[ClaimProfile] Backend sync note:', err));
+      } catch (err) {}
+    }
+
+    if (targetStats) {
+      togglePinHomeProfile(targetStats);
+      saveTrackedStatSnapshot({ current: targetStats });
+      if (isTrackingMode) downloadUserDataset({ current: targetStats });
       try { localStorage.setItem(`last_auto_snapshot_time_${targetUser.toLowerCase()}`, String(Date.now())); } catch (e) { }
     }
-    showNativeToast(`👑 ${targetUser} claimed as primary profile!`);
-    setUpdateToast({ type: 'success', message: `👑 ${targetUser} claimed as primary profile! Auto-loads & saves snapshots on startup (max once per 12h).` });
+
+    showNativeToast(`👑 ${targetUser} claimed! Direct URL saved for instant fast loading.`);
+    setUpdateToast({ type: 'success', message: `👑 ${targetUser} claimed! Saved direct URL (${savedUrl}) for instant fast loading.` });
     setTimeout(() => setUpdateToast(null), 3500);
     setShowClaimModal(false);
   };
@@ -464,14 +495,25 @@ export default function App() {
   }, []);
 
   const handleUnclaimProfile = () => {
+    const unclaimingUser = claimedProfile?.username;
     setClaimedProfile(null);
     try {
       localStorage.removeItem('claimed_profile');
     } catch (e) { }
+
+    if (backendBaseUrl && unclaimingUser) {
+      try {
+        fetch(getApiUrl(`/api/claim-profile?username=${encodeURIComponent(unclaimingUser)}`), {
+          method: 'DELETE'
+        }).catch(err => {});
+      } catch (err) {}
+    }
+
     showNativeToast('👑 Claimed profile removed');
     setUpdateToast({ type: 'update', message: '👑 Claimed profile removed.' });
     setTimeout(() => setUpdateToast(null), 3000);
     setShowClaimModal(false);
+    setShowUnclaimConfirmModal(false);
   };
 
   const toggleTrackingSource = (sourceKey) => {
@@ -2416,9 +2458,21 @@ ${payload.stack || 'No stack trace available.'}
       if (controller) controller.abort();
     }, 45000);
 
+    const isClaimedMatch = claimedProfile && claimedProfile.username?.toLowerCase() === activeQuery.trim().toLowerCase();
+
     try {
       let data = null;
-      if (backendBaseUrl) {
+      if (isClaimedMatch && claimedProfile.cachedStats) {
+        console.log(`[ClaimedProfile] Instant loading for claimed user '${activeQuery}' using saved URL (${claimedProfile.savedUrl})`);
+        data = {
+          current: {
+            ...claimedProfile.cachedStats,
+            isFastLoaded: true,
+            savedUrl: claimedProfile.savedUrl,
+            sources: [`👑 Claimed Profile (Saved Direct URL: ${claimedProfile.savedUrl})`]
+          }
+        };
+      } else if (backendBaseUrl) {
         try {
           const backendController = new AbortController();
           const bTimeout = setTimeout(() => backendController.abort(), 7000);
@@ -3090,6 +3144,27 @@ ${payload.stack || 'No stack trace available.'}
 
 
               <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                {claimedProfile?.username?.toLowerCase() === stats.current.username?.toLowerCase() ? (
+                  <button
+                    type="button"
+                    onClick={() => handleUnclaimProfile()}
+                    className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-red-600 hover:to-rose-600 text-white transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20 border border-emerald-400/50 uppercase tracking-wider font-black group"
+                    title="Click to unclaim profile"
+                  >
+                    <span className="group-hover:hidden">👑 Profile Claimed</span>
+                    <span className="hidden group-hover:inline">✕ Unclaim</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleClaimProfile(stats.current)}
+                    className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-amber-500/20 border border-amber-400/50 uppercase tracking-wider font-black hover:scale-105 active:scale-95"
+                    title="Claim profile & save direct URL for instant fast loading"
+                  >
+                    <span>👑 Claim Profile</span>
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => { triggerHaptic('light'); setShowHeroLeaderboardModal(true); }}
@@ -5159,6 +5234,45 @@ ${payload.stack || 'No stack trace available.'}
                     </button>
                   </div>
                 </div>
+
+                {/* Drawer Group 0.4: My Claimed Profile Card */}
+                {claimedProfile?.username && (
+                  <div className="space-y-2 bg-gradient-to-br from-[#131b2f] to-[#0d1424] border-2 border-amber-500/60 p-3.5 rounded-2xl shadow-xl text-left relative overflow-hidden">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
+                        <span>👑</span> Claimed Profile (Fast Loaded)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleUnclaimProfile}
+                        className="text-[10px] text-red-400 hover:text-red-300 font-bold bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 px-2 py-0.5 rounded cursor-pointer"
+                      >
+                        Unclaim
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3 pt-1">
+                      <div>
+                        <h4 className="text-base font-black text-white">{claimedProfile.username}</h4>
+                        <p className="text-[10px] text-slate-400 font-mono truncate max-w-[200px]">
+                          Direct URL: {claimedProfile.savedUrl}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          setQuery(claimedProfile.username);
+                          fetchStats(null, claimedProfile.username, season);
+                        }}
+                        className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl transition-all shadow-md uppercase tracking-wider shrink-0 cursor-pointer"
+                      >
+                        ⚡ Fast Load
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Drawer Group 0.5: Automatic Snapshot Tracking Mode Toggle */}
                 <div className="space-y-2.5 bg-[#131b2f] border border-emerald-500/40 p-3.5 rounded-2xl text-left">
