@@ -1113,14 +1113,27 @@ export default function App() {
 
   const activeTheme = THEMES.find(t => t.id === activeThemeId) || THEMES[0];
 
+  useEffect(() => {
+    const selected = THEMES.find(t => t.id === activeThemeId) || THEMES[0];
+    document.documentElement.setAttribute('data-theme', selected.id);
+    if (selected.accentColor) {
+      document.documentElement.style.setProperty('--accent-color', selected.accentColor);
+      document.documentElement.style.setProperty('--accent-glow', selected.accentGlow || 'rgba(16, 185, 129, 0.4)');
+    }
+  }, [activeThemeId]);
+
   const handleSelectTheme = (themeId) => {
     setActiveThemeId(themeId);
     try {
       localStorage.setItem('app_color_theme', themeId);
     } catch (e) { }
     const selected = THEMES.find(t => t.id === themeId);
+    if (selected) {
+      document.documentElement.setAttribute('data-theme', selected.id);
+      document.documentElement.style.setProperty('--accent-color', selected.accentColor);
+    }
     triggerHaptic('success');
-    showNativeToast(`🎨 Theme set to ${selected?.name || themeId}!`);
+    showNativeToast(`🎨 Color scheme set to ${selected?.name || themeId}!`);
     setUpdateToast({ type: 'success', message: `🎨 App Color Scheme set to ${selected?.name || themeId}!` });
     setTimeout(() => setUpdateToast(null), 3000);
   };
@@ -5477,39 +5490,6 @@ ${payload.stack || 'No stack trace available.'}
                           {activeThemeId === t.id ? '✓' : ''}
                         </div>
                         <span className="text-[8px] font-bold text-slate-300 truncate w-full text-center">{t.name.split(' ')[0]}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Drawer Group: App Color Schemes & Themes */}
-                <div className="space-y-2.5 bg-[#131b2f] border border-slate-700/80 p-3.5 rounded-2xl shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
-                      <span>🎨</span> App Color Scheme
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-300">
-                      {COLOR_THEMES[activeColorScheme]?.name || 'Emerald'}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2 pt-1">
-                    {Object.values(COLOR_THEMES).map((theme) => (
-                      <button
-                        key={theme.id}
-                        type="button"
-                        onClick={() => changeColorScheme(theme.id)}
-                        className={`p-2.5 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1 cursor-pointer ${
-                          activeColorScheme === theme.id
-                            ? 'bg-slate-800 border-emerald-400 text-white shadow-lg ring-1 ring-emerald-400 scale-[1.02]'
-                            : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1">
-                          <span className="w-3.5 h-3.5 rounded-full shadow-sm" style={{ backgroundColor: theme.accentHex }}></span>
-                          <span className="text-xs">{theme.icon}</span>
-                        </div>
-                        <span className="text-[10px] font-bold truncate w-full text-center">{theme.name.split(' ')[0]}</span>
                       </button>
                     ))}
                   </div>
