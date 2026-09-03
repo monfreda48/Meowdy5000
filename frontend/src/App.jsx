@@ -1841,22 +1841,25 @@ ${payload.stack || 'No stack trace available.'}
       let data = null;
       if (backendBaseUrl) {
         try {
+          const backendController = new AbortController();
+          const bTimeout = setTimeout(() => backendController.abort(), 7000);
           const response = await fetch(
             getApiUrl(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`),
             {
-              signal: controller.signal,
+              signal: backendController.signal,
               headers: {
                 'bypass-tunnel-reminder': 'true',
                 'Accept': 'application/json'
               }
             }
           );
+          clearTimeout(bTimeout);
           data = await safeFetchJson(response);
           if (!response.ok) {
             throw new Error(data?.error || 'Backend request failed');
           }
         } catch (backendErr) {
-          console.warn('[FetchStats] Custom backend request failed, falling back to direct API fetch:', backendErr);
+          console.warn('[FetchStats] Custom backend request failed or timed out (7s), falling back to direct client fetch:', backendErr);
           data = await fetchDirectPlayerStats(activeQuery, activeSeason, controller.signal);
         }
       } else {

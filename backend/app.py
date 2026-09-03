@@ -108,6 +108,18 @@ def calc_per_10m(stat_dict, per10_keys, total_keys, time_sec):
 
     return "N/A"
 
+_CHROMEDRIVER_PATH = None
+
+def get_chromedriver_path():
+    global _CHROMEDRIVER_PATH
+    if _CHROMEDRIVER_PATH is None:
+        try:
+            _CHROMEDRIVER_PATH = ChromeDriverManager().install()
+        except Exception as e:
+            print(f"[WARN] ChromeDriverManager install failed: {e}")
+            _CHROMEDRIVER_PATH = ""
+    return _CHROMEDRIVER_PATH
+
 def scrape_tracker_gg_api(username, season=None):
     """Uses Selenium to fetch Tracker.gg's protected API."""
     season_str = f" for season {season}" if season else ""
@@ -125,7 +137,11 @@ def scrape_tracker_gg_api(username, season=None):
     api_url = f"https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/ign/{safe_name}{season_param}"
 
     try:
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        path = get_chromedriver_path()
+        if path:
+            driver = webdriver.Chrome(service=Service(path), options=options)
+        else:
+            driver = webdriver.Chrome(options=options)
         driver.set_page_load_timeout(7)
         try:
             driver.get(profile_url)
