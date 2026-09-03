@@ -72,6 +72,9 @@ def init_db():
             username TEXT UNIQUE,
             platform TEXT,
             saved_url TEXT,
+            tracker_gg_url TEXT,
+            rivals_meta_url TEXT,
+            rivals_tracker_url TEXT,
             claimed_at DATETIME,
             cached_stats TEXT
         )
@@ -1183,9 +1186,9 @@ def get_stat_reports():
 @app.route('/api/claim-profile', methods=['GET', 'POST', 'DELETE'])
 def handle_claim_profile():
     """
-    Handles claiming profiles and saving user-specific direct profile URLs:
-    - POST: Saves claimed profile with direct URL and cached stats for instant retrieval.
-    - GET: Retrieves saved profile & direct URL by username query.
+    Handles claiming profiles and saving user-specific 3-site direct profile URLs:
+    - POST: Saves claimed profile with direct URLs for Tracker.gg, RivalsMeta, and RivalsTracker for instant retrieval.
+    - GET: Retrieves saved profile & 3 direct site URLs by username query.
     - DELETE: Unclaims profile.
     """
     if request.method == 'POST':
@@ -1193,6 +1196,9 @@ def handle_claim_profile():
         username = (data.get('username') or '').strip()
         platform = data.get('platform', 'PC')
         saved_url = data.get('savedUrl') or data.get('saved_url') or ''
+        tracker_gg_url = data.get('trackerGgUrl') or data.get('siteUrls', {}).get('trackerGg') or ''
+        rivals_meta_url = data.get('rivalsMetaUrl') or data.get('siteUrls', {}).get('rivalsMeta') or ''
+        rivals_tracker_url = data.get('rivalsTrackerUrl') or data.get('siteUrls', {}).get('rivalsTracker') or ''
         cached_stats = json.dumps(data.get('cachedStats') or {})
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -1202,20 +1208,26 @@ def handle_claim_profile():
         try:
             conn = sqlite3.connect(DB)
             conn.execute('''
-                INSERT INTO claimed_profiles (username, platform, saved_url, claimed_at, cached_stats)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO claimed_profiles (username, platform, saved_url, tracker_gg_url, rivals_meta_url, rivals_tracker_url, claimed_at, cached_stats)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(username) DO UPDATE SET
                     platform = excluded.platform,
                     saved_url = excluded.saved_url,
+                    tracker_gg_url = excluded.tracker_gg_url,
+                    rivals_meta_url = excluded.rivals_meta_url,
+                    rivals_tracker_url = excluded.rivals_tracker_url,
                     claimed_at = excluded.claimed_at,
                     cached_stats = excluded.cached_stats
-            ''', (username, platform, saved_url, timestamp, cached_stats))
+            ''', (username, platform, saved_url, tracker_gg_url, rivals_meta_url, rivals_tracker_url, timestamp, cached_stats))
             conn.commit()
             conn.close()
             return jsonify({
                 "success": True,
-                "message": f"Profile '{username}' claimed successfully!",
+                "message": f"Profile '{username}' claimed successfully with 3-site direct links!",
                 "savedUrl": saved_url,
+                "trackerGgUrl": tracker_gg_url,
+                "rivalsMetaUrl": rivals_meta_url,
+                "rivalsTrackerUrl": rivals_tracker_url,
                 "claimedAt": timestamp
             })
         except Exception as e:
@@ -1239,28 +1251,44 @@ def handle_claim_profile():
         username = (request.args.get('username') or '').strip()
         conn = sqlite3.connect(DB)
         if username:
-            cursor = conn.execute('SELECT username, platform, saved_url, claimed_at, cached_stats FROM claimed_profiles WHERE LOWER(username) = LOWER(?)', (username,))
+            cursor = conn.execute('SELECT username, platform, saved_url, tracker_gg_url, rivals_meta_url, rivals_tracker_url, claimed_at, cached_stats FROM claimed_profiles WHERE LOWER(username) = LOWER(?)', (username,))
             row = cursor.fetchone()
             conn.close()
             if row:
                 cached = {}
-                try: cached = json.loads(row[4]) if row[4] else {}
+                try: cached = json.loads(row[7]) if row[7] else {}
                 except: pass
                 return jsonify({
                     "claimed": True,
                     "username": row[0],
                     "platform": row[1],
                     "savedUrl": row[2],
-                    "claimedAt": row[3],
+                    "trackerGgUrl": row[3],
+                    "rivalsMetaUrl": row[4],
+                    "rivalsTrackerUrl": row[5],
+                    "siteUrls": {
+                        "trackerGg": row[3],
+                        "rivalsMeta": row[4],
+                        "rivalsTracker": row[5]
+                    },
+                    "claimedAt": row[6],
                     "cachedStats": cached
                 })
             return jsonify({"claimed": False})
         else:
-            cursor = conn.execute('SELECT username, platform, saved_url, claimed_at FROM claimed_profiles ORDER BY id DESC LIMIT 20')
+            cursor = conn.execute('SELECT username, platform, saved_url, tracker_gg_url, rivals_meta_url, rivals_tracker_url, claimed_at FROM claimed_profiles ORDER BY id DESC LIMIT 20')
             rows = cursor.fetchall()
             conn.close()
             return jsonify([
-                {"username": r[0], "platform": r[1], "savedUrl": r[2], "claimedAt": r[3]}
+                {
+                    "username": r[0],
+                    "platform": r[1],
+                    "savedUrl": r[2],
+                    "trackerGgUrl": r[3],
+                    "rivalsMetaUrl": r[4],
+                    "rivalsTrackerUrl": r[5],
+                    "claimedAt": r[6]
+                }
                 for r in rows
             ])
 

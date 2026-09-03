@@ -444,12 +444,27 @@ export default function App() {
 
     if (!targetUser) return;
     const sources = sourcesToTrack || claimedSources;
-    const savedUrl = targetStats?.siteUrls?.rivalsMeta || targetStats?.siteUrls?.trackerGg || targetStats?.trackerUrl || `https://tracker.gg/marvel-rivals/profile/ign/${encodeURIComponent(targetUser)}/overview`;
+    const cleanUser = targetUser.trim();
+    const encodedUser = encodeURIComponent(cleanUser);
+    const platSlug = (targetStats?.platform || selectedPlatform || 'pc').toLowerCase().includes('ps') ? 'psn' : (targetStats?.platform || selectedPlatform || 'pc').toLowerCase().includes('xbox') ? 'xbl' : 'ign';
+    const isUid = cleanUser.length > 0 && !isNaN(cleanUser);
+
+    const siteUrls = {
+      trackerGg: targetStats?.siteUrls?.trackerGg || `https://tracker.gg/marvel-rivals/profile/${platSlug}/${encodedUser}/overview`,
+      rivalsMeta: targetStats?.siteUrls?.rivalsMeta || (isUid ? `https://rivalsmeta.com/player/${encodedUser}` : `https://rivalsmeta.com/characters`),
+      rivalsTracker: targetStats?.siteUrls?.rivalsTracker || (isUid ? `https://rivalstracker.com/player/${encodedUser}` : `https://rivalstracker.com/heroes`)
+    };
+
+    const savedUrl = siteUrls.rivalsMeta || siteUrls.trackerGg;
     
     const claimObj = {
-      username: targetUser,
+      username: cleanUser,
       platform: targetStats?.platform || selectedPlatform || 'PC',
       savedUrl: savedUrl,
+      siteUrls: siteUrls,
+      trackerGgUrl: siteUrls.trackerGg,
+      rivalsMetaUrl: siteUrls.rivalsMeta,
+      rivalsTrackerUrl: siteUrls.rivalsTracker,
       claimedAt: new Date().toISOString(),
       trackingSources: sources,
       cachedStats: targetStats
