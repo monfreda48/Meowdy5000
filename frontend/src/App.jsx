@@ -233,9 +233,9 @@ export default function App() {
   // User Selected Favorite Primary Site for Minimized Cards
   const [favoriteSite, setFavoriteSite] = useState(() => {
     try {
-      return localStorage.getItem('favorite_primary_site') || 'trackerGg';
+      return localStorage.getItem('favorite_primary_site') || 'merged';
     } catch (e) {
-      return 'trackerGg';
+      return 'merged';
     }
   });
 
@@ -245,10 +245,21 @@ export default function App() {
     try {
       localStorage.setItem('favorite_primary_site', siteKey);
     } catch (e) { }
-    const siteNames = { trackerGg: 'Tracker.gg', rivalsMeta: 'RivalsMeta.com', rivalsTracker: 'RivalsTracker.com' };
-    showNativeToast(`⭐ Primary Site set to ${siteNames[siteKey] || siteKey}`);
+    const siteNames = { merged: '⚡ Merged / Best Available', trackerGg: '🌐 Tracker.gg', rivalsMeta: '⚔️ RivalsMeta.com', rivalsTracker: '🎯 RivalsTracker.com' };
+    showNativeToast(`⭐ Favorite Site set to ${siteNames[siteKey] || siteKey}`);
     setUpdateToast({ type: 'success', message: `⭐ Minimized cards now display ${siteNames[siteKey] || siteKey} stats.` });
     setTimeout(() => setUpdateToast(null), 3000);
+  };
+
+  const getCardDisplayStat = (metricKey, defaultValue) => {
+    if (!stats?.statBreakdown || favoriteSite === 'merged') {
+      return defaultValue;
+    }
+    const val = stats.statBreakdown[metricKey]?.[favoriteSite];
+    if (val && val !== 'N/A' && val !== '0' && val !== '0%' && val !== '0.0') {
+      return val;
+    }
+    return defaultValue;
   };
 
   // Claimed Profile & Tracking Source Selection State
@@ -358,47 +369,41 @@ export default function App() {
   };
 
   const render3SiteBreakdown = (metricKey) => {
-    const breakdown = stats?.current?.statBreakdown?.[metricKey];
-    if (!breakdown) return null;
-    
-    const isExpanded = expandedMetric === metricKey;
-    const siteNames = { trackerGg: 'Tracker.gg', rivalsMeta: 'RivalsMeta', rivalsTracker: 'RivalsTracker' };
-    const favValue = breakdown[favoriteSite] || stats?.current?.[metricKey] || 'N/A';
+    if (expandedMetric !== metricKey) return null;
+    const bd = stats?.statBreakdown?.[metricKey] || {};
 
-    if (!isExpanded) {
-      return (
-        <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400 font-medium select-none">
-          <span className="flex items-center gap-1">
-            <span className="text-amber-400 font-bold">⭐</span>
-            <span className="font-bold text-slate-300">{siteNames[favoriteSite]}:</span>
-            <span className="text-emerald-400 font-mono font-bold">{favValue}</span>
-          </span>
-          <span className="text-slate-500 font-bold group-hover:text-emerald-400 transition-colors">
-            Tap to expand 3 sites →
-          </span>
-        </div>
-      );
-    }
+    const sites = [
+      { key: 'trackerGg', name: 'Tracker.gg', icon: '🌐', val: bd.trackerGg || (stats?.current && stats.current[metricKey]) || 'N/A', color: 'border-purple-500/40 text-purple-400 bg-purple-500/10' },
+      { key: 'rivalsMeta', name: 'RivalsMeta', icon: '⚔️', val: bd.rivalsMeta || 'N/A', color: 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10' },
+      { key: 'rivalsTracker', name: 'RivalsTracker', icon: '🎯', val: bd.rivalsTracker || 'N/A', color: 'border-amber-500/40 text-amber-400 bg-amber-500/10' }
+    ];
 
     return (
-      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-[11px] select-none animate-in fade-in duration-300">
-        <div className="flex items-center justify-between text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-          <span>🌐 3-Site Data Comparison:</span>
-          <span className="text-amber-400 font-bold">Favorite: {siteNames[favoriteSite]}</span>
+      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300 select-none" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1">
+            <span>🌐 Live 3-Site Stats Comparison</span>
+          </span>
+          <span className="text-[9px] text-emerald-400 font-mono font-bold">Tap site to set favorite ⭐</span>
         </div>
-        <div className="grid grid-cols-3 gap-1.5 text-center font-mono font-bold">
-          <div className={`p-2 rounded-xl border transition-all ${favoriteSite === 'trackerGg' ? 'bg-emerald-500/15 border-emerald-500/60 shadow-md shadow-emerald-500/10' : 'bg-[#0b101e] border-slate-800'}`}>
-            <span className="block text-[9px] text-emerald-400 font-sans font-bold uppercase tracking-wider">Tracker.gg</span>
-            <span className="text-white text-xs sm:text-sm font-black">{breakdown.trackerGg || 'N/A'}</span>
-          </div>
-          <div className={`p-2 rounded-xl border transition-all ${favoriteSite === 'rivalsMeta' ? 'bg-teal-500/15 border-teal-500/60 shadow-md shadow-teal-500/10' : 'bg-[#0b101e] border-slate-800'}`}>
-            <span className="block text-[9px] text-teal-400 font-sans font-bold uppercase tracking-wider">RivalsMeta</span>
-            <span className="text-white text-xs sm:text-sm font-black">{breakdown.rivalsMeta || 'N/A'}</span>
-          </div>
-          <div className={`p-2 rounded-xl border transition-all ${favoriteSite === 'rivalsTracker' ? 'bg-blue-500/15 border-blue-500/60 shadow-md shadow-blue-500/10' : 'bg-[#0b101e] border-slate-800'}`}>
-            <span className="block text-[9px] text-blue-400 font-sans font-bold uppercase tracking-wider">RivalsTracker</span>
-            <span className="text-white text-xs sm:text-sm font-black">{breakdown.rivalsTracker || 'N/A'}</span>
-          </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          {sites.map((s) => (
+            <div
+              key={s.key}
+              onClick={(e) => { e.stopPropagation(); handleSetFavoriteSite(s.key); }}
+              className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                favoriteSite === s.key ? `${s.color} ring-1 ring-emerald-400 shadow-md scale-105` : 'bg-[#0f1526] border-slate-800 text-slate-300 hover:border-slate-700'
+              }`}
+              title={`Tap to set ${s.name} as favorite site when minimized`}
+            >
+              <span className="text-[10px] font-bold block truncate">{s.icon} {s.name}</span>
+              <span className="text-xs sm:text-sm font-black block mt-0.5">{s.val}</span>
+              {favoriteSite === s.key && (
+                <span className="text-[8px] font-bold text-amber-400 uppercase block mt-0.5">⭐ Favorite</span>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -2977,47 +2982,58 @@ ${payload.stack || 'No stack trace available.'}
                     </div>
                     <div>
                       <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
-                        <span>Minimized Card Primary Site</span>
+                        <span>Minimized Card Favorite Site</span>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                          {favoriteSite === 'trackerGg' ? 'Tracker.gg' : favoriteSite === 'rivalsMeta' ? 'RivalsMeta' : 'RivalsTracker'}
+                          {favoriteSite === 'trackerGg' ? 'Tracker.gg' : favoriteSite === 'rivalsMeta' ? 'RivalsMeta' : favoriteSite === 'rivalsTracker' ? 'RivalsTracker' : 'Merged / Best'}
                         </span>
                       </h4>
-                      <p className="text-[10px] text-slate-400 font-medium">Select which site's stat value displays when cards are minimized. Tap cards to expand all 3 sites!</p>
+                      <p className="text-[10px] text-slate-400 font-medium">Select which site's stat displays when cards are minimized. Tap cards to expand all 3 sites!</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 bg-[#0b101e] p-1.5 rounded-xl border border-slate-800 shrink-0 w-full sm:w-auto">
+                  <div className="flex items-center gap-1 bg-[#0b101e] p-1.5 rounded-xl border border-slate-800 shrink-0 w-full sm:w-auto overflow-x-auto">
                     <button
                       type="button"
-                      onClick={() => handleSetFavoriteSite('trackerGg')}
-                      className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'trackerGg'
+                      onClick={() => handleSetFavoriteSite('merged')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'merged'
                           ? 'bg-emerald-500/20 border border-emerald-500/60 text-emerald-400 shadow-sm'
                           : 'text-slate-400 hover:text-white'
                         }`}
                     >
-                      Tracker.gg
+                      ⚡ Merged
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSetFavoriteSite('trackerGg')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'trackerGg'
+                          ? 'bg-purple-500/20 border border-purple-500/60 text-purple-400 shadow-sm'
+                          : 'text-slate-400 hover:text-white'
+                        }`}
+                    >
+                      🌐 Tracker.gg
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleSetFavoriteSite('rivalsMeta')}
-                      className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'rivalsMeta'
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'rivalsMeta'
                           ? 'bg-teal-500/20 border border-teal-500/60 text-teal-400 shadow-sm'
                           : 'text-slate-400 hover:text-white'
                         }`}
                     >
-                      RivalsMeta
+                      ⚔️ RivalsMeta
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleSetFavoriteSite('rivalsTracker')}
-                      className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'rivalsTracker'
-                          ? 'bg-blue-500/20 border border-blue-500/60 text-blue-400 shadow-sm'
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'rivalsTracker'
+                          ? 'bg-amber-500/20 border border-amber-500/60 text-amber-400 shadow-sm'
                           : 'text-slate-400 hover:text-white'
                         }`}
                     >
-                      RivalsTracker
+                      🎯 RivalsTracker
                     </button>
                   </div>
                 </div>
@@ -3051,7 +3067,9 @@ ${payload.stack || 'No stack trace available.'}
                             {expandedMetric === 'winRate' ? '▲ Hide' : '▼ Expand'}
                           </span>
                         </div>
-                        <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>{stats.current.winRate}%</p>
+                        <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
+                          {getCardDisplayStat('winRate', `${stats.current.winRate}%`)}
+                        </p>
 
                         {expandedMetric === 'winRate' && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
@@ -3102,7 +3120,9 @@ ${payload.stack || 'No stack trace available.'}
                             {expandedMetric === 'kdRatio' ? '▲ Hide' : '▼ Expand'}
                           </span>
                         </div>
-                        <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>{stats.current.kdRatio}</p>
+                        <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
+                          {getCardDisplayStat('kdRatio', stats.current.kdRatio)}
+                        </p>
 
                         {expandedMetric === 'kdRatio' && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
@@ -3154,7 +3174,7 @@ ${payload.stack || 'No stack trace available.'}
                           </span>
                         </div>
                         <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                          {typeof stats.current.heroDamage === 'number' ? stats.current.heroDamage.toLocaleString() : (stats.current.heroDamage || 'N/A')}
+                          {getCardDisplayStat('heroDamage', typeof stats.current.heroDamage === 'number' ? stats.current.heroDamage.toLocaleString() : (stats.current.heroDamage || 'N/A'))}
                         </p>
 
                         {expandedMetric === 'heroDamage' && (
@@ -3201,7 +3221,7 @@ ${payload.stack || 'No stack trace available.'}
                           </span>
                         </div>
                         <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                          {stats.current.healing || 'N/A'}
+                          {getCardDisplayStat('healing', stats.current.healing || 'N/A')}
                         </p>
 
                         {expandedMetric === 'healing' && (
@@ -3248,7 +3268,7 @@ ${payload.stack || 'No stack trace available.'}
                           </span>
                         </div>
                         <p className={`font-black text-purple-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                          {stats.current.damageBlocked || 'N/A'}
+                          {getCardDisplayStat('damageBlocked', stats.current.damageBlocked || 'N/A')}
                         </p>
 
                         {expandedMetric === 'damageBlocked' && (
@@ -3296,7 +3316,7 @@ ${payload.stack || 'No stack trace available.'}
                           </span>
                         </div>
                         <p className={`font-black text-yellow-400 ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
-                          {stats.current.accuracy || 'N/A'}
+                          {getCardDisplayStat('accuracy', stats.current.accuracy || 'N/A')}
                         </p>
 
                         {expandedMetric === 'accuracy' && (
@@ -3345,7 +3365,7 @@ ${payload.stack || 'No stack trace available.'}
                           </span>
                         </div>
                         <p className={`font-black text-amber-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                          {stats.current.mvp || '0'}
+                          {getCardDisplayStat('mvp', stats.current.mvp || '0')}
                         </p>
 
                         {expandedMetric === 'mvp' && (
@@ -3388,7 +3408,7 @@ ${payload.stack || 'No stack trace available.'}
                           </span>
                         </div>
                         <p className={`font-black text-purple-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                          {stats.current.svp || '0'}
+                          {getCardDisplayStat('svp', stats.current.svp || '0')}
                         </p>
 
                         {expandedMetric === 'svp' && (
@@ -3433,7 +3453,7 @@ ${payload.stack || 'No stack trace available.'}
                           </span>
                         </div>
                         <p className={`font-black text-sky-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                          {stats.current.timePlayed || 'N/A'}
+                          {getCardDisplayStat('timePlayed', stats.current.timePlayed || 'N/A')}
                         </p>
 
                         {expandedMetric === 'timePlayed' && (
@@ -4739,6 +4759,51 @@ ${payload.stack || 'No stack trace available.'}
                       className={`w-12 h-6 rounded-full transition-colors p-1 cursor-pointer flex items-center shrink-0 border ${isTrackingMode ? 'bg-emerald-500 border-emerald-400 justify-end' : 'bg-slate-800 border-slate-700 justify-start'}`}
                     >
                       <div className="w-4 h-4 rounded-full bg-white shadow-md"></div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Drawer Group 0.55: Favorite Primary Data Site */}
+                <div className="space-y-2.5 bg-[#131b2f] border border-amber-500/40 p-3.5 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
+                      <span>⭐</span> Favorite Minimized Site
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      {favoriteSite === 'trackerGg' ? 'Tracker.gg' : favoriteSite === 'rivalsMeta' ? 'RivalsMeta' : favoriteSite === 'rivalsTracker' ? 'RivalsTracker' : 'Merged / Best'}
+                    </span>
+                  </div>
+
+                  <p className="text-[10px] text-slate-400 text-left">Select which site's stat displays when cards are minimized. Tap cards to expand all 3 sites!</p>
+
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleSetFavoriteSite('merged')}
+                      className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'merged' ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-400 shadow-sm' : 'bg-[#0b101e] border-slate-700/60 text-slate-300 hover:text-white'}`}
+                    >
+                      ⚡ Merged / Best
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSetFavoriteSite('trackerGg')}
+                      className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'trackerGg' ? 'bg-purple-500/20 border-purple-500/60 text-purple-400 shadow-sm' : 'bg-[#0b101e] border-slate-700/60 text-slate-300 hover:text-white'}`}
+                    >
+                      🌐 Tracker.gg
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSetFavoriteSite('rivalsMeta')}
+                      className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'rivalsMeta' ? 'bg-teal-500/20 border-teal-500/60 text-teal-400 shadow-sm' : 'bg-[#0b101e] border-slate-700/60 text-slate-300 hover:text-white'}`}
+                    >
+                      ⚔️ RivalsMeta
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSetFavoriteSite('rivalsTracker')}
+                      className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'rivalsTracker' ? 'bg-amber-500/20 border-amber-500/60 text-amber-400 shadow-sm' : 'bg-[#0b101e] border-slate-700/60 text-slate-300 hover:text-white'}`}
+                    >
+                      🎯 RivalsTracker
                     </button>
                   </div>
                 </div>
