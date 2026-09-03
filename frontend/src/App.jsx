@@ -2170,6 +2170,7 @@ ${payload.stack || 'No stack trace available.'}
     const deaths = parseInt(statsObj.total_deaths || 0, 10);
     const assists = parseInt(statsObj.total_assists || 0, 10);
 
+    const hasRealStats = Boolean(data && (matches > 0 || data.stats || data.rank));
     const winRateVal = matches > 0 ? ((wins / matches) * 100).toFixed(1) : "52.4";
     const kdRatioVal = deaths > 0 ? ((kills + assists) / deaths).toFixed(2) : "2.65";
 
@@ -2214,7 +2215,7 @@ ${payload.stack || 'No stack trace available.'}
       detectedSlug = "psn";
     } else if (selectedPlatform === 'xbox') {
       detectedPlatform = "Xbox Series X|S";
-      detectedIcon = "💚";
+      detectedIcon = "❎";
       detectedSlug = "xbl";
     } else if (cleanQuery.toLowerCase().includes('psn') || cleanQuery.toLowerCase().includes('ps5')) {
       detectedPlatform = "PlayStation 5";
@@ -2222,7 +2223,7 @@ ${payload.stack || 'No stack trace available.'}
       detectedSlug = "psn";
     } else if (cleanQuery.toLowerCase().includes('xbl') || cleanQuery.toLowerCase().includes('xbox')) {
       detectedPlatform = "Xbox Series X|S";
-      detectedIcon = "💚";
+      detectedIcon = "❎";
       detectedSlug = "xbl";
     }
 
