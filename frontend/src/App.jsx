@@ -411,6 +411,68 @@ export default function App() {
     });
   };
 
+  const getHeroLeaderboardRanks = (currentStats) => {
+    if (!currentStats) return [];
+
+    if (Array.isArray(currentStats.heroLeaderboardRanks) && currentStats.heroLeaderboardRanks.length > 0) {
+      return currentStats.heroLeaderboardRanks;
+    }
+
+    const ranks = [];
+    const platRaw = currentStats.platform || 'PC / Windows';
+    const platformName = (platRaw.includes('PlayStation') || platRaw.includes('PS5'))
+      ? 'PS5'
+      : (platRaw.includes('Xbox')
+        ? 'Xbox'
+        : 'PC');
+
+    const top3 = currentStats.topHeroesDetailed || currentStats.heroes || [];
+    top3.slice(0, 3).forEach(h => {
+      const name = typeof h === 'string' ? h : h.name;
+      if (!name) return;
+
+      const st = h.rawStats || h.rawHeroData || {};
+      const meta = h.rawMetadata || {};
+
+      let rankNum = null;
+      for (const key of ['heroRank', 'leaderboardRank', 'rank', 'leaderboardPosition', 'rankPosition', 'globalRank']) {
+        if (st[key]) {
+          const val = typeof st[key] === 'object' ? st[key].value || st[key].displayValue : st[key];
+          if (val && !isNaN(val) && Number(val) > 0) {
+            rankNum = Number(val);
+            break;
+          }
+        }
+        if (meta[key] && !isNaN(meta[key]) && Number(meta[key]) > 0) {
+          rankNum = Number(meta[key]);
+          break;
+        }
+      }
+
+      if (rankNum) {
+        ranks.push({
+          hero: name,
+          rank: rankNum,
+          platform: platformName
+        });
+      }
+    });
+
+    if (ranks.length === 0 && currentStats.heroRanksMap) {
+      Object.keys(currentStats.heroRanksMap).forEach(hName => {
+        if (currentStats.heroRanksMap[hName]) {
+          ranks.push({
+            hero: hName,
+            rank: currentStats.heroRanksMap[hName],
+            platform: platformName
+          });
+        }
+      });
+    }
+
+    return ranks;
+  };
+
   const getMinimizedStatValue = (metricKey, unit = '') => {
     if (!stats?.rawSourcesData) {
       const fallback = stats?.current?.[metricKey] || 'N/A';
@@ -2904,6 +2966,21 @@ ${payload.stack || 'No stack trace available.'}
                       </span>
                     )}
                   </div>
+
+                  {/* Top 3 Hero Platform Leaderboard Ranking Badges */}
+                  {getHeroLeaderboardRanks(stats.current).length > 0 && (
+                    <div className="flex items-center gap-2 mt-2 flex-wrap animate-in fade-in slide-in-from-top-1 duration-300">
+                      {getHeroLeaderboardRanks(stats.current).map((item, idx) => (
+                        <span
+                          key={idx}
+                          className="bg-gradient-to-r from-amber-500/25 via-yellow-500/25 to-amber-500/25 border border-amber-400/80 text-amber-300 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-amber-500/20"
+                        >
+                          <span>🏆</span>
+                          <span>Ranked #{item.rank} {item.hero} on {item.platform}</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 

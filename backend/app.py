@@ -316,6 +316,37 @@ def scrape_tracker_gg_api(username, season=None):
             else:
                 avatar_url = ""
 
+            # Extract Top 3 Hero Platform Leaderboard Ranks
+            short_platform = 'PS5' if ('psn' in platform_slug or 'playstation' in platform_slug or 'ps5' in platform_slug) else ('Xbox' if ('xbl' in platform_slug or 'xbox' in platform_slug) else 'PC')
+            hero_leaderboard_ranks = []
+            for h_seg in top_3_detailed:
+                h_name = h_seg.get('name')
+                st = h_seg.get('rawStats', {})
+                meta = h_seg.get('rawMetadata', {})
+                
+                h_rank = None
+                for rk in ['rank', 'heroRank', 'leaderboardRank', 'rankPosition', 'leaderboardPos', 'globalRank']:
+                    if rk in st:
+                        v = st[rk].get('value') if isinstance(st[rk], dict) else st[rk]
+                        try:
+                            if v is not None and int(v) > 0:
+                                h_rank = int(v)
+                                break
+                        except: pass
+                    if rk in meta:
+                        try:
+                            if meta[rk] is not None and int(meta[rk]) > 0:
+                                h_rank = int(meta[rk])
+                                break
+                        except: pass
+                
+                if h_rank:
+                    hero_leaderboard_ranks.append({
+                        "hero": h_name,
+                        "rank": h_rank,
+                        "platform": short_platform
+                    })
+
             return {
                 "success": True,
                 "avatarUrl": avatar_url,
@@ -331,6 +362,7 @@ def scrape_tracker_gg_api(username, season=None):
                 "kdRatio": str(round(kd_ratio, 2)),
                 "topHero": top_hero_str,
                 "topHeroesDetailed": top_3_detailed,
+                "heroLeaderboardRanks": hero_leaderboard_ranks,
                 "allHeroesFull": hero_list,
                 "roleSegments": role_segments,
                 "allSegments": segments,
@@ -570,6 +602,8 @@ def get_stats():
         if tracker_data.get("lifetimePeakRank"): final_data["lifetimePeakRank"] = tracker_data["lifetimePeakRank"]
         if tracker_data.get("topHeroesDetailed") and len(tracker_data.get("topHeroesDetailed")) > 0:
             final_data["topHeroesDetailed"] = tracker_data["topHeroesDetailed"]
+        if tracker_data.get("heroLeaderboardRanks"):
+            final_data["heroLeaderboardRanks"] = tracker_data["heroLeaderboardRanks"]
 
     # Resolve Numeric Account UID from query or Tracker.gg payload
     resolved_uid = query if query.isdigit() else tracker_data.get("platformUserIdentifier") or tracker_data.get("platformUserId") or ""
