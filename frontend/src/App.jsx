@@ -211,6 +211,7 @@ export default function App() {
   };
 
   const [lookupQuery, setLookupQuery] = useState('');
+  const [showPayPalModal, setShowPayPalModal] = useState(false);
 
   const handleProfileLookup = (e) => {
     if (e) e.preventDefault();
@@ -5306,9 +5307,7 @@ ${payload.stack || 'No stack trace available.'}
                     onClick={() => {
                       triggerHaptic('success');
                       setIsMenuOpen(false);
-                      const paypalUrl = localStorage.getItem('paypal_donate_url') || 'https://www.paypal.com/donate';
-                      openExternalUrl(paypalUrl);
-                      showNativeToast('💙 Opening PayPal Donation page...');
+                      setShowPayPalModal(true);
                     }}
                     className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 cursor-pointer flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-98"
                   >
@@ -6219,6 +6218,71 @@ ${payload.stack || 'No stack trace available.'}
                 Yes, Unclaim Profile
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: PayPal Donation & QR Code */}
+      {showPayPalModal && (
+        <div className="fixed inset-0 z-[110000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-gradient-to-br from-[#131b2f] via-[#0f172a] to-[#0b101e] border-2 border-amber-500/70 rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl space-y-4 text-center relative animate-in zoom-in-95 duration-200">
+            
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setShowPayPalModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white text-lg font-bold p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              ✕
+            </button>
+
+            {/* Instruction Header */}
+            <div className="space-y-2 pt-1">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center font-bold text-2xl mx-auto shadow-lg shadow-amber-500/20">
+                💳
+              </div>
+              <h3 className="text-base sm:text-lg font-black text-white leading-snug">
+                Use the QR Code or press here to go to PayPal
+              </h3>
+              <p className="text-xs text-slate-400">
+                Recipient: <strong className="text-amber-400 font-mono">meowdy5000@gmail.com</strong>
+              </p>
+            </div>
+
+            {/* QR Code Container */}
+            <div className="bg-white p-3.5 rounded-2xl inline-block border-2 border-amber-500/40 shadow-xl mx-auto my-1">
+              <img
+                src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https%3A%2F%2Fwww.paypal.com%2Fcgi-bin%2Fwebscr%3Fcmd%3D_donations%26business%3Dmeowdy5000%40gmail.com"
+                alt="PayPal QR Code"
+                className="w-40 h-40 object-contain rounded-lg"
+              />
+            </div>
+
+            {/* Direct Link Action Button */}
+            <div className="space-y-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('success');
+                  const targetPaypalUrl = 'https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meowdy5000@gmail.com&currency_code=USD';
+                  openExternalUrl(targetPaypalUrl);
+                  showNativeToast('💙 Opening PayPal for meowdy5000@gmail.com...');
+                }}
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-amber-500/30 cursor-pointer flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95"
+              >
+                <span>💳</span>
+                <span>Open PayPal (meowdy5000@gmail.com)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowPayPalModal(false)}
+                className="w-full py-1.5 text-slate-400 hover:text-slate-200 text-xs font-bold uppercase tracking-wider cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+
           </div>
         </div>
       )}
