@@ -251,6 +251,43 @@ export default function App() {
     setTimeout(() => setUpdateToast(null), 3000);
   };
 
+  // Season Span & Custom Range State
+  const [customSeasonStart, setCustomSeasonStart] = useState('1.0');
+  const [customSeasonEnd, setCustomSeasonEnd] = useState('2.5');
+
+  // Daily Notification Reminder State
+  const [dailyNotificationEnabled, setDailyNotificationEnabled] = useState(() => {
+    try {
+      return localStorage.getItem('daily_notification_enabled') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const toggleDailyNotification = async () => {
+    const newVal = !dailyNotificationEnabled;
+    setDailyNotificationEnabled(newVal);
+    try {
+      localStorage.setItem('daily_notification_enabled', newVal ? 'true' : 'false');
+    } catch (e) {}
+
+    triggerHaptic('light');
+
+    if (newVal) {
+      if ('Notification' in window && Notification.permission !== 'granted') {
+        try {
+          await Notification.requestPermission();
+        } catch (e) {}
+      }
+      showNativeToast('🔔 Daily tracking reminder enabled!');
+      setUpdateToast({ type: 'success', message: '🔔 Daily tracking reminder enabled. You will receive daily log in prompts!' });
+    } else {
+      showNativeToast('🔕 Daily tracking reminder disabled.');
+      setUpdateToast({ type: 'update', message: '🔕 Daily tracking reminder disabled.' });
+    }
+    setTimeout(() => setUpdateToast(null), 3000);
+  };
+
   const getCardDisplayStat = (metricKey, defaultValue) => {
     if (!stats?.statBreakdown || favoriteSite === 'merged') {
       return defaultValue;
@@ -2432,7 +2469,7 @@ ${payload.stack || 'No stack trace available.'}
       )}
 
       {/* Top Navigation Bar */}
-      <nav className="border-b border-slate-800 bg-[#0f1526]/80 backdrop-blur-md sticky top-0 z-50 overflow-x-hidden">
+      <nav className="border-b border-slate-800 bg-[#0f1526]/90 backdrop-blur-md sticky top-0 z-50 overflow-x-hidden nav-safe-area">
         <div className="max-w-6xl mx-auto px-2.5 sm:px-6 py-2 sm:py-3.5 flex items-center justify-between gap-1.5 sm:gap-3">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-xs sm:text-sm tracking-tighter shadow-[0_0_18px_rgba(16,185,129,0.6)] border border-emerald-500/70 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)] relative overflow-hidden">
@@ -2460,8 +2497,8 @@ ${payload.stack || 'No stack trace available.'}
               <span className="relative z-10 drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]">M5</span>
             </div>
             <span className="text-xs sm:text-lg md:text-xl font-black tracking-wider text-white uppercase truncate">
-              <span className="sm:hidden">M5 RIVALS TRACKER</span>
-              <span className="hidden sm:inline">M5 RIVALS TRACKER</span>
+              <span className="sm:hidden">M5 STAT TRACKER</span>
+              <span className="hidden sm:inline">M5 STAT TRACKER</span>
             </span>
           </div>
 
@@ -2472,7 +2509,7 @@ ${payload.stack || 'No stack trace available.'}
                 type="text"
                 value={lookupQuery}
                 onChange={(e) => setLookupQuery(e.target.value)}
-                placeholder="Profile Lookup (Untracked)..."
+                placeholder="Search..."
                 className="w-full bg-[#131b2f] border border-slate-700/70 hover:border-emerald-500/50 focus:border-emerald-500 rounded-xl py-1.5 pl-8 pr-12 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all shadow-inner"
               />
               <span className="absolute left-2.5 text-slate-400 text-xs pointer-events-none">🔍</span>
@@ -2481,11 +2518,11 @@ ${payload.stack || 'No stack trace available.'}
                   type="submit"
                   className="absolute right-1 px-2 py-0.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[10px] rounded-lg uppercase tracking-wider transition-all cursor-pointer shadow"
                 >
-                  Lookup
+                  Search
                 </button>
               ) : (
                 <span className="absolute right-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline select-none">
-                  Inspect
+                  Search
                 </span>
               )}
             </div>
@@ -2661,7 +2698,7 @@ ${payload.stack || 'No stack trace available.'}
                 </svg>
               </summary>
               <div className="px-4 pb-4 text-slate-300 text-xs sm:text-sm leading-relaxed border-t border-slate-700/50 pt-3 bg-[#0f1526]">
-                Every time you hit <strong>Search</strong>, this app takes a live snapshot of your stats and securely saves it to a local database. Over time, these daily snapshots connect together to build your performance charts—revealing exactly how your Win Rate and KDA trend day by day!
+                <strong>M5 Stat Tracker</strong> aggregates real-time career data across 3 major competitive stats providers (Tracker.gg, RivalsMeta.com, and RivalsTracker.com). Your primary claimed profile automatically logs data snapshots on app launch, blending multi-site statistics to calculate merged averages, peak ranks, and historical performance trends day by day!
               </div>
             </details>
           </div>
@@ -2853,25 +2890,7 @@ ${payload.stack || 'No stack trace available.'}
 
 
 
-              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (claimedProfile?.username?.toLowerCase() === stats.current.username?.toLowerCase()) {
-                      handleUnclaimProfile();
-                    } else {
-                      handleClaimProfile(stats.current.username);
-                    }
-                  }}
-                  className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer shadow-lg border uppercase tracking-wider ${
-                    claimedProfile?.username?.toLowerCase() === stats.current.username?.toLowerCase()
-                      ? 'bg-emerald-500/20 border-emerald-500/80 text-emerald-300 shadow-emerald-500/20 hover:bg-emerald-500/30'
-                      : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 border-emerald-400/50 text-white'
-                  }`}
-                >
-                  <span>👑 {claimedProfile?.username?.toLowerCase() === stats.current.username?.toLowerCase() ? 'Claimed Profile ✓' : 'Claim Profile'}</span>
-                </button>
-
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => sharePlayerStats()}
@@ -3074,67 +3093,85 @@ ${payload.stack || 'No stack trace available.'}
                   </div>
                 </div>
 
-                {/* Favorite Primary Site Selection Bar for Minimized Cards */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#131b2f] p-3.5 sm:p-4 rounded-2xl border border-slate-700/60 shadow-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm border border-amber-500/30 shrink-0">
-                      ⭐
+                {/* Season Span Filter & Minimized Card Dropdown Controls Bar */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#131b2f] p-3.5 sm:p-4 rounded-2xl border border-slate-700/60 shadow-lg text-left">
+                  {/* Left: Season Span Selector */}
+                  <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm border border-emerald-500/30 shrink-0">
+                      📅
                     </div>
-                    <div>
-                      <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
-                        <span>Minimized Card Favorite Site</span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                          {favoriteSite === 'trackerGg' ? 'Tracker.gg' : favoriteSite === 'rivalsMeta' ? 'RivalsMeta' : favoriteSite === 'rivalsTracker' ? 'RivalsTracker' : 'Merged / Best'}
-                        </span>
-                      </h4>
-                      <p className="text-[10px] text-slate-400 font-medium">Select which site's stat displays when cards are minimized. Tap cards to expand all 3 sites!</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div>
+                        <h4 className="text-xs font-black text-white uppercase tracking-wider">Season Filter Span</h4>
+                        <p className="text-[10px] text-slate-400 font-medium">Select single half season, full season, or custom span</p>
+                      </div>
+                      <select
+                        value={season}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSeason(val);
+                          triggerHaptic('light');
+                          if (query.trim()) fetchStats(null, query, val);
+                        }}
+                        className="bg-[#0b101e] border border-slate-700/80 hover:border-emerald-500/60 rounded-xl px-3 py-1.5 text-xs font-bold text-emerald-400 focus:outline-none focus:border-emerald-500 cursor-pointer shadow-sm"
+                      >
+                        <option value="19">Season 2 (Full Season)</option>
+                        <option value="2.5">Season 2.5 (Mid-Season)</option>
+                        <option value="2.0">Season 2.0 (First Half)</option>
+                        <option value="1">Season 1 (Full Season)</option>
+                        <option value="1.5">Season 1.5 (Mid-Season)</option>
+                        <option value="1.0">Season 1.0 (First Half)</option>
+                        <option value="all">All Seasons (Combined Span)</option>
+                        <option value="custom">Custom Season Span...</option>
+                      </select>
+
+                      {season === 'custom' && (
+                        <div className="flex items-center gap-1.5 bg-[#0b101e] border border-emerald-500/40 p-1.5 rounded-xl text-xs">
+                          <span className="text-[10px] text-slate-400 font-bold px-1">From:</span>
+                          <select
+                            value={customSeasonStart}
+                            onChange={(e) => setCustomSeasonStart(e.target.value)}
+                            className="bg-slate-900 text-white font-bold rounded px-1.5 py-0.5 text-xs"
+                          >
+                            <option value="1.0">S1.0</option>
+                            <option value="1.5">S1.5</option>
+                            <option value="2.0">S2.0</option>
+                            <option value="2.5">S2.5</option>
+                          </select>
+                          <span className="text-[10px] text-slate-400 font-bold px-1">To:</span>
+                          <select
+                            value={customSeasonEnd}
+                            onChange={(e) => setCustomSeasonEnd(e.target.value)}
+                            className="bg-slate-900 text-white font-bold rounded px-1.5 py-0.5 text-xs"
+                          >
+                            <option value="1.5">S1.5</option>
+                            <option value="2.0">S2.0</option>
+                            <option value="2.5">S2.5</option>
+                            <option value="2.9">S2.9 (Current)</option>
+                          </select>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1 bg-[#0b101e] p-1.5 rounded-xl border border-slate-800 shrink-0 w-full sm:w-auto overflow-x-auto">
-                    <button
-                      type="button"
-                      onClick={() => handleSetFavoriteSite('merged')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'merged'
-                          ? 'bg-emerald-500/20 border border-emerald-500/60 text-emerald-400 shadow-sm'
-                          : 'text-slate-400 hover:text-white'
-                        }`}
-                    >
-                      ⚡ Merged
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSetFavoriteSite('trackerGg')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'trackerGg'
-                          ? 'bg-purple-500/20 border border-purple-500/60 text-purple-400 shadow-sm'
-                          : 'text-slate-400 hover:text-white'
-                        }`}
-                    >
-                      🌐 Tracker.gg
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSetFavoriteSite('rivalsMeta')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'rivalsMeta'
-                          ? 'bg-teal-500/20 border border-teal-500/60 text-teal-400 shadow-sm'
-                          : 'text-slate-400 hover:text-white'
-                        }`}
-                    >
-                      ⚔️ RivalsMeta
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSetFavoriteSite('rivalsTracker')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'rivalsTracker'
-                          ? 'bg-amber-500/20 border border-amber-500/60 text-amber-400 shadow-sm'
-                          : 'text-slate-400 hover:text-white'
-                        }`}
-                    >
-                      🎯 RivalsTracker
-                    </button>
+                  {/* Right: Minimized Card Favorite Drop-Down Menu */}
+                  <div className="flex items-center gap-2 border-t sm:border-t-0 border-slate-800 pt-2 sm:pt-0 shrink-0">
+                    <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs border border-amber-500/30 shrink-0">
+                      ⭐
+                    </div>
+                    <div className="text-left">
+                      <span className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Card Display:</span>
+                      <select
+                        value={favoriteSite}
+                        onChange={(e) => handleSetFavoriteSite(e.target.value)}
+                        className="bg-[#0b101e] border border-slate-700/80 hover:border-emerald-500/60 rounded-xl px-3 py-1.5 text-xs font-bold text-amber-400 focus:outline-none focus:border-amber-500 cursor-pointer shadow-sm"
+                      >
+                        <option value="merged">⚡ Merged / Best Data</option>
+                        <option value="trackerGg">🌐 Tracker.gg</option>
+                        <option value="rivalsMeta">⚔️ RivalsMeta.com</option>
+                        <option value="rivalsTracker">🎯 RivalsTracker.com</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -4809,101 +4846,8 @@ ${payload.stack || 'No stack trace available.'}
                   </div>
                 </div>
 
-                {/* Drawer Group 0: Claimed Profile Management */}
-                <div className="space-y-2.5 bg-[#131b2f] border border-emerald-500/40 p-3.5 rounded-2xl text-left">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
-                      <span>👑</span> My Claimed Profile
-                    </span>
-                    {claimedProfile?.username && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                        Auto-Loads
-                      </span>
-                    )}
-                  </div>
-
-                  {claimedProfile?.username ? (
-                    <div className="space-y-2.5">
-                      <div className="flex items-center justify-between bg-[#0b101e] border border-slate-700/60 p-2.5 rounded-xl">
-                        <div className="flex items-center gap-2.5 overflow-hidden">
-                          {getDisplayAvatar(claimedProfile.username) ? (
-                            <img
-                              src={getDisplayAvatar(claimedProfile.username)}
-                              alt={claimedProfile.username}
-                              className="w-9 h-9 rounded-xl border border-emerald-400/60 object-cover shadow-sm shrink-0"
-                            />
-                          ) : (
-                            <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-xs border border-emerald-500/30 shrink-0">
-                              👑
-                            </div>
-                          )}
-                          <div className="text-left overflow-hidden">
-                            <h4 className="text-xs font-black text-white truncate">{claimedProfile.username}</h4>
-                            <p className="text-[10px] text-slate-400 truncate">
-                              Claimed: {claimedProfile.claimedAt ? new Date(claimedProfile.claimedAt).toLocaleDateString() : 'Active'}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <button
-                            onClick={() => {
-                              setQuery(claimedProfile.username);
-                              fetchStats(null, claimedProfile.username, season);
-                              setIsMenuOpen(false);
-                            }}
-                            className="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/50 font-bold text-[10px] uppercase cursor-pointer transition-all"
-                          >
-                            View Stats
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              triggerHaptic('warning');
-                              setShowUnclaimConfirmModal(true);
-                            }}
-                            title="Unclaim Profile"
-                            className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/30 text-red-400 hover:text-red-300 border border-red-500/40 flex items-center justify-center font-bold text-xs cursor-pointer transition-all shrink-0"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          triggerHaptic('warning');
-                          setShowUnclaimConfirmModal(true);
-                        }}
-                        className="w-full py-2.5 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 text-red-400 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2"
-                      >
-                        <span>🗑️</span>
-                        <span>Unclaim Profile</span>
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2 text-center py-1">
-                      <p className="text-xs text-slate-400">No profile claimed yet. Claim your username to auto-load your stats on launch!</p>
-                      <button
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          if (stats?.current?.username) {
-                            handleClaimProfile(stats.current.username);
-                          } else {
-                            setShowClaimModal(true);
-                          }
-                        }}
-                        className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-emerald-500/20 cursor-pointer flex items-center justify-center gap-1.5"
-                      >
-                        <span>👑</span>
-                        <span>{stats?.current?.username ? `Claim ${stats.current.username}` : 'Claim Profile Now'}</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-
                 {/* Drawer Group 0.5: Automatic Snapshot Tracking Mode Toggle */}
-                <div className="space-y-2.5 bg-[#131b2f] border border-emerald-500/40 p-3.5 rounded-2xl">
+                <div className="space-y-2.5 bg-[#131b2f] border border-emerald-500/40 p-3.5 rounded-2xl text-left">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
                       <span>⚡</span> Snapshot Tracking Mode
@@ -4945,47 +4889,56 @@ ${payload.stack || 'No stack trace available.'}
                   </div>
                 </div>
 
-                {/* Drawer Group 0.55: Favorite Primary Data Site */}
-                <div className="space-y-2.5 bg-[#131b2f] border border-amber-500/40 p-3.5 rounded-2xl">
+                {/* Drawer Group 0.55: Favorite Primary Data Site Drop-Down */}
+                <div className="space-y-2.5 bg-[#131b2f] border border-amber-500/40 p-3.5 rounded-2xl text-left">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
                       <span>⭐</span> Favorite Minimized Site
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                      {favoriteSite === 'trackerGg' ? 'Tracker.gg' : favoriteSite === 'rivalsMeta' ? 'RivalsMeta' : favoriteSite === 'rivalsTracker' ? 'RivalsTracker' : 'Merged / Best'}
+                  </div>
+
+                  <p className="text-[10px] text-slate-400 text-left">Select which site's stat displays when cards are minimized:</p>
+
+                  <select
+                    value={favoriteSite}
+                    onChange={(e) => handleSetFavoriteSite(e.target.value)}
+                    className="w-full bg-[#0b101e] border border-slate-700/80 rounded-xl p-2.5 text-xs font-bold text-amber-400 focus:outline-none focus:border-amber-500 cursor-pointer shadow-sm"
+                  >
+                    <option value="merged">⚡ Merged / Best Available</option>
+                    <option value="trackerGg">🌐 Tracker.gg</option>
+                    <option value="rivalsMeta">⚔️ RivalsMeta.com</option>
+                    <option value="rivalsTracker">🎯 RivalsTracker.com</option>
+                  </select>
+                </div>
+
+                {/* Drawer Group 0.58: Daily Tracking Reminder */}
+                <div className="space-y-2.5 bg-[#131b2f] border border-slate-700/60 p-3.5 rounded-2xl text-left">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
+                      <span>🔔</span> Daily Tracking Reminder
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${dailyNotificationEnabled ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'}`}>
+                      {dailyNotificationEnabled ? 'ON' : 'OFF'}
                     </span>
                   </div>
 
-                  <p className="text-[10px] text-slate-400 text-left">Select which site's stat displays when cards are minimized. Tap cards to expand all 3 sites!</p>
+                  <div className="flex items-center justify-between gap-3 bg-[#0b101e] border border-slate-700/60 p-3 rounded-xl">
+                    <div className="text-left">
+                      <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <span>🔔</span>
+                        <span>Daily Log In Reminder</span>
+                      </h4>
+                      <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
+                        Send a daily notification to log in, track stats, and update performance snapshots.
+                      </p>
+                    </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-1">
                     <button
                       type="button"
-                      onClick={() => handleSetFavoriteSite('merged')}
-                      className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'merged' ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-400 shadow-sm' : 'bg-[#0b101e] border-slate-700/60 text-slate-300 hover:text-white'}`}
+                      onClick={toggleDailyNotification}
+                      className={`w-12 h-6 rounded-full transition-colors p-1 cursor-pointer flex items-center shrink-0 border ${dailyNotificationEnabled ? 'bg-emerald-500 border-emerald-400 justify-end' : 'bg-slate-800 border-slate-700 justify-start'}`}
                     >
-                      ⚡ Merged / Best
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSetFavoriteSite('trackerGg')}
-                      className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'trackerGg' ? 'bg-purple-500/20 border-purple-500/60 text-purple-400 shadow-sm' : 'bg-[#0b101e] border-slate-700/60 text-slate-300 hover:text-white'}`}
-                    >
-                      🌐 Tracker.gg
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSetFavoriteSite('rivalsMeta')}
-                      className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'rivalsMeta' ? 'bg-teal-500/20 border-teal-500/60 text-teal-400 shadow-sm' : 'bg-[#0b101e] border-slate-700/60 text-slate-300 hover:text-white'}`}
-                    >
-                      ⚔️ RivalsMeta
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSetFavoriteSite('rivalsTracker')}
-                      className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${favoriteSite === 'rivalsTracker' ? 'bg-amber-500/20 border-amber-500/60 text-amber-400 shadow-sm' : 'bg-[#0b101e] border-slate-700/60 text-slate-300 hover:text-white'}`}
-                    >
-                      🎯 RivalsTracker
+                      <div className="w-4 h-4 rounded-full bg-white shadow-md"></div>
                     </button>
                   </div>
                 </div>
@@ -5421,7 +5374,7 @@ ${payload.stack || 'No stack trace available.'}
               <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center font-black text-[#00ff88] text-[9px] border border-[#00ff88] shadow-[0_0_10px_#00ff88]">
                 M5
               </div>
-              <span className="font-bold text-slate-400">Meowdy 5000 Rivals Tracker</span>
+              <span className="font-bold text-slate-400">M5 Stat Tracker</span>
             </div>
             <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500">
               <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">

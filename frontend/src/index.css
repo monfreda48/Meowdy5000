@@ -60,3 +60,7 @@ body {
   padding-top: max(env(safe-area-inset-top, 0px), 1rem) !important;
   padding-bottom: max(env(safe-area-inset-bottom, 0px), 1rem) !important;
 }
+
+.nav-safe-area {
+  padding-top: max(env(safe-area-inset-top, 0px), 0.5rem) !important;
+}
