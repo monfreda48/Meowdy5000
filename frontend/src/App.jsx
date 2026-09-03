@@ -5294,7 +5294,7 @@ ${payload.stack || 'No stack trace available.'}
 
                   <div className="text-left space-y-1">
                     <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                      <span>💙</span> Enjoying Meowdy 5000?
+                      <span>💙</span> Enjoying M5 Stat Tracker?
                     </h4>
                     <p className="text-[10px] text-slate-300 leading-relaxed">
                       Help support server hosting, scraper maintenance & future feature updates!
