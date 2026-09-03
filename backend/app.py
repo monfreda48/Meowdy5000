@@ -304,7 +304,7 @@ def scrape_tracker_gg_api(username, season=None):
                 platform_icon = '🎮'
             elif 'xbl' in platform_slug or 'xbox' in platform_slug:
                 detected_platform = 'Xbox Series X|S'
-                platform_icon = '💚'
+                platform_icon = '❎'
             else:
                 detected_platform = 'PC / Windows'
                 platform_icon = '💻'

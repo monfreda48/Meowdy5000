@@ -2954,7 +2954,7 @@ ${payload.stack || 'No stack trace available.'}
                           ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50 shadow-indigo-500/10'
                           : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-cyan-500/10'
                     }`}>
-                      <span>{stats.current.platformIcon || ((stats.current.platform || '').includes('Xbox') ? '💚' : (stats.current.platform || '').includes('PlayStation') ? '🎮' : '💻')}</span>
+                      <span>{stats.current.platformIcon || ((stats.current.platform || '').includes('Xbox') ? '❎' : (stats.current.platform || '').includes('PlayStation') ? '🎮' : '💻')}</span>
                       <span>{stats.current.platform || 'PC / Windows'}</span>
                     </span>
                     {stats.current.peakRank && stats.current.peakRank !== 'Unranked' && (
@@ -5564,7 +5564,7 @@ ${payload.stack || 'No stack trace available.'}
                   <div className="grid grid-cols-3 gap-2">
                     {[
                       { id: 'PS5', label: '🎮 PS5' },
-                      { id: 'Xbox', label: '💚 Xbox' },
+                      { id: 'Xbox', label: '❎ Xbox' },
                       { id: 'PC', label: '💻 PC' }
                     ].map((p) => (
                       <button
