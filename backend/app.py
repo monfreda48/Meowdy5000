@@ -306,7 +306,7 @@ def scrape_tracker_gg_api(username, season=None):
                 detected_platform = 'Xbox Series X|S'
                 platform_icon = '❎'
             else:
-                detected_platform = 'PC / Windows'
+                detected_platform = 'PC'
                 platform_icon = '💻'
 
             raw_avatar_url = platform_info.get('avatarUrl', '')
@@ -767,7 +767,7 @@ def get_stats():
     # Automated 5-Step Hero Leaderboard Ingestion for Top 3 Heroes on Player's Platform
     if not final_data.get("heroLeaderboardRanks"):
         auto_ranks = []
-        plat_raw = final_data.get("platform", "PC / Windows")
+        plat_raw = final_data.get("platform", "PC")
         short_plat = "PS5" if ("PlayStation" in plat_raw or "PS5" in plat_raw) else ("Xbox" if "Xbox" in plat_raw else "PC")
         top3_heroes = (final_data.get("topHeroesDetailed") or final_data.get("heroes") or [])[:3]
         for h_item in top3_heroes:

@@ -417,6 +417,21 @@ export default function App() {
     });
   };
 
+  const renderPlatformIcon = (platformStr, fallbackIcon) => {
+    const pStr = (platformStr || '').toLowerCase();
+    if (pStr.includes('playstation') || pStr.includes('ps5') || pStr.includes('psn')) {
+      return (
+        <svg className="w-3.5 h-3.5 fill-current text-indigo-300 inline-block shrink-0" viewBox="0 0 24 24">
+          <path d="M23.669 17.202c-.378-.415-1.16-.764-2.529-1.074l-4.577-1.036v-2.023c0-.62-.224-1.127-.672-1.521-.448-.395-1.05-.592-1.806-.592-.733 0-1.325.197-1.776.592-.451.394-.676.901-.676 1.521v1.17l-3.327-.753v-5.23c1.034-.148 1.942-.519 2.723-1.113.782-.594 1.173-1.377 1.173-2.348 0-1.082-.394-1.921-1.182-2.518C10.438 1.626 9.387 1.327 8.07 1.327c-.89 0-1.748.163-2.574.489C4.67 2.142 4 2.617 3.486 3.242c-.516.625-.774 1.378-.774 2.259 0 .96.388 1.737 1.164 2.33.776.594 1.678.966 2.706 1.114v6.004l-3.882.88c-.96.217-1.636.529-2.027.936C.282 17.172.087 17.653.087 18.208c0 .644.27 1.177.81 1.6.54.423 1.306.634 2.298.634 1.05 0 2.217-.23 3.501-.69 1.284-.46 2.502-1.08 3.654-1.86v-3.791l3.327.753v2.023c0 .62.225 1.127.673 1.521.448.395 1.049.592 1.805.592.733 0 1.325-.197 1.776-.592.451-.394.676-.901.676-1.521v-1.17l3.966.897c.567.128 1.002.203 1.305.225.303.023.545.034.726.034.526 0 .942-.148 1.248-.444.306-.296.459-.706.459-1.23 0-.584-.258-1.077-.775-1.48z"/>
+        </svg>
+      );
+    }
+    if (pStr.includes('xbox') || pStr.includes('xbl')) {
+      return <span>❎</span>;
+    }
+    return <span>💻</span>;
+  };
+
   const getHeroLeaderboardRanks = (currentStats) => {
     if (!currentStats) return [];
 
@@ -425,7 +440,7 @@ export default function App() {
     }
 
     const ranks = [];
-    const platRaw = currentStats.platform || 'PC / Windows';
+    const platRaw = currentStats.platform || 'PC';
     const platformName = (platRaw.includes('PlayStation') || platRaw.includes('PS5'))
       ? 'PS5'
       : (platRaw.includes('Xbox')
@@ -2205,7 +2220,7 @@ ${payload.stack || 'No stack trace available.'}
       rivalsTracker: isUid ? `https://rivalstracker.com/player/${encodedQuery}` : `https://rivalstracker.com/search?q=${encodedQuery}`
     };
 
-    let detectedPlatform = "PC / Windows";
+    let detectedPlatform = "PC";
     let detectedIcon = "💻";
     let detectedSlug = "pc";
 
@@ -2710,9 +2725,9 @@ ${payload.stack || 'No stack trace available.'}
                       }`}
                   >
                     <option value="all">🌐 All Platforms</option>
-                    <option value="pc">💻 PC / Windows</option>
-                    <option value="ps5">🎮 PlayStation 5</option>
-                    <option value="xbox">💚 Xbox Series X|S</option>
+                    <option value="pc">💻 PC</option>
+                    <option value="ps5">PlayStation 5</option>
+                    <option value="xbox">❎ Xbox Series X|S</option>
                   </select>
 
                   <button
@@ -2955,8 +2970,8 @@ ${payload.stack || 'No stack trace available.'}
                           ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50 shadow-indigo-500/10'
                           : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-cyan-500/10'
                     }`}>
-                      <span>{stats.current.platformIcon || ((stats.current.platform || '').includes('Xbox') ? '❎' : (stats.current.platform || '').includes('PlayStation') ? '🎮' : '💻')}</span>
-                      <span>{stats.current.platform || 'PC / Windows'}</span>
+                      <span>{renderPlatformIcon(stats.current.platform, stats.current.platformIcon)}</span>
+                      <span>{stats.current.platform || 'PC'}</span>
                     </span>
                     {stats.current.peakRank && stats.current.peakRank !== 'Unranked' && (
                       <span className="bg-purple-500/10 text-purple-300 border border-purple-500/30 px-2.5 py-0.5 rounded-md text-[11px] font-bold">
