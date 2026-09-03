@@ -2324,118 +2324,6 @@ ${payload.stack || 'No stack trace available.'}
             </div>
           )}
 
-          {/* Customize What You Track Selection Box */}
-          <div className={`w-full ${isMobileView ? '' : 'max-w-3xl'} text-left`}>
-            <details className="group bg-[#131b2f] border border-slate-700/50 rounded-2xl overflow-hidden shadow-xl transition-all duration-300">
-              <summary className="flex cursor-pointer items-center justify-between px-4 py-3 font-bold text-slate-300 hover:text-emerald-400 transition-colors list-none">
-                <span className="flex items-center gap-2 uppercase tracking-widest text-xs">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                  </svg>
-                  ⚡ All Available Metrics Tracked ({AVAILABLE_METRICS.length}/{AVAILABLE_METRICS.length} Active)
-                </span>
-                <svg className="w-4 h-4 text-slate-500 transition-transform duration-300 group-open:-rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </summary>
-
-              <div className="p-4 bg-[#0f1526] border-t border-slate-700/50 space-y-3">
-                <div className="flex items-center justify-between pb-1">
-                  <p className="text-xs text-slate-400">
-                    Toggle stats & rearrange display order. Changes persist automatically:
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditOrderMode(!isEditOrderMode)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${isEditOrderMode
-                        ? 'bg-amber-500/20 border-amber-500/60 text-amber-400 shadow-sm'
-                        : 'bg-[#0b101e] border-slate-700/60 text-slate-300 hover:text-white hover:border-emerald-500/50'
-                      }`}
-                  >
-                    {isEditOrderMode ? '🔒 Done Reordering' : '✏️ Rearrange Order'}
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {(isEditOrderMode
-                    ? [...selectedMetrics.map(id => AVAILABLE_METRICS.find(m => m.id === id)).filter(Boolean), ...AVAILABLE_METRICS.filter(m => !selectedMetrics.includes(m.id))]
-                    : AVAILABLE_METRICS
-                  ).map((m) => {
-                    const active = isMetricTracked(m.id);
-                    const orderIndex = selectedMetrics.indexOf(m.id);
-
-                    return (
-                      <div key={m.id} className="flex items-center gap-1.5 bg-[#0f1526] p-1 rounded-xl border border-slate-800">
-                        <button
-                          type="button"
-                          onClick={() => toggleMetric(m.id)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${active
-                              ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/60 text-white shadow-sm'
-                              : 'bg-[#0b101e] border-slate-800 text-slate-500 hover:text-slate-300'
-                            }`}
-                        >
-                          <span>{m.icon}</span>
-                          <span>{m.name}</span>
-                          <span className={`w-2 h-2 rounded-full ${active ? 'bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.8)]' : 'bg-slate-700'}`}></span>
-                        </button>
-
-                        {isEditOrderMode && active && (
-                          <div
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-1 bg-[#0b101e] border border-slate-700/80 rounded-xl px-1.5 py-1"
-                          >
-                            <span className="text-[10px] text-slate-400 font-bold uppercase">Order:</span>
-                            <select
-                              value={orderIndex + 1}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                changeMetricOrder(m.id, parseInt(e.target.value));
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                              className="bg-slate-800 border border-slate-700 text-emerald-400 font-black text-xs rounded px-1 py-0.5 focus:outline-none focus:border-emerald-500 cursor-pointer"
-                            >
-                              {selectedMetrics.map((_, idx) => (
-                                <option key={idx + 1} value={idx + 1}>
-                                  #{idx + 1}
-                                </option>
-                              ))}
-                            </select>
-                            <div className="flex items-center ml-0.5 border-l border-slate-700/80 pl-1">
-                              <button
-                                type="button"
-                                onClick={(e) => moveMetricUp(m.id, e)}
-                                disabled={orderIndex <= 0}
-                                title="Move Up"
-                                className="px-1 py-0.5 text-slate-400 hover:text-emerald-400 disabled:opacity-30 font-black text-[10px] cursor-pointer"
-                              >
-                                ◄
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => moveMetricDown(m.id, e)}
-                                disabled={orderIndex >= selectedMetrics.length - 1}
-                                title="Move Down"
-                                className="px-1 py-0.5 text-slate-400 hover:text-emerald-400 disabled:opacity-30 font-black text-[10px] cursor-pointer"
-                              >
-                                ►
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="flex justify-end gap-3 pt-2 border-t border-slate-800/80 text-[11px]">
-                  <button type="button" onClick={selectAllMetrics} className="text-emerald-400 hover:text-emerald-300 font-bold cursor-pointer">Select All</button>
-                  <span className="text-slate-600">•</span>
-                  <button type="button" onClick={resetDefaultMetrics} className="text-slate-400 hover:text-white font-medium cursor-pointer">Reset Defaults</button>
-                </div>
-              </div>
-            </details>
-          </div>
-
           {/* Expandable "How Tracking Works" Box */}
           <div className={`w-full ${isMobileView ? '' : 'max-w-3xl'} text-left`}>
             <details className="group bg-[#131b2f] border border-slate-700/50 rounded-xl overflow-hidden shadow-lg transition-all duration-300">
@@ -2597,6 +2485,42 @@ ${payload.stack || 'No stack trace available.'}
         {/* Dashboard Results */}
         {stats && !loading && (
           <div className={`animate-in fade-in slide-in-from-bottom-8 duration-700 ${isMobileView ? 'space-y-5' : 'space-y-8'}`}>
+
+            {/* Profile Confirmation Banner before committing to track */}
+            {(!claimedProfile || claimedProfile.username?.toLowerCase() !== stats.current.username?.toLowerCase()) && (
+              <div className="bg-gradient-to-r from-[#131b2f] via-[#0f172a] to-[#131b2f] border-2 border-emerald-500/70 p-4 sm:p-6 rounded-2xl shadow-2xl space-y-3 text-left animate-in fade-in slide-in-from-top-3 duration-300">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-start sm:items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center font-bold text-2xl shrink-0 shadow-lg shadow-emerald-500/20">
+                      👑
+                    </div>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-wider flex items-center gap-2 flex-wrap">
+                        <span>Profile Found: {stats.current.username}</span>
+                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                          Inspect & Confirm
+                        </span>
+                      </h3>
+                      <p className="text-xs text-slate-300 font-medium mt-0.5 leading-relaxed">
+                        Inspect the player stats below. Click <strong>Confirm & Claim Profile</strong> to save this profile so it automatically loads on app startup!
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('success');
+                      handleClaimProfile(stats.current.username);
+                    }}
+                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs sm:text-sm px-6 py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-500/30 uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shrink-0 hover:scale-105 active:scale-95"
+                  >
+                    <span>👑</span>
+                    <span>Confirm & Claim Profile</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Player Header Banner */}
             {/* Player Header Banner with Interactive Track Player Switch */}
