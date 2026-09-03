@@ -2438,15 +2438,6 @@ ${payload.stack || 'No stack trace available.'}
             MEOWDY 5000 RIVALS TRACKER
           </h1>
 
-          {/* Prominent "TRACK HARD, SNACK HARD" Splash Motto */}
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-emerald-500/20 border-2 border-emerald-500/60 px-5 py-2.5 rounded-full shadow-lg shadow-emerald-500/20 my-3 animate-pulse">
-            <span className="text-emerald-400 font-black text-sm sm:text-lg uppercase tracking-widest flex items-center gap-2">
-              <span>⚡</span>
-              <span>TRACK HARD, SNACK HARD</span>
-              <span>🍕</span>
-            </span>
-          </div>
-
           <p className="text-xs text-slate-400 font-medium mt-3 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
             <span>Initializing 3-Site Analytics Engine...</span>
@@ -2540,7 +2531,7 @@ ${payload.stack || 'No stack trace available.'}
                 Meowdy 5000's Stat Tracker
               </h1>
               <p className="text-xs sm:text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500 uppercase tracking-widest animate-in fade-in slide-in-from-bottom-6 duration-1000">
-                SNACK HARD, TRACK HARD
+                MARVEL RIVALS STAT TRACKER
               </p>
             </div>
 
@@ -2674,7 +2665,7 @@ ${payload.stack || 'No stack trace available.'}
         <div className={`flex flex-col items-center text-center ${isMobileView ? 'space-y-2' : 'space-y-3 sm:space-y-6'}`}>
           <h1 className={`font-black tracking-tight text-white uppercase w-full ${isMobileView ? 'text-xl sm:text-3xl' : 'text-2xl sm:text-5xl md:text-6xl lg:text-7xl'
             }`}>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">SNACK HARD, TRACK HARD</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">M5 STAT TRACKER</span>
           </h1>
 
           {/* Active Season & Upcoming Season 10 Status Pill */}
