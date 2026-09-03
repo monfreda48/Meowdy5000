@@ -2168,50 +2168,6 @@ ${payload.stack || 'No stack trace available.'}
           <form onSubmit={fetchStats} className={`w-full ${isMobileView ? 'mt-1' : 'max-w-3xl mt-3 sm:mt-8'}`}>
             <div className={`flex bg-[#131b2f] p-2.5 sm:p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${isMobileView ? 'flex-col gap-2' : 'flex-col md:flex-row items-center gap-3'
               }`}>
-              {/* Checkbox to the left of the search bar for Tracking Mode */}
-              <div
-                className={`flex items-center gap-2 px-3.5 py-2.5 sm:py-3.5 rounded-xl border transition-all shrink-0 select-none ${isTrackingMode
-                    ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/60 text-white shadow-md shadow-emerald-500/10'
-                    : 'bg-[#0b101e] border-slate-700/60 text-slate-400 hover:text-slate-200'
-                  }`}
-                title={isTrackingMode ? "Tracking Mode Active: Datasets auto-download on search" : "Tracking Mode Off: Searches do not download datasets"}
-              >
-                <input
-                  type="checkbox"
-                  id="trackingCheckboxInput"
-                  checked={isTrackingMode}
-                  onChange={(e) => {
-                    const val = e.target.checked;
-                    setIsTrackingMode(val);
-                    try { localStorage.setItem('tracking_mode_enabled', val ? 'true' : 'false'); } catch (err) { }
-                    triggerHaptic('light');
-                    showNativeToast(`Tracking Mode ${val ? '📥 ON' : '🚫 OFF'}`);
-                    setUpdateToast({
-                      type: val ? 'success' : 'update',
-                      message: val ? '📥 Tracking Mode ON: User dataset will auto-download on each search.' : '🚫 Tracking Mode OFF: Datasets will not download.'
-                    });
-                    setTimeout(() => setUpdateToast(null), 3000);
-                  }}
-                  className="w-4 h-4 rounded border-slate-700 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900 bg-slate-900 cursor-pointer accent-emerald-500"
-                />
-                <label htmlFor="trackingCheckboxInput" className="text-xs font-black uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5 cursor-pointer">
-                  <span>{isTrackingMode ? '📥' : '🚫'}</span>
-                  <span className={isTrackingMode ? 'text-emerald-300' : 'text-slate-400'}>
-                    Tracking {isTrackingMode ? 'ON' : 'OFF'}
-                  </span>
-                </label>
-
-                <button
-                  type="button"
-                  onClick={() => { triggerHaptic('light'); setShowAutoUpdateModal(true); }}
-                  title="Click to change default tracking mode preference in Options"
-                  className="text-[10px] text-slate-400 hover:text-emerald-400 font-bold ml-1 pl-2 border-l border-slate-700/80 cursor-pointer flex items-center gap-1 group"
-                >
-                  <span className="group-hover:rotate-45 transition-transform">⚙️</span>
-                  <span className="hidden sm:inline">Default: <strong className={defaultTrackingPref === 'enabled' ? 'text-emerald-400' : 'text-slate-400'}>{defaultTrackingPref === 'enabled' ? 'ON' : 'OFF'}</strong></span>
-                </button>
-              </div>
-
               <div className="flex-1 relative w-full">
                 <input
                   type="text"
@@ -2436,50 +2392,6 @@ ${payload.stack || 'No stack trace available.'}
             </div>
           )}
 
-          {/* Claim Your Profile Welcome Banner (shown when no stats & no profile claimed yet) */}
-          {!stats && !loading && !claimedProfile && (
-            <div className={`w-full ${isMobileView ? '' : 'max-w-3xl'} bg-gradient-to-br from-[#131b2f] via-[#0f172a] to-[#0b101e] border-2 border-emerald-500/60 p-6 sm:p-8 rounded-3xl shadow-2xl shadow-emerald-500/20 text-center space-y-4 my-4 animate-in fade-in slide-in-from-bottom-4 duration-500`}>
-              <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center text-3xl mx-auto shadow-lg shadow-emerald-500/30">
-                👑
-              </div>
-              <div className="space-y-1.5 max-w-md mx-auto">
-                <h3 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider">
-                  Claim Your Profile to Start Tracking
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-300">
-                  Track your Marvel Rivals performance! Claim your in-game username to automatically load your stats dashboard whenever you open the app.
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 max-w-md mx-auto">
-                <input
-                  type="text"
-                  placeholder="Enter your username to claim..."
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && query.trim()) {
-                      handleClaimProfile(query.trim());
-                      fetchStats(null, query.trim(), season);
-                    }
-                  }}
-                  className="w-full bg-[#0b101e] border border-slate-700/80 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (query.trim()) {
-                      handleClaimProfile(query.trim());
-                      fetchStats(null, query.trim(), season);
-                    }
-                  }}
-                  disabled={!query.trim()}
-                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 cursor-pointer disabled:opacity-50 shrink-0"
-                >
-                  Claim & Track
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Dashboard Results */}
@@ -4437,6 +4349,49 @@ ${payload.stack || 'No stack trace available.'}
                       </button>
                     </div>
                   )}
+                </div>
+
+                {/* Drawer Group 0.5: Automatic Snapshot Tracking Mode Toggle */}
+                <div className="space-y-2.5 bg-[#131b2f] border border-emerald-500/40 p-3.5 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
+                      <span>⚡</span> Snapshot Tracking Mode
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${isTrackingMode ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'}`}>
+                      {isTrackingMode ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 bg-[#0b101e] border border-slate-700/60 p-3 rounded-xl">
+                    <div className="text-left">
+                      <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <span>{isTrackingMode ? '📥' : '🚫'}</span>
+                        <span>Auto Snapshot Tracking</span>
+                      </h4>
+                      <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
+                        Automatically record daily stat snapshots when searching or loading profiles.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newVal = !isTrackingMode;
+                        setIsTrackingMode(newVal);
+                        try { localStorage.setItem('tracking_mode_enabled', newVal ? 'true' : 'false'); } catch (err) { }
+                        triggerHaptic('light');
+                        showNativeToast(`Snapshot Tracking ${newVal ? '📥 ON' : '🚫 OFF'}`);
+                        setUpdateToast({
+                          type: newVal ? 'success' : 'update',
+                          message: newVal ? '📥 Automatic Snapshot Tracking ON' : '🚫 Automatic Snapshot Tracking OFF'
+                        });
+                        setTimeout(() => setUpdateToast(null), 3000);
+                      }}
+                      className={`w-12 h-6 rounded-full transition-colors p-1 cursor-pointer flex items-center shrink-0 border ${isTrackingMode ? 'bg-emerald-500 border-emerald-400 justify-end' : 'bg-slate-800 border-slate-700 justify-start'}`}
+                    >
+                      <div className="w-4 h-4 rounded-full bg-white shadow-md"></div>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Drawer Group 1: App Updates */}
