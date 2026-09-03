@@ -676,10 +676,13 @@ def get_stats():
 
     import urllib.parse
     encoded_query = urllib.parse.quote(query)
+    rm_url = f"https://rivalsmeta.com/player/{resolved_uid}" if (resolved_uid and str(resolved_uid).isdigit()) else f"https://rivalsmeta.com/search?q={encoded_query}"
+    rt_url = f"https://rivalstracker.com/player/{resolved_uid}" if (resolved_uid and str(resolved_uid).isdigit()) else f"https://rivalstracker.com/search?q={encoded_query}"
+
     final_data["siteUrls"] = {
         "trackerGg": tracker_data.get("tracker_url") or f"https://tracker.gg/marvel-rivals/profile/ign/{encoded_query}/overview",
-        "rivalsMeta": f"https://rivalsmeta.com/player/{resolved_uid or query}",
-        "rivalsTracker": f"https://rivalstracker.com/player/{encoded_query}"
+        "rivalsMeta": rm_url,
+        "rivalsTracker": rt_url
     }
 
     # Save to Local SQLite Database

@@ -1787,54 +1787,52 @@ ${payload.stack || 'No stack trace available.'}
     const topNames = heroList.slice(0, 3).map(h => h.name);
     const topHeroStr = topNames.join(", ") || "Spider-Man, Venom, Iron Man";
 
+    const isUid = cleanQuery.length > 0 && !isNaN(cleanQuery);
     const siteUrls = {
       trackerGg: `https://tracker.gg/marvel-rivals/profile/ign/${encodedQuery}/overview`,
-      rivalsMeta: `https://rivalsmeta.com/player/${encodedQuery}`,
-      rivalsTracker: `https://rivalstracker.com/player/${encodedQuery}`
+      rivalsMeta: isUid ? `https://rivalsmeta.com/player/${encodedQuery}` : `https://rivalsmeta.com/search?q=${encodedQuery}`,
+      rivalsTracker: isUid ? `https://rivalstracker.com/player/${encodedQuery}` : `https://rivalstracker.com/search?q=${encodedQuery}`
     };
+
+    const hasRealStats = Boolean(data && data.stats);
 
     const currentObj = {
       username: data?.name || cleanQuery,
       avatarUrl: "",
-      rank: data?.rank ? String(data.rank) : "Grandmaster",
-      peakRank: "Grandmaster",
-      winRate: String(winRateVal),
-      kdRatio: String(kdRatioVal),
-      topHero: topHeroStr,
+      rank: data?.rank ? String(data.rank) : "Search 3 Sites Below",
+      peakRank: data?.peakRank || "",
+      winRate: hasRealStats ? String(winRateVal) : "N/A",
+      kdRatio: hasRealStats ? String(kdRatioVal) : "N/A",
+      topHero: heroList.length > 0 ? topHeroStr : "Inspect Profile Below",
       trackerScore: "N/A",
       trackerUrl: siteUrls.trackerGg,
-      matchesPlayed: matches || 85,
-      matchesWon: wins || 45,
-      kills: kills || 320,
-      deaths: deaths || 140,
-      assists: assists || 180,
-      heroDamage: "18,450",
-      healing: "12,200",
-      damageBlocked: "14,800",
-      accuracy: "48.5%",
-      mvp: "14",
-      svp: "6",
-      timePlayed: "24h 15m",
-      sources: ["3-Site Direct Profile Selector (Client Mode)"],
+      matchesPlayed: hasRealStats ? matches : "N/A",
+      matchesWon: hasRealStats ? wins : "N/A",
+      kills: hasRealStats ? kills : "N/A",
+      deaths: hasRealStats ? deaths : "N/A",
+      assists: hasRealStats ? assists : "N/A",
+      heroDamage: "N/A",
+      healing: "N/A",
+      damageBlocked: "N/A",
+      accuracy: "N/A",
+      mvp: "N/A",
+      svp: "N/A",
+      timePlayed: "N/A",
+      sources: ["3-Site Direct Web Profile Selector"],
       siteUrls,
-      topHeroesDetailed: heroList.length > 0 ? heroList.slice(0, 3) : [
-        { name: "Spider-Man", matches: 45, winRate: 58.5, kda: 3.2 },
-        { name: "Venom", matches: 30, winRate: 52.0, kda: 2.7 },
-        { name: "Iron Man", matches: 25, winRate: 50.0, kda: 2.4 }
-      ],
+      topHeroesDetailed: heroList,
       allHeroesFull: heroList,
       statBreakdown: {
-        winRate: { trackerGg: `${winRateVal}%`, rivalsMeta: `${winRateVal}%`, rivalsTracker: `${winRateVal}%` },
-        kdRatio: { trackerGg: String(kdRatioVal), rivalsMeta: String(kdRatioVal), rivalsTracker: String(kdRatioVal) },
-        heroDamage: { trackerGg: "18,450", rivalsMeta: "18,200", rivalsTracker: "18,450" },
-        healing: { trackerGg: "12,200", rivalsMeta: "12,000", rivalsTracker: "12,200" },
-        damageBlocked: { trackerGg: "14,800", rivalsMeta: "14,500", rivalsTracker: "14,800" },
-        accuracy: { trackerGg: "48.5%", rivalsMeta: "48.0%", rivalsTracker: "48.5%" },
-        mvp: { trackerGg: "14", rivalsMeta: "14", rivalsTracker: "14" },
-        svp: { trackerGg: "6", rivalsMeta: "6", rivalsTracker: "6" },
-        timePlayed: { trackerGg: "24h 15m", rivalsMeta: "24h 15m", rivalsTracker: "24h 15m" },
-        matchesPlayed: { trackerGg: String(matches || 85), rivalsMeta: String(matches || 85), rivalsTracker: String(matches || 85) },
-        rank: { trackerGg: data?.rank ? String(data.rank) : "Grandmaster", rivalsMeta: data?.rank ? String(data.rank) : "Grandmaster", rivalsTracker: data?.rank ? String(data.rank) : "Grandmaster" }
+        winRate: {
+          trackerGg: hasRealStats ? `${winRateVal}%` : "Click Open ↗",
+          rivalsMeta: hasRealStats ? `${winRateVal}%` : "Click Open ↗",
+          rivalsTracker: hasRealStats ? `${winRateVal}%` : "Click Open ↗"
+        },
+        kdRatio: {
+          trackerGg: hasRealStats ? String(kdRatioVal) : "Click Open ↗",
+          rivalsMeta: hasRealStats ? String(kdRatioVal) : "Click Open ↗",
+          rivalsTracker: hasRealStats ? String(kdRatioVal) : "Click Open ↗"
+        }
       },
       rawSourcesData: { rivalsMeta: data }
     };
@@ -2599,7 +2597,9 @@ ${payload.stack || 'No stack trace available.'}
                   type="button"
                   onClick={() => {
                     triggerHaptic('light');
-                    const url = stats.current.siteUrls?.rivalsMeta || `https://rivalsmeta.com/player/${encodeURIComponent(stats.current.username)}`;
+                    const isUid = stats.current.username && !isNaN(stats.current.username);
+                    const rmFallback = isUid ? `https://rivalsmeta.com/player/${encodeURIComponent(stats.current.username)}` : `https://rivalsmeta.com/search?q=${encodeURIComponent(stats.current.username)}`;
+                    const url = stats.current.siteUrls?.rivalsMeta || rmFallback;
                     openExternalUrl(url);
                     showNativeToast('⚔️ Opening RivalsMeta.com profile webpage...');
                   }}
@@ -2609,7 +2609,7 @@ ${payload.stack || 'No stack trace available.'}
                     <span className="text-base group-hover:scale-110 transition-transform">⚔️</span>
                     <div className="text-left">
                       <span className="block text-white font-black">RivalsMeta</span>
-                      <span className="text-[9px] text-teal-400 font-normal">rivalsmeta.com/player</span>
+                      <span className="text-[9px] text-teal-400 font-normal">rivalsmeta.com</span>
                     </div>
                   </div>
                   <span className="text-xs font-black text-slate-500 group-hover:text-teal-300">Open ↗</span>
@@ -2619,7 +2619,9 @@ ${payload.stack || 'No stack trace available.'}
                   type="button"
                   onClick={() => {
                     triggerHaptic('light');
-                    const url = stats.current.siteUrls?.rivalsTracker || `https://rivalstracker.com/player/${encodeURIComponent(stats.current.username)}`;
+                    const isUid = stats.current.username && !isNaN(stats.current.username);
+                    const rtFallback = isUid ? `https://rivalstracker.com/player/${encodeURIComponent(stats.current.username)}` : `https://rivalstracker.com/search?q=${encodeURIComponent(stats.current.username)}`;
+                    const url = stats.current.siteUrls?.rivalsTracker || rtFallback;
                     openExternalUrl(url);
                     showNativeToast('🎯 Opening RivalsTracker.com profile webpage...');
                   }}
@@ -2629,7 +2631,7 @@ ${payload.stack || 'No stack trace available.'}
                     <span className="text-base group-hover:scale-110 transition-transform">🎯</span>
                     <div className="text-left">
                       <span className="block text-white font-black">RivalsTracker</span>
-                      <span className="text-[9px] text-blue-400 font-normal">rivalstracker.com/player</span>
+                      <span className="text-[9px] text-blue-400 font-normal">rivalstracker.com</span>
                     </div>
                   </div>
                   <span className="text-xs font-black text-slate-500 group-hover:text-blue-300">Open ↗</span>
