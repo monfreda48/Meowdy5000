@@ -133,6 +133,8 @@ public class ApkInstallerPlugin extends Plugin {
             intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true);
 
             context.startActivity(intent);
 

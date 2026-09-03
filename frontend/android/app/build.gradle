@@ -11,8 +11,8 @@ android {
         applicationId "com.meowdy5000.stattracker"
         minSdk 24
         targetSdk 35
-        versionCode 15
-        versionName "1.0.15"
+        versionCode 20
+        versionName "1.0.20"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
@@ -23,7 +23,11 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
+            signingConfig signingConfigs.debug
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
