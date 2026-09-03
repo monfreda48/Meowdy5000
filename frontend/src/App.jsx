@@ -3929,14 +3929,105 @@ ${payload.stack || 'No stack trace available.'}
                         📋 Copy Full JSON
                       </button>
                     </div>
-                    <div className="max-h-80 overflow-y-auto font-mono text-xs text-slate-300 select-all leading-relaxed p-3 bg-black/40 rounded-xl border border-slate-800">
-                      <pre className="whitespace-pre-wrap break-words">{JSON.stringify(stats, null, 2)}</pre>
-                    </div>
                   </div>
                 </details>
 
               </div>
             )}
+
+            {/* 3-Site Official Web Profile External Links Card (Bottom of Page) */}
+            <div className="bg-[#131b2f] border-2 border-emerald-500/50 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-4 text-left mt-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center font-bold text-xl shrink-0 shadow-lg shadow-emerald-500/20">
+                    🌐
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
+                      <span>Web Profile Links ({stats.current.username})</span>
+                    </h3>
+                    <p className="text-xs text-slate-400 font-medium mt-0.5">
+                      Open exact live player profile search pages directly on the 3 official tracking sites:
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                {/* Site 1: Tracker.gg */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    const url = stats.siteUrls?.trackerGg || `https://tracker.gg/marvel-rivals/profile/ign/${encodeURIComponent(stats.current.username)}/overview`;
+                    openExternalUrl(url);
+                  }}
+                  className="bg-[#0b101e] hover:bg-purple-500/20 border border-slate-700/80 hover:border-purple-500 p-4 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer shadow-md"
+                >
+                  <div className="flex items-center gap-3 truncate">
+                    <div className="w-9 h-9 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-black text-sm shrink-0 border border-purple-500/40">
+                      🌐
+                    </div>
+                    <div className="truncate">
+                      <h4 className="text-xs font-black text-white group-hover:text-purple-300 transition-colors truncate">
+                        Marvel Rivals Tracker.gg
+                      </h4>
+                      <p className="text-[10px] text-slate-400 font-mono">tracker.gg</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-400 group-hover:text-purple-300 font-bold shrink-0">↗</span>
+                </button>
+
+                {/* Site 2: RivalsMeta.com */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    const url = stats.siteUrls?.rivalsMeta || `https://rivalsmeta.com/search?q=${encodeURIComponent(stats.current.username)}`;
+                    openExternalUrl(url);
+                  }}
+                  className="bg-[#0b101e] hover:bg-emerald-500/20 border border-slate-700/80 hover:border-emerald-500 p-4 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer shadow-md"
+                >
+                  <div className="flex items-center gap-3 truncate">
+                    <div className="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-sm shrink-0 border border-emerald-500/40">
+                      ⚔️
+                    </div>
+                    <div className="truncate">
+                      <h4 className="text-xs font-black text-white group-hover:text-emerald-300 transition-colors truncate">
+                        RivalsMeta.com
+                      </h4>
+                      <p className="text-[10px] text-slate-400 font-mono">rivalsmeta.com</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-400 group-hover:text-emerald-300 font-bold shrink-0">↗</span>
+                </button>
+
+                {/* Site 3: RivalsTracker.com */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    const url = stats.siteUrls?.rivalsTracker || `https://rivalstracker.com/search?q=${encodeURIComponent(stats.current.username)}`;
+                    openExternalUrl(url);
+                  }}
+                  className="bg-[#0b101e] hover:bg-amber-500/20 border border-slate-700/80 hover:border-amber-500 p-4 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer shadow-md"
+                >
+                  <div className="flex items-center gap-3 truncate">
+                    <div className="w-9 h-9 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-black text-sm shrink-0 border border-amber-500/40">
+                      🎯
+                    </div>
+                    <div className="truncate">
+                      <h4 className="text-xs font-black text-white group-hover:text-amber-300 transition-colors truncate">
+                        RivalsTracker.com
+                      </h4>
+                      <p className="text-[10px] text-slate-400 font-mono">rivalstracker.com</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-400 group-hover:text-amber-300 font-bold shrink-0">↗</span>
+                </button>
+              </div>
+            </div>
+
           </div>
         )}
 
