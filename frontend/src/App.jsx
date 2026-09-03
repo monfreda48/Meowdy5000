@@ -5113,27 +5113,34 @@ ${payload.stack || 'No stack trace available.'}
           </div>
         </div>
 
-        {/* App Footer & Version Badge */}
-        <footer className="mt-6 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-xs">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center font-black text-[#00ff88] text-[9px] border border-[#00ff88] shadow-[0_0_10px_#00ff88]">
-              M5
+        {/* App Footer & Legal Disclaimer */}
+        <footer className="mt-6 pt-4 border-t border-slate-800/80 space-y-3 text-center">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center font-black text-[#00ff88] text-[9px] border border-[#00ff88] shadow-[0_0_10px_#00ff88]">
+                M5
+              </div>
+              <span className="font-bold text-slate-400">Meowdy 5000 Rivals Tracker</span>
             </div>
-            <span className="font-bold text-slate-400">Meowdy 5000's</span>
+            <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500">
+              <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+                v{getAppVersionName()} ({getAppLocalSha()})
+              </span>
+              <span>•</span>
+              <a
+                href="https://github.com/monfreda48/Meowdy5000"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-emerald-400 transition-colors"
+              >
+                GitHub Repository
+              </a>
+            </div>
           </div>
-          <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500">
-            <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
-              v{getAppVersionName()} ({getAppLocalSha()})
-            </span>
-            <span>•</span>
-            <a
-              href="https://github.com/monfreda48/Meowdy5000"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-emerald-400 transition-colors"
-            >
-              GitHub Repository
-            </a>
+
+          {/* Mandatory Legal Disclaimer Banner */}
+          <div className="pt-2 border-t border-slate-800/50 text-[10px] text-slate-400 font-medium leading-relaxed max-w-2xl mx-auto">
+            <span>⚠️ <strong>Disclaimer:</strong> Not endorsed or affiliated with Marvel, Marvel Entertainment, or NetEase Games. All game assets, trademarks, and character names belong to their respective owners.</span>
           </div>
         </footer>
 
