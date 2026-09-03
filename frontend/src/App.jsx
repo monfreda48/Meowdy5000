@@ -2447,25 +2447,6 @@ ${payload.stack || 'No stack trace available.'}
                 />
               </div>
               <div className={`flex gap-2 ${isMobileView ? 'w-full' : ''}`}>
-                <select
-                  value={season}
-                  onChange={(e) => {
-                    const selectedSeason = e.target.value;
-                    setSeason(selectedSeason);
-                    if (query) {
-                      fetchStats(null, query, selectedSeason);
-                    }
-                  }}
-                  className={`bg-[#0b101e] border border-slate-700/50 rounded-xl px-3 focus:outline-none focus:border-emerald-500 text-white cursor-pointer text-xs sm:text-sm ${isMobileView ? 'py-2.5 flex-1' : 'py-3.5 sm:py-4'
-                    }`}
-                >
-                  {seasonsList.map(s => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} {s.status === 'current' ? '(Current)' : s.status === 'upcoming' ? '(Upcoming)' : ''}
-                    </option>
-                  ))}
-                  <option value="">Current Season</option>
-                </select>
                 <button
                   type="submit"
                   disabled={loading}
