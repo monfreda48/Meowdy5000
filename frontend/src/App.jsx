@@ -568,6 +568,87 @@ export default function App() {
     }
   });
 
+  // Custom Profile Picture / Avatar Management
+  const [customAvatars, setCustomAvatars] = useState(() => {
+    try {
+      const saved = localStorage.getItem('custom_player_avatars');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [avatarUrlInput, setAvatarUrlInput] = useState('');
+
+  const HERO_AVATAR_PRESETS = [
+    { name: "Spider-Man", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1016.png/image.jpg" },
+    { name: "Venom", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1017.png/image.jpg" },
+    { name: "Rocket Raccoon", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1018.png/image.jpg" },
+    { name: "Iron Man", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1023.png/image.jpg" },
+    { name: "Hela", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1022.png/image.jpg" },
+    { name: "Doctor Strange", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1024.png/image.jpg" },
+    { name: "Punisher", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1014.png/image.jpg" },
+    { name: "Magneto", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1015.png/image.jpg" },
+    { name: "Luna Snow", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1032.png/image.jpg" },
+    { name: "Mantis", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1011.png/image.jpg" },
+    { name: "Magik", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1030.png/image.jpg" },
+    { name: "Groot", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1020.png/image.jpg" }
+  ];
+
+  const getDisplayAvatar = (username) => {
+    if (!username) return stats?.current?.avatarUrl || '';
+    const key = username.toLowerCase();
+    return customAvatars[key] || stats?.current?.avatarUrl || '';
+  };
+
+  const handleSaveCustomAvatar = (username, newAvatarUrl) => {
+    if (!username || !newAvatarUrl) return;
+    const key = username.toLowerCase();
+    const updated = { ...customAvatars, [key]: newAvatarUrl };
+    setCustomAvatars(updated);
+    try {
+      localStorage.setItem('custom_player_avatars', JSON.stringify(updated));
+    } catch (e) { }
+    triggerHaptic('success');
+    showNativeToast('🖼️ Profile picture updated!');
+    setUpdateToast({ type: 'success', message: `🖼️ Custom profile picture saved for ${username}!` });
+    setTimeout(() => setUpdateToast(null), 3000);
+    setShowAvatarModal(false);
+  };
+
+  const handleRemoveCustomAvatar = (username) => {
+    if (!username) return;
+    const key = username.toLowerCase();
+    const updated = { ...customAvatars };
+    delete updated[key];
+    setCustomAvatars(updated);
+    try {
+      localStorage.setItem('custom_player_avatars', JSON.stringify(updated));
+    } catch (e) { }
+    triggerHaptic('light');
+    showNativeToast('🖼️ Reset to default profile picture');
+    setUpdateToast({ type: 'update', message: `🖼️ Profile picture reset to default for ${username}.` });
+    setTimeout(() => setUpdateToast(null), 3000);
+    setShowAvatarModal(false);
+  };
+
+  const handleFileUploadAvatar = (e, username) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size exceeds 5MB limit. Please choose a smaller image.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        handleSaveCustomAvatar(username, event.target.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const saveTrackedStatSnapshot = async (playerStats) => {
     if (!playerStats?.current) return;
     const entry = {
@@ -2514,17 +2595,24 @@ ${payload.stack || 'No stack trace available.'}
             <div className={`bg-[#131b2f] rounded-2xl border border-slate-700/50 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 ${isMobileView ? 'p-4 text-center' : 'p-6 md:p-8 text-left'
               }`}>
               <div className="flex items-center gap-4">
-                {stats.current.avatarUrl ? (
-                  <img
-                    src={stats.current.avatarUrl}
-                    alt={stats.current.username}
-                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-2 border-emerald-500/60 shadow-lg shadow-emerald-500/20 object-cover"
-                  />
-                ) : (
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-emerald-500/20">
-                    {stats.current.username.charAt(0).toUpperCase()}
+                {/* Profile Picture Avatar Container with Change Picture Trigger Button */}
+                <div className="relative group cursor-pointer" onClick={() => { triggerHaptic('light'); setShowAvatarModal(true); }}>
+                  {getDisplayAvatar(stats.current.username) ? (
+                    <img
+                      src={getDisplayAvatar(stats.current.username)}
+                      alt={stats.current.username}
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-emerald-500/60 shadow-lg shadow-emerald-500/20 object-cover group-hover:opacity-80 transition-opacity"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-white text-2xl shadow-lg shadow-emerald-500/20 group-hover:opacity-80 transition-opacity">
+                      {stats.current.username.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  {/* Change Profile Picture Hover Badge */}
+                  <div className="absolute -bottom-1 -right-1 bg-[#0b101e] border border-emerald-500/60 text-emerald-400 p-1.5 rounded-full text-xs font-bold shadow-lg group-hover:scale-110 transition-transform">
+                    📷
                   </div>
-                )}
+                </div>
                 <div>
                   <h2 className={`font-black text-white ${isMobileView ? 'text-2xl' : 'text-3xl'}`}>{stats.current.username}</h2>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -4868,6 +4956,156 @@ ${payload.stack || 'No stack trace available.'}
             </a>
           </div>
         </footer>
+
+      {/* Customize Profile Picture / Avatar Modal */}
+      {showAvatarModal && stats?.current && (
+        <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-gradient-to-br from-[#131b2f] via-[#0f172a] to-[#0b101e] border-2 border-emerald-500/60 rounded-3xl p-5 sm:p-7 max-w-lg w-full shadow-2xl space-y-5 text-left relative max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center font-bold text-xl">
+                  🖼️
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white uppercase tracking-wider">
+                    Change Profile Picture
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Custom picture for <strong className="text-emerald-400">{stats.current.username}</strong>
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAvatarModal(false)}
+                className="text-slate-400 hover:text-white text-lg font-bold p-1 rounded-lg hover:bg-slate-800"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Current Active Avatar Preview */}
+            <div className="flex items-center gap-4 bg-[#0b101e] border border-slate-700/60 p-3.5 rounded-2xl">
+              {getDisplayAvatar(stats.current.username) ? (
+                <img
+                  src={getDisplayAvatar(stats.current.username)}
+                  alt={stats.current.username}
+                  className="w-16 h-16 rounded-2xl border-2 border-emerald-500 shadow-md object-cover"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-white text-2xl shadow-md">
+                  {stats.current.username.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400">Active Profile Picture</span>
+                <h4 className="text-xs font-bold text-white mt-0.5">{stats.current.username}</h4>
+                <p className="text-[10px] text-slate-400 mt-0.5">Custom avatars persist in local storage across sessions.</p>
+              </div>
+            </div>
+
+            {/* Option 1: Choose Marvel Hero Preset Avatar */}
+            <div className="space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                <span>🦸</span> Option 1: Pick Marvel Hero Icon
+              </span>
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                {HERO_AVATAR_PRESETS.map((hero, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleSaveCustomAvatar(stats.current.username, hero.url)}
+                    className="flex flex-col items-center bg-[#0b101e] hover:bg-emerald-500/20 border border-slate-700/80 hover:border-emerald-500 p-2 rounded-xl transition-all cursor-pointer group"
+                  >
+                    <img
+                      src={hero.url}
+                      alt={hero.name}
+                      className="w-10 h-10 rounded-xl object-cover border border-slate-700 group-hover:border-emerald-400 group-hover:scale-105 transition-all"
+                    />
+                    <span className="text-[9px] font-bold text-slate-300 group-hover:text-emerald-300 mt-1 truncate w-full text-center">
+                      {hero.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Option 2: Upload Custom Image from Device */}
+            <div className="space-y-2 pt-2 border-t border-slate-800">
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                <span>📁</span> Option 2: Upload Image File from Device
+              </span>
+              <label className="flex items-center justify-between bg-[#0b101e] hover:bg-emerald-500/10 border border-dashed border-slate-700 hover:border-emerald-500/80 p-3.5 rounded-xl cursor-pointer transition-all">
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">📤</span>
+                  <div>
+                    <h4 className="text-xs font-bold text-white">Choose Local Photo / File</h4>
+                    <p className="text-[10px] text-slate-400">PNG, JPG, WEBP (Max 5MB)</p>
+                  </div>
+                </div>
+                <span className="text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-3 py-1.5 rounded-lg">Browse File</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileUploadAvatar(e, stats.current.username)}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            {/* Option 3: Custom Web Image URL */}
+            <div className="space-y-2 pt-2 border-t border-slate-800">
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                <span>🔗</span> Option 3: Paste Direct Image URL
+              </span>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  placeholder="https://example.com/avatar.png"
+                  value={avatarUrlInput}
+                  onChange={(e) => setAvatarUrlInput(e.target.value)}
+                  className="flex-1 bg-[#0b101e] border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (avatarUrlInput.trim()) {
+                      handleSaveCustomAvatar(stats.current.username, avatarUrlInput.trim());
+                      setAvatarUrlInput('');
+                    }
+                  }}
+                  disabled={!avatarUrlInput.trim()}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider cursor-pointer disabled:opacity-50"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+              {customAvatars[stats.current.username?.toLowerCase()] ? (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveCustomAvatar(stats.current.username)}
+                  className="text-xs font-bold text-red-400 hover:text-red-300 flex items-center gap-1 cursor-pointer"
+                >
+                  <span>🗑️</span> Reset to Default
+                </button>
+              ) : (
+                <span className="text-[10px] text-slate-500 font-medium">Default scraped avatar active</span>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setShowAvatarModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold uppercase tracking-wider cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       </main>
     </div>
