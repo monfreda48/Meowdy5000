@@ -5768,7 +5768,7 @@ ${payload.stack || 'No stack trace available.'}
 
           {/* Mandatory Legal Disclaimer Banner */}
           <div className="pt-2 border-t border-slate-800/50 text-[10px] text-slate-400 font-medium leading-relaxed max-w-2xl mx-auto">
-            <span>⚠️ <strong>Disclaimer:</strong> Not endorsed or affiliated with Marvel, Marvel Entertainment, or NetEase Games. All game assets, trademarks, and character names belong to their respective owners.</span>
+            <span><strong>Disclaimer:</strong> Not endorsed or affiliated with Marvel, Marvel Entertainment, or NetEase Games. All game assets, trademarks, and character names belong to their respective owners.</span>
           </div>
         </footer>
 
