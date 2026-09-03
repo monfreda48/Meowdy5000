@@ -2165,6 +2165,12 @@ ${payload.stack || 'No stack trace available.'}
             <span>{currentSeasonName} Current</span>
           </div>
 
+          {/* Claim Your Username Helper Subtitle */}
+          <p className="text-xs sm:text-sm font-bold text-slate-300 tracking-wider uppercase flex items-center justify-center gap-1.5 pt-1">
+            <span>👑</span>
+            <span>Claim your username to start tracking</span>
+          </p>
+
           <form onSubmit={fetchStats} className={`w-full ${isMobileView ? 'mt-1' : 'max-w-3xl mt-3 sm:mt-8'}`}>
             <div className={`flex bg-[#131b2f] p-2.5 sm:p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${isMobileView ? 'flex-col gap-2' : 'flex-col md:flex-row items-center gap-3'
               }`}>
