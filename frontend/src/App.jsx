@@ -568,6 +568,9 @@ export default function App() {
     }
   });
 
+  // Platform Detection & Filter State (PC/PlayStation 5/Xbox)
+  const [selectedPlatform, setSelectedPlatform] = useState('all');
+
   // Custom Profile Picture / Avatar Management
   const [customAvatars, setCustomAvatars] = useState(() => {
     try {
@@ -1960,11 +1963,34 @@ ${payload.stack || 'No stack trace available.'}
       rivalsTracker: isUid ? `https://rivalstracker.com/player/${encodedQuery}` : `https://rivalstracker.com/search?q=${encodedQuery}`
     };
 
-    const hasRealStats = Boolean(data && data.stats);
+    let detectedPlatform = "PC / Windows";
+    let detectedIcon = "💻";
+    let detectedSlug = "pc";
+
+    if (selectedPlatform === 'ps5') {
+      detectedPlatform = "PlayStation 5";
+      detectedIcon = "🎮";
+      detectedSlug = "psn";
+    } else if (selectedPlatform === 'xbox') {
+      detectedPlatform = "Xbox Series X|S";
+      detectedIcon = "💚";
+      detectedSlug = "xbl";
+    } else if (cleanQuery.toLowerCase().includes('psn') || cleanQuery.toLowerCase().includes('ps5')) {
+      detectedPlatform = "PlayStation 5";
+      detectedIcon = "🎮";
+      detectedSlug = "psn";
+    } else if (cleanQuery.toLowerCase().includes('xbl') || cleanQuery.toLowerCase().includes('xbox')) {
+      detectedPlatform = "Xbox Series X|S";
+      detectedIcon = "💚";
+      detectedSlug = "xbl";
+    }
 
     const currentObj = {
       username: data?.name || cleanQuery,
       avatarUrl: "",
+      platform: detectedPlatform,
+      platformIcon: detectedIcon,
+      platformSlug: detectedSlug,
       rank: data?.rank ? String(data.rank) : "Search 3 Sites Below",
       peakRank: data?.peakRank || "",
       winRate: hasRealStats ? String(winRateVal) : "N/A",
@@ -2447,6 +2473,21 @@ ${payload.stack || 'No stack trace available.'}
                 />
               </div>
               <div className={`flex gap-2 ${isMobileView ? 'w-full' : ''}`}>
+                <select
+                  value={selectedPlatform}
+                  onChange={(e) => {
+                    setSelectedPlatform(e.target.value);
+                    triggerHaptic('light');
+                  }}
+                  className={`bg-[#0b101e] border border-slate-700/50 rounded-xl px-3 focus:outline-none focus:border-emerald-500 text-white cursor-pointer font-bold text-xs sm:text-sm ${isMobileView ? 'py-2.5 flex-1' : 'py-3.5 sm:py-4'
+                    }`}
+                >
+                  <option value="all">🌐 All Platforms</option>
+                  <option value="pc">💻 PC / Windows</option>
+                  <option value="ps5">🎮 PlayStation 5</option>
+                  <option value="xbox">💚 Xbox Series X|S</option>
+                </select>
+
                 <button
                   type="submit"
                   disabled={loading}
@@ -2676,6 +2717,18 @@ ${payload.stack || 'No stack trace available.'}
                     <span className="bg-gradient-to-r from-blue-600/30 to-indigo-600/30 text-blue-300 border border-blue-500/50 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-blue-500/10">
                       <span>💎</span>
                       <span>{stats.current.rank || 'Unranked'}</span>
+                    </span>
+
+                    {/* Detected Player Platform Badge (PC / PlayStation 5 / Xbox) */}
+                    <span className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md border ${
+                      (stats.current.platform || '').includes('Xbox')
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-emerald-500/10'
+                        : (stats.current.platform || '').includes('PlayStation')
+                          ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50 shadow-indigo-500/10'
+                          : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-cyan-500/10'
+                    }`}>
+                      <span>{stats.current.platformIcon || ((stats.current.platform || '').includes('Xbox') ? '💚' : (stats.current.platform || '').includes('PlayStation') ? '🎮' : '💻')}</span>
+                      <span>{stats.current.platform || 'PC / Windows'}</span>
                     </span>
                     {stats.current.peakRank && stats.current.peakRank !== 'Unranked' && (
                       <span className="bg-purple-500/10 text-purple-300 border border-purple-500/30 px-2.5 py-0.5 rounded-md text-[11px] font-bold">

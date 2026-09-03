@@ -284,7 +284,19 @@ def scrape_tracker_gg_api(username, season=None):
             mvp_str = f"{int(mvp_val)} ({round(float(mvp_pct), 1)}%)" if mvp_val else "0"
             svp_str = f"{int(svp_val)} ({round(float(svp_pct), 1)}%)" if svp_val else "0"
 
-            raw_avatar_url = data.get('data', {}).get('platformInfo', {}).get('avatarUrl', '')
+            platform_info = data.get('data', {}).get('platformInfo', {})
+            platform_slug = str(platform_info.get('platformSlug', '')).lower()
+            if 'psn' in platform_slug or 'playstation' in platform_slug or 'ps5' in platform_slug:
+                detected_platform = 'PlayStation 5'
+                platform_icon = '🎮'
+            elif 'xbl' in platform_slug or 'xbox' in platform_slug:
+                detected_platform = 'Xbox Series X|S'
+                platform_icon = '💚'
+            else:
+                detected_platform = 'PC / Windows'
+                platform_icon = '💻'
+
+            raw_avatar_url = platform_info.get('avatarUrl', '')
             if raw_avatar_url:
                 encoded_avatar = urllib.parse.quote(raw_avatar_url, safe='')
                 avatar_url = f"https://imgsvc.trackercdn.com/url/size(128),fit(cover)/{encoded_avatar}/image.jpg"
@@ -297,8 +309,11 @@ def scrape_tracker_gg_api(username, season=None):
                 "rank": rank_name,
                 "peakRank": peak_rank,
                 "lifetimePeakRank": lifetime_peak_rank,
-                "platformUserIdentifier": data.get('data', {}).get('platformInfo', {}).get('platformUserIdentifier', ''),
-                "platformUserId": data.get('data', {}).get('platformInfo', {}).get('platformUserId', ''),
+                "platform": detected_platform,
+                "platformIcon": platform_icon,
+                "platformSlug": platform_slug or "pc",
+                "platformUserIdentifier": platform_info.get('platformUserIdentifier', ''),
+                "platformUserId": platform_info.get('platformUserId', ''),
                 "winRate": str(round(win_rate, 1)),
                 "kdRatio": str(round(kd_ratio, 2)),
                 "topHero": top_hero_str,
@@ -514,6 +529,9 @@ def get_stats():
         final_data["roleSegments"] = tracker_data.get("roleSegments", [])
         final_data["allSegments"] = tracker_data.get("allSegments", [])
         if tracker_data.get("avatarUrl"): final_data["avatarUrl"] = tracker_data["avatarUrl"]
+        if tracker_data.get("platform"): final_data["platform"] = tracker_data["platform"]
+        if tracker_data.get("platformIcon"): final_data["platformIcon"] = tracker_data["platformIcon"]
+        if tracker_data.get("platformSlug"): final_data["platformSlug"] = tracker_data["platformSlug"]
         if tracker_data.get("matchesPlayed"): final_data["matchesPlayed"] = tracker_data["matchesPlayed"]
         if tracker_data.get("matchesWon"): final_data["matchesWon"] = tracker_data["matchesWon"]
         if tracker_data.get("kills"): final_data["kills"] = tracker_data["kills"]
