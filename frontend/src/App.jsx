@@ -94,7 +94,7 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [season, setSeason] = useState('19');
   const [timeframe, setTimeframe] = useState('all');
-  const [expandedMetric, setExpandedMetric] = useState(null);
+  const [expandedMetrics, setExpandedMetrics] = useState({});
   const [seasonsList, setSeasonsList] = useState(DEFAULT_SEASONS);
   const [currentSeasonName, setCurrentSeasonName] = useState('Season 9.5');
 
@@ -168,8 +168,27 @@ export default function App() {
     setLookupQuery('');
   };
 
-  const toggleExpandMetric = (id) => {
-    setExpandedMetric(prev => prev === id ? null : id);
+  const toggleExpandMetric = (id, e = null) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    triggerHaptic('light');
+    setExpandedMetrics(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
+  const expandAllMetrics = () => {
+    triggerHaptic('medium');
+    const allObj = {};
+    AVAILABLE_METRICS.forEach(m => { allObj[m.id] = true; });
+    setExpandedMetrics(allObj);
+    showNativeToast('📖 Expanded all stat cards!');
+  };
+
+  const collapseAllMetrics = () => {
+    triggerHaptic('medium');
+    setExpandedMetrics({});
+    showNativeToast('📁 Collapsed all stat cards!');
   };
 
   // Pinned Home Profile State & Helpers
@@ -407,7 +426,7 @@ export default function App() {
   };
 
   const render3SiteBreakdown = (metricKey) => {
-    if (expandedMetric !== metricKey) return null;
+    if (!expandedMetrics[metricKey]) return null;
     const bd = stats?.statBreakdown?.[metricKey] || {};
 
     const sites = [
@@ -3175,6 +3194,34 @@ ${payload.stack || 'No stack trace available.'}
                   </div>
                 </div>
 
+                {/* Bulk Expand / Collapse All Cards Controls */}
+                <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-300">
+                      Primary Stat Cards
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                      Multi-Expand Enabled
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={expandAllMetrics}
+                      className="px-3 py-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold uppercase transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+                    >
+                      <span>📖 Expand All</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={collapseAllMetrics}
+                      className="px-3 py-1 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/80 text-xs font-bold uppercase transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+                    >
+                      <span>📁 Collapse All</span>
+                    </button>
+                  </div>
+                </div>
+
                 {/* Primary Tracked Metrics Grid */}
                 <div className={`grid gap-4 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:gap-6'
                   }`}>
@@ -3210,7 +3257,7 @@ ${payload.stack || 'No stack trace available.'}
                               ⚠️
                             </button>
                             <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                              {expandedMetric === 'winRate' ? '▲ Hide' : '▼ Expand'}
+                              {expandedMetrics.winRate ? '▲ Hide' : '▼ Expand'}
                             </span>
                           </div>
                         </div>
@@ -3218,7 +3265,7 @@ ${payload.stack || 'No stack trace available.'}
                           {getCardDisplayStat('winRate', `${stats.current.winRate}%`)}
                         </p>
 
-                        {expandedMetric === 'winRate' && (
+                        {expandedMetrics.winRate && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Matches:</span>
@@ -3273,7 +3320,7 @@ ${payload.stack || 'No stack trace available.'}
                               ⚠️
                             </button>
                             <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                              {expandedMetric === 'kdRatio' ? '▲ Hide' : '▼ Expand'}
+                              {expandedMetrics.kdRatio ? '▲ Hide' : '▼ Expand'}
                             </span>
                           </div>
                         </div>
@@ -3281,7 +3328,7 @@ ${payload.stack || 'No stack trace available.'}
                           {getCardDisplayStat('kdRatio', stats.current.kdRatio)}
                         </p>
 
-                        {expandedMetric === 'kdRatio' && (
+                        {expandedMetrics.kdRatio && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Eliminations (Kills):</span>
@@ -3326,15 +3373,25 @@ ${payload.stack || 'No stack trace available.'}
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Damage / 10m</p>
                           </div>
-                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                            {expandedMetric === 'heroDamage' ? '▲ Hide' : '▼ Expand'}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(e) => handleOpenReportModal('heroDamage', e)}
+                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                              title="Report Inaccurate Stat for Damage / 10m"
+                            >
+                              ⚠️
+                            </button>
+                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                              {expandedMetrics.heroDamage ? '▲ Hide' : '▼ Expand'}
+                            </span>
+                          </div>
                         </div>
                         <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('heroDamage', typeof stats.current.heroDamage === 'number' ? stats.current.heroDamage.toLocaleString() : (stats.current.heroDamage || 'N/A'))}
                         </p>
 
-                        {expandedMetric === 'heroDamage' && (
+                        {expandedMetrics.heroDamage && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Damage Output:</span>
@@ -3373,15 +3430,25 @@ ${payload.stack || 'No stack trace available.'}
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Healing / 10m</p>
                           </div>
-                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                            {expandedMetric === 'healing' ? '▲ Hide' : '▼ Expand'}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(e) => handleOpenReportModal('healing', e)}
+                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                              title="Report Inaccurate Stat for Healing / 10m"
+                            >
+                              ⚠️
+                            </button>
+                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                              {expandedMetrics.healing ? '▲ Hide' : '▼ Expand'}
+                            </span>
+                          </div>
                         </div>
                         <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('healing', stats.current.healing || 'N/A')}
                         </p>
 
-                        {expandedMetric === 'healing' && (
+                        {expandedMetrics.healing && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Healing Output:</span>
@@ -3420,15 +3487,25 @@ ${payload.stack || 'No stack trace available.'}
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Dmg Blocked / 10m</p>
                           </div>
-                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                            {expandedMetric === 'damageBlocked' ? '▲ Hide' : '▼ Expand'}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(e) => handleOpenReportModal('damageBlocked', e)}
+                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                              title="Report Inaccurate Stat for Damage Blocked / 10m"
+                            >
+                              ⚠️
+                            </button>
+                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                              {expandedMetrics.damageBlocked ? '▲ Hide' : '▼ Expand'}
+                            </span>
+                          </div>
                         </div>
                         <p className={`font-black text-purple-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('damageBlocked', stats.current.damageBlocked || 'N/A')}
                         </p>
 
-                        {expandedMetric === 'damageBlocked' && (
+                        {expandedMetrics.damageBlocked && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Damage Blocked:</span>
@@ -3468,15 +3545,25 @@ ${payload.stack || 'No stack trace available.'}
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Accuracy</p>
                           </div>
-                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                            {expandedMetric === 'accuracy' ? '▲ Hide' : '▼ Expand'}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(e) => handleOpenReportModal('accuracy', e)}
+                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                              title="Report Inaccurate Stat for Accuracy"
+                            >
+                              ⚠️
+                            </button>
+                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                              {expandedMetrics.accuracy ? '▲ Hide' : '▼ Expand'}
+                            </span>
+                          </div>
                         </div>
                         <p className={`font-black text-yellow-400 ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
                           {getCardDisplayStat('accuracy', stats.current.accuracy || 'N/A')}
                         </p>
 
-                        {expandedMetric === 'accuracy' && (
+                        {expandedMetrics.accuracy && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Primary Attack Hits:</span>
@@ -3517,15 +3604,25 @@ ${payload.stack || 'No stack trace available.'}
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">MVPs</p>
                           </div>
-                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                            {expandedMetric === 'mvp' ? '▲ Hide' : '▼ Expand'}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(e) => handleOpenReportModal('mvp', e)}
+                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                              title="Report Inaccurate Stat for MVPs"
+                            >
+                              ⚠️
+                            </button>
+                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                              {expandedMetrics.mvp ? '▲ Hide' : '▼ Expand'}
+                            </span>
+                          </div>
                         </div>
                         <p className={`font-black text-amber-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('mvp', stats.current.mvp || '0')}
                         </p>
 
-                        {expandedMetric === 'mvp' && (
+                        {expandedMetrics.mvp && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>MVP Performance Trophies:</span>
@@ -3560,15 +3657,25 @@ ${payload.stack || 'No stack trace available.'}
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">SVPs</p>
                           </div>
-                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                            {expandedMetric === 'svp' ? '▲ Hide' : '▼ Expand'}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(e) => handleOpenReportModal('svp', e)}
+                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                              title="Report Inaccurate Stat for SVPs"
+                            >
+                              ⚠️
+                            </button>
+                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                              {expandedMetrics.svp ? '▲ Hide' : '▼ Expand'}
+                            </span>
+                          </div>
                         </div>
                         <p className={`font-black text-purple-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('svp', stats.current.svp || '0')}
                         </p>
 
-                        {expandedMetric === 'svp' && (
+                        {expandedMetrics.svp && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>SVP Team Honors:</span>
@@ -3605,15 +3712,25 @@ ${payload.stack || 'No stack trace available.'}
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Playtime</p>
                           </div>
-                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                            {expandedMetric === 'timePlayed' ? '▲ Hide' : '▼ Expand'}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(e) => handleOpenReportModal('timePlayed', e)}
+                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                              title="Report Inaccurate Stat for Total Playtime"
+                            >
+                              ⚠️
+                            </button>
+                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                              {expandedMetrics.timePlayed ? '▲ Hide' : '▼ Expand'}
+                            </span>
+                          </div>
                         </div>
                         <p className={`font-black text-sky-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('timePlayed', stats.current.timePlayed || 'N/A')}
                         </p>
 
-                        {expandedMetric === 'timePlayed' && (
+                        {expandedMetrics.timePlayed && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Recorded Hours:</span>
@@ -3651,15 +3768,25 @@ ${payload.stack || 'No stack trace available.'}
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Matches & Wins</p>
                           </div>
-                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                            {expandedMetric === 'matchesPlayed' ? '▲ Hide' : '▼ Expand'}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(e) => handleOpenReportModal('matchesPlayed', e)}
+                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                              title="Report Inaccurate Stat for Matches & Wins"
+                            >
+                              ⚠️
+                            </button>
+                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                              {expandedMetrics.matchesPlayed ? '▲ Hide' : '▼ Expand'}
+                            </span>
+                          </div>
                         </div>
                         <p className={`font-black text-white ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {stats.current.matchesWon} <span className="text-sm font-bold text-slate-400">Wins</span> / {stats.current.matchesPlayed} <span className="text-sm font-bold text-slate-400">Total</span>
                         </p>
 
-                        {expandedMetric === 'matchesPlayed' && (
+                        {expandedMetrics.matchesPlayed && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-emerald-400 font-medium">
                               <span>Victories:</span>
