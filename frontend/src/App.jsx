@@ -4561,6 +4561,42 @@ ${payload.stack || 'No stack trace available.'}
                   </div>
                 </div>
 
+                {/* Drawer Group 0.8: Support Development / Donate via PayPal */}
+                <div className="space-y-2.5 bg-gradient-to-br from-[#131b2f] via-[#0f172a] to-[#17233d] border-2 border-amber-500/50 p-4 rounded-2xl shadow-xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
+                      <span>🍕</span> Support Development
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      PayPal
+                    </span>
+                  </div>
+
+                  <div className="text-left space-y-1">
+                    <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                      <span>💙</span> Enjoying Meowdy 5000?
+                    </h4>
+                    <p className="text-[10px] text-slate-300 leading-relaxed">
+                      Help support server hosting, scraper maintenance & future feature updates!
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('success');
+                      setIsMenuOpen(false);
+                      const paypalUrl = localStorage.getItem('paypal_donate_url') || 'https://www.paypal.com/donate';
+                      openExternalUrl(paypalUrl);
+                      showNativeToast('💙 Opening PayPal Donation page...');
+                    }}
+                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 cursor-pointer flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-98"
+                  >
+                    <span className="text-base">💳</span>
+                    <span>Donate with PayPal</span>
+                  </button>
+                </div>
+
                 {/* Drawer Group 1: App Updates */}
                 <div className="space-y-2.5">
                   <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
