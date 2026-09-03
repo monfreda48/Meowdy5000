@@ -2863,7 +2863,7 @@ ${payload.stack || 'No stack trace available.'}
           {/* Big Search Box (only shown when no profile is claimed) */}
           {!claimedProfile?.username && (
             <form onSubmit={fetchStats} className={`w-full ${isMobileView ? 'mt-1' : 'max-w-3xl mt-3 sm:mt-8'}`}>
-              <div className={`flex bg-[#131b2f] p-2.5 sm:p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${isMobileView ? 'flex-col gap-2' : 'flex-col md:flex-row items-center gap-3'
+              <div className={`flex bg-[#131b2f] p-2.5 sm:p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${isMobileView ? 'flex-col gap-2' : 'flex-row items-center gap-3'
                 }`}>
                 <div className="flex-1 relative w-full">
                   <input
@@ -2876,6 +2876,7 @@ ${payload.stack || 'No stack trace available.'}
                     required
                   />
                 </div>
+
                 <div className={`flex gap-2 relative ${isMobileView ? 'w-full' : ''}`}>
                   <button
                     type="button"
@@ -2888,6 +2889,7 @@ ${payload.stack || 'No stack trace available.'}
                     <span className="flex items-center gap-1.5 shrink-0">
                       {selectedPlatform === 'ps5' ? (
                         <>
+                          <span className="text-base">🎮</span>
                           <svg className="w-4 h-4 fill-current text-indigo-400 inline-block shrink-0" viewBox="0 0 24 24">
                             <path d="M23.669 17.202c-.378-.415-1.16-.764-2.529-1.074l-4.577-1.036v-2.023c0-.62-.224-1.127-.672-1.521-.448-.395-1.05-.592-1.806-.592-.733 0-1.325.197-1.776.592-.451.394-.676.901-.676 1.521v1.17l-3.327-.753v-5.23c1.034-.148 1.942-.519 2.723-1.113.782-.594 1.173-1.377 1.173-2.348 0-1.082-.394-1.921-1.182-2.518C10.438 1.626 9.387 1.327 8.07 1.327c-.89 0-1.748.163-2.574.489C4.67 2.142 4 2.617 3.486 3.242c-.516.625-.774 1.378-.774 2.259 0 .96.388 1.737 1.164 2.33.776.594 1.678.966 2.706 1.114v6.004l-3.882.88c-.96.217-1.636.529-2.027.936C.282 17.172.087 17.653.087 18.208c0 .644.27 1.177.81 1.6.54.423 1.306.634 2.298.634 1.05 0 2.217-.23 3.501-.69 1.284-.46 2.502-1.08 3.654-1.86v-3.791l3.327.753v2.023c0 .62.225 1.127.673 1.521.448.395 1.049.592 1.805.592.733 0 1.325-.197 1.776-.592.451-.394.676-.901.676-1.521v-1.17l3.966.897c.567.128 1.002.203 1.305.225.303.023.545.034.726.034.526 0 .942-.148 1.248-.444.306-.296.459-.706.459-1.23 0-.584-.258-1.077-.775-1.48z"/>
                           </svg>
@@ -2917,10 +2919,10 @@ ${payload.stack || 'No stack trace available.'}
                   {showPlatformDropdown && (
                     <div className="absolute right-0 top-full mt-2 w-56 bg-[#131b2f] border border-slate-700/80 rounded-xl shadow-2xl z-[99999] py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
                       {[
-                        { id: 'all', label: 'All Platforms', icon: '🌐', isPs: false },
-                        { id: 'pc', label: 'PC', icon: '💻', isPs: false },
-                        { id: 'ps5', label: 'PlayStation 5', icon: null, isPs: true },
-                        { id: 'xbox', label: 'Xbox Series X|S', icon: '❎', isPs: false }
+                        { id: 'all', label: 'All Platforms', icon: '🌐' },
+                        { id: 'pc', label: 'PC', icon: '💻' },
+                        { id: 'ps5', label: 'PlayStation 5', icon: '🎮' },
+                        { id: 'xbox', label: 'Xbox Series X|S', icon: '❎' }
                       ].map((item) => (
                         <button
                           key={item.id}
@@ -2936,7 +2938,7 @@ ${payload.stack || 'No stack trace available.'}
                               : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
                           }`}
                         >
-                          {item.isPs ? (
+                          {item.id === 'ps5' ? (
                             <svg className="w-4 h-4 fill-current text-indigo-400 inline-block shrink-0" viewBox="0 0 24 24">
                               <path d="M23.669 17.202c-.378-.415-1.16-.764-2.529-1.074l-4.577-1.036v-2.023c0-.62-.224-1.127-.672-1.521-.448-.395-1.05-.592-1.806-.592-.733 0-1.325.197-1.776.592-.451.394-.676.901-.676 1.521v1.17l-3.327-.753v-5.23c1.034-.148 1.942-.519 2.723-1.113.782-.594 1.173-1.377 1.173-2.348 0-1.082-.394-1.921-1.182-2.518C10.438 1.626 9.387 1.327 8.07 1.327c-.89 0-1.748.163-2.574.489C4.67 2.142 4 2.617 3.486 3.242c-.516.625-.774 1.378-.774 2.259 0 .96.388 1.737 1.164 2.33.776.594 1.678.966 2.706 1.114v6.004l-3.882.88c-.96.217-1.636.529-2.027.936C.282 17.172.087 17.653.087 18.208c0 .644.27 1.177.81 1.6.54.423 1.306.634 2.298.634 1.05 0 2.217-.23 3.501-.69 1.284-.46 2.502-1.08 3.654-1.86v-3.791l3.327.753v2.023c0 .62.225 1.127.673 1.521.448.395 1.049.592 1.805.592.733 0 1.325-.197 1.776-.592.451-.394.676-.901.676-1.521v-1.17l3.966.897c.567.128 1.002.203 1.305.225.303.023.545.034.726.034.526 0 .942-.148 1.248-.444.306-.296.459-.706.459-1.23 0-.584-.258-1.077-.775-1.48z"/>
                             </svg>
