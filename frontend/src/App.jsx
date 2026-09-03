@@ -445,22 +445,24 @@ export default function App() {
     if (!targetUser) return;
     const sources = sourcesToTrack || claimedSources;
     const cleanUser = targetUser.trim();
-    const encodedUser = encodeURIComponent(cleanUser);
-    const platSlug = (targetStats?.platform || selectedPlatform || 'pc').toLowerCase().includes('ps') ? 'psn' : (targetStats?.platform || selectedPlatform || 'pc').toLowerCase().includes('xbox') ? 'xbl' : 'ign';
-    const isUid = cleanUser.length > 0 && !isNaN(cleanUser);
+
+    // Use the exact actual profile URLs captured during the active scraping session
+    const actualTrackerGgUrl = targetStats?.siteUrls?.trackerGg || targetStats?.trackerUrl || null;
+    const actualRivalsMetaUrl = targetStats?.siteUrls?.rivalsMeta || null;
+    const actualRivalsTrackerUrl = targetStats?.siteUrls?.rivalsTracker || null;
 
     const siteUrls = {
-      trackerGg: targetStats?.siteUrls?.trackerGg || `https://tracker.gg/marvel-rivals/profile/${platSlug}/${encodedUser}/overview`,
-      rivalsMeta: targetStats?.siteUrls?.rivalsMeta || (isUid ? `https://rivalsmeta.com/player/${encodedUser}` : `https://rivalsmeta.com/characters`),
-      rivalsTracker: targetStats?.siteUrls?.rivalsTracker || (isUid ? `https://rivalstracker.com/player/${encodedUser}` : `https://rivalstracker.com/heroes`)
+      trackerGg: actualTrackerGgUrl || `https://tracker.gg/marvel-rivals/profile/ign/${encodeURIComponent(cleanUser)}/overview`,
+      rivalsMeta: actualRivalsMetaUrl || `https://rivalsmeta.com/search?q=${encodeURIComponent(cleanUser)}`,
+      rivalsTracker: actualRivalsTrackerUrl || `https://rivalstracker.com/search?q=${encodeURIComponent(cleanUser)}`
     };
 
-    const savedUrl = siteUrls.rivalsMeta || siteUrls.trackerGg;
+    const primarySavedUrl = actualRivalsMetaUrl || actualTrackerGgUrl || actualRivalsTrackerUrl || siteUrls.trackerGg;
     
     const claimObj = {
       username: cleanUser,
       platform: targetStats?.platform || selectedPlatform || 'PC',
-      savedUrl: savedUrl,
+      savedUrl: primarySavedUrl,
       siteUrls: siteUrls,
       trackerGgUrl: siteUrls.trackerGg,
       rivalsMetaUrl: siteUrls.rivalsMeta,
