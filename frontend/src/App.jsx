@@ -649,6 +649,82 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
+  // Color Scheme Themes System
+  const THEMES = [
+    {
+      id: 'emerald',
+      name: 'Emerald Matrix',
+      accentColor: '#10b981',
+      bgGradient: 'from-emerald-400 to-teal-500',
+      textAccent: 'text-emerald-400',
+      borderAccent: 'border-emerald-500/40',
+      badgeBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+      swatchGradient: 'from-emerald-500 to-teal-600'
+    },
+    {
+      id: 'cyberpunk',
+      name: 'Cyberpunk Violet',
+      accentColor: '#a855f7',
+      bgGradient: 'from-purple-400 to-indigo-500',
+      textAccent: 'text-purple-400',
+      borderAccent: 'border-purple-500/40',
+      badgeBg: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+      swatchGradient: 'from-purple-500 to-indigo-600'
+    },
+    {
+      id: 'sapphire',
+      name: 'Neon Sapphire',
+      accentColor: '#3b82f6',
+      bgGradient: 'from-blue-400 to-cyan-500',
+      textAccent: 'text-blue-400',
+      borderAccent: 'border-blue-500/40',
+      badgeBg: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+      swatchGradient: 'from-blue-500 to-cyan-600'
+    },
+    {
+      id: 'crimson',
+      name: 'Crimson Vanguard',
+      accentColor: '#f43f5e',
+      bgGradient: 'from-rose-400 to-red-500',
+      textAccent: 'text-rose-400',
+      borderAccent: 'border-rose-500/40',
+      badgeBg: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+      swatchGradient: 'from-rose-500 to-red-600'
+    },
+    {
+      id: 'gold',
+      name: 'Golden Sentinel',
+      accentColor: '#eab308',
+      bgGradient: 'from-amber-400 to-yellow-500',
+      textAccent: 'text-amber-400',
+      borderAccent: 'border-amber-500/40',
+      badgeBg: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+      swatchGradient: 'from-amber-500 to-yellow-600'
+    }
+  ];
+
+  const [activeThemeId, setActiveThemeId] = useState(() => {
+    try {
+      return localStorage.getItem('app_color_theme') || 'emerald';
+    } catch (e) {
+      return 'emerald';
+    }
+  });
+
+  const activeTheme = THEMES.find(t => t.id === activeThemeId) || THEMES[0];
+
+  const handleSelectTheme = (themeId) => {
+    setActiveThemeId(themeId);
+    try {
+      localStorage.setItem('app_color_theme', themeId);
+    } catch (e) { }
+    const selected = THEMES.find(t => t.id === themeId);
+    triggerHaptic('success');
+    showNativeToast(`🎨 Theme set to ${selected?.name || themeId}!`);
+    setUpdateToast({ type: 'success', message: `🎨 App Color Scheme set to ${selected?.name || themeId}!` });
+    setTimeout(() => setUpdateToast(null), 3000);
+  };
+
   const saveTrackedStatSnapshot = async (playerStats) => {
     if (!playerStats?.current) return;
     const entry = {
@@ -4558,6 +4634,40 @@ ${payload.stack || 'No stack trace available.'}
                     >
                       <div className="w-4 h-4 rounded-full bg-white shadow-md"></div>
                     </button>
+                  </div>
+                </div>
+
+                {/* Drawer Group 0.6: App Color Scheme & Themes */}
+                <div className="space-y-2.5 bg-[#131b2f] border border-slate-700/60 p-3.5 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
+                      <span>🎨</span> App Color Scheme
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${activeTheme.badgeBg}`}>
+                      {activeTheme.name}
+                    </span>
+                  </div>
+
+                  <p className="text-[10px] text-slate-400 text-left">Select your favorite accent color palette:</p>
+
+                  <div className="grid grid-cols-5 gap-1.5 pt-1">
+                    {THEMES.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => handleSelectTheme(t.id)}
+                        className={`flex flex-col items-center gap-1 p-2 rounded-xl border transition-all cursor-pointer ${
+                          activeThemeId === t.id
+                            ? 'bg-[#0b101e] border-white scale-105 shadow-lg'
+                            : 'bg-[#0b101e]/60 border-slate-700/60 hover:border-slate-500 opacity-70 hover:opacity-100'
+                        }`}
+                      >
+                        <div className={`w-7 h-7 rounded-full bg-gradient-to-tr ${t.swatchGradient} shadow-md flex items-center justify-center text-white text-[10px] font-black`}>
+                          {activeThemeId === t.id ? '✓' : ''}
+                        </div>
+                        <span className="text-[8px] font-bold text-slate-300 truncate w-full text-center">{t.name.split(' ')[0]}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
