@@ -6250,11 +6250,11 @@ ${payload.stack || 'No stack trace available.'}
             </div>
 
             {/* QR Code Container */}
-            <div className="bg-white p-3.5 rounded-2xl inline-block border-2 border-amber-500/40 shadow-xl mx-auto my-1">
+            <div className="bg-white p-3 rounded-2xl inline-block border-2 border-amber-500/50 shadow-2xl mx-auto my-1">
               <img
-                src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https%3A%2F%2Fwww.paypal.com%2Fcgi-bin%2Fwebscr%3Fcmd%3D_donations%26business%3Dmeowdy5000%40gmail.com"
+                src="/paypal_qr.png"
                 alt="PayPal QR Code"
-                className="w-40 h-40 object-contain rounded-lg"
+                className="w-52 h-52 object-contain rounded-xl"
               />
             </div>
 
