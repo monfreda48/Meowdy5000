@@ -56,6 +56,63 @@ const AVAILABLE_METRICS = [
   { id: 'matchesPlayed', name: 'Matches & Wins', icon: '🎮', category: 'Profile' },
 ];
 
+const COLOR_THEMES = {
+  emerald: {
+    id: 'emerald',
+    name: 'Emerald Marvel',
+    icon: '⚡',
+    accentHex: '#10b981',
+    gradient: 'from-emerald-400 to-teal-500',
+    border: 'border-emerald-500/50',
+    bg: 'bg-emerald-500/10'
+  },
+  cyan: {
+    id: 'cyan',
+    name: 'Quantum Cyan',
+    icon: '🌐',
+    accentHex: '#06b6d4',
+    gradient: 'from-cyan-400 to-blue-500',
+    border: 'border-cyan-500/50',
+    bg: 'bg-cyan-500/10'
+  },
+  blue: {
+    id: 'blue',
+    name: 'Cobalt Blue',
+    icon: '💎',
+    accentHex: '#3b82f6',
+    gradient: 'from-blue-400 to-indigo-500',
+    border: 'border-blue-500/50',
+    bg: 'bg-blue-500/10'
+  },
+  red: {
+    id: 'red',
+    name: 'Crimson Marvel',
+    icon: '⚔️',
+    accentHex: '#ef4444',
+    gradient: 'from-red-400 to-rose-500',
+    border: 'border-red-500/50',
+    bg: 'bg-red-500/10'
+  },
+  purple: {
+    id: 'purple',
+    name: 'Amethyst Violet',
+    icon: '🔮',
+    accentHex: '#a855f7',
+    gradient: 'from-purple-400 to-violet-500',
+    border: 'border-purple-500/50',
+    bg: 'bg-purple-500/10'
+  },
+  amber: {
+    id: 'amber',
+    name: 'Gold Sentinel',
+    icon: '🏆',
+    accentHex: '#f59e0b',
+    gradient: 'from-amber-400 to-yellow-500',
+    border: 'border-amber-500/50',
+    bg: 'bg-amber-500/10'
+  }
+};
+
 const DEFAULT_SEASONS = [
   { id: '20', name: 'Season 10', status: 'upcoming' },
   { id: '19', name: 'Season 9.5', status: 'current' },
@@ -189,6 +246,29 @@ export default function App() {
     triggerHaptic('medium');
     setExpandedMetrics({});
     showNativeToast('📁 Collapsed all stat cards!');
+  };
+
+  const [activeColorScheme, setActiveColorScheme] = useState(() => {
+    try {
+      return localStorage.getItem('m5_color_scheme') || 'emerald';
+    } catch (e) {
+      return 'emerald';
+    }
+  });
+
+  useEffect(() => {
+    const theme = COLOR_THEMES[activeColorScheme] || COLOR_THEMES.emerald;
+    document.documentElement.style.setProperty('--accent-color', theme.accentHex);
+    document.documentElement.setAttribute('data-theme', activeColorScheme);
+  }, [activeColorScheme]);
+
+  const changeColorScheme = (schemeId) => {
+    try {
+      localStorage.setItem('m5_color_scheme', schemeId);
+    } catch (e) {}
+    setActiveColorScheme(schemeId);
+    triggerHaptic('light');
+    showNativeToast(`🎨 Color scheme set to ${COLOR_THEMES[schemeId]?.name || schemeId}`);
   };
 
   // Pinned Home Profile State & Helpers
@@ -5235,6 +5315,39 @@ ${payload.stack || 'No stack trace available.'}
                     <span className="text-base">💳</span>
                     <span>Donate with PayPal</span>
                   </button>
+                </div>
+
+                {/* Drawer Group: App Color Schemes & Themes */}
+                <div className="space-y-2.5 bg-[#131b2f] border border-slate-700/80 p-3.5 rounded-2xl shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
+                      <span>🎨</span> App Color Scheme
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-300">
+                      {COLOR_THEMES[activeColorScheme]?.name || 'Emerald'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 pt-1">
+                    {Object.values(COLOR_THEMES).map((theme) => (
+                      <button
+                        key={theme.id}
+                        type="button"
+                        onClick={() => changeColorScheme(theme.id)}
+                        className={`p-2.5 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1 cursor-pointer ${
+                          activeColorScheme === theme.id
+                            ? 'bg-slate-800 border-emerald-400 text-white shadow-lg ring-1 ring-emerald-400 scale-[1.02]'
+                            : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1">
+                          <span className="w-3.5 h-3.5 rounded-full shadow-sm" style={{ backgroundColor: theme.accentHex }}></span>
+                          <span className="text-xs">{theme.icon}</span>
+                        </div>
+                        <span className="text-[10px] font-bold truncate w-full text-center">{theme.name.split(' ')[0]}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Drawer Group 1: App Updates */}
