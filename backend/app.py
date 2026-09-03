@@ -53,6 +53,19 @@ def init_db():
             platform TEXT
         )
     ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS stat_reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME,
+            username TEXT,
+            metric_key TEXT,
+            reported_site TEXT,
+            current_value TEXT,
+            expected_value TEXT,
+            reason TEXT,
+            platform TEXT
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -899,6 +912,70 @@ def get_error_reports():
             "stack": row[3],
             "notes": row[4],
             "platform": row[5]
+        }
+        for row in cursor.fetchall()
+    ]
+    conn.close()
+    return jsonify(reports)
+
+@app.route('/api/report-stat', methods=['POST'])
+def report_stat():
+    """Receives and logs inaccurate stat report from client."""
+    data = request.json or {}
+    username = data.get("username", "Unknown")
+    metric_key = data.get("metricKey", "Unknown")
+    reported_site = data.get("reportedSite", "All")
+    current_value = str(data.get("currentValue", "N/A"))
+    expected_value = str(data.get("expectedValue", ""))
+    reason = str(data.get("reason", ""))
+    platform = str(data.get("platform", "Web/Mobile"))
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    try:
+        conn = sqlite3.connect(DB)
+        conn.execute('''
+            INSERT INTO stat_reports (timestamp, username, metric_key, reported_site, current_value, expected_value, reason, platform)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (timestamp, username, metric_key, reported_site, current_value, expected_value, reason, platform))
+        conn.commit()
+        conn.close()
+    except Exception as db_err:
+        print(f"[StatReporter] DB save error: {db_err}")
+
+    try:
+        log_file = os.path.join(BASE_DIR, 'stat_reports.log')
+        with open(log_file, 'a', encoding='utf-8') as f:
+            f.write(f"\n=== INACCURATE STAT REPORT [{timestamp}] ===\n")
+            f.write(f"Player: {username} | Platform: {platform}\n")
+            f.write(f"Metric: {metric_key} | Reported Site: {reported_site}\n")
+            f.write(f"Current Value: {current_value}\n")
+            if expected_value:
+                f.write(f"Expected Value: {expected_value}\n")
+            if reason:
+                f.write(f"Reason/Details: {reason}\n")
+            f.write("=" * 45 + "\n")
+    except Exception as log_err:
+        print(f"[StatReporter] File log error: {log_err}")
+
+    print(f"⚠️ [INACCURATE STAT REPORTED]: {username} - {metric_key} on {reported_site}")
+    return jsonify({"success": True, "message": "Stat report submitted successfully."})
+
+@app.route('/api/stat-reports', methods=['GET'])
+def get_stat_reports():
+    """Returns stored stat inaccuracy reports for inspection."""
+    conn = sqlite3.connect(DB)
+    cursor = conn.execute('SELECT id, timestamp, username, metric_key, reported_site, current_value, expected_value, reason, platform FROM stat_reports ORDER BY id DESC LIMIT 50')
+    reports = [
+        {
+            "id": row[0],
+            "timestamp": row[1],
+            "username": row[2],
+            "metricKey": row[3],
+            "reportedSite": row[4],
+            "currentValue": row[5],
+            "expectedValue": row[6],
+            "reason": row[7],
+            "platform": row[8]
         }
         for row in cursor.fetchall()
     ]

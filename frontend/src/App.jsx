@@ -405,6 +405,15 @@ export default function App() {
             </div>
           ))}
         </div>
+
+        <button
+          type="button"
+          onClick={(e) => handleOpenReportModal(metricKey, e)}
+          className="w-full mt-2 py-1.5 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 hover:border-red-500/50"
+        >
+          <span>⚠️</span>
+          <span>Report Inaccurate Stat ({METRIC_LABELS[metricKey] || metricKey})</span>
+        </button>
       </div>
     );
   };
@@ -655,6 +664,80 @@ export default function App() {
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  // Report Inaccurate Stat System
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportMetric, setReportMetric] = useState(null);
+  const [reportedSite, setReportedSite] = useState('merged');
+  const [reportExpectedVal, setReportExpectedVal] = useState('');
+  const [reportReason, setReportReason] = useState('');
+  const [isSubmittingStatReport, setIsSubmittingStatReport] = useState(false);
+
+  const METRIC_LABELS = {
+    winRate: 'Win Rate',
+    kdRatio: 'KDA Ratio',
+    heroDamage: 'Damage / 10m',
+    healing: 'Healing / 10m',
+    damageBlocked: 'Damage Blocked / 10m',
+    accuracy: 'Accuracy',
+    mvp: 'MVPs',
+    svp: 'SVPs',
+    timePlayed: 'Total Playtime',
+    matchesPlayed: 'Matches Played'
+  };
+
+  const handleOpenReportModal = (metricKey, e = null) => {
+    if (e) e.stopPropagation();
+    triggerHaptic('light');
+    setReportMetric(metricKey);
+    setReportedSite(favoriteSite || 'merged');
+    setReportExpectedVal('');
+    setReportReason('');
+    setReportModalOpen(true);
+  };
+
+  const handleSubmitStatReport = async () => {
+    if (!reportMetric || !stats?.current) return;
+    setIsSubmittingStatReport(true);
+    triggerHaptic('medium');
+
+    const metricName = METRIC_LABELS[reportMetric] || reportMetric;
+    const payload = {
+      username: stats.current.username || 'Unknown',
+      metricKey: reportMetric,
+      metricName: metricName,
+      reportedSite: reportedSite,
+      currentValue: stats.current[reportMetric] || 'N/A',
+      expectedValue: reportExpectedVal.trim(),
+      reason: reportReason.trim(),
+      platform: stats.current.platform || selectedPlatform || 'PC'
+    };
+
+    try {
+      const existingQueue = JSON.parse(localStorage.getItem('reported_stats_queue') || '[]');
+      existingQueue.push({ ...payload, timestamp: new Date().toISOString() });
+      localStorage.setItem('reported_stats_queue', JSON.stringify(existingQueue.slice(-50)));
+    } catch (e) {}
+
+    try {
+      await fetch(`${API_BASE_URL}/api/report-stat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.warn('[ReportStat] Backend report fetch failed:', err);
+    }
+
+    setIsSubmittingStatReport(false);
+    setReportModalOpen(false);
+    showNativeToast(`⚠️ Stat report for ${metricName} submitted!`);
+    setUpdateToast({
+      type: 'success',
+      message: `⚠️ Accuracy report for ${metricName} submitted. Thank you for your feedback!`
+    });
+    setTimeout(() => setUpdateToast(null), 3500);
   };
 
   // Color Scheme Themes System
@@ -3063,9 +3146,19 @@ ${payload.stack || 'No stack trace available.'}
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Win Rate</p>
                           </div>
-                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                            {expandedMetric === 'winRate' ? '▲ Hide' : '▼ Expand'}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(e) => handleOpenReportModal('winRate', e)}
+                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                              title="Report Inaccurate Stat for Win Rate"
+                            >
+                              ⚠️
+                            </button>
+                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                              {expandedMetric === 'winRate' ? '▲ Hide' : '▼ Expand'}
+                            </span>
+                          </div>
                         </div>
                         <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
                           {getCardDisplayStat('winRate', `${stats.current.winRate}%`)}
@@ -3116,9 +3209,19 @@ ${payload.stack || 'No stack trace available.'}
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">KDA Ratio</p>
                           </div>
-                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                            {expandedMetric === 'kdRatio' ? '▲ Hide' : '▼ Expand'}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(e) => handleOpenReportModal('kdRatio', e)}
+                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                              title="Report Inaccurate Stat for KDA Ratio"
+                            >
+                              ⚠️
+                            </button>
+                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                              {expandedMetric === 'kdRatio' ? '▲ Hide' : '▼ Expand'}
+                            </span>
+                          </div>
                         </div>
                         <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
                           {getCardDisplayStat('kdRatio', stats.current.kdRatio)}
@@ -5407,6 +5510,136 @@ ${payload.stack || 'No stack trace available.'}
                 className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold uppercase tracking-wider cursor-pointer"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Report Inaccurate Stat */}
+      {reportModalOpen && reportMetric && stats?.current && (
+        <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-gradient-to-br from-[#131b2f] via-[#0f172a] to-[#0b101e] border-2 border-red-500/60 rounded-3xl p-5 sm:p-7 max-w-md w-full shadow-2xl space-y-4 text-left relative max-h-[90vh] overflow-y-auto">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-red-500/20 text-red-400 border border-red-500/40 flex items-center justify-center font-bold text-xl">
+                  ⚠️
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white uppercase tracking-wider">
+                    Report Inaccurate Stat
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Flag discrepancy for <strong className="text-emerald-400">{stats.current.username}</strong>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReportModalOpen(false)}
+                className="text-slate-400 hover:text-white text-lg font-bold p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Target Metric Context Card */}
+            <div className="bg-[#0b101e] border border-slate-700/80 p-3.5 rounded-2xl space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Target Metric</span>
+                <span className="text-xs font-black text-emerald-400">{METRIC_LABELS[reportMetric] || reportMetric}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-slate-400">Recorded App Value</span>
+                <span className="text-xs font-mono font-bold text-white">{stats.current[reportMetric] || 'N/A'}</span>
+              </div>
+            </div>
+
+            {/* 1. Select Affected Data Site */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-wider text-slate-300 block">
+                1. Which Site is Inaccurate?
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { key: 'merged', label: '⚡ Merged / All' },
+                  { key: 'trackerGg', label: '🌐 Tracker.gg' },
+                  { key: 'rivalsMeta', label: '⚔️ RivalsMeta' },
+                  { key: 'rivalsTracker', label: '🎯 RivalsTracker' }
+                ].map((site) => (
+                  <button
+                    key={site.key}
+                    type="button"
+                    onClick={() => setReportedSite(site.key)}
+                    className={`p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer text-left ${
+                      reportedSite === site.key
+                        ? 'bg-red-500/20 border-red-500/80 text-red-300 shadow-sm'
+                        : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                    }`}
+                  >
+                    {site.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 2. Expected Correct Value (Optional) */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-wider text-slate-300 block">
+                2. Expected / In-Game Correct Value <span className="text-slate-500 font-normal">(Optional)</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. 58.5% win rate, 3.82 KDA, etc."
+                value={reportExpectedVal}
+                onChange={(e) => setReportExpectedVal(e.target.value)}
+                className="w-full bg-[#0b101e] border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
+              />
+            </div>
+
+            {/* 3. Reason / Discrepancy Details */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-wider text-slate-300 block">
+                3. Additional Notes / Discrepancy Details <span className="text-slate-500 font-normal">(Optional)</span>
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Describe what is inaccurate or what your career profile shows..."
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+                className="w-full bg-[#0b101e] border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500 resize-none"
+              />
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setReportModalOpen(false)}
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold uppercase tracking-wider cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSubmitStatReport}
+                disabled={isSubmittingStatReport}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-amber-600 hover:from-red-400 hover:to-amber-500 text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-red-500/20 cursor-pointer disabled:opacity-50 flex items-center gap-2"
+              >
+                {isSubmittingStatReport ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span>Submitting...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>⚠️</span>
+                    <span>Submit Report</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
