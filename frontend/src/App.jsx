@@ -561,11 +561,7 @@ export default function App() {
   const renderPlatformIcon = (platformStr, fallbackIcon) => {
     const pStr = (platformStr || '').toLowerCase();
     if (pStr.includes('playstation') || pStr.includes('ps5') || pStr.includes('psn') || pStr === 'ps') {
-      return (
-        <svg className="w-3.5 h-3.5 fill-current text-indigo-300 inline-block shrink-0" viewBox="0 0 24 24">
-          <path d="M23.669 17.202c-.378-.415-1.16-.764-2.529-1.074l-4.577-1.036v-2.023c0-.62-.224-1.127-.672-1.521-.448-.395-1.05-.592-1.806-.592-.733 0-1.325.197-1.776.592-.451.394-.676.901-.676 1.521v1.17l-3.327-.753v-5.23c1.034-.148 1.942-.519 2.723-1.113.782-.594 1.173-1.377 1.173-2.348 0-1.082-.394-1.921-1.182-2.518C10.438 1.626 9.387 1.327 8.07 1.327c-.89 0-1.748.163-2.574.489C4.67 2.142 4 2.617 3.486 3.242c-.516.625-.774 1.378-.774 2.259 0 .96.388 1.737 1.164 2.33.776.594 1.678.966 2.706 1.114v6.004l-3.882.88c-.96.217-1.636.529-2.027.936C.282 17.172.087 17.653.087 18.208c0 .644.27 1.177.81 1.6.54.423 1.306.634 2.298.634 1.05 0 2.217-.23 3.501-.69 1.284-.46 2.502-1.08 3.654-1.86v-3.791l3.327.753v2.023c0 .62.225 1.127.673 1.521.448.395 1.049.592 1.805.592.733 0 1.325-.197 1.776-.592.451-.394.676-.901.676-1.521v-1.17l3.966.897c.567.128 1.002.203 1.305.225.303.023.545.034.726.034.526 0 .942-.148 1.248-.444.306-.296.459-.706.459-1.23 0-.584-.258-1.077-.775-1.48z"/>
-        </svg>
-      );
+      return <span>🎮</span>;
     }
     if (pStr.includes('xbox') || pStr.includes('xbl')) {
       return <span>❎</span>;
@@ -1689,7 +1685,7 @@ export default function App() {
       setUpdateStatusMsg('📥 Downloading updated APK binary...');
       showNativeToast('📥 Downloading update package...');
 
-      const downloadUrl = readyToInstallUpdate?.apkUrl || 'https://github.com/monfreda48/Meowdy5000/releases/download/v1.0.14/app-debug.apk';
+      const downloadUrl = readyToInstallUpdate?.apkUrl || 'https://github.com/monfreda48/Meowdy5000/releases/latest/download/app-debug.apk';
 
       try {
         // Request Storage Permission from Android OS
@@ -2315,69 +2311,9 @@ ${payload.stack || 'No stack trace available.'}
 
   const fetchDirectPlayerStats = async (queryVal, seasonVal, signal) => {
     const cleanQuery = (queryVal || '').trim();
-    const seasonParam = seasonVal ? `?season=${encodeURIComponent(seasonVal)}` : '';
+    if (!cleanQuery) throw new Error('Please enter a username or player UID to search.');
     const encodedQuery = encodeURIComponent(cleanQuery);
-
-    let data = null;
-    try {
-      const rmUrl = `https://rivalsmeta.com/api/player/${encodedQuery}${seasonParam}`;
-      const res = await fetch(rmUrl, { signal, headers: { 'Accept': 'application/json' } });
-      if (res.ok) {
-        const text = await res.text();
-        if (!text.trim().startsWith('<') && !text.toLowerCase().includes('<!doctype html')) {
-          data = JSON.parse(text);
-        }
-      }
-    } catch (e) {
-      console.warn('[DirectFetch] Primary API fetch note:', e);
-    }
-
-    const statsObj = data?.stats || {};
-    const matches = parseInt(statsObj.total_matches || 0, 10);
-    const wins = parseInt(statsObj.total_wins || 0, 10);
-    const kills = parseInt(statsObj.total_kills || 0, 10);
-    const deaths = parseInt(statsObj.total_deaths || 0, 10);
-    const assists = parseInt(statsObj.total_assists || 0, 10);
-
-    const hasRealStats = Boolean(cleanQuery && cleanQuery.length > 0);
-    const winRateVal = matches > 0 ? ((wins / matches) * 100).toFixed(1) : "54.2";
-    const kdRatioVal = deaths > 0 ? ((kills + assists) / deaths).toFixed(2) : "2.85";
-    const matchesVal = matches > 0 ? matches : 148;
-    const winsVal = wins > 0 ? wins : 80;
-    const killsVal = kills > 0 ? kills : 412;
-    const deathsVal = deaths > 0 ? deaths : 172;
-    const assistsVal = assists > 0 ? assists : 285;
-
-    const heroList = [];
-    if (data?.heroes_ranked) {
-      Object.entries(data.heroes_ranked).forEach(([hId, hData]) => {
-        const hMatches = parseInt(hData.total_matches || 0, 10);
-        const hWins = parseInt(hData.total_wins || 0, 10);
-        const hKills = parseInt(hData.total_kills || 0, 10);
-        const hDeaths = parseInt(hData.total_deaths || 0, 10);
-        const hAssists = parseInt(hData.total_assists || 0, 10);
-        const hWinRate = hMatches > 0 ? parseFloat(((hWins / hMatches) * 100).toFixed(1)) : 0;
-        const hKda = hDeaths > 0 ? parseFloat(((hKills + hAssists) / hDeaths).toFixed(2)) : (hKills + hAssists);
-        heroList.push({
-          id: String(hId),
-          name: HERO_MAP_CLIENT[String(hId)] || `Hero #${hId}`,
-          matches: hMatches,
-          winRate: hWinRate,
-          kda: hKda,
-          rawHeroData: hData
-        });
-      });
-    }
-    heroList.sort((a, b) => b.matches - a.matches);
-    const topNames = heroList.slice(0, 3).map(h => h.name);
-    const topHeroStr = topNames.join(", ") || "Spider-Man, Venom, Iron Man";
-
-    const isUid = cleanQuery.length > 0 && !isNaN(cleanQuery);
-    const siteUrls = {
-      trackerGg: `https://tracker.gg/marvel-rivals/profile/ign/${encodedQuery}/overview`,
-      rivalsMeta: isUid ? `https://rivalsmeta.com/player/${encodedQuery}` : `https://rivalsmeta.com/search?q=${encodedQuery}`,
-      rivalsTracker: isUid ? `https://rivalstracker.com/player/${encodedQuery}` : `https://rivalstracker.com/search?q=${encodedQuery}`
-    };
+    const seasonParam = seasonVal ? `?season=${encodeURIComponent(seasonVal)}` : '';
 
     let detectedPlatform = "PC";
     let detectedIcon = "💻";
@@ -2401,55 +2337,246 @@ ${payload.stack || 'No stack trace available.'}
       detectedSlug = "xbl";
     }
 
-    const currentObj = {
-      username: data?.name || cleanQuery,
-      avatarUrl: "",
-      platform: detectedPlatform,
-      platformIcon: detectedIcon,
-      platformSlug: detectedSlug,
-      rank: data?.rank ? String(data.rank) : "Gold I",
-      peakRank: data?.peakRank || "Platinum III",
-      winRate: String(winRateVal),
-      kdRatio: String(kdRatioVal),
-      topHero: topHeroStr,
-      trackerScore: "4.8",
-      trackerUrl: siteUrls.trackerGg,
-      matchesPlayed: matchesVal,
-      matchesWon: winsVal,
-      kills: killsVal,
-      deaths: deathsVal,
-      assists: assistsVal,
-      heroDamage: "18,450",
-      healing: "12,300",
-      damageBlocked: "8,900",
-      accuracy: "48.5%",
-      mvp: "14",
-      svp: "8",
-      timePlayed: "42h 15m",
-      sources: ["3-Site Direct Web Profile Selector"],
-      siteUrls,
-      topHeroesDetailed: heroList.length > 0 ? heroList : [
-        { id: "1016", name: "Spider-Man", matches: 68, winRate: 58.8, kda: 3.12 },
-        { id: "1017", name: "Venom", matches: 45, winRate: 53.3, kda: 2.84 },
-        { id: "1018", name: "Iron Man", matches: 35, winRate: 48.6, kda: 2.45 }
-      ],
-      allHeroesFull: heroList,
-      statBreakdown: {
-        winRate: {
-          trackerGg: `${winRateVal}%`,
-          rivalsMeta: `${winRateVal}%`,
-          rivalsTracker: `${winRateVal}%`
-        },
-        kdRatio: {
-          trackerGg: String(kdRatioVal),
-          rivalsMeta: String(kdRatioVal),
-          rivalsTracker: String(kdRatioVal)
+    const trackerGgUrl = `https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/${detectedSlug}/${encodedQuery}`;
+    const rivalsMetaUrl = `https://rivalsmeta.com/api/player/${encodedQuery}${seasonParam}`;
+    const rivalsTrackerUrl = `https://api.rivalstracker.com/api/player/${encodedQuery}${seasonParam}`;
+
+    const fetchCandidatesForSite = async (candidates) => {
+      for (const url of candidates) {
+        if (signal && signal.aborted) break;
+        try {
+          const res = await fetch(url, {
+            signal,
+            headers: {
+              'Accept': 'application/json, text/plain, */*'
+            }
+          });
+          if (res.ok) {
+            const text = await res.text();
+            if (text && !text.trim().startsWith('<') && !text.toLowerCase().includes('<!doctype html')) {
+              const parsed = JSON.parse(text);
+              if (parsed && (parsed.data || parsed.stats || parsed.name || parsed.username)) {
+                return parsed;
+              }
+            }
+          }
+        } catch (e) {
+          // Try next proxy
         }
-      },
-      rawSourcesData: { rivalsMeta: data }
+      }
+      return null;
     };
 
-    return { current: currentObj };
+    const [trackerData, rivalsMetaData, rivalsTrackerData] = await Promise.all([
+      fetchCandidatesForSite([
+        trackerGgUrl,
+        `https://corsproxy.io/?${encodeURIComponent(trackerGgUrl)}`,
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(trackerGgUrl)}`,
+        `https://thingproxy.freeboard.io/fetch/${trackerGgUrl}`
+      ]),
+      fetchCandidatesForSite([
+        rivalsMetaUrl,
+        `https://corsproxy.io/?${encodeURIComponent(rivalsMetaUrl)}`,
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(rivalsMetaUrl)}`,
+        `https://thingproxy.freeboard.io/fetch/${rivalsMetaUrl}`
+      ]),
+      fetchCandidatesForSite([
+        rivalsTrackerUrl,
+        `https://corsproxy.io/?${encodeURIComponent(rivalsTrackerUrl)}`,
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(rivalsTrackerUrl)}`,
+        `https://thingproxy.freeboard.io/fetch/${rivalsTrackerUrl}`
+      ])
+    ]);
+
+    let tUsername = "", tAvatar = "", tRank = "", tPeakRank = "", tMatches = 0, tWins = 0, tKills = 0, tDeaths = 0, tAssists = 0;
+    let tWinRate = "N/A", tKdRatio = "N/A", tHeroList = [];
+
+    if (trackerData?.data?.segments) {
+      const segments = trackerData.data.segments;
+      const stats = segments[0]?.stats || {};
+      const platformInfo = trackerData.data.platformInfo || {};
+      tUsername = platformInfo.platformUserIdentifier || cleanQuery;
+      const rawAvatar = platformInfo.avatarUrl || "";
+      tAvatar = rawAvatar ? `https://imgsvc.trackercdn.com/url/size(128),fit(cover)/${encodeURIComponent(rawAvatar)}/image.jpg` : "";
+
+      const rankedStat = stats.ranked || stats.rank || {};
+      const tierName = rankedStat.metadata?.tierName || rankedStat.metadata?.tierShortName || "Unranked";
+      const rsVal = rankedStat.displayValue || rankedStat.value || "";
+      tRank = tierName !== "Unranked" && rsVal ? `${tierName} (${rsVal} RS)` : tierName;
+
+      const peakStat = stats.peakRanked || stats.lifetimePeakRanked || {};
+      const peakTier = peakStat.metadata?.tierName || peakStat.metadata?.tierShortName;
+      const peakRs = peakStat.displayValue || peakStat.value || "";
+      tPeakRank = peakTier && peakRs ? `${peakTier} (${peakRs} RS)` : (peakTier || "Unranked");
+
+      tMatches = parseInt(stats.matchesPlayed?.value || stats.matchesPlayed || 0, 10);
+      tWins = parseInt(stats.matchesWon?.value || stats.matchesWon || 0, 10);
+
+      const winPctStat = stats.matchesWinPct?.value ?? stats.winPct?.value;
+      if (winPctStat !== undefined && winPctStat !== null) {
+        tWinRate = parseFloat(winPctStat).toFixed(1);
+      } else if (tMatches > 0) {
+        tWinRate = ((tWins / tMatches) * 100).toFixed(1);
+      }
+
+      tKills = parseInt(stats.kills?.value || stats.kills || 0, 10);
+      tDeaths = parseInt(stats.deaths?.value || stats.deaths || 0, 10);
+      tAssists = parseInt(stats.assists?.value || stats.assists || 0, 10);
+
+      const kdaStat = stats.kdaRatio?.value ?? stats.kdRatio?.value ?? stats.kdaRatio?.displayValue ?? stats.kdRatio?.displayValue;
+      if (kdaStat !== undefined && kdaStat !== null && kdaStat !== "") {
+        tKdRatio = parseFloat(kdaStat).toFixed(2);
+      } else if (tDeaths > 0) {
+        tKdRatio = ((tKills + tAssists) / tDeaths).toFixed(2);
+      } else if (tKills || tAssists) {
+        tKdRatio = (tKills + tAssists).toFixed(2);
+      }
+
+      for (const seg of segments) {
+        if (seg.type === 'hero') {
+          const hName = seg.metadata?.name || 'Unknown Hero';
+          const hSt = seg.stats || {};
+          const hMatches = parseInt(hSt.matchesPlayed?.value || hSt.matchesPlayed || 0, 10);
+          const hWinRate = parseFloat((hSt.matchesWinPct?.value ?? hSt.winPct?.value ?? 0).toFixed(1));
+          const hKda = parseFloat((hSt.kdaRatio?.value ?? hSt.kdRatio?.value ?? 0).toFixed(2));
+          if (hMatches > 0) {
+            tHeroList.push({ id: String(seg.metadata?.heroId || hName), name: hName, matches: hMatches, winRate: hWinRate, kda: hKda });
+          }
+        }
+      }
+      tHeroList.sort((a, b) => b.matches - a.matches);
+    }
+
+    let rmUsername = "", rmRank = "", rmMatches = 0, rmWins = 0, rmKills = 0, rmDeaths = 0, rmAssists = 0;
+    let rmWinRate = "N/A", rmKdRatio = "N/A", rmHeroList = [];
+
+    if (rivalsMetaData?.stats || rivalsMetaData?.name) {
+      rmUsername = rivalsMetaData.name || cleanQuery;
+      rmRank = rivalsMetaData.rank ? String(rivalsMetaData.rank) : "Unranked";
+      const statsObj = rivalsMetaData.stats || {};
+      rmMatches = parseInt(statsObj.total_matches || 0, 10);
+      rmWins = parseInt(statsObj.total_wins || 0, 10);
+      rmKills = parseInt(statsObj.total_kills || 0, 10);
+      rmDeaths = parseInt(statsObj.total_deaths || 0, 10);
+      rmAssists = parseInt(statsObj.total_assists || 0, 10);
+      rmWinRate = rmMatches > 0 ? ((rmWins / rmMatches) * 100).toFixed(1) : "0.0";
+      rmKdRatio = rmDeaths > 0 ? ((rmKills + rmAssists) / rmDeaths).toFixed(2) : (rmKills + rmAssists).toString();
+
+      if (rivalsMetaData.heroes_ranked) {
+        Object.entries(rivalsMetaData.heroes_ranked).forEach(([hId, hData]) => {
+          const hMatches = parseInt(hData.total_matches || 0, 10);
+          const hWins = parseInt(hData.total_wins || 0, 10);
+          const hKills = parseInt(hData.total_kills || 0, 10);
+          const hDeaths = parseInt(hData.total_deaths || 0, 10);
+          const hAssists = parseInt(hData.total_assists || 0, 10);
+          const hWinRate = hMatches > 0 ? parseFloat(((hWins / hMatches) * 100).toFixed(1)) : 0;
+          const hKda = hDeaths > 0 ? parseFloat(((hKills + hAssists) / hDeaths).toFixed(2)) : (hKills + hAssists);
+          rmHeroList.push({
+            id: String(hId),
+            name: HERO_MAP_CLIENT[String(hId)] || `Hero #${hId}`,
+            matches: hMatches,
+            winRate: hWinRate,
+            kda: hKda
+          });
+        });
+        rmHeroList.sort((a, b) => b.matches - a.matches);
+      }
+    }
+
+    let rtUsername = "", rtRank = "", rtMatches = 0, rtWins = 0, rtKills = 0, rtDeaths = 0, rtAssists = 0;
+    let rtWinRate = "N/A", rtKdRatio = "N/A", rtHeroList = [];
+
+    if (rivalsTrackerData?.username || rivalsTrackerData?.rank || rivalsTrackerData?.winRate) {
+      rtUsername = rivalsTrackerData.username || cleanQuery;
+      rtRank = rivalsTrackerData.rank ? String(rivalsTrackerData.rank) : "Unranked";
+      rtMatches = parseInt(rivalsTrackerData.matchesPlayed || rivalsTrackerData.matches || 0, 10);
+      rtWins = parseInt(rivalsTrackerData.matchesWon || rivalsTrackerData.wins || 0, 10);
+      rtKills = parseInt(rivalsTrackerData.kills || 0, 10);
+      rtDeaths = parseInt(rivalsTrackerData.deaths || 0, 10);
+      rtAssists = parseInt(rivalsTrackerData.assists || 0, 10);
+      rtWinRate = rivalsTrackerData.winRate ? String(rivalsTrackerData.winRate) : (rtMatches > 0 ? ((rtWins / rtMatches) * 100).toFixed(1) : "0.0");
+      rtKdRatio = rivalsTrackerData.kdRatio ? String(rivalsTrackerData.kdRatio) : (rtDeaths > 0 ? ((rtKills + rtAssists) / rtDeaths).toFixed(2) : "0.0");
+    }
+
+    const sources = [];
+    if (trackerData) sources.push(`Tracker.gg (${detectedPlatform})`);
+    if (rivalsMetaData) sources.push(`RivalsMeta.com (${detectedPlatform})`);
+    if (rivalsTrackerData) sources.push(`RivalsTracker.com (${detectedPlatform})`);
+
+    if (sources.length === 0) {
+      throw new Error(`Player "${cleanQuery}" not found on Marvel Rivals across Tracker.gg, RivalsMeta.com, or RivalsTracker.com. Please verify the spelling and platform (${detectedPlatform}).`);
+    }
+
+    const username = tUsername || rmUsername || rtUsername || cleanQuery;
+    const avatarUrl = tAvatar || "";
+    const rank = tRank || rmRank || rtRank || "Unranked";
+    const peakRank = tPeakRank || rmRank || rtRank || "Unranked";
+    const winRate = tWinRate !== "N/A" ? tWinRate : (rmWinRate !== "N/A" ? rmWinRate : (rtWinRate !== "N/A" ? rtWinRate : "0.0"));
+    const kdRatio = tKdRatio !== "N/A" ? tKdRatio : (rmKdRatio !== "N/A" ? rmKdRatio : (rtKdRatio !== "N/A" ? rtKdRatio : "0.0"));
+    const matchesPlayed = tMatches || rmMatches || rtMatches || 0;
+    const matchesWon = tWins || rmWins || rtWins || 0;
+    const kills = tKills || rmKills || rtKills || 0;
+    const deaths = tDeaths || rmDeaths || rtDeaths || 0;
+    const assists = tAssists || rmAssists || rtAssists || 0;
+
+    const heroList = tHeroList.length > 0 ? tHeroList : (rmHeroList.length > 0 ? rmHeroList : rtHeroList);
+    const topHeroStr = heroList.slice(0, 3).map(h => h.name).join(", ") || "N/A";
+
+    const statBreakdown = {
+      winRate: {
+        ...(tWinRate !== "N/A" ? { trackerGg: `${tWinRate}%` } : {}),
+        ...(rmWinRate !== "N/A" ? { rivalsMeta: `${rmWinRate}%` } : {}),
+        ...(rtWinRate !== "N/A" ? { rivalsTracker: `${rtWinRate}%` } : {})
+      },
+      kdRatio: {
+        ...(tKdRatio !== "N/A" ? { trackerGg: tKdRatio } : {}),
+        ...(rmKdRatio !== "N/A" ? { rivalsMeta: rmKdRatio } : {}),
+        ...(rtKdRatio !== "N/A" ? { rivalsTracker: rtKdRatio } : {})
+      },
+      rank: {
+        ...(tRank ? { trackerGg: tRank } : {}),
+        ...(rmRank ? { rivalsMeta: rmRank } : {}),
+        ...(rtRank ? { rivalsTracker: rtRank } : {})
+      }
+    };
+
+    return {
+      current: {
+        username,
+        avatarUrl,
+        platform: detectedPlatform,
+        platformIcon: detectedIcon,
+        platformSlug: detectedSlug,
+        rank,
+        peakRank,
+        winRate,
+        kdRatio,
+        topHero: topHeroStr,
+        trackerScore: "4.8",
+        trackerUrl: `https://tracker.gg/marvel-rivals/profile/${detectedSlug}/${encodedQuery}/overview`,
+        matchesPlayed,
+        matchesWon,
+        kills,
+        deaths,
+        assists,
+        heroDamage: trackerData?.data?.segments?.[0]?.stats?.heroDamagePer10?.displayValue || "N/A",
+        healing: trackerData?.data?.segments?.[0]?.stats?.healingPer10?.displayValue || "N/A",
+        damageBlocked: trackerData?.data?.segments?.[0]?.stats?.damageBlockedPer10?.displayValue || "N/A",
+        accuracy: "N/A",
+        mvp: trackerData?.data?.segments?.[0]?.stats?.totalMvp?.value ? String(trackerData.data.segments[0].stats.totalMvp.value) : "0",
+        svp: trackerData?.data?.segments?.[0]?.stats?.totalSvp?.value ? String(trackerData.data.segments[0].stats.totalSvp.value) : "0",
+        timePlayed: trackerData?.data?.segments?.[0]?.stats?.timePlayed?.displayValue || "N/A",
+        sources,
+        siteUrls: {
+          trackerGg: `https://tracker.gg/marvel-rivals/profile/${detectedSlug}/${encodedQuery}/overview`,
+          rivalsMeta: `https://rivalsmeta.com/player/${encodedQuery}`,
+          rivalsTracker: `https://rivalstracker.com/player/${encodedQuery}`
+        },
+        topHeroesDetailed: heroList.slice(0, 3),
+        allHeroesFull: heroList,
+        statBreakdown
+      }
+    };
   };
 
   const fetchStats = async (e, overrideQuery = null, overrideSeason = null) => {
@@ -2506,7 +2633,7 @@ ${payload.stack || 'No stack trace available.'}
       } else if (backendBaseUrl) {
         try {
           const backendController = new AbortController();
-          const bTimeout = setTimeout(() => backendController.abort(), 7000);
+          const bTimeout = setTimeout(() => backendController.abort(), 2000);
           const response = await fetch(
             getApiUrl(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`),
             {
@@ -2523,7 +2650,7 @@ ${payload.stack || 'No stack trace available.'}
             throw new Error(data?.error || 'Backend request failed');
           }
         } catch (backendErr) {
-          console.warn('[FetchStats] Custom backend request failed or timed out (7s), falling back to direct client fetch:', backendErr);
+          console.warn('[FetchStats] Custom backend request failed or timed out (2s), falling back to direct client fetch:', backendErr);
           data = await fetchDirectPlayerStats(activeQuery, activeSeason, controller.signal);
         }
       } else {
@@ -2903,9 +3030,6 @@ ${payload.stack || 'No stack trace available.'}
                       {selectedPlatform === 'ps5' ? (
                         <>
                           <span className="text-base">🎮</span>
-                          <svg className="w-4 h-4 fill-current text-indigo-400 inline-block shrink-0" viewBox="0 0 24 24">
-                            <path d="M23.669 17.202c-.378-.415-1.16-.764-2.529-1.074l-4.577-1.036v-2.023c0-.62-.224-1.127-.672-1.521-.448-.395-1.05-.592-1.806-.592-.733 0-1.325.197-1.776.592-.451.394-.676.901-.676 1.521v1.17l-3.327-.753v-5.23c1.034-.148 1.942-.519 2.723-1.113.782-.594 1.173-1.377 1.173-2.348 0-1.082-.394-1.921-1.182-2.518C10.438 1.626 9.387 1.327 8.07 1.327c-.89 0-1.748.163-2.574.489C4.67 2.142 4 2.617 3.486 3.242c-.516.625-.774 1.378-.774 2.259 0 .96.388 1.737 1.164 2.33.776.594 1.678.966 2.706 1.114v6.004l-3.882.88c-.96.217-1.636.529-2.027.936C.282 17.172.087 17.653.087 18.208c0 .644.27 1.177.81 1.6.54.423 1.306.634 2.298.634 1.05 0 2.217-.23 3.501-.69 1.284-.46 2.502-1.08 3.654-1.86v-3.791l3.327.753v2.023c0 .62.225 1.127.673 1.521.448.395 1.049.592 1.805.592.733 0 1.325-.197 1.776-.592.451-.394.676-.901.676-1.521v-1.17l3.966.897c.567.128 1.002.203 1.305.225.303.023.545.034.726.034.526 0 .942-.148 1.248-.444.306-.296.459-.706.459-1.23 0-.584-.258-1.077-.775-1.48z"/>
-                          </svg>
                           <span>PlayStation 5</span>
                         </>
                       ) : selectedPlatform === 'xbox' ? (
@@ -2951,13 +3075,7 @@ ${payload.stack || 'No stack trace available.'}
                               : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
                           }`}
                         >
-                          {item.id === 'ps5' ? (
-                            <svg className="w-4 h-4 fill-current text-indigo-400 inline-block shrink-0" viewBox="0 0 24 24">
-                              <path d="M23.669 17.202c-.378-.415-1.16-.764-2.529-1.074l-4.577-1.036v-2.023c0-.62-.224-1.127-.672-1.521-.448-.395-1.05-.592-1.806-.592-.733 0-1.325.197-1.776.592-.451.394-.676.901-.676 1.521v1.17l-3.327-.753v-5.23c1.034-.148 1.942-.519 2.723-1.113.782-.594 1.173-1.377 1.173-2.348 0-1.082-.394-1.921-1.182-2.518C10.438 1.626 9.387 1.327 8.07 1.327c-.89 0-1.748.163-2.574.489C4.67 2.142 4 2.617 3.486 3.242c-.516.625-.774 1.378-.774 2.259 0 .96.388 1.737 1.164 2.33.776.594 1.678.966 2.706 1.114v6.004l-3.882.88c-.96.217-1.636.529-2.027.936C.282 17.172.087 17.653.087 18.208c0 .644.27 1.177.81 1.6.54.423 1.306.634 2.298.634 1.05 0 2.217-.23 3.501-.69 1.284-.46 2.502-1.08 3.654-1.86v-3.791l3.327.753v2.023c0 .62.225 1.127.673 1.521.448.395 1.049.592 1.805.592.733 0 1.325-.197 1.776-.592.451-.394.676-.901.676-1.521v-1.17l3.966.897c.567.128 1.002.203 1.305.225.303.023.545.034.726.034.526 0 .942-.148 1.248-.444.306-.296.459-.706.459-1.23 0-.584-.258-1.077-.775-1.48z"/>
-                            </svg>
-                          ) : (
-                            <span className="text-base">{item.icon}</span>
-                          )}
+                          <span className="text-base">{item.icon}</span>
                           <span>{item.label}</span>
                         </button>
                       ))}
@@ -3292,7 +3410,8 @@ ${payload.stack || 'No stack trace available.'}
                   type="button"
                   onClick={() => {
                     triggerHaptic('light');
-                    const url = stats.current.siteUrls?.trackerGg || stats.current.trackerUrl || `https://tracker.gg/marvel-rivals/profile/ign/${encodeURIComponent(stats.current.username)}/overview`;
+                    const platformSlug = stats.current.platformSlug || (selectedPlatform === 'ps5' ? 'psn' : (selectedPlatform === 'xbox' ? 'xbl' : 'ign'));
+                    const url = stats.current.siteUrls?.trackerGg || stats.current.trackerUrl || `https://tracker.gg/marvel-rivals/profile/${platformSlug}/${encodeURIComponent(stats.current.username)}/overview`;
                     openExternalUrl(url);
                     showNativeToast('🌐 Opening Tracker.gg profile webpage...');
                   }}
@@ -3312,9 +3431,7 @@ ${payload.stack || 'No stack trace available.'}
                   type="button"
                   onClick={() => {
                     triggerHaptic('light');
-                    const isUid = stats.current.username && !isNaN(stats.current.username);
-                    const rmFallback = isUid ? `https://rivalsmeta.com/player/${encodeURIComponent(stats.current.username)}` : `https://rivalsmeta.com/search?q=${encodeURIComponent(stats.current.username)}`;
-                    const url = stats.current.siteUrls?.rivalsMeta || rmFallback;
+                    const url = stats.current.siteUrls?.rivalsMeta || `https://rivalsmeta.com/player/${encodeURIComponent(stats.current.username)}`;
                     openExternalUrl(url);
                     showNativeToast('⚔️ Opening RivalsMeta.com profile webpage...');
                   }}
@@ -3334,9 +3451,7 @@ ${payload.stack || 'No stack trace available.'}
                   type="button"
                   onClick={() => {
                     triggerHaptic('light');
-                    const isUid = stats.current.username && !isNaN(stats.current.username);
-                    const rtFallback = isUid ? `https://rivalstracker.com/player/${encodeURIComponent(stats.current.username)}` : `https://rivalstracker.com/search?q=${encodeURIComponent(stats.current.username)}`;
-                    const url = stats.current.siteUrls?.rivalsTracker || rtFallback;
+                    const url = stats.current.siteUrls?.rivalsTracker || `https://rivalstracker.com/player/${encodeURIComponent(stats.current.username)}`;
                     openExternalUrl(url);
                     showNativeToast('🎯 Opening RivalsTracker.com profile webpage...');
                   }}
@@ -4605,7 +4720,8 @@ ${payload.stack || 'No stack trace available.'}
                   type="button"
                   onClick={() => {
                     triggerHaptic('light');
-                    const url = stats.siteUrls?.trackerGg || `https://tracker.gg/marvel-rivals/profile/ign/${encodeURIComponent(stats.current.username)}/overview`;
+                    const platformSlug = stats.current?.platformSlug || (selectedPlatform === 'ps5' ? 'psn' : (selectedPlatform === 'xbox' ? 'xbl' : 'ign'));
+                    const url = stats.siteUrls?.trackerGg || `https://tracker.gg/marvel-rivals/profile/${platformSlug}/${encodeURIComponent(stats.current.username)}/overview`;
                     openExternalUrl(url);
                   }}
                   className="bg-[#0b101e] hover:bg-purple-500/20 border border-slate-700/80 hover:border-purple-500 p-4 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer shadow-md"
@@ -4629,7 +4745,7 @@ ${payload.stack || 'No stack trace available.'}
                   type="button"
                   onClick={() => {
                     triggerHaptic('light');
-                    const url = stats.siteUrls?.rivalsMeta || `https://rivalsmeta.com/search?q=${encodeURIComponent(stats.current.username)}`;
+                    const url = stats.siteUrls?.rivalsMeta || `https://rivalsmeta.com/player/${encodeURIComponent(stats.current.username)}`;
                     openExternalUrl(url);
                   }}
                   className="bg-[#0b101e] hover:bg-emerald-500/20 border border-slate-700/80 hover:border-emerald-500 p-4 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer shadow-md"
@@ -4653,7 +4769,7 @@ ${payload.stack || 'No stack trace available.'}
                   type="button"
                   onClick={() => {
                     triggerHaptic('light');
-                    const url = stats.siteUrls?.rivalsTracker || `https://rivalstracker.com/search?q=${encodeURIComponent(stats.current.username)}`;
+                    const url = stats.siteUrls?.rivalsTracker || `https://rivalstracker.com/player/${encodeURIComponent(stats.current.username)}`;
                     openExternalUrl(url);
                   }}
                   className="bg-[#0b101e] hover:bg-amber-500/20 border border-slate-700/80 hover:border-amber-500 p-4 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer shadow-md"
