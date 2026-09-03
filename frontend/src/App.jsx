@@ -6460,16 +6460,21 @@ ${payload.stack || 'No stack trace available.'}
             <div className="space-y-2 pt-2">
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   triggerHaptic('success');
-                  const targetPaypalUrl = 'https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meowdy5000@gmail.com&currency_code=USD';
-                  openExternalUrl(targetPaypalUrl);
-                  showNativeToast('💙 Opening PayPal for meowdy5000@gmail.com...');
+                  try {
+                    await Clipboard.write({ string: 'meowdy5000@gmail.com' });
+                  } catch (e) {
+                    try { navigator.clipboard.writeText('meowdy5000@gmail.com'); } catch (err) {}
+                  }
+                  const sendMoneyUrl = 'https://www.paypal.com/myaccount/transfer/homepage';
+                  openExternalUrl(sendMoneyUrl);
+                  showNativeToast('📋 Copied meowdy5000@gmail.com! Opening PayPal Send Money...');
                 }}
                 className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-amber-500/30 cursor-pointer flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95"
               >
                 <span>💳</span>
-                <span>Open PayPal (meowdy5000@gmail.com)</span>
+                <span>Open PayPal Send Money Page</span>
               </button>
 
               <button
