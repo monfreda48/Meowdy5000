@@ -2613,7 +2613,7 @@ ${payload.stack || 'No stack trace available.'}
           </div>
 
           <h1 className="text-xl sm:text-3xl font-black text-white uppercase tracking-wider mb-2">
-            MEOWDY 5000 RIVALS TRACKER
+            MEOWDY 5000 <br /> RIVALS TRACKER
           </h1>
 
           <p className="text-xs text-slate-400 font-medium mt-3 flex items-center gap-2">
@@ -2706,7 +2706,7 @@ ${payload.stack || 'No stack trace available.'}
 
             <div className="space-y-2">
               <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-wider animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                Meowdy 5000's Stat Tracker
+                Meowdy 5000<br />Stat Tracker
               </h1>
               <p className="text-xs sm:text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500 uppercase tracking-widest animate-in fade-in slide-in-from-bottom-6 duration-1000">
                 MARVEL RIVALS STAT TRACKER
