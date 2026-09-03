@@ -2068,7 +2068,7 @@ ${payload.stack || 'No stack trace available.'}
                 type="text"
                 value={lookupQuery}
                 onChange={(e) => setLookupQuery(e.target.value)}
-                placeholder="🔍 Profile Lookup (Untracked)..."
+                placeholder="Profile Lookup (Untracked)..."
                 className="w-full bg-[#131b2f] border border-slate-700/70 hover:border-emerald-500/50 focus:border-emerald-500 rounded-xl py-1.5 pl-8 pr-12 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all shadow-inner"
               />
               <span className="absolute left-2.5 text-slate-400 text-xs pointer-events-none">🔍</span>
