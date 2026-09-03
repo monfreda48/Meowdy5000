@@ -293,12 +293,23 @@ export default function App() {
 
     if (stats?.current) {
       togglePinHomeProfile(stats.current);
+      saveTrackedStatSnapshot(stats);
+      if (isTrackingMode) downloadUserDataset(stats);
+      try { localStorage.setItem(`last_auto_snapshot_time_${targetUser.toLowerCase()}`, String(Date.now())); } catch (e) { }
     }
     showNativeToast(`👑 ${targetUser} claimed as primary profile!`);
-    setUpdateToast({ type: 'success', message: `👑 ${targetUser} claimed as primary profile! Auto-loads on startup.` });
+    setUpdateToast({ type: 'success', message: `👑 ${targetUser} claimed as primary profile! Auto-loads & saves snapshots on startup (max once per 12h).` });
     setTimeout(() => setUpdateToast(null), 3500);
     setShowClaimModal(false);
   };
+
+  // On App Launch: Auto-load claimed profile and run 12h throttled snapshot saving
+  useEffect(() => {
+    if (claimedProfile?.username) {
+      setQuery(claimedProfile.username);
+      fetchStats(null, claimedProfile.username, season);
+    }
+  }, []);
 
   const handleUnclaimProfile = () => {
     setClaimedProfile(null);
@@ -1879,11 +1890,31 @@ ${payload.stack || 'No stack trace available.'}
 
       if (data?.current?.username || data?.username) {
         const uKey = (data.current?.username || data.username).toLowerCase();
-        if (trackedPlayers[uKey]) {
+        const isClaimedUser = claimedProfile && claimedProfile.username?.toLowerCase() === uKey;
+
+        if (isClaimedUser) {
+          const lastSaveKey = `last_auto_snapshot_time_${uKey}`;
+          const lastSaveTime = localStorage.getItem(lastSaveKey);
+          const now = Date.now();
+          const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+
+          if (!lastSaveTime || (now - Number(lastSaveTime)) >= TWELVE_HOURS_MS) {
+            saveTrackedStatSnapshot(data);
+            if (isTrackingMode) downloadUserDataset(data);
+            try { localStorage.setItem(lastSaveKey, String(now)); } catch (e) { }
+            console.log(`[AutoSnapshot] 12-Hour window elapsed. Auto-saved snapshot for claimed profile: ${uKey}`);
+            setUpdateToast({
+              type: 'success',
+              message: `📥 Claimed Profile (${data.current?.username || uKey}) Stat Snapshot Saved (Next auto-save in 12h)`
+            });
+            setTimeout(() => setUpdateToast(null), 4000);
+          } else {
+            const hoursLeft = ((TWELVE_HOURS_MS - (now - Number(lastSaveTime))) / (1000 * 60 * 60)).toFixed(1);
+            console.log(`[AutoSnapshot] Snapshot skipped (saved < 12h ago). Next auto-save for ${uKey} in ${hoursLeft}h.`);
+          }
+        } else if (trackedPlayers[uKey]) {
           saveTrackedStatSnapshot(data);
-        }
-        if (isTrackingMode) {
-          downloadUserDataset(data);
+          if (isTrackingMode) downloadUserDataset(data);
         }
       }
     } catch (err) {
