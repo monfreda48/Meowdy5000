@@ -2374,18 +2374,8 @@ ${payload.stack || 'No stack trace available.'}
             </div>
           </form>
 
-          {/* Right Nav Menu & Desktop Error Reports Button */}
+          {/* Right Nav Menu Button */}
           <div className="flex items-center gap-2">
-            {!isMobileView && (
-              <button
-                onClick={openErrorReportsViewer}
-                className="hidden md:flex items-center gap-2 bg-[#131b2f] hover:bg-slate-800 border border-slate-700/80 hover:border-amber-500/60 text-slate-300 hover:text-amber-400 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md group"
-                title="View all client & system error reports logged in backend database"
-              >
-                <span className="text-amber-400 group-hover:scale-110 transition-transform">📜</span>
-                <span>View Error Reports</span>
-              </button>
-            )}
 
             <button
               onClick={() => setIsMenuOpen(true)}
@@ -4963,24 +4953,6 @@ ${payload.stack || 'No stack trace available.'}
                   <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
                     🛠️ Developer Tools & Issue Reporting
                   </span>
-
-                  <button
-                    onClick={() => { setIsMenuOpen(false); openErrorReportsViewer(); }}
-                    className="w-full bg-[#131b2f] hover:bg-amber-500/10 border border-slate-700/80 hover:border-amber-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
-                        📜
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">
-                          View Error Reports Log
-                        </h4>
-                        <p className="text-[10px] text-slate-400">Inspect all client & system diagnostic logs</p>
-                      </div>
-                    </div>
-                    <span className="text-xs text-slate-500 group-hover:text-amber-400 font-bold">→</span>
-                  </button>
 
                   <button
                     onClick={() => { setIsMenuOpen(false); setShowReportModal(true); }}
