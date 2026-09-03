@@ -791,6 +791,16 @@ export default function App() {
       borderAccent: 'border-amber-500/40',
       badgeBg: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
       swatchGradient: 'from-amber-500 to-yellow-600'
+    },
+    {
+      id: 'monochrome',
+      name: 'Black & White',
+      accentColor: '#ffffff',
+      bgGradient: 'from-slate-200 to-white',
+      textAccent: 'text-white',
+      borderAccent: 'border-slate-400/60',
+      badgeBg: 'bg-slate-800 text-white border-slate-600',
+      swatchGradient: 'from-black via-slate-700 to-white'
     }
   ];
 
@@ -4924,7 +4934,7 @@ ${payload.stack || 'No stack trace available.'}
 
                   <p className="text-[10px] text-slate-400 text-left">Select your favorite accent color palette:</p>
 
-                  <div className="grid grid-cols-5 gap-1.5 pt-1">
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 pt-1">
                     {THEMES.map((t) => (
                       <button
                         key={t.id}
