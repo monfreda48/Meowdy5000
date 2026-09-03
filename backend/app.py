@@ -526,17 +526,17 @@ def scrape_rivals_meta_api(query, season=None):
 def scrape_hero_leaderboards(username, hero_name, platform="PS5"):
     """
     Scrapes hero leaderboards across rivalstracker.com/heroes and rivalsmeta.com/characters:
-    1. Selects hero (e.g. Jubilee)
-    2. Navigates to Leaderboards tab
+    1. Navigates to hero page (e.g. rivalstracker.com/heroes/spider-man)
+    2. Clicks 'Leaderboard' tab button
     3. Filters by platform (PS5 / Xbox / PC)
-    4. Searches for matching username and extracts updated rank position number.
+    4. Searches for matching username and extracts updated rank position number & DOM row stats.
     """
     print(f"[HERO LEADERBOARD SCRAPER] Ingesting hero leaderboards for {username} - Hero: {hero_name}, Platform: {platform}")
     hero_slug = hero_name.lower().replace(" ", "-").replace("&", "and")
     platform_slug = platform.lower()
     
-    rt_hero_url = f"https://rivalstracker.com/heroes/{hero_slug}?platform={platform_slug}"
-    rm_hero_url = f"https://rivalsmeta.com/characters/{hero_slug}?platform={platform_slug}"
+    rt_hero_url = f"https://rivalstracker.com/heroes/{hero_slug}"
+    rm_hero_url = f"https://rivalsmeta.com/characters/{hero_slug}"
 
     result_ranks = []
     
@@ -545,49 +545,101 @@ def scrape_hero_leaderboards(username, hero_name, platform="PS5"):
         "Accept": "application/json, text/html"
     }
 
+    # 1. Direct Web Automation (Selenium Headless Chrome)
     try:
-        api_rt = f"https://api.rivalstracker.com/api/heroes/{hero_slug}/leaderboard?platform={platform_slug}"
-        res_rt = requests.get(api_rt, headers=headers, timeout=4)
-        if res_rt.status_code == 200 and res_rt.text.strip().startswith("{"):
-            data = res_rt.json()
-            entries = data.get("leaderboard", []) or data.get("entries", [])
-            for entry in entries:
-                u = entry.get("username", "") or entry.get("name", "")
-                if u.lower() == username.lower():
-                    r = entry.get("rank") or entry.get("position")
-                    if r:
-                        result_ranks.append({
-                            "hero": hero_name,
-                            "rank": int(r),
-                            "platform": platform.upper(),
-                            "source": "RivalsTracker.com",
-                            "sourceUrl": rt_hero_url
-                        })
-                        break
-    except Exception as e:
-        print(f"[WARN] RivalsTracker Hero Leaderboard API Exception: {e}")
+        options = Options()
+        options.add_argument("--headless=new")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        options.page_load_strategy = 'eager'
 
-    try:
-        api_rm = f"https://rivalsmeta.com/api/characters/{hero_slug}/leaderboard?platform={platform_slug}"
-        res_rm = requests.get(api_rm, headers=headers, timeout=4)
-        if res_rm.status_code == 200 and res_rm.text.strip().startswith("{"):
-            data = res_rm.json()
-            entries = data.get("leaderboard", []) or data.get("rankings", [])
-            for entry in entries:
-                u = entry.get("username", "") or entry.get("name", "")
-                if u.lower() == username.lower():
-                    r = entry.get("rank") or entry.get("position")
-                    if r:
-                        result_ranks.append({
-                            "hero": hero_name,
-                            "rank": int(r),
-                            "platform": platform.upper(),
-                            "source": "RivalsMeta.com",
-                            "sourceUrl": rm_hero_url
-                        })
-                        break
+        path = get_chromedriver_path()
+        if path:
+            driver = webdriver.Chrome(service=Service(path), options=options)
+        else:
+            driver = webdriver.Chrome(options=options)
+        driver.set_page_load_timeout(10)
+
+        # Step 1: Open Hero Page
+        driver.get(rt_hero_url)
+        time.sleep(2)
+
+        # Step 2: Click 'Leaderboard' tab button
+        buttons = driver.find_elements(By.TAG_NAME, "button")
+        for b in buttons:
+            if b.text.strip().lower() == "leaderboard":
+                driver.execute_script("arguments[0].click();", b)
+                time.sleep(2)
+                break
+
+        # Step 3: Filter Platform (Xbox / PC / PS5)
+        buttons_after = driver.find_elements(By.TAG_NAME, "button")
+        for b in buttons_after:
+            txt = b.text.strip().lower()
+            if platform_slug in txt:
+                driver.execute_script("arguments[0].click();", b)
+                time.sleep(1)
+                break
+
+        # Step 4: Type Username in Search Input Box
+        inputs = driver.find_elements(By.TAG_NAME, "input")
+        if inputs:
+            search_inp = inputs[0]
+            driver.execute_script("""
+                var el = arguments[0];
+                var val = arguments[1];
+                el.style.display = 'block';
+                el.style.visibility = 'visible';
+                el.value = val;
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            """, search_inp, username)
+            time.sleep(2)
+
+        # Extract matching table rows
+        rows = driver.find_elements(By.TAG_NAME, "tr")
+        for idx, r in enumerate(rows):
+            r_text = r.text.strip()
+            if r_text and username.lower() in r_text.lower():
+                cols = r_text.split()
+                rank_num = cols[0].replace("#", "") if cols and cols[0].startswith("#") else idx
+                result_ranks.append({
+                    "hero": hero_name,
+                    "rank": rank_num,
+                    "platform": platform.upper(),
+                    "rowText": r_text,
+                    "source": "RivalsTracker.com",
+                    "sourceUrl": rt_hero_url
+                })
+
+        driver.quit()
     except Exception as e:
-        print(f"[WARN] RivalsMeta Hero Leaderboard API Exception: {e}")
+        print(f"[WARN] Selenium Hero Leaderboard Scraper Exception: {e}")
+
+    # 2. Fallback to API Endpoints
+    if not result_ranks:
+        try:
+            api_rt = f"https://api.rivalstracker.com/api/heroes/{hero_slug}/leaderboard?platform={platform_slug}"
+            res_rt = requests.get(api_rt, headers=headers, timeout=4)
+            if res_rt.status_code == 200 and res_rt.text.strip().startswith("{"):
+                data = res_rt.json()
+                entries = data.get("leaderboard", []) or data.get("entries", [])
+                for entry in entries:
+                    u = entry.get("username", "") or entry.get("name", "")
+                    if u.lower() == username.lower():
+                        r = entry.get("rank") or entry.get("position")
+                        if r:
+                            result_ranks.append({
+                                "hero": hero_name,
+                                "rank": int(r),
+                                "platform": platform.upper(),
+                                "source": "RivalsTracker.com",
+                                "sourceUrl": rt_hero_url
+                            })
+                            break
+        except Exception as e:
+            print(f"[WARN] RivalsTracker Hero Leaderboard API Exception: {e}")
 
     return {
         "success": True,
