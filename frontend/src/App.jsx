@@ -521,6 +521,15 @@ export default function App() {
   const [readyToInstallUpdate, setReadyToInstallUpdate] = useState(null);
   const [nativeAppVersion, setNativeAppVersion] = useState(null);
 
+  const [showSplashOverlay, setShowSplashOverlay] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplashOverlay(false);
+    }, 1800);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
       CapApp.getInfo().then(info => {
@@ -1989,6 +1998,38 @@ ${payload.stack || 'No stack trace available.'}
       onTouchEnd={handleTouchEnd}
       className="min-h-[100dvh] mobile-safe-area bg-[#0b101e] text-slate-200 font-sans selection:bg-emerald-500/30 transition-all duration-300 relative"
     >
+      {/* Animated Startup Splash Screen Overlay */}
+      {showSplashOverlay && (
+        <div className="fixed inset-0 z-[100] bg-gradient-to-br from-[#0b101e] via-[#0f172a] to-[#060911] flex flex-col items-center justify-center p-6 text-center animate-out fade-out duration-700 pointer-events-none">
+          <div className="relative mb-6">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 border-2 border-emerald-400/80 shadow-2xl shadow-emerald-500/40 flex items-center justify-center text-5xl sm:text-6xl animate-bounce">
+              🐱
+            </div>
+            <div className="absolute -bottom-2 -right-2 bg-slate-900 border border-emerald-400/60 text-emerald-400 p-1.5 rounded-full text-[10px] font-black shadow-lg uppercase tracking-wider">
+              v1.0.15
+            </div>
+          </div>
+
+          <h1 className="text-xl sm:text-3xl font-black text-white uppercase tracking-wider mb-2">
+            MEOWDY 5000 RIVALS TRACKER
+          </h1>
+
+          {/* Prominent "TRACK HARD, SNACK HARD" Splash Motto */}
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-emerald-500/20 border-2 border-emerald-500/60 px-5 py-2.5 rounded-full shadow-lg shadow-emerald-500/20 my-3 animate-pulse">
+            <span className="text-emerald-400 font-black text-sm sm:text-lg uppercase tracking-widest flex items-center gap-2">
+              <span>⚡</span>
+              <span>TRACK HARD, SNACK HARD</span>
+              <span>🍕</span>
+            </span>
+          </div>
+
+          <p className="text-xs text-slate-400 font-medium mt-3 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            <span>Initializing 3-Site Analytics Engine...</span>
+          </p>
+        </div>
+      )}
+
       {/* Network Offline Alert Banner */}
       {!networkStatus.connected && (
         <div className="w-full bg-amber-500/20 border-b border-amber-500/40 px-4 py-2 text-center text-amber-300 text-xs font-bold flex items-center justify-center gap-2 z-[60] backdrop-blur-md sticky top-0">
