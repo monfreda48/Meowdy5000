@@ -2541,53 +2541,58 @@ ${payload.stack || 'No stack trace available.'}
             <span>{currentSeasonName} Current</span>
           </div>
 
-          {/* Claim Your Username Helper Subtitle */}
-          <p className="text-xs sm:text-sm font-bold text-slate-300 tracking-wider uppercase flex items-center justify-center gap-1.5 pt-1">
-            <span>👑</span>
-            <span>Claim your username to start tracking</span>
-          </p>
+          {/* Claim Your Username Helper Subtitle (only shown when no profile is claimed) */}
+          {!claimedProfile?.username && (
+            <p className="text-xs sm:text-sm font-bold text-slate-300 tracking-wider uppercase flex items-center justify-center gap-1.5 pt-1">
+              <span>👑</span>
+              <span>Claim your username to start tracking</span>
+            </p>
+          )}
 
-          <form onSubmit={fetchStats} className={`w-full ${isMobileView ? 'mt-1' : 'max-w-3xl mt-3 sm:mt-8'}`}>
-            <div className={`flex bg-[#131b2f] p-2.5 sm:p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${isMobileView ? 'flex-col gap-2' : 'flex-col md:flex-row items-center gap-3'
-              }`}>
-              <div className="flex-1 relative w-full">
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Enter Username or UID..."
-                  className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white placeholder-slate-500 ${isMobileView ? 'py-2.5 text-sm' : 'py-3.5 sm:py-4 text-base sm:text-lg'
-                    }`}
-                  required
-                />
-              </div>
-              <div className={`flex gap-2 ${isMobileView ? 'w-full' : ''}`}>
-                <select
-                  value={selectedPlatform}
-                  onChange={(e) => {
-                    setSelectedPlatform(e.target.value);
-                    triggerHaptic('light');
-                  }}
-                  className={`bg-[#0b101e] border border-slate-700/50 rounded-xl px-3 focus:outline-none focus:border-emerald-500 text-white cursor-pointer font-bold text-xs sm:text-sm ${isMobileView ? 'py-2.5 flex-1' : 'py-3.5 sm:py-4'
-                    }`}
-                >
-                  <option value="all">🌐 All Platforms</option>
-                  <option value="pc">💻 PC / Windows</option>
-                  <option value="ps5">🎮 PlayStation 5</option>
-                  <option value="xbox">💚 Xbox Series X|S</option>
-                </select>
+          {/* Big Search Box (only shown when no profile is claimed) */}
+          {!claimedProfile?.username && (
+            <form onSubmit={fetchStats} className={`w-full ${isMobileView ? 'mt-1' : 'max-w-3xl mt-3 sm:mt-8'}`}>
+              <div className={`flex bg-[#131b2f] p-2.5 sm:p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${isMobileView ? 'flex-col gap-2' : 'flex-col md:flex-row items-center gap-3'
+                }`}>
+                <div className="flex-1 relative w-full">
+                  <input
+                    type="text"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Enter Username or UID..."
+                    className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white placeholder-slate-500 ${isMobileView ? 'py-2.5 text-sm' : 'py-3.5 sm:py-4 text-base sm:text-lg'
+                      }`}
+                    required
+                  />
+                </div>
+                <div className={`flex gap-2 ${isMobileView ? 'w-full' : ''}`}>
+                  <select
+                    value={selectedPlatform}
+                    onChange={(e) => {
+                      setSelectedPlatform(e.target.value);
+                      triggerHaptic('light');
+                    }}
+                    className={`bg-[#0b101e] border border-slate-700/50 rounded-xl px-3 focus:outline-none focus:border-emerald-500 text-white cursor-pointer font-bold text-xs sm:text-sm ${isMobileView ? 'py-2.5 flex-1' : 'py-3.5 sm:py-4'
+                      }`}
+                  >
+                    <option value="all">🌐 All Platforms</option>
+                    <option value="pc">💻 PC / Windows</option>
+                    <option value="ps5">🎮 PlayStation 5</option>
+                    <option value="xbox">💚 Xbox Series X|S</option>
+                  </select>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(16,185,129,0.3)] uppercase tracking-wider text-xs sm:text-sm ${isMobileView ? 'py-2.5 px-4 flex-1' : 'py-3.5 sm:py-4 px-6 sm:px-8'
-                    }`}
-                >
-                  {loading ? 'Scanning...' : 'Search'}
-                </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(16,185,129,0.3)] uppercase tracking-wider text-xs sm:text-sm ${isMobileView ? 'py-2.5 px-4 flex-1' : 'py-3.5 sm:py-4 px-6 sm:px-8'
+                      }`}
+                  >
+                    {loading ? 'Scanning...' : 'Search'}
+                  </button>
+                </div>
               </div>
-            </div>
-          </form>
+            </form>
+          )}
 
           {/* Live Search Telemetry Progress Bar */}
           {loading && (
