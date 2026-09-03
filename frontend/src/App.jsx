@@ -2736,15 +2736,6 @@ ${payload.stack || 'No stack trace available.'}
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Data Sources:</span>
-                    {(stats.current.sources && stats.current.sources.length > 0 ? stats.current.sources : ["Tracker.gg", "RivalsMeta.com"]).map((src, sIdx) => (
-                      <span key={sIdx} className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <span>🌐</span>
-                        <span>{src}</span>
-                      </span>
-                    ))}
-                  </div>
                 </div>
               </div>
 
