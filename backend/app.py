@@ -764,6 +764,20 @@ def get_stats():
     elif final_data.get("heroes") and not final_data.get("topHeroesDetailed"):
         final_data["topHeroesDetailed"] = final_data["heroes"]
 
+    # Automated 5-Step Hero Leaderboard Ingestion for Top 3 Heroes on Player's Platform
+    if not final_data.get("heroLeaderboardRanks"):
+        auto_ranks = []
+        plat_raw = final_data.get("platform", "PC / Windows")
+        short_plat = "PS5" if ("PlayStation" in plat_raw or "PS5" in plat_raw) else ("Xbox" if "Xbox" in plat_raw else "PC")
+        top3_heroes = (final_data.get("topHeroesDetailed") or final_data.get("heroes") or [])[:3]
+        for h_item in top3_heroes:
+            h_name = h_item.get("name") if isinstance(h_item, dict) else str(h_item)
+            if h_name and h_name != "Unknown":
+                lb_res = scrape_hero_leaderboards(query, h_name, short_plat)
+                if lb_res.get("ranks"):
+                    auto_ranks.extend(lb_res["ranks"])
+        final_data["heroLeaderboardRanks"] = auto_ranks
+
     if not final_data["sources"]:
         final_data["sources"] = ["Built-in Analytics Engine"]
 
