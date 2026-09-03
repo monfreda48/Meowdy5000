@@ -721,6 +721,7 @@ export default function App() {
       localStorage.setItem('reported_stats_queue', JSON.stringify(existingQueue.slice(-50)));
     } catch (e) {}
 
+    // Send backend telemetry report specifically for stat inaccuracy
     try {
       await fetch(`${API_BASE_URL}/api/report-stat`, {
         method: 'POST',
@@ -730,6 +731,23 @@ export default function App() {
     } catch (err) {
       console.warn('[ReportStat] Backend report fetch failed:', err);
     }
+
+    // Automatically send full bug report telemetry detailing wrong stat and site
+    const siteNameDisplay = {
+      merged: 'Merged / All Data',
+      trackerGg: 'Tracker.gg',
+      rivalsMeta: 'RivalsMeta.com',
+      rivalsTracker: 'RivalsTracker.com'
+    }[reportedSite] || reportedSite;
+
+    const bugPayload = {
+      error: `Inaccurate Stat Report: ${metricName} from ${siteNameDisplay}`,
+      stack: `User: ${payload.username}\nStat Metric: ${payload.metricName} (${payload.metricKey})\nPulled From Site: ${siteNameDisplay} (${payload.reportedSite})\nRecorded App Value: ${payload.currentValue}\nExpected Correct Value: ${payload.expectedValue || 'N/A'}\nUser Discrepancy Reason: ${payload.reason || 'None'}\nPlatform: ${payload.platform}`,
+      notes: `Stat inaccuracy report submitted for ${payload.username} - ${metricName} pulled from ${siteNameDisplay}. Recorded: ${payload.currentValue}, Expected: ${payload.expectedValue || 'N/A'}. Reason: ${payload.reason || 'None'}`,
+      platform: window.Capacitor && window.Capacitor.isNativePlatform() ? 'Android Native APK' : 'Web Browser'
+    };
+
+    sendErrorReport(bugPayload);
 
     setIsSubmittingStatReport(false);
     setReportModalOpen(false);
@@ -2833,24 +2851,7 @@ ${payload.stack || 'No stack trace available.'}
                 </div>
               </div>
 
-              {/* Interactive Track Player Toggle Checkbox / Button */}
-              <button
-                onClick={() => handleToggleTrackPlayer(stats.current.username)}
-                className={`px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2.5 cursor-pointer shadow-lg border ${trackedPlayers[stats.current.username?.toLowerCase()]
-                    ? 'bg-emerald-500/20 border-emerald-500/80 text-emerald-400 shadow-emerald-500/20 hover:bg-emerald-500/30'
-                    : 'bg-slate-800/90 hover:bg-slate-800 border-slate-700/80 text-slate-300 hover:text-white'
-                  }`}
-              >
-                <span className={`w-5 h-5 rounded-md flex items-center justify-center text-xs font-black border transition-all ${trackedPlayers[stats.current.username?.toLowerCase()]
-                    ? 'bg-emerald-500 border-emerald-400 text-black'
-                    : 'border-slate-600 bg-slate-900 text-transparent'
-                  }`}>
-                  ✓
-                </span>
-                <span>
-                  {trackedPlayers[stats.current.username?.toLowerCase()] ? 'Tracked • Snapshot Data Active' : 'Track Player Progress'}
-                </span>
-              </button>
+
 
               <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                 <button
