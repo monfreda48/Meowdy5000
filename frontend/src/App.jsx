@@ -1821,19 +1821,17 @@ ${payload.stack || 'No stack trace available.'}
 
     const pInterval = setInterval(() => {
       setSearchProgress(prev => {
-        setSearchProgressMsg(prevMsg => getRandomMarvelQuote(prevMsg));
-        if (prev < 35) {
-          return prev + 10;
-        } else if (prev < 65) {
-          return prev + 8;
-        } else if (prev < 85) {
-          return prev + 5;
-        } else if (prev < 94) {
-          return prev + 2;
-        }
+        if (prev < 35) return prev + 5;
+        if (prev < 65) return prev + 3;
+        if (prev < 85) return prev + 2;
+        if (prev < 94) return prev + 1;
         return prev;
       });
-    }, 600);
+    }, 400);
+
+    const qInterval = setInterval(() => {
+      setSearchProgressMsg(prevMsg => getRandomMarvelQuote(prevMsg));
+    }, 2800);
 
     const timeoutId = setTimeout(() => {
       if (controller) controller.abort();
@@ -1867,6 +1865,7 @@ ${payload.stack || 'No stack trace available.'}
 
       clearTimeout(timeoutId);
       clearInterval(pInterval);
+      clearInterval(qInterval);
 
       setSearchProgress(95);
       setSearchProgressMsg("🚀 Rocket Raccoon assembled your dashboard!");
@@ -1886,6 +1885,7 @@ ${payload.stack || 'No stack trace available.'}
       }
     } catch (err) {
       clearInterval(pInterval);
+      clearInterval(qInterval);
       clearTimeout(timeoutId);
       if (err.name === 'AbortError') {
         setError('Search timed out after 12s or was cancelled. Please check your connection or backend URL in Menu (⚙️).');
