@@ -1835,7 +1835,7 @@ ${payload.stack || 'No stack trace available.'}
 
     const timeoutId = setTimeout(() => {
       if (controller) controller.abort();
-    }, 30000);
+    }, 45000);
 
     try {
       let data = null;
@@ -1888,7 +1888,7 @@ ${payload.stack || 'No stack trace available.'}
       clearInterval(qInterval);
       clearTimeout(timeoutId);
       if (err.name === 'AbortError') {
-        setError('Search timed out after 12s or was cancelled. Please check your connection or backend URL in Menu (⚙️).');
+        setError('Search request timed out. Please verify network connection or check backend URL in Menu (⚙️).');
       } else {
         setError(err.message);
         setLastCapturedError({

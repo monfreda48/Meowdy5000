@@ -126,17 +126,22 @@ def scrape_tracker_gg_api(username, season=None):
 
     try:
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-        driver.get(profile_url)
-        time.sleep(3)
+        driver.set_page_load_timeout(7)
+        try:
+            driver.get(profile_url)
+        except Exception:
+            pass
+
+        time.sleep(1)
         
         try:
             js_script = f"return fetch('{api_url}').then(r => r.json()).catch(e => ({{error: e.toString()}}));"
             data = driver.execute_script(js_script)
             
             if not data or not isinstance(data, dict) or 'data' not in data:
-                driver.get(api_url)
-                time.sleep(3)
                 try:
+                    driver.get(api_url)
+                    time.sleep(1)
                     pre_elem = driver.find_element(By.TAG_NAME, "pre")
                     data = json.loads(pre_elem.text)
                 except Exception:
