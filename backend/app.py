@@ -523,6 +523,94 @@ def scrape_rivals_meta_api(query, season=None):
     
     return {"success": False}
 
+def scrape_hero_leaderboards(username, hero_name, platform="PS5"):
+    """
+    Scrapes hero leaderboards across rivalstracker.com/heroes and rivalsmeta.com/characters:
+    1. Selects hero (e.g. Jubilee)
+    2. Navigates to Leaderboards tab
+    3. Filters by platform (PS5 / Xbox / PC)
+    4. Searches for matching username and extracts updated rank position number.
+    """
+    print(f"[HERO LEADERBOARD SCRAPER] Ingesting hero leaderboards for {username} - Hero: {hero_name}, Platform: {platform}")
+    hero_slug = hero_name.lower().replace(" ", "-").replace("&", "and")
+    platform_slug = platform.lower()
+    
+    rt_hero_url = f"https://rivalstracker.com/heroes/{hero_slug}?platform={platform_slug}"
+    rm_hero_url = f"https://rivalsmeta.com/characters/{hero_slug}?platform={platform_slug}"
+
+    result_ranks = []
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/html"
+    }
+
+    try:
+        api_rt = f"https://api.rivalstracker.com/api/heroes/{hero_slug}/leaderboard?platform={platform_slug}"
+        res_rt = requests.get(api_rt, headers=headers, timeout=4)
+        if res_rt.status_code == 200 and res_rt.text.strip().startswith("{"):
+            data = res_rt.json()
+            entries = data.get("leaderboard", []) or data.get("entries", [])
+            for entry in entries:
+                u = entry.get("username", "") or entry.get("name", "")
+                if u.lower() == username.lower():
+                    r = entry.get("rank") or entry.get("position")
+                    if r:
+                        result_ranks.append({
+                            "hero": hero_name,
+                            "rank": int(r),
+                            "platform": platform.upper(),
+                            "source": "RivalsTracker.com",
+                            "sourceUrl": rt_hero_url
+                        })
+                        break
+    except Exception as e:
+        print(f"[WARN] RivalsTracker Hero Leaderboard API Exception: {e}")
+
+    try:
+        api_rm = f"https://rivalsmeta.com/api/characters/{hero_slug}/leaderboard?platform={platform_slug}"
+        res_rm = requests.get(api_rm, headers=headers, timeout=4)
+        if res_rm.status_code == 200 and res_rm.text.strip().startswith("{"):
+            data = res_rm.json()
+            entries = data.get("leaderboard", []) or data.get("rankings", [])
+            for entry in entries:
+                u = entry.get("username", "") or entry.get("name", "")
+                if u.lower() == username.lower():
+                    r = entry.get("rank") or entry.get("position")
+                    if r:
+                        result_ranks.append({
+                            "hero": hero_name,
+                            "rank": int(r),
+                            "platform": platform.upper(),
+                            "source": "RivalsMeta.com",
+                            "sourceUrl": rm_hero_url
+                        })
+                        break
+    except Exception as e:
+        print(f"[WARN] RivalsMeta Hero Leaderboard API Exception: {e}")
+
+    return {
+        "success": True,
+        "username": username,
+        "hero": hero_name,
+        "platform": platform,
+        "ranks": result_ranks,
+        "rivalsTrackerUrl": rt_hero_url,
+        "rivalsMetaUrl": rm_hero_url
+    }
+
+@app.route('/api/hero-leaderboards')
+def get_hero_leaderboards():
+    username = request.args.get('username', '')
+    hero = request.args.get('hero', 'Jubilee')
+    platform = request.args.get('platform', 'PS5')
+
+    if not username:
+        return jsonify({"error": "Missing username parameter"}), 400
+
+    data = scrape_hero_leaderboards(username, hero, platform)
+    return jsonify(data)
+
 @app.route('/api/stats')
 def get_stats():
     query = request.args.get('query')

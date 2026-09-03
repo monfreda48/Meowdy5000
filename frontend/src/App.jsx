@@ -201,6 +201,12 @@ export default function App() {
     }
   });
 
+  const [showHeroLeaderboardModal, setShowHeroLeaderboardModal] = useState(false);
+  const [selectedLeaderboardHero, setSelectedLeaderboardHero] = useState('Jubilee');
+  const [selectedLeaderboardPlatform, setSelectedLeaderboardPlatform] = useState('PS5');
+  const [customHeroRankInput, setCustomHeroRankInput] = useState('');
+  const [heroRanksMap, setHeroRanksMap] = useState({});
+
   const [autoLoadHomeProfile, setAutoLoadHomeProfile] = useState(() => {
     try {
       return localStorage.getItem('auto_load_home_profile') === 'enabled';
@@ -2986,7 +2992,14 @@ ${payload.stack || 'No stack trace available.'}
 
 
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                <button
+                  type="button"
+                  onClick={() => { triggerHaptic('light'); setShowHeroLeaderboardModal(true); }}
+                  className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-amber-500/20 border border-amber-400/50 uppercase tracking-wider font-black"
+                >
+                  <span>🏆 Hero Leaderboards</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => sharePlayerStats()}
@@ -5498,6 +5511,171 @@ ${payload.stack || 'No stack trace available.'}
                 >
                   🔗 View GitHub Repository
                 </a>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Hero Leaderboard Search & Verification Modal */}
+        {showHeroLeaderboardModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 modal-safe-area animate-in fade-in duration-200">
+            <div className="bg-[#131b2f] border border-amber-500/50 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-left relative">
+              <button
+                type="button"
+                onClick={() => setShowHeroLeaderboardModal(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors text-lg font-bold"
+              >
+                ✕
+              </button>
+
+              <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center text-xl font-bold shrink-0">
+                  🏆
+                </div>
+                <div>
+                  <h3 className="font-black text-white text-lg tracking-tight">Hero Leaderboards Search</h3>
+                  <p className="text-xs text-slate-400 font-medium">Search RivalsTracker.com & RivalsMeta.com by Hero, Leaderboard & Platform</p>
+                </div>
+              </div>
+
+              <div className="space-y-3.5 pt-1">
+                {/* Step 1: Select Hero */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                    1. Select Hero
+                  </label>
+                  <select
+                    value={selectedLeaderboardHero}
+                    onChange={(e) => setSelectedLeaderboardHero(e.target.value)}
+                    className="w-full bg-[#0b101e] border border-slate-700 text-white rounded-xl px-3.5 py-2.5 text-xs font-bold focus:ring-2 focus:ring-amber-500 outline-none"
+                  >
+                    {[
+                      'Jubilee', 'Hulk', 'The Punisher', 'Storm', 'Loki', 'Human Torch', 'Doctor Strange',
+                      'Mantis', 'Hawkeye', 'Captain America', 'Rocket Raccoon', 'Hela', 'Cloak & Dagger',
+                      'Black Panther', 'Groot', 'Ultron', 'Magik', 'Moon Knight', 'Luna Snow', 'Squirrel Girl',
+                      'Black Widow', 'Iron Man', 'Venom', 'Spider-Man', 'Magneto', 'Scarlet Witch', 'Thor',
+                      'Mister Fantastic', 'Winter Soldier', 'Peni Parker', 'Star-Lord', 'Blade', 'Namor',
+                      'Adam Warlock', 'Jeff the Land Shark', 'Psylocke', 'Wolverine', 'Invisible Woman',
+                      'The Thing', 'Iron Fist', 'Emma Frost', 'Phoenix', 'Angela', 'Daredevil', 'Deadpool',
+                      'Gambit', 'Elsa Bloodstone', 'White Fox', 'Black Cat', 'Devil Dinosaur', 'Cyclops',
+                      'Rogue', 'The Hood'
+                    ].map((h) => (
+                      <option key={h} value={h}>{h}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Step 2: Select Platform */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+                    2. Select Platform
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'PS5', label: '🎮 PS5' },
+                      { id: 'Xbox', label: '💚 Xbox' },
+                      { id: 'PC', label: '💻 PC' }
+                    ].map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setSelectedLeaderboardPlatform(p.id)}
+                        className={`py-2 px-3 rounded-xl border text-xs font-black transition-all cursor-pointer ${
+                          selectedLeaderboardPlatform === p.id
+                            ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-md ring-1 ring-amber-400'
+                            : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:border-slate-700'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Step 3: Open Live Leaderboards */}
+                <div className="pt-1 space-y-2">
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    3. Open Hero Leaderboards Page
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const slug = selectedLeaderboardHero.toLowerCase().replace(/ /g, '-').replace(/&/g, 'and');
+                        const pSlug = selectedLeaderboardPlatform.toLowerCase();
+                        openExternalUrl(`https://rivalstracker.com/heroes/${slug}?platform=${pSlug}`);
+                        showNativeToast(`🎯 Opening RivalsTracker.com ${selectedLeaderboardHero} leaderboard...`);
+                      }}
+                      className="p-3 bg-[#0b101e] hover:bg-amber-500/15 border border-amber-500/40 hover:border-amber-400 rounded-xl text-left transition-all cursor-pointer group"
+                    >
+                      <div className="text-xs font-bold text-amber-400 flex items-center justify-between">
+                        <span>🎯 RivalsTracker.com</span>
+                        <span className="group-hover:scale-110 transition-transform">↗</span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-0.5 font-mono">rivalstracker.com/heroes/{selectedLeaderboardHero.toLowerCase()}</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const slug = selectedLeaderboardHero.toLowerCase().replace(/ /g, '-').replace(/&/g, 'and');
+                        const pSlug = selectedLeaderboardPlatform.toLowerCase();
+                        openExternalUrl(`https://rivalsmeta.com/leaderboard?hero=${slug}&platform=${pSlug}`);
+                        showNativeToast(`⚔️ Opening RivalsMeta.com ${selectedLeaderboardHero} leaderboard...`);
+                      }}
+                      className="p-3 bg-[#0b101e] hover:bg-emerald-500/15 border border-emerald-500/40 hover:border-emerald-400 rounded-xl text-left transition-all cursor-pointer group"
+                    >
+                      <div className="text-xs font-bold text-emerald-400 flex items-center justify-between">
+                        <span>⚔️ RivalsMeta.com</span>
+                        <span className="group-hover:scale-110 transition-transform">↗</span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-0.5 font-mono">rivalsmeta.com/leaderboard?hero={selectedLeaderboardHero.toLowerCase()}</p>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Step 4: Attach Badge */}
+                <div className="pt-2.5 border-t border-slate-800 space-y-2">
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    4. Attach Hero Leaderboard Rank Badge
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      placeholder="Enter Rank # (e.g. 259)"
+                      value={customHeroRankInput}
+                      onChange={(e) => setCustomHeroRankInput(e.target.value)}
+                      className="flex-1 bg-[#0b101e] border border-slate-700 text-white rounded-xl px-3.5 py-2.5 text-xs font-bold focus:ring-2 focus:ring-amber-500 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!customHeroRankInput || isNaN(customHeroRankInput)) {
+                          showNativeToast('⚠️ Please enter a valid leaderboard rank number');
+                          return;
+                        }
+                        const rNum = parseInt(customHeroRankInput, 10);
+                        const updatedRanks = [
+                          ...(stats?.current?.heroLeaderboardRanks || []).filter(r => r.hero !== selectedLeaderboardHero),
+                          { hero: selectedLeaderboardHero, rank: rNum, platform: selectedLeaderboardPlatform }
+                        ];
+                        if (stats?.current) {
+                          stats.current.heroLeaderboardRanks = updatedRanks;
+                          setStats({ ...stats });
+                        }
+                        triggerHaptic('success');
+                        showNativeToast(`🏆 Attached Ranked #${rNum} ${selectedLeaderboardHero} on ${selectedLeaderboardPlatform}!`);
+                        setShowHeroLeaderboardModal(false);
+                      }}
+                      className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-black text-xs rounded-xl shadow-md transition-all cursor-pointer shrink-0 uppercase tracking-wider"
+                    >
+                      Attach Badge
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-400 leading-relaxed">
+                    Attaches <strong>🏆 Ranked #{customHeroRankInput || '259'} {selectedLeaderboardHero} on {selectedLeaderboardPlatform}</strong> badge right under your profile picture and name!
+                  </p>
+                </div>
               </div>
             </div>
           </div>
