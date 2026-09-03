@@ -273,6 +273,7 @@ export default function App() {
   });
 
   const [showClaimModal, setShowClaimModal] = useState(false);
+  const [showUnclaimConfirmModal, setShowUnclaimConfirmModal] = useState(false);
 
   const [claimedSources, setClaimedSources] = useState(() => {
     try {
@@ -4744,25 +4745,66 @@ ${payload.stack || 'No stack trace available.'}
               {/* Drawer Header */}
               <div className="space-y-6 p-4">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-xs tracking-tighter border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
-                      M5
+                  {claimedProfile?.username ? (
+                    <div className="flex items-center gap-3 overflow-hidden text-left">
+                      {getDisplayAvatar(claimedProfile.username) ? (
+                        <img
+                          src={getDisplayAvatar(claimedProfile.username)}
+                          alt={claimedProfile.username}
+                          className="w-10 h-10 rounded-2xl border-2 border-emerald-400 object-cover shadow-md shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-white text-base shadow-md shrink-0">
+                          {claimedProfile.username.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="overflow-hidden">
+                        <div className="flex items-center gap-1.5">
+                          <h3 className="text-sm font-black text-white uppercase tracking-wider truncate">{claimedProfile.username}</h3>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0">
+                            👑 Primary
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-medium truncate">Auto-loads on launch</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-base font-black text-white uppercase tracking-wider">Settings & Tools</h3>
-                      <p className="text-[11px] text-slate-400 font-medium">Control panel & app configurations</p>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-xs tracking-tighter border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                        M5
+                      </div>
+                      <div className="text-left">
+                        <h3 className="text-base font-black text-white uppercase tracking-wider">Settings & Tools</h3>
+                        <p className="text-[11px] text-slate-400 font-medium">Control panel & app configurations</p>
+                      </div>
                     </div>
+                  )}
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {claimedProfile?.username && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('warning');
+                          setShowUnclaimConfirmModal(true);
+                        }}
+                        title="Unclaim Profile"
+                        className="w-8 h-8 rounded-xl bg-red-500/10 hover:bg-red-500/30 text-red-400 hover:text-red-300 border border-red-500/40 flex items-center justify-center font-bold text-xs transition-all cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setIsMenuOpen(false)}
+                      className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
+                    >
+                      ✕
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setIsMenuOpen(false)}
-                    className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
-                  >
-                    ✕
-                  </button>
                 </div>
 
                 {/* Drawer Group 0: Claimed Profile Management */}
-                <div className="space-y-2.5 bg-[#131b2f] border border-emerald-500/40 p-3.5 rounded-2xl">
+                <div className="space-y-2.5 bg-[#131b2f] border border-emerald-500/40 p-3.5 rounded-2xl text-left">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
                       <span>👑</span> My Claimed Profile
@@ -4777,39 +4819,60 @@ ${payload.stack || 'No stack trace available.'}
                   {claimedProfile?.username ? (
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between bg-[#0b101e] border border-slate-700/60 p-2.5 rounded-xl">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-xs border border-emerald-500/30">
-                            👑
-                          </div>
-                          <div>
-                            <h4 className="text-xs font-black text-white">{claimedProfile.username}</h4>
-                            <p className="text-[10px] text-slate-400">
+                        <div className="flex items-center gap-2.5 overflow-hidden">
+                          {getDisplayAvatar(claimedProfile.username) ? (
+                            <img
+                              src={getDisplayAvatar(claimedProfile.username)}
+                              alt={claimedProfile.username}
+                              className="w-9 h-9 rounded-xl border border-emerald-400/60 object-cover shadow-sm shrink-0"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-xs border border-emerald-500/30 shrink-0">
+                              👑
+                            </div>
+                          )}
+                          <div className="text-left overflow-hidden">
+                            <h4 className="text-xs font-black text-white truncate">{claimedProfile.username}</h4>
+                            <p className="text-[10px] text-slate-400 truncate">
                               Claimed: {claimedProfile.claimedAt ? new Date(claimedProfile.claimedAt).toLocaleDateString() : 'Active'}
                             </p>
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => {
-                            setQuery(claimedProfile.username);
-                            fetchStats(null, claimedProfile.username, season);
-                            setIsMenuOpen(false);
-                          }}
-                          className="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/50 font-bold text-[10px] uppercase cursor-pointer transition-all"
-                        >
-                          View Stats
-                        </button>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            onClick={() => {
+                              setQuery(claimedProfile.username);
+                              fetchStats(null, claimedProfile.username, season);
+                              setIsMenuOpen(false);
+                            }}
+                            className="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/50 font-bold text-[10px] uppercase cursor-pointer transition-all"
+                          >
+                            View Stats
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('warning');
+                              setShowUnclaimConfirmModal(true);
+                            }}
+                            title="Unclaim Profile"
+                            className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/30 text-red-400 hover:text-red-300 border border-red-500/40 flex items-center justify-center font-bold text-xs cursor-pointer transition-all shrink-0"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </div>
 
                       <button
                         onClick={() => {
-                          handleUnclaimProfile();
-                          setIsMenuOpen(false);
+                          triggerHaptic('warning');
+                          setShowUnclaimConfirmModal(true);
                         }}
                         className="w-full py-2.5 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 text-red-400 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2"
                       >
                         <span>🗑️</span>
-                        <span>Remove Claimed Profile</span>
+                        <span>Unclaim Profile</span>
                       </button>
                     </div>
                   ) : (
@@ -5650,6 +5713,49 @@ ${payload.stack || 'No stack trace available.'}
                     <span>Submit Report</span>
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Unclaim Profile Confirmation */}
+      {showUnclaimConfirmModal && (
+        <div className="fixed inset-0 z-[110000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-gradient-to-br from-[#131b2f] via-[#0f172a] to-[#0b101e] border-2 border-red-500/60 rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl space-y-4 text-left relative">
+            <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
+              <div className="w-10 h-10 rounded-2xl bg-red-500/20 text-red-400 border border-red-500/40 flex items-center justify-center font-bold text-xl">
+                ⚠️
+              </div>
+              <div>
+                <h3 className="text-base font-black text-white uppercase tracking-wider">Unclaim Profile?</h3>
+                <p className="text-xs text-slate-400">Confirm removing primary profile link</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Are you sure you want to unclaim <strong className="text-white font-bold">{claimedProfile?.username}</strong>? 
+              It will no longer automatically load your statistics on app launch.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setShowUnclaimConfirmModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold uppercase tracking-wider cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleUnclaimProfile();
+                  setShowUnclaimConfirmModal(false);
+                  setIsMenuOpen(false);
+                }}
+                className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-red-500/30 cursor-pointer"
+              >
+                Yes, Unclaim Profile
               </button>
             </div>
           </div>
