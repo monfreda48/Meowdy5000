@@ -428,6 +428,56 @@ export default function App() {
     }
   });
 
+  // 3-Site Profile Verification & Confirmation State
+  const [searchConfirmationData, setSearchConfirmationData] = useState(null);
+  const [show3SiteConfirmModal, setShow3SiteConfirmModal] = useState(false);
+
+  const handleConfirmAndSave3SiteProfiles = (confirmedSites, mergedStats) => {
+    triggerHaptic('success');
+
+    const enabledSiteKeys = confirmedSites.filter(s => s.enabled).map(s => s.siteKey);
+    const primaryUrl = confirmedSites.find(s => s.enabled)?.profileUrl || confirmedSites[0]?.profileUrl || '';
+
+    const siteUrls = {
+      trackerGg: confirmedSites.find(s => s.siteKey === 'trackerGg')?.profileUrl || '',
+      rivalsMeta: confirmedSites.find(s => s.siteKey === 'rivalsMeta')?.profileUrl || '',
+      rivalsTracker: confirmedSites.find(s => s.siteKey === 'rivalsTracker')?.profileUrl || ''
+    };
+
+    const targetUser = mergedStats.current.username;
+
+    const claimObj = {
+      username: targetUser,
+      platform: mergedStats.current.platform || selectedPlatform || 'PC',
+      savedUrl: primaryUrl,
+      siteUrls: siteUrls,
+      trackerGgUrl: siteUrls.trackerGg,
+      rivalsMetaUrl: siteUrls.rivalsMeta,
+      rivalsTrackerUrl: siteUrls.rivalsTracker,
+      claimedAt: new Date().toISOString(),
+      trackingSources: enabledSiteKeys,
+      cachedStats: mergedStats.current
+    };
+
+    setClaimedProfile(claimObj);
+    setClaimedSources(enabledSiteKeys);
+
+    try {
+      localStorage.setItem('claimed_profile', JSON.stringify(claimObj));
+      localStorage.setItem('claimed_tracking_sources', JSON.stringify(enabledSiteKeys));
+    } catch (e) { }
+
+    setStats(mergedStats);
+    setShow3SiteConfirmModal(false);
+
+    showNativeToast(`⭐ Verified 3-site profile URLs saved for ${targetUser}!`);
+    setUpdateToast({
+      type: 'success',
+      message: `⭐ Direct tracking URLs saved across Tracker.gg, RivalsMeta, & RivalsTracker for ${targetUser}!`
+    });
+    setTimeout(() => setUpdateToast(null), 4000);
+  };
+
   const handleClaimProfile = (targetDataOrUsername = null, sourcesToTrack = null) => {
     let targetStats = null;
     let targetUser = query;
@@ -2589,6 +2639,67 @@ ${payload.stack || 'No stack trace available.'}
       }
     };
 
+    const trackerUrl = `https://tracker.gg/marvel-rivals/profile/${detectedSlug}/${encodedQuery}/overview`;
+    const rivalsMetaUrl = `https://rivalsmeta.com/player/${encodedQuery}`;
+    const rivalsTrackerUrl = `https://rivalstracker.com/player/${encodedQuery}`;
+
+    const siteCards = [
+      {
+        siteKey: 'trackerGg',
+        siteName: 'Tracker.gg',
+        icon: '🌐',
+        color: 'from-blue-600 to-indigo-700',
+        borderColor: 'border-blue-500/50',
+        username: tUsername || cleanQuery,
+        platform: detectedPlatform,
+        avatarUrl: tAvatar || '',
+        rank: tRank || 'Unranked',
+        winRate: tWinRate !== 'N/A' ? `${tWinRate}%` : 'N/A',
+        kdRatio: tKdRatio !== 'N/A' ? tKdRatio : 'N/A',
+        topHero: tHeroList[0]?.name || 'N/A',
+        matches: tMatches,
+        profileUrl: trackerUrl,
+        found: Boolean(trackerData),
+        enabled: Boolean(trackerData)
+      },
+      {
+        siteKey: 'rivalsMeta',
+        siteName: 'RivalsMeta.com',
+        icon: '⚔️',
+        color: 'from-purple-600 to-pink-700',
+        borderColor: 'border-purple-500/50',
+        username: rmUsername || cleanQuery,
+        platform: detectedPlatform,
+        avatarUrl: tAvatar || '',
+        rank: rmRank || 'Unranked',
+        winRate: rmWinRate !== 'N/A' ? `${rmWinRate}%` : 'N/A',
+        kdRatio: rmKdRatio !== 'N/A' ? rmKdRatio : 'N/A',
+        topHero: rmHeroList[0]?.name || 'N/A',
+        matches: rmMatches,
+        profileUrl: rivalsMetaUrl,
+        found: Boolean(rivalsMetaData),
+        enabled: Boolean(rivalsMetaData)
+      },
+      {
+        siteKey: 'rivalsTracker',
+        siteName: 'RivalsTracker.com',
+        icon: '🎯',
+        color: 'from-emerald-600 to-teal-700',
+        borderColor: 'border-emerald-500/50',
+        username: rtUsername || cleanQuery,
+        platform: detectedPlatform,
+        avatarUrl: tAvatar || '',
+        rank: rtRank || 'Unranked',
+        winRate: rtWinRate !== 'N/A' ? `${rtWinRate}%` : 'N/A',
+        kdRatio: rtKdRatio !== 'N/A' ? rtKdRatio : 'N/A',
+        topHero: rtHeroList[0]?.name || 'N/A',
+        matches: rtMatches,
+        profileUrl: rivalsTrackerUrl,
+        found: Boolean(rivalsTrackerData),
+        enabled: Boolean(rivalsTrackerData)
+      }
+    ];
+
     return {
       current: {
         username,
@@ -2602,7 +2713,7 @@ ${payload.stack || 'No stack trace available.'}
         kdRatio,
         topHero: topHeroStr,
         trackerScore: "4.8",
-        trackerUrl: `https://tracker.gg/marvel-rivals/profile/${detectedSlug}/${encodedQuery}/overview`,
+        trackerUrl: trackerUrl,
         matchesPlayed,
         matchesWon,
         kills,
@@ -2617,10 +2728,11 @@ ${payload.stack || 'No stack trace available.'}
         timePlayed: trackerData?.data?.segments?.[0]?.stats?.timePlayed?.displayValue || "N/A",
         sources,
         siteUrls: {
-          trackerGg: `https://tracker.gg/marvel-rivals/profile/${detectedSlug}/${encodedQuery}/overview`,
-          rivalsMeta: `https://rivalsmeta.com/player/${encodedQuery}`,
-          rivalsTracker: `https://rivalstracker.com/player/${encodedQuery}`
+          trackerGg: trackerUrl,
+          rivalsMeta: rivalsMetaUrl,
+          rivalsTracker: rivalsTrackerUrl
         },
+        siteCards,
         topHeroesDetailed: heroList.slice(0, 3),
         allHeroesFull: heroList,
         statBreakdown
@@ -2715,7 +2827,19 @@ ${payload.stack || 'No stack trace available.'}
 
       setSearchProgress(100);
       setSearchProgressMsg('💥 Avengers Assembled! Stats Ready.');
-      setStats(data);
+
+      // If searching a new profile, display 3-Site Confirmation preview modal
+      if (!isClaimedMatch && data?.current?.siteCards) {
+        setSearchConfirmationData({
+          query: activeQuery,
+          platform: data.current.platform || 'PC',
+          mergedStats: data,
+          sites: data.current.siteCards
+        });
+        setShow3SiteConfirmModal(true);
+      } else {
+        setStats(data);
+      }
 
       if (data?.current?.username || data?.username) {
         const uKey = (data.current?.username || data.username).toLowerCase();
@@ -6634,6 +6758,143 @@ ${payload.stack || 'No stack trace available.'}
                 className="w-full py-1.5 text-slate-400 hover:text-slate-200 text-xs font-bold uppercase tracking-wider cursor-pointer"
               >
                 Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Modal: 3-Site Profile Verification & Confirmation */}
+      {show3SiteConfirmModal && searchConfirmationData && (
+        <div className="fixed inset-0 z-[110000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
+          <div className="bg-gradient-to-br from-[#0f172a] via-[#111c35] to-[#0a0f1d] border-2 border-emerald-500/60 rounded-3xl p-5 sm:p-7 max-w-4xl w-full shadow-2xl space-y-6 text-left relative my-auto border-t-emerald-400/80">
+            
+            {/* Header */}
+            <div className="flex items-start justify-between border-b border-slate-800 pb-4 gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 font-black text-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                  ⚡
+                </div>
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-bold uppercase tracking-wider mb-1">
+                    <span>3-Site Profile Verification</span>
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-black text-white tracking-tight">
+                    Is this your profile?
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    We pulled statistics across Tracker.gg, RivalsMeta.com, & RivalsTracker.com for <strong className="text-white font-bold">{searchConfirmationData.query}</strong> ({searchConfirmationData.platform}). Please confirm that this profile is yours to start tracking.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShow3SiteConfirmModal(false)}
+                className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors text-lg font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* 3 Site Cards Preview Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {searchConfirmationData.sites.map((site, idx) => (
+                <div
+                  key={site.siteKey || idx}
+                  className={`relative rounded-2xl border-2 p-4 space-y-3.5 transition-all ${
+                    site.found
+                      ? `${site.borderColor} bg-[#0c1324]/90 shadow-xl shadow-black/40`
+                      : 'border-slate-800 bg-slate-900/40 opacity-60'
+                  }`}
+                >
+                  {/* Site Header */}
+                  <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{site.icon}</span>
+                      <span className="text-xs font-black text-white tracking-wide">{site.siteName}</span>
+                    </div>
+                    {site.found ? (
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[9px] font-mono font-bold">
+                        ✓ Found
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[9px] font-mono font-bold">
+                        ⚠️ Not Found
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Profile Avatar & Name */}
+                  <div className="flex items-center gap-3 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/60">
+                    <div className="relative">
+                      {site.avatarUrl ? (
+                        <img
+                          src={site.avatarUrl}
+                          alt={site.username}
+                          className="w-11 h-11 rounded-xl object-cover border border-emerald-500/40 shadow-md"
+                          onError={(e) => { e.target.style.display = 'none'; if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex'; }}
+                        />
+                      ) : null}
+                      <div
+                        className="w-11 h-11 rounded-xl bg-gradient-to-tr from-slate-800 to-slate-700 text-emerald-400 border border-slate-700 flex items-center justify-center font-bold text-lg"
+                        style={{ display: site.avatarUrl ? 'none' : 'flex' }}
+                      >
+                        🦸
+                      </div>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-black text-white truncate">{site.username}</div>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <span className="text-[10px] text-slate-400 font-mono">{site.platform}</span>
+                        <span className="text-[10px] text-slate-500">•</span>
+                        <span className="text-[10px] text-emerald-400 font-mono">{site.matches} matches</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Stat Summary */}
+                  <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                    <div className="bg-slate-900/40 p-2 rounded-lg border border-slate-800">
+                      <span className="text-slate-400 block text-[9px] uppercase tracking-wider font-sans">Rank</span>
+                      <span className="text-amber-300 font-bold truncate block">{site.rank}</span>
+                    </div>
+                    <div className="bg-slate-900/40 p-2 rounded-lg border border-slate-800">
+                      <span className="text-slate-400 block text-[9px] uppercase tracking-wider font-sans">Win Rate</span>
+                      <span className="text-emerald-400 font-bold block">{site.winRate}</span>
+                    </div>
+                    <div className="bg-slate-900/40 p-2 rounded-lg border border-slate-800">
+                      <span className="text-slate-400 block text-[9px] uppercase tracking-wider font-sans">K/D/A</span>
+                      <span className="text-cyan-400 font-bold block">{site.kdRatio}</span>
+                    </div>
+                    <div className="bg-slate-900/40 p-2 rounded-lg border border-slate-800">
+                      <span className="text-slate-400 block text-[9px] uppercase tracking-wider font-sans">Top Hero</span>
+                      <span className="text-purple-300 font-bold truncate block">{site.topHero}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Action Bar */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setShow3SiteConfirmModal(false)}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider cursor-pointer"
+              >
+                🔍 Not Me (Re-search)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleConfirmAndSave3SiteProfiles(searchConfirmationData.sites, searchConfirmationData.mergedStats);
+                }}
+                className="w-full sm:w-auto px-7 py-3 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/30 cursor-pointer flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95"
+              >
+                <span>✅</span>
+                <span>Yes, This Is Me</span>
               </button>
             </div>
 
