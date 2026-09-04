@@ -2396,19 +2396,16 @@ ${payload.stack || 'No stack trace available.'}
       return null;
     };
 
-    // Construct primary candidate URLs for Tracker.gg
+    // Always include 'ign' (in-game Marvel Rivals username) as the primary candidate!
     const primarySlug = detectedSlug === 'psn' ? 'psn' : (detectedSlug === 'xbl' ? 'xbl' : 'ign');
-    const trackerCandidates = [
-      `https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/${primarySlug}/${encodedQuery}`,
-      `https://corsproxy.io/?${encodeURIComponent(`https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/${primarySlug}/${encodedQuery}`)}`,
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/${primarySlug}/${encodedQuery}`)}`
-    ];
+    const trackerSlugs = Array.from(new Set(['ign', primarySlug, 'pc']));
 
-    if (primarySlug === 'ign') {
-      trackerCandidates.push(
-        `https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/pc/${encodedQuery}`,
-        `https://corsproxy.io/?${encodeURIComponent(`https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/pc/${encodedQuery}`)}`
-      );
+    const trackerCandidates = [];
+    for (const slug of trackerSlugs) {
+      const directUrl = `https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/${slug}/${encodedQuery}`;
+      trackerCandidates.push(directUrl);
+      trackerCandidates.push(`https://corsproxy.io/?${encodeURIComponent(directUrl)}`);
+      trackerCandidates.push(`https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`);
     }
 
     // STEP 1: SCRAPE SITE 1 - Tracker.gg
