@@ -1721,12 +1721,12 @@ export default function App() {
         await Filesystem.writeFile({
           path: fileName,
           data: base64Data,
-          directory: Directory.Documents
+          directory: Directory.Cache
         });
 
         const uriResult = await Filesystem.getUri({
           path: fileName,
-          directory: Directory.Documents
+          directory: Directory.Cache
         });
         
         let nativeFilePath = uriResult.uri;
@@ -1872,7 +1872,7 @@ export default function App() {
       } catch (e) { }
 
       const localSha = getAppLocalSha(backendData);
-      const lastAttempted = (sessionStorage.getItem('last_attempted_update_sha') || '').slice(0, 7);
+      const lastAttempted = isSilent ? (sessionStorage.getItem('last_attempted_update_sha') || '').slice(0, 7) : '';
 
       const hasUpdate = Boolean(
         latestSha &&
@@ -1884,7 +1884,12 @@ export default function App() {
       if (hasUpdate) {
         triggerHaptic('success');
         showNativeToast(`⚡ Update found (${latestSha})! Auto-installing...`);
-        setUpdateToast({ type: 'update', message: `⚡ New fix commit found (${latestSha})! Auto-applying update...` });
+        setUpdateToast({ type: 'update', message: `⚡ New update found (${latestSha})! Downloading & installing...` });
+        setUpdateInfo({
+          latestVersion: latestSha,
+          releaseNotes: latestMessage || 'New fixes & performance updates',
+          apkUrl: 'https://github.com/monfreda48/Meowdy5000/releases/latest/download/app-debug.apk'
+        });
         await applyUpdateNow(latestSha);
       } else if (!isSilent) {
         triggerHaptic('success');
@@ -2337,10 +2342,6 @@ ${payload.stack || 'No stack trace available.'}
       detectedSlug = "xbl";
     }
 
-    const trackerGgUrl = `https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/${detectedSlug}/${encodedQuery}`;
-    const rivalsMetaUrl = `https://rivalsmeta.com/api/player/${encodedQuery}${seasonParam}`;
-    const rivalsTrackerUrl = `https://api.rivalstracker.com/api/player/${encodedQuery}${seasonParam}`;
-
     const fetchCandidatesForSite = async (candidates) => {
       for (const url of candidates) {
         if (signal && signal.aborted) break;
@@ -2354,9 +2355,15 @@ ${payload.stack || 'No stack trace available.'}
           if (res.ok) {
             const text = await res.text();
             if (text && !text.trim().startsWith('<') && !text.toLowerCase().includes('<!doctype html')) {
-              const parsed = JSON.parse(text);
-              if (parsed && (parsed.data || parsed.stats || parsed.name || parsed.username)) {
-                return parsed;
+              let parsed = null;
+              try { parsed = JSON.parse(text); } catch (e) {}
+              if (parsed) {
+                if (typeof parsed.contents === 'string' && parsed.contents.startsWith('{')) {
+                  try { parsed = JSON.parse(parsed.contents); } catch (e) {}
+                }
+                if (parsed && (parsed.data?.segments || parsed.stats || parsed.name || parsed.username)) {
+                  return parsed;
+                }
               }
             }
           }
@@ -2367,25 +2374,60 @@ ${payload.stack || 'No stack trace available.'}
       return null;
     };
 
-    const [trackerData, rivalsMetaData, rivalsTrackerData] = await Promise.all([
-      fetchCandidatesForSite([
-        trackerGgUrl,
-        `https://corsproxy.io/?${encodeURIComponent(trackerGgUrl)}`,
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(trackerGgUrl)}`,
-        `https://thingproxy.freeboard.io/fetch/${trackerGgUrl}`
-      ]),
-      fetchCandidatesForSite([
-        rivalsMetaUrl,
-        `https://corsproxy.io/?${encodeURIComponent(rivalsMetaUrl)}`,
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(rivalsMetaUrl)}`,
-        `https://thingproxy.freeboard.io/fetch/${rivalsMetaUrl}`
-      ]),
-      fetchCandidatesForSite([
-        rivalsTrackerUrl,
-        `https://corsproxy.io/?${encodeURIComponent(rivalsTrackerUrl)}`,
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(rivalsTrackerUrl)}`,
-        `https://thingproxy.freeboard.io/fetch/${rivalsTrackerUrl}`
-      ])
+    // Query variants for spaces and platform slugs
+    const queryVariants = Array.from(new Set([
+      cleanQuery,
+      cleanQuery.replace(/\s+/g, '%20'),
+      cleanQuery.replace(/\s+/g, '-'),
+      cleanQuery.replace(/\s+/g, '+')
+    ]));
+
+    const trackerSlugs = detectedSlug === 'psn' ? ['psn'] : (detectedSlug === 'xbl' ? ['xbl'] : ['ign', 'pc']);
+    const trackerCandidates = [];
+    for (const slug of trackerSlugs) {
+      for (const qVar of queryVariants) {
+        const directUrl = `https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/${slug}/${encodeURIComponent(qVar)}`;
+        trackerCandidates.push(directUrl);
+        trackerCandidates.push(`https://corsproxy.io/?${encodeURIComponent(directUrl)}`);
+        trackerCandidates.push(`https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`);
+        trackerCandidates.push(`https://api.allorigins.win/get?url=${encodeURIComponent(directUrl)}`);
+        trackerCandidates.push(`https://thingproxy.freeboard.io/fetch/${directUrl}`);
+      }
+    }
+
+    // STEP 1: SCRAPE SITE 1 - Tracker.gg
+    const trackerData = await fetchCandidatesForSite(trackerCandidates);
+
+    // Resolve Numeric Account UID from Tracker.gg payload
+    let resolvedUid = cleanQuery;
+    if (trackerData?.data?.platformInfo) {
+      resolvedUid = trackerData.data.platformInfo.platformUserId || trackerData.data.platformInfo.platformUserIdentifier || cleanQuery;
+    }
+
+    const rivalsMetaCandidates = [];
+    for (const uidVar of Array.from(new Set([resolvedUid, cleanQuery, cleanQuery.replace(/\s+/g, '%20'), cleanQuery.replace(/\s+/g, '-')]))) {
+      const rmUrl = `https://rivalsmeta.com/api/player/${encodeURIComponent(uidVar)}${seasonParam}`;
+      rivalsMetaCandidates.push(rmUrl);
+      rivalsMetaCandidates.push(`https://corsproxy.io/?${encodeURIComponent(rmUrl)}`);
+      rivalsMetaCandidates.push(`https://api.allorigins.win/raw?url=${encodeURIComponent(rmUrl)}`);
+      rivalsMetaCandidates.push(`https://api.allorigins.win/get?url=${encodeURIComponent(rmUrl)}`);
+      rivalsMetaCandidates.push(`https://thingproxy.freeboard.io/fetch/${rmUrl}`);
+    }
+
+    const rivalsTrackerCandidates = [];
+    for (const qVar of queryVariants) {
+      const rtUrl = `https://api.rivalstracker.com/api/player/${encodeURIComponent(qVar)}${seasonParam}`;
+      rivalsTrackerCandidates.push(rtUrl);
+      rivalsTrackerCandidates.push(`https://corsproxy.io/?${encodeURIComponent(rtUrl)}`);
+      rivalsTrackerCandidates.push(`https://api.allorigins.win/raw?url=${encodeURIComponent(rtUrl)}`);
+      rivalsTrackerCandidates.push(`https://api.allorigins.win/get?url=${encodeURIComponent(rtUrl)}`);
+      rivalsTrackerCandidates.push(`https://thingproxy.freeboard.io/fetch/${rtUrl}`);
+    }
+
+    // STEP 2 & 3: SCRAPE SITES 2 & 3 - RivalsMeta.com & RivalsTracker.com (using resolved UID/query)
+    const [rivalsMetaData, rivalsTrackerData] = await Promise.all([
+      fetchCandidatesForSite(rivalsMetaCandidates),
+      fetchCandidatesForSite(rivalsTrackerCandidates)
     ]);
 
     let tUsername = "", tAvatar = "", tRank = "", tPeakRank = "", tMatches = 0, tWins = 0, tKills = 0, tDeaths = 0, tAssists = 0;
@@ -5618,7 +5660,11 @@ ${payload.stack || 'No stack trace available.'}
                   </span>
 
                   <button
-                    onClick={() => handleOneClickUpdate()}
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      triggerHaptic('light');
+                      handleOneClickUpdate();
+                    }}
                     disabled={checkingUpdate || isApplyingUpdate}
                     className="w-full bg-[#131b2f] hover:bg-emerald-500/10 border border-slate-700/80 hover:border-emerald-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer disabled:opacity-80"
                   >
