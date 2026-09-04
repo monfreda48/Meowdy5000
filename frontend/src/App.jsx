@@ -2342,17 +2342,39 @@ ${payload.stack || 'No stack trace available.'}
       detectedSlug = "xbl";
     }
 
+    const fetchWithTimeout = async (url, parentSignal, timeoutMs = 2500) => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+      const onParentAbort = () => controller.abort();
+      if (parentSignal) {
+        if (parentSignal.aborted) controller.abort();
+        else parentSignal.addEventListener('abort', onParentAbort);
+      }
+
+      try {
+        const res = await fetch(url, {
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json, text/plain, */*'
+          }
+        });
+        clearTimeout(timer);
+        if (parentSignal && parentSignal.removeEventListener) parentSignal.removeEventListener('abort', onParentAbort);
+        return res;
+      } catch (e) {
+        clearTimeout(timer);
+        if (parentSignal && parentSignal.removeEventListener) parentSignal.removeEventListener('abort', onParentAbort);
+        throw e;
+      }
+    };
+
     const fetchCandidatesForSite = async (candidates) => {
       for (const url of candidates) {
         if (signal && signal.aborted) break;
         try {
-          const res = await fetch(url, {
-            signal,
-            headers: {
-              'Accept': 'application/json, text/plain, */*'
-            }
-          });
-          if (res.ok) {
+          const res = await fetchWithTimeout(url, signal, 2500);
+          if (res && res.ok) {
             const text = await res.text();
             if (text && !text.trim().startsWith('<') && !text.toLowerCase().includes('<!doctype html')) {
               let parsed = null;
@@ -2368,31 +2390,25 @@ ${payload.stack || 'No stack trace available.'}
             }
           }
         } catch (e) {
-          // Try next proxy
+          // Try next candidate
         }
       }
       return null;
     };
 
-    // Query variants for spaces and platform slugs
-    const queryVariants = Array.from(new Set([
-      cleanQuery,
-      cleanQuery.replace(/\s+/g, '%20'),
-      cleanQuery.replace(/\s+/g, '-'),
-      cleanQuery.replace(/\s+/g, '+')
-    ]));
+    // Construct primary candidate URLs for Tracker.gg
+    const primarySlug = detectedSlug === 'psn' ? 'psn' : (detectedSlug === 'xbl' ? 'xbl' : 'ign');
+    const trackerCandidates = [
+      `https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/${primarySlug}/${encodedQuery}`,
+      `https://corsproxy.io/?${encodeURIComponent(`https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/${primarySlug}/${encodedQuery}`)}`,
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/${primarySlug}/${encodedQuery}`)}`
+    ];
 
-    const trackerSlugs = detectedSlug === 'psn' ? ['psn'] : (detectedSlug === 'xbl' ? ['xbl'] : ['ign', 'pc']);
-    const trackerCandidates = [];
-    for (const slug of trackerSlugs) {
-      for (const qVar of queryVariants) {
-        const directUrl = `https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/${slug}/${encodeURIComponent(qVar)}`;
-        trackerCandidates.push(directUrl);
-        trackerCandidates.push(`https://corsproxy.io/?${encodeURIComponent(directUrl)}`);
-        trackerCandidates.push(`https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`);
-        trackerCandidates.push(`https://api.allorigins.win/get?url=${encodeURIComponent(directUrl)}`);
-        trackerCandidates.push(`https://thingproxy.freeboard.io/fetch/${directUrl}`);
-      }
+    if (primarySlug === 'ign') {
+      trackerCandidates.push(
+        `https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/pc/${encodedQuery}`,
+        `https://corsproxy.io/?${encodeURIComponent(`https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/pc/${encodedQuery}`)}`
+      );
     }
 
     // STEP 1: SCRAPE SITE 1 - Tracker.gg
@@ -2403,26 +2419,20 @@ ${payload.stack || 'No stack trace available.'}
     if (trackerData?.data?.platformInfo) {
       resolvedUid = trackerData.data.platformInfo.platformUserId || trackerData.data.platformInfo.platformUserIdentifier || cleanQuery;
     }
+    const encodedUid = encodeURIComponent(resolvedUid);
 
-    const rivalsMetaCandidates = [];
-    for (const uidVar of Array.from(new Set([resolvedUid, cleanQuery, cleanQuery.replace(/\s+/g, '%20'), cleanQuery.replace(/\s+/g, '-')]))) {
-      const rmUrl = `https://rivalsmeta.com/api/player/${encodeURIComponent(uidVar)}${seasonParam}`;
-      rivalsMetaCandidates.push(rmUrl);
-      rivalsMetaCandidates.push(`https://corsproxy.io/?${encodeURIComponent(rmUrl)}`);
-      rivalsMetaCandidates.push(`https://api.allorigins.win/raw?url=${encodeURIComponent(rmUrl)}`);
-      rivalsMetaCandidates.push(`https://api.allorigins.win/get?url=${encodeURIComponent(rmUrl)}`);
-      rivalsMetaCandidates.push(`https://thingproxy.freeboard.io/fetch/${rmUrl}`);
-    }
+    // STEP 2 & 3: SCRAPE SITES 2 & 3 - RivalsMeta.com & RivalsTracker.com (using resolved UID/query)
+    const rivalsMetaCandidates = [
+      `https://rivalsmeta.com/api/player/${encodedUid}${seasonParam}`,
+      `https://corsproxy.io/?${encodeURIComponent(`https://rivalsmeta.com/api/player/${encodedUid}${seasonParam}`)}`,
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://rivalsmeta.com/api/player/${encodedUid}${seasonParam}`)}`
+    ];
 
-    const rivalsTrackerCandidates = [];
-    for (const qVar of queryVariants) {
-      const rtUrl = `https://api.rivalstracker.com/api/player/${encodeURIComponent(qVar)}${seasonParam}`;
-      rivalsTrackerCandidates.push(rtUrl);
-      rivalsTrackerCandidates.push(`https://corsproxy.io/?${encodeURIComponent(rtUrl)}`);
-      rivalsTrackerCandidates.push(`https://api.allorigins.win/raw?url=${encodeURIComponent(rtUrl)}`);
-      rivalsTrackerCandidates.push(`https://api.allorigins.win/get?url=${encodeURIComponent(rtUrl)}`);
-      rivalsTrackerCandidates.push(`https://thingproxy.freeboard.io/fetch/${rtUrl}`);
-    }
+    const rivalsTrackerCandidates = [
+      `https://api.rivalstracker.com/api/player/${encodedQuery}${seasonParam}`,
+      `https://corsproxy.io/?${encodeURIComponent(`https://api.rivalstracker.com/api/player/${encodedQuery}${seasonParam}`)}`,
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://api.rivalstracker.com/api/player/${encodedQuery}${seasonParam}`)}`
+    ];
 
     // STEP 2 & 3: SCRAPE SITES 2 & 3 - RivalsMeta.com & RivalsTracker.com (using resolved UID/query)
     const [rivalsMetaData, rivalsTrackerData] = await Promise.all([
