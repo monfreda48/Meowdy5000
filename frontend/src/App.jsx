@@ -432,6 +432,69 @@ export default function App() {
   const [searchConfirmationData, setSearchConfirmationData] = useState(null);
   const [show3SiteConfirmModal, setShow3SiteConfirmModal] = useState(false);
 
+  // Account UID Connection State & Handler
+  const [userUidInput, setUserUidInput] = useState(() => {
+    try {
+      const saved = localStorage.getItem('claimed_profile');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed?.uid || '';
+      }
+    } catch (e) {}
+    return '';
+  });
+
+  const handleConnectAccountUid = (e) => {
+    if (e) e.preventDefault();
+    const cleanUid = (userUidInput || '').trim();
+    if (!cleanUid) {
+      showNativeToast('⚠️ Please enter your numeric Account UID (e.g. 70463344)');
+      return;
+    }
+
+    triggerHaptic('success');
+    const targetUser = claimedProfile?.username || stats?.current?.username || query;
+
+    const rivalsTrackerUrl = `https://rivalstracker.com/profile/${cleanUid}`;
+    const rivalsMetaUrl = `https://rivalsmeta.com/player/${cleanUid}`;
+    const trackerGgUrl = claimedProfile?.trackerGgUrl || `https://tracker.gg/marvel-rivals/profile/ign/${encodeURIComponent(targetUser)}/overview?season=19`;
+
+    const updatedClaim = {
+      ...(claimedProfile || {}),
+      username: targetUser,
+      uid: cleanUid,
+      savedUrl: trackerGgUrl,
+      trackerGgUrl,
+      rivalsTrackerUrl,
+      rivalsMetaUrl,
+      siteUrls: {
+        trackerGg: trackerGgUrl,
+        rivalsTracker: rivalsTrackerUrl,
+        rivalsMeta: rivalsMetaUrl
+      },
+      claimedAt: claimedProfile?.claimedAt || new Date().toISOString(),
+      trackingSources: ['trackerGg', 'rivalsMeta', 'rivalsTracker']
+    };
+
+    setClaimedProfile(updatedClaim);
+    setClaimedSources(['trackerGg', 'rivalsMeta', 'rivalsTracker']);
+    try {
+      localStorage.setItem('claimed_profile', JSON.stringify(updatedClaim));
+      localStorage.setItem('claimed_tracking_sources', JSON.stringify(['trackerGg', 'rivalsMeta', 'rivalsTracker']));
+    } catch (err) {}
+
+    showNativeToast(`🔗 Connected Account UID ${cleanUid}! Saved 3-site tracking URLs.`);
+    setUpdateToast({
+      type: 'success',
+      message: `🔗 Connected UID ${cleanUid}! Saved rivalstracker.com/profile/${cleanUid} & rivalsmeta.com/player/${cleanUid}.`
+    });
+    setTimeout(() => setUpdateToast(null), 4000);
+
+    if (targetUser) {
+      fetchStats(null, targetUser, season, cleanUid);
+    }
+  };
+
   const handleConfirmAndSave3SiteProfiles = (confirmedSites, mergedStats) => {
     triggerHaptic('success');
 
@@ -2364,33 +2427,19 @@ ${payload.stack || 'No stack trace available.'}
     "1051": "Ultron", "1052": "Flynn"
   };
 
-  const fetchDirectPlayerStats = async (queryVal, seasonVal, signal) => {
+const DEFAULT_SEASON_NUM = 19;
+
+  const fetchDirectPlayerStats = async (queryVal, seasonVal, signal, overrideUid = null) => {
     const cleanQuery = (queryVal || '').trim();
-    if (!cleanQuery) throw new Error('Please enter a username or player UID to search.');
+    if (!cleanQuery) throw new Error('Please enter a username to search.');
     const encodedQuery = encodeURIComponent(cleanQuery);
-    const seasonParam = seasonVal ? `?season=${encodeURIComponent(seasonVal)}` : '';
+    
+    let activeSeasonNum = parseInt(seasonVal, 10) || DEFAULT_SEASON_NUM;
+    const seasonParam = `?season=${activeSeasonNum}`;
 
     let detectedPlatform = "PC";
     let detectedIcon = "💻";
-    let detectedSlug = "pc";
-
-    if (selectedPlatform === 'ps5') {
-      detectedPlatform = "PlayStation 5";
-      detectedIcon = "🎮";
-      detectedSlug = "psn";
-    } else if (selectedPlatform === 'xbox') {
-      detectedPlatform = "Xbox Series X|S";
-      detectedIcon = "❎";
-      detectedSlug = "xbl";
-    } else if (cleanQuery.toLowerCase().includes('psn') || cleanQuery.toLowerCase().includes('ps5')) {
-      detectedPlatform = "PlayStation 5";
-      detectedIcon = "🎮";
-      detectedSlug = "psn";
-    } else if (cleanQuery.toLowerCase().includes('xbl') || cleanQuery.toLowerCase().includes('xbox')) {
-      detectedPlatform = "Xbox Series X|S";
-      detectedIcon = "❎";
-      detectedSlug = "xbl";
-    }
+    let detectedSlug = "ign";
 
     const fetchWithTimeout = async (url, parentSignal, timeoutMs = 2500) => {
       const controller = new AbortController();
@@ -2446,29 +2495,45 @@ ${payload.stack || 'No stack trace available.'}
       return null;
     };
 
-    // Always include 'ign' (in-game Marvel Rivals username) as the primary candidate!
-    const primarySlug = detectedSlug === 'psn' ? 'psn' : (detectedSlug === 'xbl' ? 'xbl' : 'ign');
-    const trackerSlugs = Array.from(new Set(['ign', primarySlug, 'pc']));
-
-    const trackerCandidates = [];
-    for (const slug of trackerSlugs) {
-      const directUrl = `https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/${slug}/${encodedQuery}`;
-      trackerCandidates.push(directUrl);
-      trackerCandidates.push(`https://corsproxy.io/?${encodeURIComponent(directUrl)}`);
-      trackerCandidates.push(`https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`);
-    }
+    // Primary search uses ign in-game username slug on Tracker.gg
+    const directTrackerApiUrl = `https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/ign/${encodedQuery}`;
+    const trackerCandidates = [
+      `${directTrackerApiUrl}${seasonParam}`,
+      `https://corsproxy.io/?${encodeURIComponent(`${directTrackerApiUrl}${seasonParam}`)}`,
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(`${directTrackerApiUrl}${seasonParam}`)}`,
+      directTrackerApiUrl,
+      `https://corsproxy.io/?${encodeURIComponent(directTrackerApiUrl)}`,
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(directTrackerApiUrl)}`
+    ];
 
     // STEP 1: SCRAPE SITE 1 - Tracker.gg
-    const trackerData = await fetchCandidatesForSite(trackerCandidates);
+    let trackerData = await fetchCandidatesForSite(trackerCandidates);
+    let upgradedSeason = null;
 
-    // Resolve Numeric Account UID from Tracker.gg payload
-    let resolvedUid = cleanQuery;
-    if (trackerData?.data?.platformInfo) {
-      resolvedUid = trackerData.data.platformInfo.platformUserId || trackerData.data.platformInfo.platformUserIdentifier || cleanQuery;
+    // IF Tracker.gg link breaks or returns no data for current season, TRY SEASON + 1!
+    if (!trackerData || !trackerData?.data?.segments) {
+      const nextSeasonNum = activeSeasonNum + 1;
+      const nextSeasonParam = `?season=${nextSeasonNum}`;
+      const fallbackCandidates = [
+        `${directTrackerApiUrl}${nextSeasonParam}`,
+        `https://corsproxy.io/?${encodeURIComponent(`${directTrackerApiUrl}${nextSeasonParam}`)}`,
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(`${directTrackerApiUrl}${nextSeasonParam}`)}`
+      ];
+
+      const fallbackTrackerData = await fetchCandidatesForSite(fallbackCandidates);
+      if (fallbackTrackerData && fallbackTrackerData?.data?.segments) {
+        console.log(`[SeasonAutoUpgrade] Tracker.gg link for season ${activeSeasonNum} failed. Upgraded to season ${nextSeasonNum}!`);
+        trackerData = fallbackTrackerData;
+        activeSeasonNum = nextSeasonNum;
+        upgradedSeason = nextSeasonNum;
+      }
     }
-    const encodedUid = encodeURIComponent(resolvedUid);
 
-    // STEP 2 & 3: SCRAPE SITES 2 & 3 - RivalsMeta.com & RivalsTracker.com (using resolved UID/query)
+    // Resolve Numeric Account UID from parameters, claimed profile, or Tracker.gg payload
+    const effectiveUid = (overrideUid || claimedProfile?.uid || trackerData?.data?.platformInfo?.platformUserId || '').trim();
+    const encodedUid = effectiveUid ? encodeURIComponent(effectiveUid) : encodedQuery;
+
+    // STEP 2 & 3: SCRAPE SITES 2 & 3 - RivalsMeta.com & RivalsTracker.com (using resolved UID)
     const rivalsMetaCandidates = [
       `https://rivalsmeta.com/api/player/${encodedUid}${seasonParam}`,
       `https://corsproxy.io/?${encodeURIComponent(`https://rivalsmeta.com/api/player/${encodedUid}${seasonParam}`)}`,
@@ -2476,12 +2541,12 @@ ${payload.stack || 'No stack trace available.'}
     ];
 
     const rivalsTrackerCandidates = [
-      `https://api.rivalstracker.com/api/player/${encodedQuery}${seasonParam}`,
-      `https://corsproxy.io/?${encodeURIComponent(`https://api.rivalstracker.com/api/player/${encodedQuery}${seasonParam}`)}`,
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://api.rivalstracker.com/api/player/${encodedQuery}${seasonParam}`)}`
+      `https://api.rivalstracker.com/api/player/${encodedUid}${seasonParam}`,
+      `https://corsproxy.io/?${encodeURIComponent(`https://api.rivalstracker.com/api/player/${encodedUid}${seasonParam}`)}`,
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://api.rivalstracker.com/api/player/${encodedUid}${seasonParam}`)}`
     ];
 
-    // STEP 2 & 3: SCRAPE SITES 2 & 3 - RivalsMeta.com & RivalsTracker.com (using resolved UID/query)
+    // STEP 2 & 3: SCRAPE SITES 2 & 3 - RivalsMeta.com & RivalsTracker.com
     const [rivalsMetaData, rivalsTrackerData] = await Promise.all([
       fetchCandidatesForSite(rivalsMetaCandidates),
       fetchCandidatesForSite(rivalsTrackerCandidates)
@@ -2639,9 +2704,9 @@ ${payload.stack || 'No stack trace available.'}
       }
     };
 
-    const trackerUrl = `https://tracker.gg/marvel-rivals/profile/${detectedSlug}/${encodedQuery}/overview`;
-    const rivalsMetaUrl = `https://rivalsmeta.com/player/${encodedQuery}`;
-    const rivalsTrackerUrl = `https://rivalstracker.com/player/${encodedQuery}`;
+    const trackerUrl = `https://tracker.gg/marvel-rivals/profile/ign/${encodedQuery}/overview?season=${seasonVal || '19'}`;
+    const rivalsMetaUrl = effectiveUid ? `https://rivalsmeta.com/player/${effectiveUid}` : `https://rivalsmeta.com/player/${encodedQuery}`;
+    const rivalsTrackerUrl = effectiveUid ? `https://rivalstracker.com/profile/${effectiveUid}` : `https://rivalstracker.com/profile/${encodedQuery}`;
 
     const siteCards = [
       {
@@ -2707,6 +2772,8 @@ ${payload.stack || 'No stack trace available.'}
         platform: detectedPlatform,
         platformIcon: detectedIcon,
         platformSlug: detectedSlug,
+        seasonNum: String(activeSeasonNum),
+        upgradedSeason,
         rank,
         peakRank,
         winRate,
@@ -2740,7 +2807,7 @@ ${payload.stack || 'No stack trace available.'}
     };
   };
 
-  const fetchStats = async (e, overrideQuery = null, overrideSeason = null) => {
+  const fetchStats = async (e, overrideQuery = null, overrideSeason = null, overrideUid = null) => {
     if (e) e.preventDefault();
     const activeQuery = overrideQuery !== null ? overrideQuery : query;
     const activeSeason = overrideSeason !== null ? overrideSeason : season;
@@ -2812,10 +2879,10 @@ ${payload.stack || 'No stack trace available.'}
           }
         } catch (backendErr) {
           console.warn('[FetchStats] Custom backend request failed or timed out (2s), falling back to direct client fetch:', backendErr);
-          data = await fetchDirectPlayerStats(activeQuery, activeSeason, controller.signal);
+          data = await fetchDirectPlayerStats(activeQuery, activeSeason, controller.signal, overrideUid);
         }
       } else {
-        data = await fetchDirectPlayerStats(activeQuery, activeSeason, controller.signal);
+        data = await fetchDirectPlayerStats(activeQuery, activeSeason, controller.signal, overrideUid);
       }
 
       clearTimeout(timeoutId);
@@ -2827,18 +2894,30 @@ ${payload.stack || 'No stack trace available.'}
 
       setSearchProgress(100);
       setSearchProgressMsg('💥 Avengers Assembled! Stats Ready.');
+      setStats(data);
 
-      // If searching a new profile, display 3-Site Confirmation preview modal
-      if (!isClaimedMatch && data?.current?.siteCards) {
-        setSearchConfirmationData({
-          query: activeQuery,
-          platform: data.current.platform || 'PC',
-          mergedStats: data,
-          sites: data.current.siteCards
+      if (data?.current?.upgradedSeason && claimedProfile) {
+        const nextSeason = data.current.upgradedSeason;
+        const newTrackerUrl = `https://tracker.gg/marvel-rivals/profile/ign/${encodeURIComponent(data.current.username)}/overview?season=${nextSeason}`;
+        const updatedClaim = {
+          ...claimedProfile,
+          savedUrl: newTrackerUrl,
+          trackerGgUrl: newTrackerUrl,
+          siteUrls: {
+            ...(claimedProfile.siteUrls || {}),
+            trackerGg: newTrackerUrl
+          }
+        };
+        setClaimedProfile(updatedClaim);
+        try {
+          localStorage.setItem('claimed_profile', JSON.stringify(updatedClaim));
+        } catch (e) {}
+        showNativeToast(`⚡ Tracker.gg link upgraded to Season ${nextSeason}! Saved new URL.`);
+        setUpdateToast({
+          type: 'success',
+          message: `⚡ Tracker.gg season auto-upgraded to Season ${nextSeason}! Replaced saved profile URL.`
         });
-        setShow3SiteConfirmModal(true);
-      } else {
-        setStats(data);
+        setTimeout(() => setUpdateToast(null), 4000);
       }
 
       if (data?.current?.username || data?.username) {
@@ -3183,87 +3262,21 @@ ${payload.stack || 'No stack trace available.'}
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Enter Username or UID..."
+                    placeholder="Enter Username (e.g. Meowdy 5000)..."
                     className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white placeholder-slate-500 ${isMobileView ? 'py-2.5 text-sm' : 'py-3.5 sm:py-4 text-base sm:text-lg'
                       }`}
                     required
                   />
                 </div>
 
-                <div className={`flex gap-2 relative ${isMobileView ? 'w-full' : ''}`}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowPlatformDropdown(!showPlatformDropdown);
-                      triggerHaptic('light');
-                    }}
-                    className={`bg-[#0b101e] border border-slate-700/50 hover:border-emerald-500 rounded-xl px-3 flex items-center justify-between gap-2 focus:outline-none focus:border-emerald-500 text-white cursor-pointer font-bold text-xs sm:text-sm transition-all ${isMobileView ? 'py-2.5 flex-1' : 'py-3.5 sm:py-4'}`}
-                  >
-                    <span className="flex items-center gap-1.5 shrink-0">
-                      {selectedPlatform === 'ps5' ? (
-                        <>
-                          <span className="text-base">🎮</span>
-                          <span>PlayStation 5</span>
-                        </>
-                      ) : selectedPlatform === 'xbox' ? (
-                        <>
-                          <span>❎</span>
-                          <span>Xbox Series X|S</span>
-                        </>
-                      ) : selectedPlatform === 'pc' ? (
-                        <>
-                          <span>💻</span>
-                          <span>PC</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>🌐</span>
-                          <span>All Platforms</span>
-                        </>
-                      )}
-                    </span>
-                    <span className="text-[10px] text-slate-400">▼</span>
-                  </button>
-
-                  {/* Custom Dropdown Popover */}
-                  {showPlatformDropdown && (
-                    <div className="absolute right-0 top-full mt-2 w-56 bg-[#131b2f] border border-slate-700/80 rounded-xl shadow-2xl z-[99999] py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-                      {[
-                        { id: 'all', label: 'All Platforms', icon: '🌐' },
-                        { id: 'pc', label: 'PC', icon: '💻' },
-                        { id: 'ps5', label: 'PlayStation 5', icon: '🎮' },
-                        { id: 'xbox', label: 'Xbox Series X|S', icon: '❎' }
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedPlatform(item.id);
-                            setShowPlatformDropdown(false);
-                            triggerHaptic('light');
-                          }}
-                          className={`w-full text-left px-3.5 py-2.5 text-xs sm:text-sm font-bold flex items-center gap-2.5 transition-all cursor-pointer ${
-                            selectedPlatform === item.id
-                              ? 'bg-emerald-500/20 text-emerald-300 border-l-4 border-emerald-400'
-                              : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
-                          }`}
-                        >
-                          <span className="text-base">{item.icon}</span>
-                          <span>{item.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={`bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(16,185,129,0.3)] uppercase tracking-wider text-xs sm:text-sm ${isMobileView ? 'py-2.5 px-4 flex-1' : 'py-3.5 sm:py-4 px-6 sm:px-8'
-                      }`}
-                  >
-                    {loading ? 'Scanning...' : 'Search'}
-                  </button>
-                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(16,185,129,0.3)] uppercase tracking-wider text-xs sm:text-sm ${isMobileView ? 'py-2.5 px-4 w-full' : 'py-3.5 sm:py-4 px-6 sm:px-8'
+                    }`}
+                >
+                  {loading ? 'Scanning...' : 'Search'}
+                </button>
               </div>
             </form>
           )}
@@ -3419,6 +3432,44 @@ ${payload.stack || 'No stack trace available.'}
         {/* Dashboard Results */}
         {stats && !loading && (
           <div className={`animate-in fade-in slide-in-from-bottom-8 duration-700 ${isMobileView ? 'space-y-5' : 'space-y-8'}`}>
+
+            {/* Subtle Account UID Multi-Site Connection Section */}
+            <div className="bg-gradient-to-r from-[#111827] via-[#0f172a] to-[#111827] border border-slate-700/60 rounded-2xl p-3.5 sm:p-4 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-left">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-xl shrink-0 shadow-md">
+                  🔗
+                </div>
+                <div>
+                  <div className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2 flex-wrap">
+                    <span>Connect Multi-Site Stats with Account UID</span>
+                    {claimedProfile?.uid && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-mono font-bold">
+                        ✓ Connected ({claimedProfile.uid})
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-0.5 leading-normal">
+                    Enter your Marvel Rivals Account UID (e.g. <strong className="text-slate-300 font-mono">70463344</strong>) to link <span className="text-slate-200 font-bold">RivalsTracker</span> (<code className="text-[10px] text-emerald-400">rivalstracker.com/profile/{claimedProfile?.uid || '70463344'}</code>) & <span className="text-slate-200 font-bold">RivalsMeta</span> (<code className="text-[10px] text-emerald-400">rivalsmeta.com/player/{claimedProfile?.uid || '70463344'}</code>).
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleConnectAccountUid} className="flex items-center gap-2 w-full md:w-auto shrink-0">
+                <input
+                  type="text"
+                  value={userUidInput}
+                  onChange={(e) => setUserUidInput(e.target.value)}
+                  placeholder="Enter UID (e.g. 70463344)..."
+                  className="bg-[#0b101e] border border-slate-700/70 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 w-full md:w-48"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider shadow-md cursor-pointer shrink-0 transition-all hover:scale-105 active:scale-95"
+                >
+                  Connect
+                </button>
+              </form>
+            </div>
 
             {/* Profile Confirmation Banner before committing to track */}
             {(!claimedProfile || claimedProfile.username?.toLowerCase() !== stats.current.username?.toLowerCase()) && (
