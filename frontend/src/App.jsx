@@ -675,15 +675,30 @@ export default function App() {
     setShowClaimModal(false);
   };
 
-  // On App Launch: Auto-load claimed profile from GET /api/profile/claimed
+  // On App Launch: Auto-load claimed profile from localStorage and GET /api/profile/claimed
   useEffect(() => {
     const initClaimedProfile = async () => {
+      // Check local storage directly first
+      let savedUser = null;
+      try {
+        const saved = localStorage.getItem('claimed_profile');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed?.username) {
+            savedUser = parsed.username;
+            setClaimedProfile(parsed);
+            setQuery(parsed.username);
+          }
+        }
+      } catch (e) {}
+
+      // If backend has a claimed user, sync it
       try {
         const res = await fetch(getApiUrl('/api/profile/claimed'));
         if (res.ok) {
           const data = await res.json();
           if (data.claimed && data.player_name) {
-            setQuery(data.player_name);
+            savedUser = data.player_name;
             const claimObj = {
               username: data.player_name,
               trackerGgUrl: data.profile_url,
@@ -691,24 +706,18 @@ export default function App() {
             };
             setClaimedProfile(claimObj);
             try { localStorage.setItem('claimed_profile', JSON.stringify(claimObj)); } catch (e) {}
-            if (data.cached_stats) {
-              const normalized = normalizeBackendStatsToCurrent(data.cached_stats, data.player_name, season);
-              if (normalized) {
-                setStats(normalized);
-                return;
-              }
-            }
-            fetchStats(null, data.player_name, season);
-            return;
           }
         }
       } catch (err) {
         console.warn('[AppInit] GET /api/profile/claimed note:', err);
       }
 
-      if (claimedProfile?.username) {
-        setQuery(claimedProfile.username);
-        fetchStats(null, claimedProfile.username, season);
+      // Fetch stats for the resolved user
+      if (savedUser) {
+        fetchStats(null, savedUser, season);
+      } else if (autoLoadHomeProfile && pinnedHomeProfile?.username) {
+        setQuery(pinnedHomeProfile.username);
+        fetchStats(null, pinnedHomeProfile.username, pinnedHomeProfile.season || season);
       }
     };
 
@@ -2475,24 +2484,6 @@ ${payload.stack || 'No stack trace available.'}
     cleanupOldApkFiles();
     checkForUpdates(true);
 
-    const saved = localStorage.getItem('claimed_profile');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed?.username) {
-          console.log(`[ClaimedProfile] Auto-loading claimed profile: ${parsed.username}`);
-          setQuery(parsed.username);
-          fetchStats(null, parsed.username, season);
-        }
-      } catch (e) {
-        console.error('Error auto-loading claimed profile:', e);
-      }
-    } else if (autoLoadHomeProfile && pinnedHomeProfile?.username) {
-      console.log(`[HomeProfile] Auto-loading pinned home profile: ${pinnedHomeProfile.username}`);
-      setQuery(pinnedHomeProfile.username);
-      fetchStats(null, pinnedHomeProfile.username, pinnedHomeProfile.season || season);
-    }
-
     const handleFocus = () => {
       cleanupOldApkFiles();
     };
@@ -3486,18 +3477,25 @@ const DEFAULT_SEASON_NUM = 19;
 
               <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                 {claimedProfile?.username?.toLowerCase() === stats.current.username?.toLowerCase() ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic('light');
-                      setShowUnclaimConfirmModal(true);
-                    }}
-                    className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-red-600 hover:to-rose-600 text-white transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20 border border-emerald-400/50 uppercase tracking-wider font-black group"
-                    title="Profile tracking active. Click to unclaim profile"
-                  >
-                    <span className="group-hover:hidden">👑 TRACKING ACTIVE</span>
-                    <span className="hidden group-hover:inline">✕ Unclaim Profile</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <div className="px-3.5 py-2.5 rounded-xl font-black text-xs sm:text-sm bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/20 border border-emerald-400/50 uppercase tracking-wider cursor-default flex items-center gap-1.5">
+                      <span>👑</span>
+                      <span>TRACKING ACTIVE</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('light');
+                        if (window.confirm(`Unclaim profile for ${claimedProfile?.username}?`)) {
+                          handleUnclaimProfile();
+                        }
+                      }}
+                      className="px-3 py-2.5 rounded-xl font-bold text-xs bg-red-500/20 hover:bg-red-600 border border-red-500/50 text-red-300 hover:text-white transition-all uppercase tracking-wider cursor-pointer shrink-0"
+                      title="Unclaim profile"
+                    >
+                      ✕ Unclaim
+                    </button>
+                  </div>
                 ) : (
                   <button
                     type="button"
