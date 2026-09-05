@@ -1129,9 +1129,22 @@ export default function App() {
   ];
 
   const getDisplayAvatar = (username) => {
-    if (!username) return stats?.current?.avatarUrl || '';
-    const key = username.toLowerCase();
-    return customAvatars[key] || stats?.current?.avatarUrl || '';
+    let raw = '';
+    if (!username) raw = stats?.current?.avatarUrl || '';
+    else {
+      const key = username.toLowerCase();
+      raw = customAvatars[key] || (stats?.current?.username?.toLowerCase() === key ? stats?.current?.avatarUrl : '') || claimedProfile?.avatar_url || '';
+    }
+    if (raw && (raw.includes('monfreda48.synology.me') || raw.includes('synology.me'))) {
+      try {
+        if (raw.includes('url=')) {
+          const urlParam = raw.split('url=')[1]?.split('&')[0];
+          if (urlParam) return `/api/image-proxy?url=${urlParam}`;
+        }
+      } catch (e) { }
+      return raw.replace(/https?:\/\/[^\/]+/, '');
+    }
+    return raw;
   };
 
   const handleSaveCustomAvatar = (username, newAvatarUrl) => {
@@ -3285,7 +3298,15 @@ const DEFAULT_SEASON_NUM = 19;
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
                 <div className="flex items-center gap-3.5">
                   {pinnedHomeProfile.avatarUrl ? (
-                    <img src={pinnedHomeProfile.avatarUrl} alt={pinnedHomeProfile.username} className="w-12 h-12 rounded-xl border border-emerald-500/60 object-cover shadow-md" />
+                    <img
+                      src={pinnedHomeProfile.avatarUrl}
+                      alt={pinnedHomeProfile.username}
+                      className="w-12 h-12 rounded-xl border border-emerald-500/60 object-cover shadow-md overflow-hidden shrink-0"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = 'https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31030002.jpg';
+                      }}
+                    />
                   ) : (
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-white text-lg shadow-md">
                       {pinnedHomeProfile.username.charAt(0).toUpperCase()}
@@ -3350,43 +3371,7 @@ const DEFAULT_SEASON_NUM = 19;
         {stats && !loading && (
           <div className={`animate-in fade-in slide-in-from-bottom-8 duration-700 ${isMobileView ? 'space-y-5' : 'space-y-8'}`}>
 
-            {/* Subtle Account UID Multi-Site Connection Section */}
-            <div className="bg-gradient-to-r from-[#111827] via-[#0f172a] to-[#111827] border border-slate-700/60 rounded-2xl p-3.5 sm:p-4 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-left">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-xl shrink-0 shadow-md">
-                  🔗
-                </div>
-                <div>
-                  <div className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2 flex-wrap">
-                    <span>Connect Multi-Site Stats with Account UID</span>
-                    {claimedProfile?.uid && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-mono font-bold">
-                        ✓ Connected ({claimedProfile.uid})
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5 leading-normal">
-                    Enter your Marvel Rivals Account UID (e.g. <strong className="text-slate-300 font-mono">70463344</strong>) to link <span className="text-slate-200 font-bold">RivalsTracker</span> (<code className="text-[10px] text-emerald-400">rivalstracker.com/profile/{claimedProfile?.uid || '70463344'}</code>) & <span className="text-slate-200 font-bold">RivalsMeta</span> (<code className="text-[10px] text-emerald-400">rivalsmeta.com/player/{claimedProfile?.uid || '70463344'}</code>).
-                  </p>
-                </div>
-              </div>
 
-              <form onSubmit={handleConnectAccountUid} className="flex items-center gap-2 w-full md:w-auto shrink-0">
-                <input
-                  type="text"
-                  value={userUidInput}
-                  onChange={(e) => setUserUidInput(e.target.value)}
-                  placeholder="Enter UID (e.g. 70463344)..."
-                  className="bg-[#0b101e] border border-slate-700/70 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 w-full md:w-48"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider shadow-md cursor-pointer shrink-0 transition-all hover:scale-105 active:scale-95"
-                >
-                  Connect
-                </button>
-              </form>
-            </div>
 
             {/* Profile Confirmation Banner before committing to track */}
             {(!claimedProfile || claimedProfile.username?.toLowerCase() !== stats.current.username?.toLowerCase()) && (
@@ -3430,12 +3415,16 @@ const DEFAULT_SEASON_NUM = 19;
               }`}>
               <div className="flex items-center gap-4">
                 {/* Profile Picture Avatar Container with Change Picture Trigger Button */}
-                <div className="relative group cursor-pointer" onClick={() => { triggerHaptic('light'); setShowAvatarModal(true); }}>
+                <div className="relative group cursor-pointer rounded-2xl overflow-hidden shrink-0" onClick={() => { triggerHaptic('light'); setShowAvatarModal(true); }}>
                   {getDisplayAvatar(stats.current.username) ? (
                     <img
                       src={getDisplayAvatar(stats.current.username)}
                       alt={stats.current.username}
                       className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-emerald-500/60 shadow-lg shadow-emerald-500/20 object-cover group-hover:opacity-80 transition-opacity"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = 'https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31030002.jpg';
+                      }}
                     />
                   ) : (
                     <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-white text-2xl shadow-lg shadow-emerald-500/20 group-hover:opacity-80 transition-opacity">
@@ -5539,7 +5528,11 @@ const DEFAULT_SEASON_NUM = 19;
                         <img
                           src={getDisplayAvatar(claimedProfile.username)}
                           alt={claimedProfile.username}
-                          className="w-10 h-10 rounded-2xl border-2 border-emerald-400 object-cover shadow-md shrink-0"
+                          className="w-10 h-10 rounded-2xl border-2 border-emerald-400 object-cover shadow-md shrink-0 overflow-hidden"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = 'https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31030002.jpg';
+                          }}
                         />
                       ) : (
                         <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-white text-base shadow-md shrink-0">
@@ -6408,7 +6401,11 @@ const DEFAULT_SEASON_NUM = 19;
                 <img
                   src={getDisplayAvatar(stats.current.username)}
                   alt={stats.current.username}
-                  className="w-16 h-16 rounded-2xl border-2 border-emerald-500 shadow-md object-cover"
+                  className="w-16 h-16 rounded-2xl border-2 border-emerald-500 shadow-md object-cover overflow-hidden shrink-0"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = 'https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31030002.jpg';
+                  }}
                 />
               ) : (
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-white text-2xl shadow-md">
