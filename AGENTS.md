@@ -165,39 +165,65 @@ When a build, lint, or verification command fails during an autonomous session, 
 
 ---
 
-## Local Emulator Directives
+## Mandatory Android Emulator Directives & Verification Loop
 
-Configure runtime and testing directives to target the currently running Android Studio emulator on screen as the default execution device. Do not launch headless emulators, cloud devices, or ask for a device selection prompt if an emulator is already booted.
+Do not consider any frontend or backend task complete without running and validating on the active emulator. Follow this strict execution loop:
 
-### Execution Directives
+### 1. Device Handshake Check
+Before building, confirm ADB connectivity:
+```bash
+adb devices
+```
+If no device is detected or listed as offline:
+1. Run `adb kill-server && adb start-server`
+2. If still missing, launch the default AVD:
+   `emulator -avd $(emulator -list-avds | Select-Object -First 1) -no-snapshot-load &`
+3. Wait until booted: `adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done'`
 
-1. **Auto-Detect Running Emulator**:
-   - Query running devices using `adb devices`.
-   - Identify the active local emulator instance (typically `emulator-5554`).
-   - If multiple devices appear, bind commands explicitly to the emulator using the `-s <device_id>` flag (e.g., `adb -s emulator-5554 ...`).
+### 2. Mandatory Build, Deploy & Launch Loop
+Every time code is modified in `frontend/android/` or `backend/`:
+1. Compile and install without hanging the terminal:
+   ```powershell
+   cd frontend/android
+   .\gradlew.bat installDebug --no-daemon
+   ```
+2. Launch the main activity:
+   ```bash
+   adb shell am start -n com.meowdy5000.stattracker/.MainActivity
+   ```
+3. Wait 3 seconds for UI rendering:
+   ```cmd
+   timeout /t 3 /nobreak > nul
+   ```
 
-2. **Default Run & Install Configuration**:
-   - When building and testing the app, automatically install and launch directly on this active emulator:
-     ```bash
-     # Ensure target emulator is detected
-     adb devices
-     
-     # Install the debug build onto the active emulator
-     ./gradlew installDebug
-     
-     # Launch the main activity directly
-     adb shell am start -n com.meowdy5000.stattracker/.MainActivity
-     ```
+### 3. Automated UI Inspection & Verification
+After launching:
+1. Trigger the search for "Meowdy 5000":
+   ```bash
+   adb shell input keyevent 84
+   adb shell input text "Meowdy%s5000"
+   adb shell input keyevent 66
+   ```
+2. Wait 6 seconds for network data:
+   ```cmd
+   timeout /t 6 /nobreak > nul
+   ```
+3. Capture the emulator screen and pull it locally:
+   ```bash
+   adb shell screencap -p /sdcard/screen_verify.png
+   adb pull /sdcard/screen_verify.png ./screen_verify.png
+   ```
+4. Dump the UI hierarchy to inspect the rendered text:
+   ```bash
+   adb shell uiautomator dump /sdcard/ui_verify.xml
+   adb pull /sdcard/ui_verify.xml ./ui_verify.xml
+   ```
 
-3. **Logcat & Screen Inspection**:
-   - For troubleshooting, UI inspection, or error reproduction, pipe logs directly from this emulator target:
-     ```bash
-     adb logcat -d -s AndroidRuntime:E <app_tag>:*
-     ```
-   - If UI state verification is needed, capture a screenshot via ADB and inspect the output:
-     ```bash
-     adb exec-out screencap -p > /tmp/screen.png
-     ```
+### 4. Definition of Done
+Report your final status ONLY after you have:
+- Pulled and visually inspected `screen_verify.png`.
+- Verified that the relevant cards on `ui_verify.xml` are populated.
+- Confirmed no `AndroidRuntime` crashes exist in `adb logcat -d`.
 
 ---
 
@@ -208,7 +234,7 @@ You are operating under full autonomous test, debug, and sub-agent delegation au
 ### 1. Autonomous Self-Testing & Troubleshooting Loop
 
 1. **Active Target**: 
-   - Execute all builds and runtime tests against the active Android Studio emulator on screen via ADB (`./gradlew installDebug` and `adb shell am start -n com.meowdy5000.stattracker/.MainActivity`).
+   - Execute all builds and runtime tests against the active Android Studio emulator on screen via ADB (`.\gradlew.bat installDebug --no-daemon` and `adb shell am start -n com.meowdy5000.stattracker/.MainActivity`).
 
 2. **Automated Error Trapping**:
    - If a build fails or an `AndroidRuntime` crash occurs on the emulator:
@@ -222,7 +248,7 @@ When dealing with multi-faceted bugs or feature builds, split and delegate respo
 
 - **Diagnostics Sub-Agent**: Task with parsing Logcat crashes, reading stack traces, and locating offending file lines or lifecycle hooks.
 - **Implementation Sub-Agent**: Task with refactoring Kotlin classes, updating XML resources, or correcting Gradle dependencies based on diagnostic findings.
-- **Verification Sub-Agent (`emulator-tester` skill)**: Automatically dispatches after every fix to compile (`./gradlew installDebug`), reinstall on `emulator-5554`, perform multi-user search tests (`Meowdy 5000`, secondary IGNs), inspect right-anchored drawer and Kinetic Purple theme, verify Logcat logs for `AndroidRuntime` errors, and pull verification screenshots (`adb exec-out screencap -p > scratch/emulator_verification.png`).
+- **Verification Sub-Agent (`emulator-tester` skill)**: Automatically dispatches after every fix to execute the mandatory 4-step verification loop (ADB device handshake, compile & install, UI dump/screenshot, Logcat verification).
 
 ### 3. Operating Contract
 
@@ -231,5 +257,6 @@ When dealing with multi-faceted bugs or feature builds, split and delegate respo
   1. All 3 repair loops fail to resolve the issue.
   2. You encounter an unresolvable dependency conflict that requires architectural decision-making.
   3. A critical security or signing secret is missing.
+
 
 

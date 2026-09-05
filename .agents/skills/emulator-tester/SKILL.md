@@ -5,73 +5,82 @@ description: Automated post-fix feature & search function verification workflow 
 
 # Emulator Feature & Search Verification Sub-Agent Skill
 
-Use this skill when spawning or operating a **Verification Sub-Agent** to validate fixes, UI layouts, and search functionality on the active Android Studio emulator.
+Use this skill when performing mandatory Android emulator testing and ADB verification for all tasks (frontend and backend).
 
 ---
 
-## 1. Pre-Flight Verification Environment
+## 1. Device Handshake Check
 
-1. **Target Device**: Ensure `emulator-5554` (or active booted emulator) is detected via `adb devices`.
-2. **Backend Server**: Ensure Python Uvicorn server is active on `http://0.0.0.0:8000` (`python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000`).
-3. **App Build & Launch**:
+Before building, confirm ADB connectivity:
+```bash
+adb devices
+```
+If no device is detected or listed as offline:
+1. Restart ADB server:
    ```bash
-   cd frontend/android
-   .\gradlew.bat installDebug
-   adb shell am start -n com.meowdy5000.stattracker/.MainActivity
+   adb kill-server && adb start-server
+   ```
+2. If still missing, launch the default AVD:
+   ```powershell
+   emulator -avd (emulator -list-avds | Select-Object -First 1) -no-snapshot-load
+   ```
+3. Wait until booted:
+   ```bash
+   adb wait-for-device shell "while [ -z \$(getprop sys.boot_completed) ]; do sleep 1; done"
    ```
 
 ---
 
-## 2. Automated Testing Suite
+## 2. Mandatory Build, Deploy & Launch Loop
 
-Execute the following test steps systematically:
+Every time code is modified in `app/` (or `frontend/android/`) or `backend/`:
 
-### Test 1: Initial Profile & Cache Validation
-- Wait 3 seconds post-launch.
-- Capture screen: `adb exec-out screencap -p > scratch/test_step1_launch.png`.
-- Confirm initial lookup loads cleanly without rendering `⚠️ Profile Unavailable` banner.
-
-### Test 2: Primary Player Search (`Meowdy 5000`)
-- Trigger search for target user `Meowdy 5000`:
-  ```bash
-  # Tap search text field, input username, and submit
-  adb shell input keyevent 66  # Enter key
-  ```
-- Capture screen: `adb exec-out screencap -p > scratch/test_step2_meowdy.png`.
-- Verify presence of 6 card sections:
-  1. Season Banner ("Season 9.5")
-  2. Competitive Rank & Skill Rating ("Grandmaster III", "4120 SR")
-  3. Combat Overview (Win Rate 64.5%, KDA 3.42)
-  4. Per 10-Minute Rates (Damage/10m 14850, Healing/10m 9200)
-  5. Lifetime Totals & Combat Records
-  6. Hero Performance Breakdown (Magneto, Hela, Luna Snow, Venom)
-
-### Test 3: Alternative Player Search (`HelaMain99`)
-- Clear search bar and type new username.
-- Submit search and wait 3 seconds.
-- Capture screen: `adb exec-out screencap -p > scratch/test_step3_alt_player.png`.
-- Verify dynamic procedural profile generation works smoothly without `Player Not Found` alert.
-
-### Test 4: UI Features & Navigation Drawer
-- Open Right-Anchored Navigation Drawer (tap top-right hamburger icon).
-- Verify Kinetic Purple theme active.
-- Verify settings items ("Check for Updates", "Report Issue", "Donate").
-
-### Test 5: Logcat Diagnostics & Error Trapping
-- Dump runtime exceptions:
-  ```bash
-  adb logcat -d -s AndroidRuntime:E DashboardSearch:* System.err:*
-  ```
-- Ensure zero fatal crashes or uncaught exceptions.
+1. Compile and install without hanging the terminal:
+   ```powershell
+   cd frontend/android
+   .\gradlew.bat installDebug --no-daemon
+   ```
+2. Launch the main dashboard activity:
+   ```bash
+   adb shell am start -n com.meowdy5000.stattracker/.MainActivity
+   ```
+3. Wait 3 seconds for UI rendering:
+   ```cmd
+   timeout /t 3 /nobreak > nul
+   ```
 
 ---
 
-## 3. Reporting Requirements
+## 3. Automated UI Inspection & Verification
 
-The sub-agent must generate a concise pass/fail summary report containing:
-- [x] APK build & install status
-- [x] Backend connectivity status (`0.0.0.0:8000`)
-- [x] Primary search verification (`Meowdy 5000`)
-- [x] Secondary player search verification
-- [x] Zero Logcat `AndroidRuntime` crashes
-- Embedded screenshot file paths for visual proof.
+After launching:
+
+1. Trigger the search for "Meowdy 5000":
+   ```bash
+   adb shell input keyevent 84
+   adb shell input text "Meowdy%s5000"
+   adb shell input keyevent 66
+   ```
+2. Wait 6 seconds for network data response:
+   ```cmd
+   timeout /t 6 /nobreak > nul
+   ```
+3. Capture the emulator screen and pull it locally:
+   ```bash
+   adb shell screencap -p /sdcard/screen_verify.png
+   adb pull /sdcard/screen_verify.png ./screen_verify.png
+   ```
+4. Dump the UI hierarchy to inspect the rendered text:
+   ```bash
+   adb shell uiautomator dump /sdcard/ui_verify.xml
+   adb pull /sdcard/ui_verify.xml ./ui_verify.xml
+   ```
+
+---
+
+## 4. Definition of Done
+
+Report your final status ONLY after you have:
+1. Pulled and visually inspected `screen_verify.png`.
+2. Verified that the relevant cards on `ui_verify.xml` are populated.
+3. Confirmed no `AndroidRuntime` crashes exist in `adb logcat -d -s AndroidRuntime:E`.
