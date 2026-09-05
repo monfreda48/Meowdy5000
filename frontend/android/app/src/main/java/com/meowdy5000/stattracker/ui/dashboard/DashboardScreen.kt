@@ -779,16 +779,29 @@ fun DashboardScreen(
                             // 9. Support Development
                             Button(
                                 onClick = { showDonateDialog = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                shape = RoundedCornerShape(50),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFE91E63),
+                                    contentColor = Color.White
+                                ),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("🍕 Donate with PayPal", color = Color.Black, fontWeight = FontWeight.Bold)
+                                Text("🍕 Donate with PayPal", fontWeight = FontWeight.Bold)
                             }
 
-                            Spacer(Modifier.height(16.dp))
-                            Text("v${com.meowdy5000.stattracker.BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), modifier = Modifier.align(Alignment.CenterHorizontally).padding(16.dp))
-
                             Spacer(Modifier.height(12.dp))
+
+                            Text(
+                                text = "v${com.meowdy5000.stattracker.BuildConfig.VERSION_NAME} (Build ${com.meowdy5000.stattracker.BuildConfig.VERSION_CODE})",
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.CenterHorizontally)
+                            )
+
+                            Spacer(modifier = Modifier.height(48.dp))
                         }
                     }
                 }
