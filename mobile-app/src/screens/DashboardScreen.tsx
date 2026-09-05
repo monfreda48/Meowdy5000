@@ -92,7 +92,7 @@ export const DashboardScreen: React.FC = () => {
     <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       {/* Top Navigation Bar */}
       <View style={[styles.topBar, { backgroundColor: themeColors.surface, borderBottomColor: themeColors.cardBorder }]}>
-        <Text style={[styles.topBarTitle, { color: themeColors.text }]}>Meowdy 5000 Rivals Tracker</Text>
+        <Text style={[styles.topBarTitle, { color: themeColors.text }]}>M5 Stat Tracker</Text>
         
         <TouchableOpacity onPress={() => setShowThemePicker(!showThemePicker)} style={[styles.themeBtn, { backgroundColor: themeColors.primary }]}>
           <Text style={styles.themeBtnText}>🎨 Menu</Text>
