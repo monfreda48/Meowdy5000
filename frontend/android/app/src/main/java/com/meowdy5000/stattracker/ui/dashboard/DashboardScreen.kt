@@ -991,7 +991,7 @@ fun DashboardScreen(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Search player (e.g. Meowdy 5000)") },
+                        placeholder = { Text("Search player username...") },
                         trailingIcon = {
                             IconButton(onClick = { performSearch(searchQuery) }) {
                                 Icon(Icons.Default.Search, contentDescription = "Search")
@@ -1091,7 +1091,7 @@ fun DashboardScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "Search for your player username above (e.g. Meowdy 5000) to inspect stats and claim your profile.",
+                                    text = "Search for your player username above to inspect stats and claim your profile.",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
                                     textAlign = TextAlign.Center

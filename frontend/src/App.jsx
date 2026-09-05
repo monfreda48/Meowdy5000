@@ -3276,7 +3276,7 @@ const DEFAULT_SEASON_NUM = 19;
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Enter Username (e.g. Meowdy 5000)..."
+                    placeholder="Enter Username..."
                     className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white placeholder-slate-500 ${isMobileView ? 'py-2.5 text-sm' : 'py-3.5 sm:py-4 text-base sm:text-lg'
                       }`}
                     required
