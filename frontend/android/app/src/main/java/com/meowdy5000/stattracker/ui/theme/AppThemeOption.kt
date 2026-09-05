@@ -8,7 +8,8 @@ enum class AppThemeOption(val displayName: String) {
     DEFAULT("Default"),
     KINETIC_PURPLE("Kinetic Purple"),
     GAMMA_GREEN("Gamma Green"),
-    JEAN_GREY("Jean Grey");
+    JEAN_GREY("Jean Grey"),
+    OOPS_ALL_HALLWAYS("Oops, All Hallways");
 
     fun getColorScheme(): ColorScheme {
         return when (this) {
@@ -45,6 +46,21 @@ enum class AppThemeOption(val displayName: String) {
                 surface = Color(0xFF1A1A1E), // Dark Slate Surface
                 onSurface = Color(0xFFF3F4F6), // Crisp Silver Text
                 surfaceVariant = Color(0xFF2B2B30) // Graphite Surface Variant
+            )
+
+            OOPS_ALL_HALLWAYS -> darkColorScheme(
+                primary = Color(0xFFE53935), // Vivid Blood / Crimson Red
+                onPrimary = Color(0xFFFFFFFF),
+                primaryContainer = Color(0xFF3E1417), // Deep Hallway Maroon
+                onPrimaryContainer = Color(0xFFEDE0E1),
+                secondary = Color(0xFFFF5252), // Warning Rust / Neon Red Accent
+                onSecondary = Color(0xFFFFFFFF),
+                background = Color(0xFF120B0C), // Deep Gritty Hallway Charcoal
+                onBackground = Color(0xFFEDE0E1),
+                surface = Color(0xFF1A1213), // Dark Shadow Slate with subtle red undertone
+                onSurface = Color(0xFFEDE0E1), // Clean Off-White Text
+                surfaceVariant = Color(0xFF24191B), // Dark Shadow Slate Variant
+                onSurfaceVariant = Color(0xFFC7B4B6) // Muted Rose-Gray for secondary labels
             )
         }
     }
