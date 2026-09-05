@@ -2947,7 +2947,7 @@ const DEFAULT_SEASON_NUM = 19;
           </div>
 
           <h1 className="text-xl sm:text-3xl font-black text-white uppercase tracking-wider mb-2">
-            M5 STAT TRACKER
+            M5 RIVALS TRACKER
           </h1>
 
           <p className="text-xs text-slate-400 font-medium mt-3 flex items-center gap-2">
@@ -3087,8 +3087,8 @@ const DEFAULT_SEASON_NUM = 19;
               <span className="relative z-10 drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]">M5</span>
             </div>
             <span className="text-xs sm:text-lg md:text-xl font-black tracking-wider text-white uppercase truncate">
-              <span className="sm:hidden">M5 STAT TRACKER</span>
-              <span className="hidden sm:inline">M5 STAT TRACKER</span>
+              <span className="sm:hidden">M5 RIVALS TRACKER</span>
+              <span className="hidden sm:inline">M5 RIVALS TRACKER</span>
             </span>
           </div>
 
@@ -3179,7 +3179,7 @@ const DEFAULT_SEASON_NUM = 19;
         <div className={`flex flex-col items-center text-center ${isMobileView ? 'space-y-2' : 'space-y-3 sm:space-y-6'}`}>
           <h1 className={`font-black tracking-tight text-white uppercase w-full ${isMobileView ? 'text-xl sm:text-3xl' : 'text-2xl sm:text-5xl md:text-6xl lg:text-7xl'
             }`}>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">M5 STAT TRACKER</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">M5 RIVALS TRACKER</span>
           </h1>
 
           {/* Active Season & Upcoming Season 10 Status Pill */}

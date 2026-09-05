@@ -1,6 +1,6 @@
 {
   "appId": "com.meowdy5000.stattracker",
-  "appName": "Meowdy 5000 Stat Tracker",
+  "appName": "M5 Rivals Tracker",
   "webDir": "dist",
   "server": {
     "androidScheme": "https",
