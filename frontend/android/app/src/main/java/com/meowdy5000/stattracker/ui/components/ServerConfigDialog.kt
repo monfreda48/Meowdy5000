@@ -25,7 +25,7 @@ fun ServerConfigDialog(
         text = {
             Column {
                 Text(
-                    text = "Specify a custom host URL (defaults to production backend https://monfreda48.synology.me):",
+                    text = "Specify a custom host URL (defaults to production backend https://meowdy5000.synology.me):",
                     style = MaterialTheme.typography.bodySmall
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -33,7 +33,7 @@ fun ServerConfigDialog(
                     value = inputUrl,
                     onValueChange = { inputUrl = it },
                     label = { Text("Backend URL") },
-                    placeholder = { Text("e.g. https://monfreda48.synology.me") },
+                    placeholder = { Text("e.g. https://meowdy5000.synology.me") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )

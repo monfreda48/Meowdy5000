@@ -79,7 +79,7 @@ class DynamicHostInterceptor(private val context: Context) : Interceptor {
         }
 
         // 2. Production HTTPS Endpoint (Primary default)
-        candidates.add("https://monfreda48.synology.me")
+        candidates.add("https://meowdy5000.synology.me")
 
         // 3. Previously verified working URL
         prefs.getString(KEY_ACTIVE_URL, null)?.let { active ->
@@ -94,6 +94,6 @@ class DynamicHostInterceptor(private val context: Context) : Interceptor {
         if (!active.isNullOrEmpty()) {
             return active
         }
-        return getCandidateEndpoints().firstOrNull() ?: "https://monfreda48.synology.me/"
+        return getCandidateEndpoints().firstOrNull() ?: "https://meowdy5000.synology.me/"
     }
 }

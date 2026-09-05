@@ -10,7 +10,7 @@ import java.net.URL
 import java.util.concurrent.TimeUnit
 
 object NetworkModule {
-    const val BASE_URL = "https://monfreda48.synology.me/"
+    const val BASE_URL = "https://meowdy5000.synology.me/"
     const val CONNECT_TIMEOUT_SECONDS = 10L
     const val READ_TIMEOUT_SECONDS = 10L
 

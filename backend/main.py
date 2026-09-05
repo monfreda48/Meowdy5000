@@ -329,3 +329,26 @@ async def get_seasons_list():
 async def get_stats_legacy(query: str = Query(...), season: str = Query("19")):
     """Backward compatibility stats lookup route."""
     return await scrape_player_profile(query)
+
+FRONTEND_DIST = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"))
+
+@app.get("/")
+async def serve_root():
+    index_path = os.path.join(FRONTEND_DIST, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"status": "Meowdy 5000 Backend Running"}
+
+@app.get("/{path:path}")
+async def serve_spa(path: str):
+    if path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="API route not found")
+    file_path = os.path.join(FRONTEND_DIST, path)
+    if path != "" and os.path.exists(file_path) and os.path.isfile(file_path):
+        return FileResponse(file_path)
+    index_path = os.path.join(FRONTEND_DIST, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"status": "Meowdy 5000 Backend Running"}
+
+

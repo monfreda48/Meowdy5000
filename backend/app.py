@@ -6,7 +6,8 @@ import sys
 from datetime import datetime
 import urllib.parse
 import httpx
-from flask import Flask, request, jsonify, Response
+import os
+from flask import Flask, request, jsonify, Response, send_from_directory
 from flask_cors import CORS
 
 # Ensure UTF-8 output encoding for stdout/stderr on Windows
@@ -15,7 +16,10 @@ if sys.stdout:
 if sys.stderr:
     sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_DIST = os.path.abspath(os.path.join(BASE_DIR, "..", "frontend", "dist"))
+
+app = Flask(__name__, static_folder=FRONTEND_DIST, static_url_path="")
 CORS(app)
 
 import os
@@ -540,6 +544,15 @@ def handle_claim_profile():
                 }
                 for r in rows
             ])
+
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve_spa(path):
+    if path != "" and app.static_folder and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    if app.static_folder and os.path.exists(os.path.join(app.static_folder, "index.html")):
+        return send_from_directory(app.static_folder, "index.html")
+    return jsonify({"status": "Meowdy 5000 Backend Running"}), 200
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
