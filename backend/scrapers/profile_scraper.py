@@ -234,23 +234,28 @@ async def scrape_player_profile(username: str, profile_url: Optional[str] = None
         base_name = re.sub(r"\(.*?\)", "", raw_name).strip()
         liquipedia_url = liquipedia_icons.get(base_name) or liquipedia_icons.get(raw_name)
 
-        if liquipedia_url:
-            encoded_target = urllib.parse.quote(liquipedia_url, safe='')
+        # 1. Prioritize Tracker.gg's native square card icon
+        target_icon = raw_icon
+        
+        # Clean Tracker CDN wrapper if nested
+        if target_icon and ("url=" in target_icon or "https%3A%2F%2F" in target_icon):
+            parts = target_icon.split("https%3A%2F%2F")
+            if len(parts) > 1:
+                target_icon = "https://" + urllib.parse.unquote(parts[1]).split("?")[0]
+
+        # 2. Fallback to known Tracker.gg CDN square ID if missing
+        if not target_icon and base_name in known_hero_ids:
+            target_icon = f"https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/heroes/square/{known_hero_ids[base_name]}.png"
+
+        # 3. Fallback to Liquipedia only if no Tracker icon exists
+        if not target_icon and liquipedia_url:
+            target_icon = liquipedia_url
+
+        if target_icon:
+            encoded_target = urllib.parse.quote(target_icon, safe='')
             h_icon = f"https://monfreda48.synology.me/api/image-proxy?url={encoded_target}"
         else:
-            if raw_icon and ("url=" in raw_icon or "https%3A%2F%2F" in raw_icon):
-                parts = raw_icon.split("https%3A%2F%2F")
-                if len(parts) > 1:
-                    raw_icon = "https://" + urllib.parse.unquote(parts[1]).split("?")[0]
-
-            if not raw_icon and base_name in known_hero_ids:
-                raw_icon = f"https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/heroes/square/{known_hero_ids[base_name]}.png"
-
-            if raw_icon:
-                encoded_target = urllib.parse.quote(raw_icon, safe='')
-                h_icon = f"https://monfreda48.synology.me/api/image-proxy?url={encoded_target}"
-            else:
-                h_icon = None
+            h_icon = None
 
         h_matches = int(h_stats.get("matchesPlayed", {}).get("value", 0))
         h_won = int(h_stats.get("matchesWon", {}).get("value", 0))

@@ -199,9 +199,10 @@ fun DashboardScreen(
     }
 
     val performSearch: (String) -> Unit = { queryText ->
-        val targetName = queryText.replace("\r", "").replace("\n", "").trim().ifBlank { "Meowdy 5000" }
-        searchQuery = queryText
-        isSearching = true
+        val targetName = queryText.replace("\r", "").replace("\n", "").trim()
+        if (targetName.isNotBlank()) {
+            searchQuery = queryText
+            isSearching = true
         searchProgress = 0.15f
         searchProgressMsg = marvelQuotes.random()
         Log.e("DashboardSearch", "Initiating search for targetName='$targetName'")
@@ -291,8 +292,9 @@ fun DashboardScreen(
             }
         }
     }
+}
 
-    // Instant offline loading on launch (or automatic initial search)
+    // Instant offline loading on launch (without auto-searching on startup)
     LaunchedEffect(Unit) {
         fetchSeasonInfo(false)
         val cached = snapshotManager.loadLatestProfile()
@@ -307,12 +309,7 @@ fun DashboardScreen(
             val hasValidData = overviewObj != null && overviewObj.length() > 0 && winRateStr != "N/A" && tierName != "Unranked" && !isFallback
             if (root != null && !hasError && hasValidData) {
                 loadedDataJson = cached
-            } else {
-                snapshotManager.clearCache()
-                performSearch("Meowdy 5000")
             }
-        } else {
-            performSearch("Meowdy 5000")
         }
     }
 
