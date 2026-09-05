@@ -51,13 +51,14 @@ app.add_middleware(
 # Image Proxy Endpoint
 @app.api_route("/api/image-proxy", methods=["GET", "HEAD"])
 async def proxy_image(url: str = Query(...)):
+    referer = "https://liquipedia.net/" if "liquipedia" in url else "https://tracker.gg/"
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-        "Referer": "https://tracker.gg/",
+        "Referer": referer,
         "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
     }
-    async with httpx.AsyncClient(follow_redirects=True, timeout=10.0) as client:
+    async with httpx.AsyncClient(follow_redirects=True, timeout=12.0) as client:
         try:
             resp = await client.get(url, headers=headers)
             if resp.status_code == 200:
@@ -66,6 +67,12 @@ async def proxy_image(url: str = Query(...)):
             return Response(status_code=resp.status_code)
         except Exception as e:
             return Response(status_code=500, content=str(e).encode('utf-8'))
+
+@app.post("/api/heroes/sync-icons")
+async def refresh_hero_icons():
+    from backend.scrapers.liquipedia_scraper import sync_liquipedia_heroes
+    data = await sync_liquipedia_heroes(force=True)
+    return {"status": "success", "heroes_count": len(data)}
 
 
 

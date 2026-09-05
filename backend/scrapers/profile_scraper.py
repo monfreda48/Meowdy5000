@@ -1,7 +1,9 @@
 import asyncio
+import re
 import urllib.parse
 from typing import Dict, Any, Optional
 from playwright.async_api import async_playwright
+from backend.scrapers.liquipedia_scraper import sync_liquipedia_heroes
 
 async def scrape_player_profile(username: str, profile_url: Optional[str] = None) -> Dict[str, Any]:
     clean_username = username.strip()
@@ -220,27 +222,35 @@ async def scrape_player_profile(username: str, profile_url: Optional[str] = None
         avatar_url = f"http://10.0.2.2:8000/api/image-proxy?url={encoded_avatar}"
 
     # 5. Top Heroes Breakdown with Portraits
+    liquipedia_icons = await sync_liquipedia_heroes(force=False)
     heroes_list = []
     for h in [s for s in segments if s.get("type") == "hero"]:
         h_stats = h.get("stats", {})
         h_meta = h.get("metadata", {})
         h_name = h_meta.get("name", "Unknown")
         raw_icon = h_meta.get("imageUrl") or h_meta.get("iconUrl")
-        
-        base_name = h_name.lower().split("(")[0].strip()
-        if raw_icon and ("url=" in raw_icon or "https%3A%2F%2F" in raw_icon):
-            parts = raw_icon.split("https%3A%2F%2F")
-            if len(parts) > 1:
-                raw_icon = "https://" + urllib.parse.unquote(parts[1]).split("?")[0]
 
-        if not raw_icon and base_name in known_hero_ids:
-            raw_icon = f"https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/heroes/square/{known_hero_ids[base_name]}.png"
+        raw_name = h_name.lower().strip()
+        base_name = re.sub(r"\(.*?\)", "", raw_name).strip()
+        liquipedia_url = liquipedia_icons.get(base_name) or liquipedia_icons.get(raw_name)
 
-        if raw_icon:
-            encoded_target = urllib.parse.quote(raw_icon, safe='')
+        if liquipedia_url:
+            encoded_target = urllib.parse.quote(liquipedia_url, safe='')
             h_icon = f"http://10.0.2.2:8000/api/image-proxy?url={encoded_target}"
         else:
-            h_icon = None
+            if raw_icon and ("url=" in raw_icon or "https%3A%2F%2F" in raw_icon):
+                parts = raw_icon.split("https%3A%2F%2F")
+                if len(parts) > 1:
+                    raw_icon = "https://" + urllib.parse.unquote(parts[1]).split("?")[0]
+
+            if not raw_icon and base_name in known_hero_ids:
+                raw_icon = f"https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/heroes/square/{known_hero_ids[base_name]}.png"
+
+            if raw_icon:
+                encoded_target = urllib.parse.quote(raw_icon, safe='')
+                h_icon = f"http://10.0.2.2:8000/api/image-proxy?url={encoded_target}"
+            else:
+                h_icon = None
 
         h_matches = int(h_stats.get("matchesPlayed", {}).get("value", 0))
         h_won = int(h_stats.get("matchesWon", {}).get("value", 0))

@@ -1,6 +1,5 @@
 package com.meowdy5000.stattracker.ui.dashboard
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -15,11 +14,11 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun SeasonBannerCard(
-    seasonNumber: String = "9.5",
-    seasonTitle: String = "THE MYSTERY OF THEBES",
-    newHeroName: String = "The Hood",
-    daysLeft: Int = 6,
-    progressPercentage: Float = 0.78f
+    seasonNumber: String,
+    seasonTitle: String,
+    newHeroName: String,
+    daysLeft: Int,
+    progressPercentage: Float
 ) {
     Card(
         modifier = Modifier

@@ -3,6 +3,7 @@ package com.meowdy5000.stattracker.data
 import android.content.Context
 import coil.ImageLoader
 import coil.util.DebugLogger
+import com.meowdy5000.stattracker.data.network.DynamicHostInterceptor
 import okhttp3.OkHttpClient
 import java.net.HttpURLConnection
 import java.net.URL
@@ -13,9 +14,38 @@ object NetworkModule {
     const val CONNECT_TIMEOUT_SECONDS = 10L
     const val READ_TIMEOUT_SECONDS = 10L
 
-    fun getSearchUrl(): String = "${BASE_URL}api/search"
-    fun getHealthUrl(): String = "${BASE_URL}api/health"
-    fun getReportErrorUrl(): String = "${BASE_URL}api/report-error"
+    fun getSearchUrl(context: Context? = null): String {
+        val base = context?.let { getBaseUrl(it) } ?: BASE_URL
+        val cleanBase = if (base.endsWith("/")) base else "$base/"
+        return "${cleanBase}api/search"
+    }
+
+    fun getHealthUrl(context: Context? = null): String {
+        val base = context?.let { getBaseUrl(it) } ?: BASE_URL
+        val cleanBase = if (base.endsWith("/")) base else "$base/"
+        return "${cleanBase}api/health"
+    }
+
+    fun getReportErrorUrl(context: Context? = null): String {
+        val base = context?.let { getBaseUrl(it) } ?: BASE_URL
+        val cleanBase = if (base.endsWith("/")) base else "$base/"
+        return "${cleanBase}api/report-error"
+    }
+
+    fun getBaseUrl(context: Context): String {
+        val interceptor = DynamicHostInterceptor(context)
+        return interceptor.resolveBaseUrl()
+    }
+
+    fun provideOkHttpClient(context: Context): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(DynamicHostInterceptor(context))
+            .connectTimeout(3, TimeUnit.SECONDS) // Fast timeout for quick failover between networks
+            .readTimeout(20, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .build()
+    }
 
     fun createConnection(urlString: String): HttpURLConnection {
         val conn = URL(urlString).openConnection() as HttpURLConnection
@@ -30,17 +60,7 @@ object ImageLoaderProvider {
 
     fun get(context: Context): ImageLoader {
         if (loaderInstance == null) {
-            val client = OkHttpClient.Builder()
-                .addInterceptor { chain ->
-                    val request = chain.request().newBuilder()
-                        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36")
-                        .header("Referer", "https://tracker.gg/")
-                        .build()
-                    chain.proceed(request)
-                }
-                .connectTimeout(15, TimeUnit.SECONDS)
-                .readTimeout(15, TimeUnit.SECONDS)
-                .build()
+            val client = NetworkModule.provideOkHttpClient(context)
 
             loaderInstance = ImageLoader.Builder(context.applicationContext)
                 .okHttpClient(client)

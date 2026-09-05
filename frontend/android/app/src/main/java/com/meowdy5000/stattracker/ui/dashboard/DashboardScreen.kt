@@ -41,11 +41,16 @@ import androidx.compose.ui.unit.sp
 import com.meowdy5000.stattracker.data.LocalSnapshotManager
 import com.meowdy5000.stattracker.data.NetworkModule
 
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import com.meowdy5000.stattracker.notifications.DailyScheduler
 import com.meowdy5000.stattracker.storage.ApkUpdateManager
 import com.meowdy5000.stattracker.storage.PersistentSafStorageManager
+import androidx.compose.material.icons.filled.Settings
 import com.meowdy5000.stattracker.ui.components.ExpandableStatCard
 import com.meowdy5000.stattracker.ui.components.NotificationTimePickerDialog
+import com.meowdy5000.stattracker.ui.components.ServerConfigDialog
 import com.meowdy5000.stattracker.ui.theme.AppThemeOption
 import com.meowdy5000.stattracker.ui.theme.ThemeViewModel
 import com.meowdy5000.stattracker.updater.AppUpdateManager
@@ -71,6 +76,42 @@ fun DashboardScreen(
     val updateManager = remember { AppUpdateManager(context) }
     val updateStatus by updateManager.status.collectAsState()
 
+    var seasonNumber by remember { mutableStateOf("9.5") }
+    var seasonTitle by remember { mutableStateOf("THE MYSTERY OF THEBES") }
+    var newHeroName by remember { mutableStateOf("The Hood") }
+    var seasonDaysLeft by remember { mutableStateOf(6) }
+    var seasonProgressPct by remember { mutableStateOf(0.78f) }
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    val fetchSeasonInfo: (Boolean) -> Unit = { force ->
+        scope.launch {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    val baseUrl = NetworkModule.getBaseUrl(context)
+                    val cleanBase = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
+                    val urlStr = "${cleanBase}api/season/current" + if (force) "?force_refresh=true" else ""
+                    val conn = NetworkModule.createConnection(urlStr)
+                    conn.requestMethod = "GET"
+                    val code = conn.responseCode
+                    if (code == 200) {
+                        val respStr = conn.inputStream.bufferedReader().use { it.readText() }
+                        val json = JSONObject(respStr)
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                            seasonNumber = json.optString("season_number", "9.5")
+                            seasonTitle = json.optString("season_title", "THE MYSTERY OF THEBES")
+                            newHeroName = json.optString("new_hero_name", "The Hood")
+                            seasonDaysLeft = json.optInt("days_left", 6)
+                            val pct = json.optInt("progress_percentage", 78)
+                            seasonProgressPct = (pct / 100f).coerceIn(0f, 1f)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("SeasonFetch", "Failed to fetch season info: ${e.message}")
+                }
+            }
+        }
+    }
+
 
 
     var searchQuery by remember { mutableStateOf("Meowdy 5000") }
@@ -81,7 +122,6 @@ fun DashboardScreen(
 
     // Settings & Options State
     var autoSnapshotEnabled by remember { mutableStateOf(true) }
-    var selectedFavoriteSite by remember { mutableStateOf("merged") }
     var showIssueReportDialog by remember { mutableStateOf(false) }
     var issueNotes by remember { mutableStateOf("") }
     var issueReportSuccess by remember { mutableStateOf(false) }
@@ -91,6 +131,7 @@ fun DashboardScreen(
     var showDonateDialog by remember { mutableStateOf(false) }
     var showClaimDialog by remember { mutableStateOf(false) }
     var claimInputUrl by remember { mutableStateOf("") }
+    var showServerDialog by remember { mutableStateOf(false) }
 
     val rootJson = remember(loadedDataJson) {
         if (loadedDataJson != null) {
@@ -124,7 +165,7 @@ fun DashboardScreen(
         scope.launch {
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 try {
-                    val urlStr = NetworkModule.getSearchUrl()
+                    val urlStr = NetworkModule.getSearchUrl(context)
                     val conn = NetworkModule.createConnection(urlStr)
                     conn.requestMethod = "POST"
                     conn.setRequestProperty("Content-Type", "application/json")
@@ -183,6 +224,7 @@ fun DashboardScreen(
 
     // Instant offline loading on launch (or automatic initial search)
     LaunchedEffect(Unit) {
+        fetchSeasonInfo(false)
         val cached = snapshotManager.loadLatestProfile()
         if (cached != null) {
             val root = try { JSONObject(cached) } catch (e: Exception) { null }
@@ -209,6 +251,10 @@ fun DashboardScreen(
             showTimePicker = false
             isReminderEnabled = DailyScheduler.isReminderEnabled(context)
         })
+    }
+
+    if (showServerDialog) {
+        ServerConfigDialog(onDismiss = { showServerDialog = false })
     }
 
     // Issue Reporting Dialog
@@ -239,7 +285,7 @@ fun DashboardScreen(
                         scope.launch {
                             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                                 try {
-                                    val url = java.net.URL("http://10.0.2.2:8000/api/report-error")
+                                    val url = java.net.URL(NetworkModule.getReportErrorUrl(context))
                                     val conn = url.openConnection() as java.net.HttpURLConnection
                                     conn.requestMethod = "POST"
                                     conn.setRequestProperty("Content-Type", "application/json")
@@ -510,35 +556,6 @@ fun DashboardScreen(
                             HorizontalDivider()
                             Spacer(Modifier.height(12.dp))
 
-                            // 3. Favorite Minimized Site
-                            Text("⭐ FAVORITE MINIMIZED SITE", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                            Spacer(Modifier.height(6.dp))
-                            Text("Select site display for minimized cards:", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f))
-                            Spacer(Modifier.height(8.dp))
-                            val sites = listOf(
-                                "merged" to "⚡ Merged / Best Available",
-                                "trackerGg" to "🌐 Tracker.gg",
-                                "rivalsMeta" to "⚔️ RivalsMeta.com",
-                                "rivalsTracker" to "🎯 RivalsTracker.com"
-                            )
-                            sites.forEach { (key, label) ->
-                                NavigationDrawerItem(
-                                    label = { Text(label, style = MaterialTheme.typography.bodyMedium) },
-                                    selected = (selectedFavoriteSite == key),
-                                    onClick = { selectedFavoriteSite = key },
-                                    colors = NavigationDrawerItemDefaults.colors(
-                                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                        selectedTextColor = MaterialTheme.colorScheme.primary,
-                                        unselectedTextColor = MaterialTheme.colorScheme.onSurface
-                                    ),
-                                    modifier = Modifier.padding(vertical = 1.dp)
-                                )
-                            }
-
-                            Spacer(Modifier.height(16.dp))
-                            HorizontalDivider()
-                            Spacer(Modifier.height(12.dp))
-
                             // 4. Daily Tracking Reminder
                             Text("🔔 DAILY TRACKING REMINDER", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.height(8.dp))
@@ -595,6 +612,21 @@ fun DashboardScreen(
                                 Spacer(Modifier.width(8.dp))
                                 Text("Check for App Release Updates")
                             }
+
+                            Spacer(Modifier.height(8.dp))
+                            NavigationDrawerItem(
+                                label = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(imageVector = Icons.Default.Settings, contentDescription = null)
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text("Server Connection")
+                                    }
+                                },
+                                selected = false,
+                                onClick = {
+                                    showServerDialog = true
+                                }
+                            )
 
                             Spacer(Modifier.height(16.dp))
                             HorizontalDivider()
@@ -710,17 +742,39 @@ fun DashboardScreen(
                         )
                     }
                 ) { innerPadding ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = 16.dp)
-            ) {
-                // 1. Season Banner at Very Top
-                item {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    SeasonBannerCard()
-                }
+                    val pullToRefreshState = rememberPullToRefreshState()
+                    if (pullToRefreshState.isRefreshing) {
+                        LaunchedEffect(true) {
+                            isRefreshing = true
+                            fetchSeasonInfo(true)
+                            performSearch(searchQuery)
+                            isRefreshing = false
+                            pullToRefreshState.endRefresh()
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
+                            .nestedScroll(pullToRefreshState.nestedScrollConnection)
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp)
+                        ) {
+                            // 1. Season Banner at Very Top
+                            item {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                SeasonBannerCard(
+                                    seasonNumber = seasonNumber,
+                                    seasonTitle = seasonTitle,
+                                    newHeroName = newHeroName,
+                                    daysLeft = seasonDaysLeft,
+                                    progressPercentage = seasonProgressPct
+                                )
+                            }
 
                 // 2. Search Bar below Season Banner
                 item {
@@ -961,6 +1015,12 @@ fun DashboardScreen(
                             }
                         }
                     }
+                }
+
+                    PullToRefreshContainer(
+                        state = pullToRefreshState,
+                        modifier = Modifier.align(Alignment.TopCenter)
+                    )
                 }
             }
         }

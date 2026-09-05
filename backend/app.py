@@ -132,9 +132,10 @@ def image_proxy():
     url = request.args.get('url', '')
     if not url:
         return jsonify({"error": "Missing URL parameter"}), 400
+    referer = "https://liquipedia.net/" if "liquipedia" in url else "https://tracker.gg/"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-        "Referer": "https://tracker.gg/",
+        "Referer": referer,
         "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
     }
     try:

@@ -29,11 +29,11 @@ sealed class UpdateStatus {
 }
 
 class AppUpdateManager(private val context: Context) {
-    private val client = OkHttpClient()
+    private val client = com.meowdy5000.stattracker.data.NetworkModule.provideOkHttpClient(context)
     private val _status = MutableStateFlow<UpdateStatus>(UpdateStatus.Idle)
     val status: StateFlow<UpdateStatus> = _status
 
-    suspend fun checkForUpdates(serverBaseUrl: String = "http://10.0.2.2:8000") {
+    suspend fun checkForUpdates(serverBaseUrl: String = com.meowdy5000.stattracker.data.NetworkModule.getBaseUrl(context)) {
         _status.value = UpdateStatus.Checking
         withContext(Dispatchers.IO) {
             try {

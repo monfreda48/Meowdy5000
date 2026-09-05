@@ -13,7 +13,7 @@ import androidx.core.view.WindowCompat
 
 @Composable
 fun DynamicAppTheme(
-    themeOption: AppThemeOption = AppThemeOption.JEAN_GREY,
+    themeOption: AppThemeOption = AppThemeOption.DEFAULT,
     content: @Composable () -> Unit
 ) {
     val colorScheme = themeOption.getColorScheme()

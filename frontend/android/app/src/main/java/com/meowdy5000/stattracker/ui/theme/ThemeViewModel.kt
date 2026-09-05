@@ -15,11 +15,11 @@ class ThemeViewModel(application: Application) : AndroidViewModel(application) {
     val selectedTheme: StateFlow<AppThemeOption> = _selectedTheme.asStateFlow()
 
     private fun loadInitialTheme(): AppThemeOption {
-        val savedName = prefs.getString("app_theme_selection", AppThemeOption.JEAN_GREY.name)
+        val savedName = prefs.getString("app_theme_selection", AppThemeOption.DEFAULT.name)
         return try {
-            AppThemeOption.valueOf(savedName ?: AppThemeOption.JEAN_GREY.name)
+            AppThemeOption.valueOf(savedName ?: AppThemeOption.DEFAULT.name)
         } catch (e: Exception) {
-            AppThemeOption.JEAN_GREY
+            AppThemeOption.DEFAULT
         }
     }
 
