@@ -18,4 +18,8 @@
 ## 4. Emulator & ADB Constraints
 - NEVER run emulator.exe, Start-Process emulator, or headless virtual device commands.
 - The developer runs the emulator manually in a dedicated desktop window.
-- Always detect the active device via db devices and target it explicitly using the -s <serial> flag.
+- Always detect the active device via  db devices and target it explicitly using the -s <serial> flag.
+
+## 5. Branding Rules
+- The official application name is strictly 'M5 Stat Tracker'.
+- Never include personal usernames, real names, or account handles in any UI text, headers, footers, meta tags, commit messages, or app manifests.

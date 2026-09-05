@@ -957,7 +957,7 @@ fun DashboardScreen(
                                 selected = false,
                                 onClick = {
                                     val timestamp = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date())
-                                    val defaultFileName = "meowdy5000_stats_$timestamp.json"
+                                    val defaultFileName = "m5_stats_$timestamp.json"
                                     exportJsonLauncher.launch(defaultFileName)
                                 }
                             )
@@ -1087,7 +1087,7 @@ fun DashboardScreen(
                     contentColor = MaterialTheme.colorScheme.onBackground,
                     topBar = {
                         TopAppBar(
-                            title = { Text("Rivals Tracker Dashboard", color = MaterialTheme.colorScheme.onSurface) },
+                            title = { Text("M5 Stat Tracker Dashboard", color = MaterialTheme.colorScheme.onSurface) },
                             actions = {
                                 IconButton(onClick = { scope.launch { drawerState.open() } }) {
                                     Icon(Icons.Default.Menu, contentDescription = "Open Drawer (Right)", tint = MaterialTheme.colorScheme.primary)

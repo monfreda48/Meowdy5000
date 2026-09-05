@@ -7,11 +7,27 @@
   --accent-glow: rgba(16, 185, 129, 0.4);
 }
 
-[data-theme="emerald"] {
+[data-theme="default"], [data-theme="emerald"] {
   --accent-color: #10b981;
   --accent-glow: rgba(16, 185, 129, 0.4);
 }
-[data-theme="cyan"] {
+[data-theme="kinetic_purple"], [data-theme="cyberpunk"], [data-theme="purple"] {
+  --accent-color: #ff2a85;
+  --accent-glow: rgba(255, 42, 133, 0.4);
+}
+[data-theme="gamma_green"] {
+  --accent-color: #22c55e;
+  --accent-glow: rgba(34, 197, 94, 0.4);
+}
+[data-theme="jeangrey"], [data-theme="monochrome"] {
+  --accent-color: #d1d5db;
+  --accent-glow: rgba(209, 213, 219, 0.4);
+}
+[data-theme="oops_all_hallways"], [data-theme="crimson"], [data-theme="red"] {
+  --accent-color: #e53935;
+  --accent-glow: rgba(229, 57, 53, 0.4);
+}
+[data-theme="cyan"], [data-theme="sapphire"] {
   --accent-color: #06b6d4;
   --accent-glow: rgba(6, 182, 212, 0.4);
 }
@@ -19,15 +35,7 @@
   --accent-color: #3b82f6;
   --accent-glow: rgba(59, 130, 246, 0.4);
 }
-[data-theme="red"] {
-  --accent-color: #ef4444;
-  --accent-glow: rgba(239, 68, 68, 0.4);
-}
-[data-theme="purple"] {
-  --accent-color: #a855f7;
-  --accent-glow: rgba(168, 85, 247, 0.4);
-}
-[data-theme="amber"] {
+[data-theme="amber"], [data-theme="gold"] {
   --accent-color: #f59e0b;
   --accent-glow: rgba(245, 158, 11, 0.4);
 }

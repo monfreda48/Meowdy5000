@@ -9,7 +9,6 @@ import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { Toast } from '@capacitor/toast';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
-import { Share } from '@capacitor/share';
 import { Clipboard } from '@capacitor/clipboard';
 import { ScreenOrientation } from '@capacitor/screen-orientation';
 import pkg from '../package.json';
@@ -156,7 +155,7 @@ const getApiUrl = (path) => {
   } catch (e) { }
   if (typeof window !== 'undefined') {
     if (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) {
-      return `http://10.0.2.2:8000${path.startsWith('/') ? path : '/' + path}`;
+      return `https://meowdy5000.synology.me${path.startsWith('/') ? path : '/' + path}`;
     }
   }
   return path.startsWith('/') ? path : '/' + path;
@@ -236,9 +235,9 @@ export default function App() {
   const [recentSearches, setRecentSearches] = useState(() => {
     try {
       const saved = localStorage.getItem('recent_player_searches');
-      return saved ? JSON.parse(saved) : ['Meowdy', 'Necros', 'Bogur'];
+      return saved ? JSON.parse(saved) : ['Player1', 'Necros', 'Bogur'];
     } catch (e) {
-      return ['Meowdy', 'Necros', 'Bogur'];
+      return ['Player1', 'Necros', 'Bogur'];
     }
   });
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -269,6 +268,9 @@ export default function App() {
   const [lookupQuery, setLookupQuery] = useState('');
   const [showPayPalModal, setShowPayPalModal] = useState(false);
   const [showPlatformDropdown, setShowPlatformDropdown] = useState(false);
+  const [showMoreStatsModal, setShowMoreStatsModal] = useState(false);
+  const [moreStatsCategory, setMoreStatsCategory] = useState('All');
+  const [moreStatsFilter, setMoreStatsFilter] = useState('');
 
   const handleProfileLookup = (e) => {
     if (e) e.preventDefault();
@@ -306,29 +308,6 @@ export default function App() {
     showNativeToast('📁 Collapsed all stat cards!');
   };
 
-  const [activeColorScheme, setActiveColorScheme] = useState(() => {
-    try {
-      return localStorage.getItem('m5_color_scheme') || 'jeangrey';
-    } catch (e) {
-      return 'jeangrey';
-    }
-  });
-
-  useEffect(() => {
-    const theme = COLOR_THEMES[activeColorScheme] || COLOR_THEMES.jeangrey;
-    document.documentElement.style.setProperty('--accent-color', theme.accentHex);
-    document.documentElement.setAttribute('data-theme', activeColorScheme);
-  }, [activeColorScheme]);
-
-  const changeColorScheme = (schemeId) => {
-    try {
-      localStorage.setItem('m5_color_scheme', schemeId);
-    } catch (e) {}
-    setActiveColorScheme(schemeId);
-    triggerHaptic('light');
-    showNativeToast(`🎨 Color scheme set to ${COLOR_THEMES[schemeId]?.name || schemeId}`);
-  };
-
   // Pinned Home Profile State & Helpers
   const [pinnedHomeProfile, setPinnedHomeProfile] = useState(() => {
     try {
@@ -339,10 +318,6 @@ export default function App() {
     }
   });
 
-  const [showHeroLeaderboardModal, setShowHeroLeaderboardModal] = useState(false);
-  const [selectedLeaderboardHero, setSelectedLeaderboardHero] = useState('Jubilee');
-  const [selectedLeaderboardPlatform, setSelectedLeaderboardPlatform] = useState('PS5');
-  const [customHeroRankInput, setCustomHeroRankInput] = useState('');
   const [heroRanksMap, setHeroRanksMap] = useState({});
 
   const [autoLoadHomeProfile, setAutoLoadHomeProfile] = useState(() => {
@@ -451,15 +426,51 @@ export default function App() {
     setTimeout(() => setUpdateToast(null), 3000);
   };
 
+  const formatStatDisplayValue = (metricKey, val) => {
+    if (val === undefined || val === null || val === 'N/A' || val === '') return 'N/A';
+    const valStr = String(val).trim();
+    if (valStr === 'N/A' || valStr === '') return 'N/A';
+
+    const isPercent = valStr.endsWith('%');
+    const cleanStr = isPercent ? valStr.slice(0, -1).trim() : valStr;
+    const num = Number(cleanStr);
+
+    if (!isNaN(num)) {
+      if (metricKey === 'kdRatio' || metricKey === 'pureKdRatio' || metricKey === 'kd_ratio' || metricKey === 'kda') {
+        return num.toFixed(2);
+      }
+      if (metricKey === 'winRate') {
+        return `${num.toFixed(1)}%`;
+      }
+      if (metricKey === 'heroDamage' || metricKey === 'healing' || metricKey === 'damageBlocked') {
+        return Math.round(num).toLocaleString();
+      }
+      if (metricKey === 'accuracy') {
+        return `${num.toFixed(1)}%`;
+      }
+      if (metricKey === 'mvp' || metricKey === 'svp' || metricKey === 'matchesPlayed' || metricKey === 'kills' || metricKey === 'deaths' || metricKey === 'assists') {
+        return Math.round(num).toLocaleString();
+      }
+      if (cleanStr.includes('.')) {
+        const decimals = cleanStr.split('.')[1];
+        if (decimals && decimals.length > 2) {
+          return num.toFixed(2);
+        }
+      }
+    }
+
+    return valStr;
+  };
+
   const getCardDisplayStat = (metricKey, defaultValue) => {
-    if (!stats?.statBreakdown || favoriteSite === 'merged') {
-      return defaultValue;
+    let rawVal = defaultValue;
+    if (stats?.statBreakdown && favoriteSite !== 'merged') {
+      const breakdownVal = stats.statBreakdown[metricKey]?.[favoriteSite];
+      if (breakdownVal && breakdownVal !== 'N/A' && breakdownVal !== '0' && breakdownVal !== '0%' && breakdownVal !== '0.0') {
+        rawVal = breakdownVal;
+      }
     }
-    const val = stats.statBreakdown[metricKey]?.[favoriteSite];
-    if (val && val !== 'N/A' && val !== '0' && val !== '0%' && val !== '0.0') {
-      return val;
-    }
-    return defaultValue;
+    return formatStatDisplayValue(metricKey, rawVal);
   };
 
   // Claimed Profile & Tracking Source Selection State
@@ -471,7 +482,6 @@ export default function App() {
   });
 
   const [showClaimModal, setShowClaimModal] = useState(false);
-  const [showUnclaimConfirmModal, setShowUnclaimConfirmModal] = useState(false);
 
   const [claimedSources, setClaimedSources] = useState(() => {
     try {
@@ -776,7 +786,6 @@ export default function App() {
     setUpdateToast({ type: 'update', message: '👑 Claimed profile removed.' });
     setTimeout(() => setUpdateToast(null), 3000);
     setShowClaimModal(false);
-    setShowUnclaimConfirmModal(false);
   };
 
   const toggleTrackingSource = (sourceKey) => {
@@ -895,9 +904,9 @@ export default function App() {
     const bd = stats?.statBreakdown?.[metricKey] || {};
 
     const sites = [
-      { key: 'trackerGg', name: 'Tracker.gg', icon: '🌐', val: bd.trackerGg || (stats?.current && stats.current[metricKey]) || 'N/A', color: 'border-purple-500/40 text-purple-400 bg-purple-500/10' },
-      { key: 'rivalsMeta', name: 'RivalsMeta', icon: '⚔️', val: bd.rivalsMeta || 'N/A', color: 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10' },
-      { key: 'rivalsTracker', name: 'RivalsTracker', icon: '🎯', val: bd.rivalsTracker || 'N/A', color: 'border-amber-500/40 text-amber-400 bg-amber-500/10' }
+      { key: 'trackerGg', name: 'Tracker.gg', icon: '🌐', val: formatStatDisplayValue(metricKey, bd.trackerGg || (stats?.current && stats.current[metricKey]) || 'N/A'), color: 'border-purple-500/40 text-purple-400 bg-purple-500/10' },
+      { key: 'rivalsMeta', name: 'RivalsMeta', icon: '⚔️', val: formatStatDisplayValue(metricKey, bd.rivalsMeta || 'N/A'), color: 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10' },
+      { key: 'rivalsTracker', name: 'RivalsTracker', icon: '🎯', val: formatStatDisplayValue(metricKey, bd.rivalsTracker || 'N/A'), color: 'border-amber-500/40 text-amber-400 bg-amber-500/10' }
     ];
 
     return (
@@ -1121,18 +1130,31 @@ export default function App() {
   const [avatarUrlInput, setAvatarUrlInput] = useState('');
 
   const HERO_AVATAR_PRESETS = [
-    { name: "Spider-Man", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1016.png/image.jpg" },
-    { name: "Venom", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1017.png/image.jpg" },
-    { name: "Rocket Raccoon", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1018.png/image.jpg" },
-    { name: "Iron Man", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1023.png/image.jpg" },
-    { name: "Hela", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1022.png/image.jpg" },
-    { name: "Doctor Strange", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1024.png/image.jpg" },
-    { name: "Punisher", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1014.png/image.jpg" },
-    { name: "Magneto", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1015.png/image.jpg" },
-    { name: "Luna Snow", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1032.png/image.jpg" },
-    { name: "Mantis", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1011.png/image.jpg" },
-    { name: "Magik", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1030.png/image.jpg" },
-    { name: "Groot", url: "https://imgsvc.trackercdn.com/url/size(128),fit(cover)/https%3A%2F%2Ftrackercdn.com%2Fcdn%2Fmarvel-rivals%2Fheroes%2F1020.png/image.jpg" }
+    { name: "Spider-Man", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31020001.jpg" },
+    { name: "Venom", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31020002.jpg" },
+    { name: "Rocket Raccoon", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31020003.jpg" },
+    { name: "Iron Man", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31020004.jpg" },
+    { name: "Hela", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31020005.jpg" },
+    { name: "Doctor Strange", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31030001.jpg" },
+    { name: "Punisher", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31030002.jpg" },
+    { name: "Magneto", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31030003.jpg" },
+    { name: "Luna Snow", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31030004.jpg" },
+    { name: "Mantis", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31030005.jpg" },
+    { name: "Magik", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31040001.jpg" },
+    { name: "Groot", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31040002.jpg" },
+    { name: "Black Panther", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31040003.jpg" },
+    { name: "Storm", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31040004.jpg" },
+    { name: "Star-Lord", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31040005.jpg" },
+    { name: "Thor", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31050001.jpg" },
+    { name: "Jeff the Land Shark", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31050002.jpg" },
+    { name: "Winter Soldier", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31050003.jpg" },
+    { name: "Adam Warlock", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31050004.jpg" },
+    { name: "Psylocke", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31050005.jpg" },
+    { name: "Hawkeye", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31060001.jpg" },
+    { name: "Moon Knight", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31060002.jpg" },
+    { name: "Cloak & Dagger", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31060003.jpg" },
+    { name: "Wolverine", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31060004.jpg" },
+    { name: "Squirrel Girl", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31060005.jpg" }
   ];
 
   const getDisplayAvatar = (username) => {
@@ -1293,32 +1315,68 @@ export default function App() {
     setTimeout(() => setUpdateToast(null), 3500);
   };
 
-  // Color Scheme Themes System
+  // Color Scheme Themes System (Synchronized with Android APK Theme Presets)
   const THEMES = [
     {
-      id: 'emerald',
-      name: 'Emerald Matrix',
+      id: 'default',
+      name: 'Default',
       accentColor: '#10b981',
+      secondaryColor: '#06b6d4',
       bgGradient: 'from-emerald-400 to-teal-500',
       textAccent: 'text-emerald-400',
       borderAccent: 'border-emerald-500/40',
       badgeBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-      swatchGradient: 'from-emerald-500 to-teal-600'
+      swatchGradient: 'from-emerald-500 to-cyan-500'
     },
     {
-      id: 'cyberpunk',
-      name: 'Cyberpunk Violet',
-      accentColor: '#a855f7',
-      bgGradient: 'from-purple-400 to-indigo-500',
-      textAccent: 'text-purple-400',
-      borderAccent: 'border-purple-500/40',
-      badgeBg: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-      swatchGradient: 'from-purple-500 to-indigo-600'
+      id: 'kinetic_purple',
+      name: 'Kinetic Purple',
+      accentColor: '#ff2a85',
+      secondaryColor: '#9d4edd',
+      bgGradient: 'from-pink-500 to-purple-600',
+      textAccent: 'text-pink-400',
+      borderAccent: 'border-pink-500/40',
+      badgeBg: 'bg-pink-500/20 text-pink-300 border-pink-500/40',
+      swatchGradient: 'from-pink-500 to-purple-600'
+    },
+    {
+      id: 'gamma_green',
+      name: 'Gamma Green',
+      accentColor: '#22c55e',
+      secondaryColor: '#10b981',
+      bgGradient: 'from-green-400 to-emerald-600',
+      textAccent: 'text-green-400',
+      borderAccent: 'border-green-500/40',
+      badgeBg: 'bg-green-500/20 text-green-300 border-green-500/40',
+      swatchGradient: 'from-green-500 to-emerald-600'
+    },
+    {
+      id: 'jeangrey',
+      name: 'Jean Grey',
+      accentColor: '#d1d5db',
+      secondaryColor: '#9ca3af',
+      bgGradient: 'from-gray-300 to-slate-400',
+      textAccent: 'text-gray-300',
+      borderAccent: 'border-gray-400/50',
+      badgeBg: 'bg-gray-500/20 text-gray-200 border-gray-400/50',
+      swatchGradient: 'from-gray-300 to-slate-500'
+    },
+    {
+      id: 'oops_all_hallways',
+      name: 'Oops, All Hallways',
+      accentColor: '#e53935',
+      secondaryColor: '#ff5252',
+      bgGradient: 'from-red-500 to-rose-700',
+      textAccent: 'text-red-500',
+      borderAccent: 'border-red-500/50',
+      badgeBg: 'bg-red-500/20 text-red-300 border-red-500/50',
+      swatchGradient: 'from-red-600 to-rose-800'
     },
     {
       id: 'sapphire',
       name: 'Neon Sapphire',
       accentColor: '#3b82f6',
+      secondaryColor: '#06b6d4',
       bgGradient: 'from-blue-400 to-cyan-500',
       textAccent: 'text-blue-400',
       borderAccent: 'border-blue-500/40',
@@ -1326,42 +1384,29 @@ export default function App() {
       swatchGradient: 'from-blue-500 to-cyan-600'
     },
     {
-      id: 'crimson',
-      name: 'Crimson Vanguard',
-      accentColor: '#f43f5e',
-      bgGradient: 'from-rose-400 to-red-500',
-      textAccent: 'text-rose-400',
-      borderAccent: 'border-rose-500/40',
-      badgeBg: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
-      swatchGradient: 'from-rose-500 to-red-600'
-    },
-    {
       id: 'gold',
       name: 'Golden Sentinel',
       accentColor: '#eab308',
+      secondaryColor: '#f59e0b',
       bgGradient: 'from-amber-400 to-yellow-500',
       textAccent: 'text-amber-400',
       borderAccent: 'border-amber-500/40',
       badgeBg: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
       swatchGradient: 'from-amber-500 to-yellow-600'
-    },
-    {
-      id: 'monochrome',
-      name: 'Black & White',
-      accentColor: '#ffffff',
-      bgGradient: 'from-slate-200 to-white',
-      textAccent: 'text-white',
-      borderAccent: 'border-slate-400/60',
-      badgeBg: 'bg-slate-800 text-white border-slate-600',
-      swatchGradient: 'from-black via-slate-700 to-white'
     }
   ];
 
   const [activeThemeId, setActiveThemeId] = useState(() => {
     try {
-      return localStorage.getItem('app_color_theme') || 'emerald';
+      const saved = localStorage.getItem('app_color_theme') || localStorage.getItem('m5_color_scheme') || localStorage.getItem('app_theme_selection');
+      if (saved === 'emerald' || saved === 'DEFAULT') return 'default';
+      if (saved === 'cyberpunk' || saved === 'KINETIC_PURPLE') return 'kinetic_purple';
+      if (saved === 'monochrome' || saved === 'JEAN_GREY') return 'jeangrey';
+      if (saved === 'crimson' || saved === 'OOPS_ALL_HALLWAYS') return 'oops_all_hallways';
+      if (saved === 'GAMMA_GREEN') return 'gamma_green';
+      return saved || 'default';
     } catch (e) {
-      return 'emerald';
+      return 'default';
     }
   });
 
@@ -1372,19 +1417,25 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', selected.id);
     if (selected.accentColor) {
       document.documentElement.style.setProperty('--accent-color', selected.accentColor);
-      document.documentElement.style.setProperty('--accent-glow', selected.accentGlow || 'rgba(16, 185, 129, 0.4)');
+      document.documentElement.style.setProperty('--accent-glow', `${selected.accentColor}66`);
     }
+    try {
+      localStorage.setItem('app_color_theme', selected.id);
+      localStorage.setItem('m5_color_scheme', selected.id);
+    } catch (e) {}
   }, [activeThemeId]);
 
   const handleSelectTheme = (themeId) => {
     setActiveThemeId(themeId);
     try {
       localStorage.setItem('app_color_theme', themeId);
+      localStorage.setItem('m5_color_scheme', themeId);
     } catch (e) { }
-    const selected = THEMES.find(t => t.id === themeId);
-    if (selected) {
-      document.documentElement.setAttribute('data-theme', selected.id);
+    const selected = THEMES.find(t => t.id === themeId) || THEMES[0];
+    document.documentElement.setAttribute('data-theme', selected.id);
+    if (selected.accentColor) {
       document.documentElement.style.setProperty('--accent-color', selected.accentColor);
+      document.documentElement.style.setProperty('--accent-glow', `${selected.accentColor}66`);
     }
     triggerHaptic('success');
     showNativeToast(`🎨 Color scheme set to ${selected?.name || themeId}!`);
@@ -1452,7 +1503,7 @@ export default function App() {
   const handleExportBackup = async () => {
     try {
       const backupData = {
-        app: "Meowdy 5000's Stat Tracker",
+        app: "M5 Stat Tracker",
         exportedAt: new Date().toISOString(),
         trackedPlayers: trackedPlayers,
         selectedMetrics: selectedMetrics,
@@ -1471,17 +1522,17 @@ export default function App() {
 
       if (window.Capacitor && window.Capacitor.isNativePlatform()) {
         await Filesystem.writeFile({
-          path: 'Meowdy5000_Backup.json',
+          path: 'M5StatTracker_Backup.json',
           data: jsonStr,
           directory: Directory.Documents
         });
-        setUpdateToast({ type: 'success', message: '✅ Backup file exported to Documents/Meowdy5000_Backup.json!' });
+        setUpdateToast({ type: 'success', message: '✅ Backup file exported to Documents/M5StatTracker_Backup.json!' });
       } else {
         const blob = new Blob([jsonStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Meowdy5000_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = `M5StatTracker_Backup_${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
         setUpdateToast({ type: 'success', message: '✅ Backup downloaded as JSON file!' });
@@ -1852,7 +1903,7 @@ export default function App() {
       const stored = localStorage.getItem('backend_server_url') || localStorage.getItem('backend_base_url');
       if (stored) return stored;
       if (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform()) {
-        return 'http://10.0.2.2:5000';
+        return 'https://meowdy5000.synology.me';
       }
       return '';
     } catch (e) {
@@ -1873,7 +1924,7 @@ export default function App() {
   const getApiUrl = (endpoint) => {
     let base = backendBaseUrl;
     if (!base && typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform()) {
-      base = 'http://10.0.2.2:5000';
+      base = 'https://meowdy5000.synology.me';
     }
     if (!base) return endpoint;
     const cleanBase = base.replace(/\/+$/, '');
@@ -1904,7 +1955,7 @@ export default function App() {
           if (res && res.files) {
             for (const file of res.files) {
               const filename = typeof file === 'string' ? file : (file.name || file.path || '');
-              if (filename && (filename.endsWith('.apk') || filename.includes('Meowdy5000-Update'))) {
+              if (filename && (filename.endsWith('.apk') || filename.includes('M5StatTracker-Update'))) {
                 try {
                   await Filesystem.deleteFile({ path: filename, directory: dir });
                   console.log(`[ApkCleanup] Cleaned up old APK file: ${filename} from ${dir}`);
@@ -1919,7 +1970,7 @@ export default function App() {
         }
       }
       try {
-        await Filesystem.deleteFile({ path: 'Meowdy5000-Update.apk', directory: Directory.Cache });
+        await Filesystem.deleteFile({ path: 'M5StatTracker-Update.apk', directory: Directory.Cache });
       } catch (e) { }
     } catch (e) {
       console.warn('[ApkCleanup] Cleanup error:', e);
@@ -1975,7 +2026,7 @@ export default function App() {
         reader.readAsDataURL(blob);
         const base64Data = await base64Promise;
 
-        const fileName = 'Meowdy5000-Update.apk';
+        const fileName = 'M5StatTracker-Update.apk';
         await Filesystem.writeFile({
           path: fileName,
           data: base64Data,
@@ -2456,30 +2507,6 @@ ${payload.stack || 'No stack trace available.'}
     setupNativeUi();
   }, []);
 
-  const sharePlayerStats = async () => {
-    if (!stats?.current) return;
-    triggerHaptic('light');
-    const username = stats.current.username || 'Player';
-    const winRate = stats.current.winRate || 0;
-    const kdRatio = stats.current.kdRatio || 0;
-    const topHero = stats.current.topHero || 'Unknown';
-    const shareText = `🦸 Marvel Rivals Stat Sheet for ${username}:\n🏆 Win Rate: ${winRate}%\n⚔️ K/D Ratio: ${kdRatio}\n⭐ Top Hero: ${topHero}\nTracked with M5 Stat Tracker!`;
-
-    try {
-      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-        await Share.share({
-          title: `Marvel Rivals Stats: ${username}`,
-          text: shareText,
-          url: 'https://github.com/monfreda48/Meowdy5000',
-          dialogTitle: 'Share Player Stats'
-        });
-      } else {
-        await Clipboard.write({ string: shareText });
-        showNativeToast('📋 Player stats summary copied to clipboard!');
-      }
-    } catch (e) { }
-  };
-
   useEffect(() => {
     cleanupOldApkFiles();
     checkForUpdates(true);
@@ -2700,6 +2727,7 @@ const DEFAULT_SEASON_NUM = 19;
         mvp: String(awards.mvp_count ?? overview.mvp_count ?? 0),
         svp: String(awards.svp_count ?? overview.svp_count ?? 0),
         timePlayed: timePlayedVal,
+        moreStats: backendData.more_stats || null,
         sources: ['🌐 Tracker.gg (via Backend API)'],
         siteUrls: {
           trackerGg: trackerUrl,
@@ -2947,7 +2975,7 @@ const DEFAULT_SEASON_NUM = 19;
           </div>
 
           <h1 className="text-xl sm:text-3xl font-black text-white uppercase tracking-wider mb-2">
-            M5 RIVALS TRACKER
+            M5 STAT TRACKER
           </h1>
 
           <p className="text-xs text-slate-400 font-medium mt-3 flex items-center gap-2">
@@ -3040,7 +3068,7 @@ const DEFAULT_SEASON_NUM = 19;
 
             <div className="space-y-2">
               <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-wider animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                Meowdy 5000<br />Stat Tracker
+                M5<br />Stat Tracker
               </h1>
               <p className="text-xs sm:text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500 uppercase tracking-widest animate-in fade-in slide-in-from-bottom-6 duration-1000">
                 MARVEL RIVALS STAT TRACKER
@@ -3087,8 +3115,8 @@ const DEFAULT_SEASON_NUM = 19;
               <span className="relative z-10 drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]">M5</span>
             </div>
             <span className="text-xs sm:text-lg md:text-xl font-black tracking-wider text-white uppercase truncate">
-              <span className="sm:hidden">M5 RIVALS TRACKER</span>
-              <span className="hidden sm:inline">M5 RIVALS TRACKER</span>
+              <span className="sm:hidden">M5 STAT TRACKER</span>
+              <span className="hidden sm:inline">M5 STAT TRACKER</span>
             </span>
           </div>
 
@@ -3179,7 +3207,7 @@ const DEFAULT_SEASON_NUM = 19;
         <div className={`flex flex-col items-center text-center ${isMobileView ? 'space-y-2' : 'space-y-3 sm:space-y-6'}`}>
           <h1 className={`font-black tracking-tight text-white uppercase w-full ${isMobileView ? 'text-xl sm:text-3xl' : 'text-2xl sm:text-5xl md:text-6xl lg:text-7xl'
             }`}>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">M5 RIVALS TRACKER</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">M5 STAT TRACKER</span>
           </h1>
 
           {/* Active Season & Upcoming Season 10 Status Pill */}
@@ -3438,22 +3466,23 @@ const DEFAULT_SEASON_NUM = 19;
                       <span>{stats.current.rank || 'Unranked'}</span>
                     </span>
 
-                    {/* Detected Player Platform Badge (PC / PlayStation 5 / Xbox) */}
-                    <span className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md border ${
-                      (stats.current.platform || '').includes('Xbox')
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-emerald-500/10'
-                        : (stats.current.platform || '').includes('PlayStation')
-                          ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50 shadow-indigo-500/10'
-                          : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-cyan-500/10'
-                    }`}>
-                      <span>{renderPlatformIcon(stats.current.platform, stats.current.platformIcon)}</span>
-                      <span>{stats.current.platform || 'PC'}</span>
-                    </span>
                     {stats.current.peakRank && stats.current.peakRank !== 'Unranked' && (
                       <span className="bg-purple-500/10 text-purple-300 border border-purple-500/30 px-2.5 py-0.5 rounded-md text-[11px] font-bold">
                         🏆 Peak: {stats.current.peakRank}
                       </span>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setShowMoreStatsModal(true);
+                      }}
+                      className="bg-gradient-to-r from-emerald-600/30 to-teal-600/30 hover:from-emerald-600/50 hover:to-teal-600/50 text-emerald-300 border border-emerald-500/50 px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-emerald-500/10 active:scale-95 transition-all cursor-pointer"
+                    >
+                      <span>📊</span>
+                      <span>More Stats</span>
+                    </button>
                   </div>
 
                   {/* Top 3 Hero Platform Leaderboard Ranking Badges */}
@@ -3482,19 +3511,6 @@ const DEFAULT_SEASON_NUM = 19;
                       <span>👑</span>
                       <span>TRACKING ACTIVE</span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        triggerHaptic('light');
-                        if (window.confirm(`Unclaim profile for ${claimedProfile?.username}?`)) {
-                          handleUnclaimProfile();
-                        }
-                      }}
-                      className="px-3 py-2.5 rounded-xl font-bold text-xs bg-red-500/20 hover:bg-red-600 border border-red-500/50 text-red-300 hover:text-white transition-all uppercase tracking-wider cursor-pointer shrink-0"
-                      title="Unclaim profile"
-                    >
-                      ✕ Unclaim
-                    </button>
                   </div>
                 ) : (
                   <button
@@ -3515,107 +3531,12 @@ const DEFAULT_SEASON_NUM = 19;
                 >
                   <span>🔄 Refresh / Sync Stats</span>
                 </button>
-
-                <button
-                  type="button"
-                  onClick={() => { triggerHaptic('light'); setShowHeroLeaderboardModal(true); }}
-                  className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-amber-500/20 border border-amber-400/50 uppercase tracking-wider font-black"
-                >
-                  <span>🏆 Hero Leaderboards</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => sharePlayerStats()}
-                  className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-blue-500/20 border border-blue-400/40 uppercase tracking-wider"
-                >
-                  <span>📤 Share Stats</span>
-                </button>
               </div>
             </div>
 
             <div className="space-y-6 animate-in fade-in duration-300">
 
-                {/* Season Span Filter & Minimized Card Dropdown Controls Bar */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#131b2f] p-3.5 sm:p-4 rounded-2xl border border-slate-700/60 shadow-lg text-left">
-                  {/* Left: Season Span Selector */}
-                  <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm border border-emerald-500/30 shrink-0">
-                      📅
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <div>
-                        <h4 className="text-xs font-black text-white uppercase tracking-wider">Season Filter Span</h4>
-                        <p className="text-[10px] text-slate-400 font-medium">Select single half season, full season, or custom span</p>
-                      </div>
-                      <select
-                        value={season}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setSeason(val);
-                          triggerHaptic('light');
-                          if (query.trim()) fetchStats(null, query, val);
-                        }}
-                        className="bg-[#0b101e] border border-slate-700/80 hover:border-emerald-500/60 rounded-xl px-3 py-1.5 text-xs font-bold text-emerald-400 focus:outline-none focus:border-emerald-500 cursor-pointer shadow-sm"
-                      >
-                        <option value="19">Season 2 (Full Season)</option>
-                        <option value="2.5">Season 2.5 (Mid-Season)</option>
-                        <option value="2.0">Season 2.0 (First Half)</option>
-                        <option value="1">Season 1 (Full Season)</option>
-                        <option value="1.5">Season 1.5 (Mid-Season)</option>
-                        <option value="1.0">Season 1.0 (First Half)</option>
-                        <option value="all">All Seasons (Combined Span)</option>
-                        <option value="custom">Custom Season Span...</option>
-                      </select>
 
-                      {season === 'custom' && (
-                        <div className="flex items-center gap-1.5 bg-[#0b101e] border border-emerald-500/40 p-1.5 rounded-xl text-xs">
-                          <span className="text-[10px] text-slate-400 font-bold px-1">From:</span>
-                          <select
-                            value={customSeasonStart}
-                            onChange={(e) => setCustomSeasonStart(e.target.value)}
-                            className="bg-slate-900 text-white font-bold rounded px-1.5 py-0.5 text-xs"
-                          >
-                            <option value="1.0">S1.0</option>
-                            <option value="1.5">S1.5</option>
-                            <option value="2.0">S2.0</option>
-                            <option value="2.5">S2.5</option>
-                          </select>
-                          <span className="text-[10px] text-slate-400 font-bold px-1">To:</span>
-                          <select
-                            value={customSeasonEnd}
-                            onChange={(e) => setCustomSeasonEnd(e.target.value)}
-                            className="bg-slate-900 text-white font-bold rounded px-1.5 py-0.5 text-xs"
-                          >
-                            <option value="1.5">S1.5</option>
-                            <option value="2.0">S2.0</option>
-                            <option value="2.5">S2.5</option>
-                            <option value="2.9">S2.9 (Current)</option>
-                          </select>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Right: Minimized Card Favorite Drop-Down Menu */}
-                  <div className="flex items-center gap-2 border-t sm:border-t-0 border-slate-800 pt-2 sm:pt-0 shrink-0">
-                    <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs border border-amber-500/30 shrink-0">
-                      ⭐
-                    </div>
-                    <div className="text-left">
-                      <span className="block text-[10px] font-black uppercase tracking-wider text-slate-400">Card Display:</span>
-                      <select
-                        value={favoriteSite}
-                        onChange={(e) => handleSetFavoriteSite(e.target.value)}
-                        className="bg-[#0b101e] border border-slate-700/80 hover:border-emerald-500/60 rounded-xl px-3 py-1.5 text-xs font-bold text-amber-400 focus:outline-none focus:border-amber-500 cursor-pointer shadow-sm"
-                      >
-                        <option value="merged">⚡ Merged / Best Data</option>
-                        <option value="trackerGg">🌐 Tracker.gg</option>
-                        <option value="rivalsMeta">⚔️ RivalsMeta.com</option>
-                        <option value="rivalsTracker">🎯 RivalsTracker.com</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
 
                 {/* Bulk Expand / Collapse All Cards Controls */}
                 <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
@@ -3685,7 +3606,7 @@ const DEFAULT_SEASON_NUM = 19;
                           </div>
                         </div>
                         <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
-                          {getCardDisplayStat('winRate', `${stats.current.winRate}%`)}
+                          {getCardDisplayStat('winRate', stats.current.winRate)}
                         </p>
 
                         {expandedMetrics.winRate && (
@@ -4773,7 +4694,7 @@ const DEFAULT_SEASON_NUM = 19;
               <div className="space-y-1.5">
                 <h3 className="text-xl font-black text-white uppercase tracking-wider">App is Up to Date!</h3>
                 <p className="text-xs text-slate-400 font-medium">
-                  You are running the latest version of Meowdy 5000's Stat Tracker.
+                  You are running the latest version of M5 Stat Tracker.
                 </p>
               </div>
 
@@ -5091,27 +5012,12 @@ const DEFAULT_SEASON_NUM = 19;
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    {claimedProfile?.username && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          triggerHaptic('warning');
-                          setShowUnclaimConfirmModal(true);
-                        }}
-                        title="Unclaim Profile"
-                        className="w-8 h-8 rounded-xl bg-red-500/10 hover:bg-red-500/30 text-red-400 hover:text-red-300 border border-red-500/40 flex items-center justify-center font-bold text-xs transition-all cursor-pointer"
-                      >
-                        ✕
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setIsMenuOpen(false)}
-                      className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
-                    >
-                      ✕
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
+                  >
+                    ✕
+                  </button>
                 </div>
 
                 {/* Drawer Group 0.4: My Claimed Profile Card & Unclaim Button */}
@@ -5148,8 +5054,10 @@ const DEFAULT_SEASON_NUM = 19;
                       <button
                         type="button"
                         onClick={() => {
-                          setIsMenuOpen(false);
-                          handleUnclaimProfile();
+                          if (window.confirm("Are you sure you want to unclaim this profile?")) {
+                            setIsMenuOpen(false);
+                            handleUnclaimProfile();
+                          }
                         }}
                         className="w-full py-2.5 px-3 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/40 text-red-400 hover:text-red-300 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
                       >
@@ -5223,27 +5131,7 @@ const DEFAULT_SEASON_NUM = 19;
                   </details>
                 </div>
 
-                {/* Drawer Group 0.55: Favorite Primary Data Site Drop-Down */}
-                <div className="space-y-2.5 bg-[#131b2f] border border-amber-500/40 p-3.5 rounded-2xl text-left">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
-                      <span>⭐</span> Favorite Minimized Site
-                    </span>
-                  </div>
 
-                  <p className="text-[10px] text-slate-400 text-left">Select which site's stat displays when cards are minimized:</p>
-
-                  <select
-                    value={favoriteSite}
-                    onChange={(e) => handleSetFavoriteSite(e.target.value)}
-                    className="w-full bg-[#0b101e] border border-slate-700/80 rounded-xl p-2.5 text-xs font-bold text-amber-400 focus:outline-none focus:border-amber-500 cursor-pointer shadow-sm"
-                  >
-                    <option value="merged">⚡ Merged / Best Available</option>
-                    <option value="trackerGg">🌐 Tracker.gg</option>
-                    <option value="rivalsMeta">⚔️ RivalsMeta.com</option>
-                    <option value="rivalsTracker">🎯 RivalsTracker.com</option>
-                  </select>
-                </div>
 
                 {/* Drawer Group 0.58: Daily Tracking Reminder */}
                 <div className="space-y-2.5 bg-[#131b2f] border border-slate-700/60 p-3.5 rounded-2xl text-left">
@@ -5618,6 +5506,7 @@ const DEFAULT_SEASON_NUM = 19;
                     <span>Donate with PayPal</span>
                   </button>
                 </div>
+              </div>
 
               {/* Drawer Footer */}
               <div className="pt-6 border-t border-slate-800/80 text-center space-y-3">
@@ -5635,172 +5524,6 @@ const DEFAULT_SEASON_NUM = 19;
                 >
                   🔗 View GitHub Repository
                 </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-        {/* Hero Leaderboard Search & Verification Modal */}
-        {showHeroLeaderboardModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 modal-safe-area animate-in fade-in duration-200">
-            <div className="bg-[#131b2f] border border-amber-500/50 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-left relative">
-              <button
-                type="button"
-                onClick={() => setShowHeroLeaderboardModal(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors text-lg font-bold"
-              >
-                ✕
-              </button>
-
-              <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center text-xl font-bold shrink-0">
-                  🏆
-                </div>
-                <div>
-                  <h3 className="font-black text-white text-lg tracking-tight">Hero Leaderboards Search</h3>
-                  <p className="text-xs text-slate-400 font-medium">Search RivalsTracker.com & RivalsMeta.com by Hero, Leaderboard & Platform</p>
-                </div>
-              </div>
-
-              <div className="space-y-3.5 pt-1">
-                {/* Step 1: Select Hero */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
-                    1. Select Hero
-                  </label>
-                  <select
-                    value={selectedLeaderboardHero}
-                    onChange={(e) => setSelectedLeaderboardHero(e.target.value)}
-                    className="w-full bg-[#0b101e] border border-slate-700 text-white rounded-xl px-3.5 py-2.5 text-xs font-bold focus:ring-2 focus:ring-amber-500 outline-none"
-                  >
-                    {[
-                      'Jubilee', 'Hulk', 'The Punisher', 'Storm', 'Loki', 'Human Torch', 'Doctor Strange',
-                      'Mantis', 'Hawkeye', 'Captain America', 'Rocket Raccoon', 'Hela', 'Cloak & Dagger',
-                      'Black Panther', 'Groot', 'Ultron', 'Magik', 'Moon Knight', 'Luna Snow', 'Squirrel Girl',
-                      'Black Widow', 'Iron Man', 'Venom', 'Spider-Man', 'Magneto', 'Scarlet Witch', 'Thor',
-                      'Mister Fantastic', 'Winter Soldier', 'Peni Parker', 'Star-Lord', 'Blade', 'Namor',
-                      'Adam Warlock', 'Jeff the Land Shark', 'Psylocke', 'Wolverine', 'Invisible Woman',
-                      'The Thing', 'Iron Fist', 'Emma Frost', 'Phoenix', 'Angela', 'Daredevil', 'Deadpool',
-                      'Gambit', 'Elsa Bloodstone', 'White Fox', 'Black Cat', 'Devil Dinosaur', 'Cyclops',
-                      'Rogue', 'The Hood'
-                    ].map((h) => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Step 2: Select Platform */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
-                    2. Select Platform
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'PS5', label: '🎮 PS5' },
-                      { id: 'Xbox', label: '❎ Xbox' },
-                      { id: 'PC', label: '💻 PC' }
-                    ].map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => setSelectedLeaderboardPlatform(p.id)}
-                        className={`py-2 px-3 rounded-xl border text-xs font-black transition-all cursor-pointer ${
-                          selectedLeaderboardPlatform === p.id
-                            ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-md ring-1 ring-amber-400'
-                            : 'bg-[#0b101e] border-slate-800 text-slate-400 hover:border-slate-700'
-                        }`}
-                      >
-                        {p.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Step 3: Open Live Leaderboards */}
-                <div className="pt-1 space-y-2">
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-                    3. Open Hero Leaderboards Page
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const slug = selectedLeaderboardHero.toLowerCase().replace(/ /g, '-').replace(/&/g, 'and');
-                        const pSlug = selectedLeaderboardPlatform.toLowerCase();
-                        openExternalUrl(`https://rivalstracker.com/heroes/${slug}?platform=${pSlug}`);
-                        showNativeToast(`🎯 Opening RivalsTracker.com ${selectedLeaderboardHero} leaderboard...`);
-                      }}
-                      className="p-3 bg-[#0b101e] hover:bg-amber-500/15 border border-amber-500/40 hover:border-amber-400 rounded-xl text-left transition-all cursor-pointer group"
-                    >
-                      <div className="text-xs font-bold text-amber-400 flex items-center justify-between">
-                        <span>🎯 RivalsTracker.com</span>
-                        <span className="group-hover:scale-110 transition-transform">↗</span>
-                      </div>
-                      <p className="text-[10px] text-slate-400 mt-0.5 font-mono">rivalstracker.com/heroes/{selectedLeaderboardHero.toLowerCase()}</p>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const slug = selectedLeaderboardHero.toLowerCase().replace(/ /g, '-').replace(/&/g, 'and');
-                        const pSlug = selectedLeaderboardPlatform.toLowerCase();
-                        openExternalUrl(`https://rivalsmeta.com/leaderboard?hero=${slug}&platform=${pSlug}`);
-                        showNativeToast(`⚔️ Opening RivalsMeta.com ${selectedLeaderboardHero} leaderboard...`);
-                      }}
-                      className="p-3 bg-[#0b101e] hover:bg-emerald-500/15 border border-emerald-500/40 hover:border-emerald-400 rounded-xl text-left transition-all cursor-pointer group"
-                    >
-                      <div className="text-xs font-bold text-emerald-400 flex items-center justify-between">
-                        <span>⚔️ RivalsMeta.com</span>
-                        <span className="group-hover:scale-110 transition-transform">↗</span>
-                      </div>
-                      <p className="text-[10px] text-slate-400 mt-0.5 font-mono">rivalsmeta.com/leaderboard?hero={selectedLeaderboardHero.toLowerCase()}</p>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Step 4: Attach Badge */}
-                <div className="pt-2.5 border-t border-slate-800 space-y-2">
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-                    4. Attach Hero Leaderboard Rank Badge
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      placeholder="Enter Rank # (e.g. 259)"
-                      value={customHeroRankInput}
-                      onChange={(e) => setCustomHeroRankInput(e.target.value)}
-                      className="flex-1 bg-[#0b101e] border border-slate-700 text-white rounded-xl px-3.5 py-2.5 text-xs font-bold focus:ring-2 focus:ring-amber-500 outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!customHeroRankInput || isNaN(customHeroRankInput)) {
-                          showNativeToast('⚠️ Please enter a valid leaderboard rank number');
-                          return;
-                        }
-                        const rNum = parseInt(customHeroRankInput, 10);
-                        const updatedRanks = [
-                          ...(stats?.current?.heroLeaderboardRanks || []).filter(r => r.hero !== selectedLeaderboardHero),
-                          { hero: selectedLeaderboardHero, rank: rNum, platform: selectedLeaderboardPlatform }
-                        ];
-                        if (stats?.current) {
-                          stats.current.heroLeaderboardRanks = updatedRanks;
-                          setStats({ ...stats });
-                        }
-                        triggerHaptic('success');
-                        showNativeToast(`🏆 Attached Ranked #${rNum} ${selectedLeaderboardHero} on ${selectedLeaderboardPlatform}!`);
-                        setShowHeroLeaderboardModal(false);
-                      }}
-                      className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-black text-xs rounded-xl shadow-md transition-all cursor-pointer shrink-0 uppercase tracking-wider"
-                    >
-                      Attach Badge
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-slate-400 leading-relaxed">
-                    Attaches <strong>🏆 Ranked #{customHeroRankInput || '259'} {selectedLeaderboardHero} on {selectedLeaderboardPlatform}</strong> badge right under your profile picture and name!
-                  </p>
-                </div>
               </div>
             </div>
           </div>
@@ -6189,48 +5912,7 @@ const DEFAULT_SEASON_NUM = 19;
         </div>
       )}
 
-      {/* Modal: Unclaim Profile Confirmation */}
-      {showUnclaimConfirmModal && (
-        <div className="fixed inset-0 z-[110000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-gradient-to-br from-[#131b2f] via-[#0f172a] to-[#0b101e] border-2 border-red-500/60 rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl space-y-4 text-left relative">
-            <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
-              <div className="w-10 h-10 rounded-2xl bg-red-500/20 text-red-400 border border-red-500/40 flex items-center justify-center font-bold text-xl">
-                ⚠️
-              </div>
-              <div>
-                <h3 className="text-base font-black text-white uppercase tracking-wider">Unclaim Profile?</h3>
-                <p className="text-xs text-slate-400">Confirm removing primary profile link</p>
-              </div>
-            </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Are you sure you want to unclaim <strong className="text-white font-bold">{claimedProfile?.username}</strong>? 
-              It will no longer automatically load your statistics on app launch.
-            </p>
-
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-800">
-              <button
-                type="button"
-                onClick={() => setShowUnclaimConfirmModal(false)}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold uppercase tracking-wider cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  handleUnclaimProfile();
-                  setShowUnclaimConfirmModal(false);
-                  setIsMenuOpen(false);
-                }}
-                className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-red-500/30 cursor-pointer"
-              >
-                Yes, Unclaim Profile
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modal: PayPal Donation & QR Code */}
       {showPayPalModal && (
@@ -6255,7 +5937,7 @@ const DEFAULT_SEASON_NUM = 19;
                 Use the QR Code or press here to go to PayPal
               </h3>
               <p className="text-xs text-slate-400">
-                Recipient: <strong className="text-amber-400 font-mono">meowdy5000@gmail.com</strong>
+                Recipient: <strong className="text-amber-400 font-mono">support@m5stattracker.com</strong>
               </p>
             </div>
 
@@ -6275,13 +5957,13 @@ const DEFAULT_SEASON_NUM = 19;
                 onClick={async () => {
                   triggerHaptic('success');
                   try {
-                    await Clipboard.write({ string: 'meowdy5000@gmail.com' });
+                    await Clipboard.write({ string: 'support@m5stattracker.com' });
                   } catch (e) {
-                    try { navigator.clipboard.writeText('meowdy5000@gmail.com'); } catch (err) {}
+                    try { navigator.clipboard.writeText('support@m5stattracker.com'); } catch (err) {}
                   }
                   const sendMoneyUrl = 'https://www.paypal.com/myaccount/transfer/homepage';
                   openExternalUrl(sendMoneyUrl);
-                  showNativeToast('📋 Copied meowdy5000@gmail.com! Opening PayPal Send Money...');
+                  showNativeToast('📋 Copied support@m5stattracker.com! Opening PayPal Send Money...');
                 }}
                 className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-amber-500/30 cursor-pointer flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95"
               >
@@ -6435,6 +6117,150 @@ const DEFAULT_SEASON_NUM = 19;
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Extended Overview & More Stats Drawer */}
+      {showMoreStatsModal && (
+        <div className="fixed inset-0 z-[110000] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setShowMoreStatsModal(false)}>
+          <div
+            className="bg-[#0f172a] border border-slate-700/80 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl shadow-emerald-500/10 text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between gap-4 bg-slate-900/80">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-xl shrink-0">
+                  📊
+                </div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-black text-white tracking-wide">All Overview & Extended Metrics</h3>
+                  <p className="text-xs text-slate-400 font-medium">Categorized stats for {stats?.current?.username || 'Player'}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMoreStatsModal(false)}
+                className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-lg transition-colors cursor-pointer shrink-0"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Controls: Search & Category Tabs */}
+            <div className="p-4 border-b border-slate-800/80 bg-slate-900/40 space-y-3">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search metric (e.g., Kills, Win %, Heal, Head, Continue)..."
+                  value={moreStatsFilter}
+                  onChange={(e) => setMoreStatsFilter(e.target.value)}
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 pl-10 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/60 transition-colors"
+                />
+                <span className="absolute left-3.5 top-3 text-slate-500 text-xs sm:text-sm">🔍</span>
+                {moreStatsFilter && (
+                  <button
+                    type="button"
+                    onClick={() => setMoreStatsFilter('')}
+                    className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-white bg-slate-800 px-2 py-0.5 rounded-md cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+
+              {/* Category Pills */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {['All', 'Game', 'Combat', 'Support & Healing', 'Defense & Damage', 'Additional Metrics'].map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setMoreStatsCategory(cat);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black shrink-0 transition-all cursor-pointer ${
+                      moreStatsCategory === cat
+                        ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                        : 'bg-slate-800/70 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700/50'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Modal Body / Stat Cards */}
+            <div className="p-5 overflow-y-auto space-y-6 flex-1 custom-scrollbar">
+              {(() => {
+                const rawMoreStats = stats?.current?.moreStats;
+                if (!rawMoreStats || Object.keys(rawMoreStats).length === 0) {
+                  return (
+                    <div className="py-12 text-center space-y-3">
+                      <div className="text-4xl animate-pulse">⌛</div>
+                      <h4 className="text-lg font-bold text-slate-300">Extended Metrics Indexing or Unavailable</h4>
+                      <p className="text-xs text-slate-500 max-w-md mx-auto">
+                        Detailed overview metrics are being fetched or indexed from Tracker.gg for this profile. Try refreshing or checking back shortly.
+                      </p>
+                    </div>
+                  );
+                }
+
+                const filterLower = moreStatsFilter.trim().toLowerCase();
+                const categoriesToDisplay = Object.keys(rawMoreStats).filter(cat => 
+                  moreStatsCategory === 'All' || moreStatsCategory === cat
+                );
+
+                let totalRendered = 0;
+
+                return (
+                  <>
+                    {categoriesToDisplay.map((category) => {
+                      const items = (rawMoreStats[category] || []).filter(item =>
+                        !filterLower || item.label.toLowerCase().includes(filterLower) || item.key.toLowerCase().includes(filterLower)
+                      );
+
+                      if (items.length === 0) return null;
+                      totalRendered += items.length;
+
+                      return (
+                        <div key={category} className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            <h4 className="text-xs font-black text-slate-300 uppercase tracking-wider">{category}</h4>
+                            <span className="text-xs text-slate-500 font-bold">({items.length})</span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                            {items.map((stat, idx) => (
+                              <div
+                                key={idx}
+                                className="bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 rounded-2xl p-3 flex items-center justify-between gap-3 transition-colors"
+                              >
+                                <span className="text-xs font-bold text-slate-300 truncate" title={stat.label}>
+                                  {stat.label}
+                                </span>
+                                <span className="text-xs font-black text-emerald-400 shrink-0 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl">
+                                  {stat.value}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {totalRendered === 0 && (
+                      <div className="py-12 text-center text-slate-500 text-sm font-medium">
+                        No metrics match your search filter "{moreStatsFilter}".
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
           </div>
         </div>
       )}

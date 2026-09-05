@@ -332,11 +332,87 @@ async def scrape_player_profile(username: str, profile_url: Optional[str] = None
     rank_score_str = f"{current_rs:,} RS" if isinstance(current_rs, int) else str(current_rs)
     profile_target_url = f"https://tracker.gg/marvel-rivals/profile/ign/{encoded_ign}/overview"
 
+    # 7. Extended Overview ("More Stats") Categorized Extraction
+    more_stats_categories = {
+        "Game": [
+            ("matchesPlayed", "Matches Played"),
+            ("matchesWon", "Wins"),
+            ("winRate", "Win %"),
+            ("totalMvp", "MVPs"),
+            ("totalMvpPct", "MVP %"),
+            ("totalSvp", "SVPs"),
+            ("totalSvpPct", "SVP %"),
+            ("timePlayed", "Time Played")
+        ],
+        "Combat": [
+            ("kills", "Kills"),
+            ("deaths", "Deaths"),
+            ("assists", "Assists"),
+            ("kdRatio", "K/D Ratio"),
+            ("kdaRatio", "KDA Ratio"),
+            ("lastKills", "Last Kills"),
+            ("headKills", "Head Kills"),
+            ("soloKills", "Solo Kills"),
+            ("finalBlows", "Final Blows"),
+            ("chaosHits", "Chaos Hits"),
+            ("continueKills3", "Continue Kills (3)"),
+            ("continueKills4", "Continue Kills (4)"),
+            ("continueKills5", "Continue Kills (5)"),
+            ("continueKills6", "Continue Kills (6)"),
+            ("mainAttacks", "Main Attacks"),
+            ("mainAttackHits", "Main Attack Hits")
+        ],
+        "Support & Healing": [
+            ("totalHeroHeal", "Total Hero Heal"),
+            ("totalHeroHealPerMinute", "Healing / 10m"),
+            ("healingPerMinute", "Healing / Min"),
+            ("supportPoints", "Support Points")
+        ],
+        "Defense & Damage": [
+            ("totalHeroDamage", "Total Hero Damage"),
+            ("totalHeroDamagePerMinute", "Damage / 10m"),
+            ("damagePerMinute", "Damage / Min"),
+            ("totalDamageTaken", "Damage Blocked / Taken"),
+            ("damageBlocked", "Damage Blocked"),
+            ("maxSurvivalKills", "Max Survival Streak")
+        ]
+    }
+
+    processed_stat_keys = set()
+    more_stats_result = {}
+
+    for cat_name, key_tuples in more_stats_categories.items():
+        cat_items = []
+        for key_name, default_label in key_tuples:
+            st = overview_stats.get(key_name, {})
+            if isinstance(st, dict) and (st.get("displayValue") is not None or st.get("value") is not None):
+                label = st.get("displayName") or default_label
+                val = st.get("displayValue")
+                if val is None:
+                    val = str(st.get("value"))
+                cat_items.append({"label": label, "value": str(val), "key": key_name})
+                processed_stat_keys.add(key_name)
+        if cat_items:
+            more_stats_result[cat_name] = cat_items
+
+    # Catch-all for any unmapped overview_stats
+    other_items = []
+    for k, v in overview_stats.items():
+        if k not in processed_stat_keys and isinstance(v, dict):
+            disp_val = v.get("displayValue") or (str(v.get("value")) if v.get("value") is not None else None)
+            if disp_val is not None:
+                disp_name = v.get("displayName") or k
+                other_items.append({"label": disp_name, "value": str(disp_val), "key": k})
+
+    if other_items:
+        more_stats_result["Additional Metrics"] = other_items
+
     return {
         # Top-level legacy backward compatibility keys
         "player_name": clean_username,
         "avatar_url": avatar_url,
         "profile_url": profile_target_url,
+        "more_stats": more_stats_result,
         "rank": {
             "tier_name": tier_name,
             "rank_score": rank_score_str,
@@ -426,4 +502,5 @@ async def scrape_player_profile(username: str, profile_url: Optional[str] = None
         "hero_mastery": heroes_list,
         "match_history": matches_list
     }
+
 
