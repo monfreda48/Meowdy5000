@@ -2475,10 +2475,18 @@ ${payload.stack || 'No stack trace available.'}
     cleanupOldApkFiles();
     checkForUpdates(true);
 
-    if (claimedProfile?.username) {
-      console.log(`[ClaimedProfile] Auto-loading claimed profile: ${claimedProfile.username}`);
-      setQuery(claimedProfile.username);
-      fetchStats(null, claimedProfile.username, season);
+    const saved = localStorage.getItem('claimed_profile');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed?.username) {
+          console.log(`[ClaimedProfile] Auto-loading claimed profile: ${parsed.username}`);
+          setQuery(parsed.username);
+          fetchStats(null, parsed.username, season);
+        }
+      } catch (e) {
+        console.error('Error auto-loading claimed profile:', e);
+      }
     } else if (autoLoadHomeProfile && pinnedHomeProfile?.username) {
       console.log(`[HomeProfile] Auto-loading pinned home profile: ${pinnedHomeProfile.username}`);
       setQuery(pinnedHomeProfile.username);
@@ -3480,9 +3488,12 @@ const DEFAULT_SEASON_NUM = 19;
                 {claimedProfile?.username?.toLowerCase() === stats.current.username?.toLowerCase() ? (
                   <button
                     type="button"
-                    onClick={() => handleUnclaimProfile()}
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setShowUnclaimConfirmModal(true);
+                    }}
                     className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-red-600 hover:to-rose-600 text-white transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20 border border-emerald-400/50 uppercase tracking-wider font-black group"
-                    title="Click to unclaim profile"
+                    title="Profile tracking active. Click to unclaim profile"
                   >
                     <span className="group-hover:hidden">👑 TRACKING ACTIVE</span>
                     <span className="hidden group-hover:inline">✕ Unclaim Profile</span>
