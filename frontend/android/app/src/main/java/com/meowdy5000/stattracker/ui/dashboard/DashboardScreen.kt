@@ -601,17 +601,19 @@ fun DashboardScreen(
                             // 5. App Updates & Maintenance
                             Text("⚡ APP UPDATES & MAINTENANCE", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.height(8.dp))
-                            OutlinedButton(
+                            NavigationDrawerItem(
+                                label = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(imageVector = Icons.Default.Refresh, contentDescription = null)
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text("Check for Updates")
+                                    }
+                                },
+                                selected = false,
                                 onClick = {
                                     scope.launch { updateManager.checkForUpdates() }
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-
-                                Icon(Icons.Default.Refresh, contentDescription = null)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Check for App Release Updates")
-                            }
+                                }
+                            )
 
                             Spacer(Modifier.height(8.dp))
                             NavigationDrawerItem(

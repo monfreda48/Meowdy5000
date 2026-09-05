@@ -12,7 +12,7 @@ if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 import httpx
-from fastapi import FastAPI, Depends, Query, HTTPException, Response
+from fastapi import FastAPI, Depends, Query, HTTPException, Response, Request
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -100,18 +100,28 @@ os.makedirs(RELEASES_DIR, exist_ok=True)
 
 # App Self-Update Endpoints
 @app.get("/api/app/version/latest", response_model=AppVersionInfo)
-async def get_latest_app_version():
-    """Reads current app update distribution metadata."""
+async def get_latest_app_version(request: Request):
+    """Reads current app update distribution metadata with dynamic host resolution."""
     version_meta_path = os.path.join(RELEASES_DIR, "version.json")
+    
+    # Dynamically build base URL from the incoming request (preserves tunnel, LAN, or cellular domains)
+    base_url = str(request.base_url).rstrip("/")
+    dynamic_download_url = f"{base_url}/api/app/download/latest"
+
     if not os.path.exists(version_meta_path):
         return {
             "version_code": 999,
             "version_name": "1.0.1",
-            "download_url": "http://10.0.2.2:8000/api/app/download/latest",
-            "changelog": "UI performance enhancements & complete telemetry parsing."
+            "download_url": dynamic_download_url,
+            "changelog": "Dynamic network failover & live telemetry enhancements."
         }
+
     with open(version_meta_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+        # Override hardcoded download_url if it targets loopback 10.0.2.2 or 127.0.0.1
+        if "10.0.2.2" in data.get("download_url", "") or "127.0.0.1" in data.get("download_url", ""):
+            data["download_url"] = dynamic_download_url
+        return data
 
 @app.get("/api/app/download/latest")
 async def download_latest_apk():
