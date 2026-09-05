@@ -467,9 +467,7 @@ export default function App() {
     try {
       const saved = localStorage.getItem('claimed_profile');
       return saved ? JSON.parse(saved) : null;
-    } catch (e) {
-      return null;
-    }
+    } catch { return null; }
   });
 
   const [showClaimModal, setShowClaimModal] = useState(false);
@@ -2076,10 +2074,7 @@ export default function App() {
     return (import.meta.env.VITE_APP_COMMIT_SHA || 'afab44e').slice(0, 7);
   };
 
-  const getAppVersionName = (backendData = null) => {
-    if (nativeAppVersion) return nativeAppVersion;
-    return pkg.version || '1.0.24';
-  };
+  const getAppVersionName = () => pkg.version || '1.0.24';
 
   const checkForUpdates = async (isSilent = true) => {
     if (!isSilent) {
@@ -4539,8 +4534,9 @@ const DEFAULT_SEASON_NUM = 19;
 
               {/* Scrollable Submenu Body Container */}
               <div className="overflow-y-auto space-y-3 pr-1">
-                {/* Mode Selection Cards */}
-                <div className="space-y-2">
+                {window.Capacitor?.isNativePlatform() ? (
+                  /* Mode Selection Cards */
+                  <div className="space-y-2">
                 <button
                   onClick={() => { triggerHaptic('light'); setAutoUpdatePermission('silent'); }}
                   className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-1 ${autoUpdatePref === 'silent'
@@ -4597,6 +4593,11 @@ const DEFAULT_SEASON_NUM = 19;
                   </p>
                 </button>
               </div>
+                ) : (
+                  <div className="text-xs text-slate-500 font-mono text-center py-4 bg-[#131b2f] rounded-xl border border-slate-800">
+                    Web Version: v{getAppVersionName()} (Managed by Server)
+                  </div>
+                )}
 
               {/* Default Tracking Mode Setting Card */}
               <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-4 space-y-3">
@@ -5302,62 +5303,68 @@ const DEFAULT_SEASON_NUM = 19;
                 </div>
 
                 {/* Drawer Group 1: App Updates */}
-                <div className="space-y-2.5">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                    ⚡ App Updates & Maintenance
-                  </span>
-
-                  <button
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      triggerHaptic('light');
-                      handleOneClickUpdate();
-                    }}
-                    disabled={checkingUpdate || isApplyingUpdate}
-                    className="w-full bg-[#131b2f] hover:bg-emerald-500/10 border border-slate-700/80 hover:border-emerald-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer disabled:opacity-80"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0">
-                        {checkingUpdate ? (
-                          <div className="w-4 h-4 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin"></div>
-                        ) : (
-                          '⚡'
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
-                          {checkingUpdate ? 'Checking for updates...' : 'Check for update'}
-                        </h4>
-                        <p className="text-[10px] text-slate-400">
-                          {checkingUpdate ? 'Connecting to GitHub API...' : 'Check, download & install latest release'}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">
-                      {checkingUpdate ? '⏳' : '→'}
+                {window.Capacitor?.isNativePlatform() ? (
+                  <div className="space-y-2.5">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                      ⚡ App Updates & Maintenance
                     </span>
-                  </button>
 
-                  <button
-                    onClick={() => { setIsMenuOpen(false); setShowAutoUpdateModal(true); }}
-                    className="w-full bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-sm">
-                        ⚙️
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        triggerHaptic('light');
+                        handleOneClickUpdate();
+                      }}
+                      disabled={checkingUpdate || isApplyingUpdate}
+                      className="w-full bg-[#131b2f] hover:bg-emerald-500/10 border border-slate-700/80 hover:border-emerald-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer disabled:opacity-80"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0">
+                          {checkingUpdate ? (
+                            <div className="w-4 h-4 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin"></div>
+                          ) : (
+                            '⚡'
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
+                            {checkingUpdate ? 'Checking for updates...' : 'Check for update'}
+                          </h4>
+                          <p className="text-[10px] text-slate-400">
+                            {checkingUpdate ? 'Connecting to GitHub API...' : 'Check, download & install latest release'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-white group-hover:text-teal-400 transition-colors">
-                          Auto-Update Settings
-                        </h4>
-                        <p className="text-[10px] text-slate-400">
-                          Status: <span className="text-emerald-400 font-bold">{autoUpdatePref === 'enabled' ? 'Enabled' : autoUpdatePref === 'never_ask' ? 'Off' : 'Ask on startup'}</span>
-                        </p>
+                      <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">
+                        {checkingUpdate ? '⏳' : '→'}
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => { setIsMenuOpen(false); setShowAutoUpdateModal(true); }}
+                      className="w-full bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-sm">
+                          ⚙️
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white group-hover:text-teal-400 transition-colors">
+                            Auto-Update Settings
+                          </h4>
+                          <p className="text-[10px] text-slate-400">
+                            Status: <span className="text-emerald-400 font-bold">{autoUpdatePref === 'enabled' ? 'Enabled' : autoUpdatePref === 'never_ask' ? 'Off' : 'Ask on startup'}</span>
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <span className="text-xs text-slate-500 group-hover:text-teal-400 font-bold">→</span>
-                  </button>
-                </div>
+                      <span className="text-xs text-slate-500 group-hover:text-teal-400 font-bold">→</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-xs text-slate-500 font-mono text-center py-2.5 bg-[#131b2f] rounded-xl border border-slate-800">
+                    Web Version: v{getAppVersionName()} (Managed by Server)
+                  </div>
+                )}
 
                 {/* Drawer Group 2: Storage & Data */}
                 <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
