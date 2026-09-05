@@ -2,9 +2,18 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Build",
+      "label": "Android: Check Devices",
       "type": "shell",
-      "command": "npm --prefix frontend run build:android",
+      "command": "adb devices",
+      "problemMatcher": []
+    },
+    {
+      "label": "Android: Build & Install",
+      "type": "shell",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend/android"
+      },
+      "command": ".\\gradlew.bat installDebug",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -12,21 +21,21 @@
       "problemMatcher": []
     },
     {
-      "label": "Install APK",
+      "label": "Android: Launch App",
       "type": "shell",
-      "command": "& 'C:/Users/User/AppData/Local/Android/Sdk/platform-tools/adb.exe' -s emulator-5554 install -r frontend/android/app/build/outputs/apk/debug/app-debug.apk",
+      "command": "adb shell am start -n com.meowdy5000.stattracker/.MainActivity",
       "problemMatcher": []
     },
     {
-      "label": "Run",
+      "label": "Android: Stream App Logs",
       "type": "shell",
-      "command": "& 'C:/Users/User/AppData/Local/Android/Sdk/platform-tools/adb.exe' -s emulator-5554 shell am start -n com.meowdy5000.stattracker/.MainActivity",
+      "command": "adb logcat *:E",
       "problemMatcher": []
     },
     {
-      "label": "Stop",
+      "label": "Android: Capture Screenshot",
       "type": "shell",
-      "command": "& 'C:/Users/User/AppData/Local/Android/Sdk/platform-tools/adb.exe' -s emulator-5554 shell am force-stop com.meowdy5000.stattracker",
+      "command": "adb shell screencap -p /sdcard/screen.png; adb pull /sdcard/screen.png ./debug_screen.png",
       "problemMatcher": []
     }
   ]

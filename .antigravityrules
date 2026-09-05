@@ -1,0 +1,30 @@
+# Antigravity Workspace Agent Rules — Phase 1 ADB & Build Loop Enforcement
+
+## 1. Emulator Device Verification & Management
+- Always check connected Android emulators using `adb devices`.
+- If multiple devices are present, target the active emulator explicitly with `-s <emulator-id>` (e.g., `-s emulator-5554`).
+- App Package Name: `com.meowdy5000.stattracker`
+- App Main Activity: `com.meowdy5000.stattracker/.MainActivity`
+
+## 2. Mandatory Build & Installation Verification Loop
+- Before marking any Android coding or UI task complete, you MUST execute:
+  1. Frontend Web Build & Capacitor Sync: `npm run build && npx cap sync android` (in `frontend/`).
+  2. Native Android Build & Installation: `.\gradlew.bat installDebug` (in `frontend/android/`).
+- Verify that Gradle exits with `code 0` and `BUILD SUCCESSFUL`.
+
+## 3. Runtime Launch & Diagnostic Protocol
+- Immediately after installing a new build, launch the app:
+  `adb shell am start -n com.meowdy5000.stattracker/.MainActivity`
+- Inspect logcat for runtime crashes or errors:
+  `adb logcat -d | Select-String "FATAL EXCEPTION|com.meowdy5000.stattracker"`
+- Ensure zero unhandled exceptions or crashes occurred.
+
+## 4. UI Automation & Screen Validation
+- Use ADB shell input commands for UI interaction:
+  - Tap: `adb shell input tap <x> <y>`
+  - Text Entry: `adb shell input text "<string>"`
+  - Navigation Keys: `adb shell input keyevent <KEYCODE>` (e.g., `4` for BACK, `66` for ENTER)
+  - Swipe: `adb shell input swipe <x1> <y1> <x2> <y2> <duration_ms>`
+- Whenever UI verification is requested or visual state must be verified:
+  - Capture screen: `adb shell screencap -p /sdcard/screen.png`
+  - Pull artifact: `adb pull /sdcard/screen.png ./debug_screen.png`

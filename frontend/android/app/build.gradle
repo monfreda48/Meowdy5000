@@ -2,6 +2,27 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+def versionPropsFile = file("version.properties")
+def Properties versionProps = new Properties()
+
+if (versionPropsFile.exists()) {
+    versionProps.load(new FileInputStream(versionPropsFile))
+} else {
+    versionProps['VERSION_MAJOR'] = '1'
+    versionProps['VERSION_MINOR'] = '0'
+    versionProps['VERSION_PATCH'] = '0'
+    versionProps['VERSION_BUILD'] = '1'
+    versionProps['VERSION_CODE'] = '1'
+    versionProps.store(new FileOutputStream(versionPropsFile), null)
+}
+
+def major = versionProps.getProperty('VERSION_MAJOR', '1')
+def minor = versionProps.getProperty('VERSION_MINOR', '0')
+def patch = versionProps.getProperty('VERSION_PATCH', '0')
+def buildNum = versionProps.getProperty('VERSION_BUILD', '1').toInteger()
+def currentVersionCode = versionProps.getProperty('VERSION_CODE', '1').toInteger()
 
 android {
     namespace 'com.meowdy5000.stattracker'
@@ -11,8 +32,8 @@ android {
         applicationId "com.meowdy5000.stattracker"
         minSdk 24
         targetSdk 35
-        versionCode 21
-        versionName "1.0.21"
+        versionCode currentVersionCode
+        versionName "${major}.${minor}.${patch} (Build ${buildNum})"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
@@ -21,6 +42,17 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    buildFeatures {
+        compose true
+        buildConfig true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.5.14'
     }
     buildTypes {
         debug {
@@ -74,6 +106,44 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:1.2.0"
     implementation "androidx.core:core-splashscreen:1.0.1"
     implementation project(':capacitor-android')
+
+    // Jetpack Compose & Material 3
+    implementation "androidx.compose.ui:ui:1.6.8"
+    implementation "androidx.compose.material3:material3:1.2.1"
+    implementation "androidx.compose.ui:ui-tooling-preview:1.6.8"
+    implementation "androidx.activity:activity-compose:1.9.0"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.8.1"
+    implementation "io.coil-kt:coil-compose:2.6.0"
+    implementation "com.squareup.okhttp3:okhttp:4.12.0"
 }
 
+
 apply from: 'capacitor.build.gradle'
+
+task incrementVersion {
+    doLast {
+        def props = new Properties()
+        if (versionPropsFile.exists()) {
+            props.load(new FileInputStream(versionPropsFile))
+        } else {
+            props['VERSION_MAJOR'] = '1'
+            props['VERSION_MINOR'] = '0'
+            props['VERSION_PATCH'] = '0'
+            props['VERSION_BUILD'] = '1'
+            props['VERSION_CODE'] = '1'
+        }
+        def nextBuild = props.getProperty('VERSION_BUILD', '1').toInteger() + 1
+        def nextCode = props.getProperty('VERSION_CODE', '1').toInteger() + 1
+        props['VERSION_BUILD'] = nextBuild.toString()
+        props['VERSION_CODE'] = nextCode.toString()
+        props.store(new FileOutputStream(versionPropsFile), "Auto-incremented build version")
+        println("App version incremented to: ${major}.${minor}.${patch} (Build ${nextBuild}) [Code:${nextCode}]")
+    }
+}
+
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.hasTask(":app:assembleDebug") || taskGraph.hasTask(":app:installDebug")) {
+        tasks.findByName("preBuild")?.dependsOn("incrementVersion")
+    }
+}
+

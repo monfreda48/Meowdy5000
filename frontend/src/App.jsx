@@ -110,6 +110,15 @@ const COLOR_THEMES = {
     gradient: 'from-amber-400 to-yellow-500',
     border: 'border-amber-500/50',
     bg: 'bg-amber-500/10'
+  },
+  jeangrey: {
+    id: 'jeangrey',
+    name: 'Jean Grey (Monochrome)',
+    icon: '🌪️',
+    accentHex: '#9ca3af',
+    gradient: 'from-gray-300 to-slate-400',
+    border: 'border-gray-400/50',
+    bg: 'bg-gray-500/10'
   }
 };
 
@@ -144,6 +153,11 @@ const getApiUrl = (path) => {
       return `${base}${path.startsWith('/') ? path : '/' + path}`;
     }
   } catch (e) { }
+  if (typeof window !== 'undefined') {
+    if (window.Capacitor || window.location.hostname === 'localhost' || window.location.origin.includes('localhost')) {
+      return `http://10.0.2.2:8000${path.startsWith('/') ? path : '/' + path}`;
+    }
+  }
   return path;
 };
 
@@ -252,14 +266,14 @@ export default function App() {
 
   const [activeColorScheme, setActiveColorScheme] = useState(() => {
     try {
-      return localStorage.getItem('m5_color_scheme') || 'emerald';
+      return localStorage.getItem('m5_color_scheme') || 'jeangrey';
     } catch (e) {
-      return 'emerald';
+      return 'jeangrey';
     }
   });
 
   useEffect(() => {
-    const theme = COLOR_THEMES[activeColorScheme] || COLOR_THEMES.emerald;
+    const theme = COLOR_THEMES[activeColorScheme] || COLOR_THEMES.jeangrey;
     document.documentElement.style.setProperty('--accent-color', theme.accentHex);
     document.documentElement.setAttribute('data-theme', activeColorScheme);
   }, [activeColorScheme]);
@@ -2874,8 +2888,8 @@ const DEFAULT_SEASON_NUM = 19;
           );
           clearTimeout(bTimeout);
           data = await safeFetchJson(response);
-          if (!response.ok) {
-            throw new Error(data?.error || 'Backend request failed');
+          if (!response.ok || data?.status === 'pending_upgrade') {
+            throw new Error(data?.error || 'Backend scraper pending upgrade');
           }
         } catch (backendErr) {
           console.warn('[FetchStats] Custom backend request failed or timed out (2s), falling back to direct client fetch:', backendErr);
