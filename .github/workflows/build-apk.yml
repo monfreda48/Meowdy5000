@@ -63,17 +63,18 @@ jobs:
         with:
           name: Meowdy5000-StatTracker-APK
           path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
-
       - name: Extract Version Info
         id: get_version
         run: |
-          V_CODE=$(grep -shoE 'versionCode\s*=?\s*[0-9]+' frontend/android/app/build.gradle* frontend/android/app/version.properties 2>/dev/null | head -1 | grep -oE '[0-9]+' || true)
-          V_NAME=$(grep -shoE 'versionName\s*=?\s*["'\''"][^"'\'']+["'\''"]' frontend/android/app/build.gradle* frontend/android/app/version.properties 2>/dev/null | head -1 | sed -E 's/.*["'\''"]([^"'\'']+)["'\''"]/\1/' || true)
-          if [ -z "$V_CODE" ]; then V_CODE="23"; fi
-          if [ -z "$V_NAME" ]; then V_NAME="1.0.23"; fi
+          # Base offset so the build code stays higher than your current phone build (Build 22)
+          BASE_OFFSET=20
+          V_CODE=$((BASE_OFFSET + GITHUB_RUN_NUMBER))
+          V_NAME="1.0.${V_CODE}"
+          
           echo "version_code=$V_CODE" >> $GITHUB_OUTPUT
           echo "version_name=$V_NAME" >> $GITHUB_OUTPUT
           echo "tag=v$V_NAME" >> $GITHUB_OUTPUT
+          echo "Automated Version: $V_NAME (Build $V_CODE)"
 
       - name: Publish APK to GitHub Release
         uses: softprops/action-gh-release@v2
