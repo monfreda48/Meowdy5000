@@ -12,6 +12,7 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { Share } from '@capacitor/share';
 import { Clipboard } from '@capacitor/clipboard';
 import { ScreenOrientation } from '@capacitor/screen-orientation';
+import pkg from '../package.json';
 
 const triggerHaptic = async (type = 'light') => {
   try {
@@ -227,6 +228,7 @@ export default function App() {
   };
 
   useEffect(() => {
+    try { localStorage.removeItem('installed_version_name'); } catch (e) { }
     fetchDynamicSeasons();
   }, []);
 
@@ -2063,12 +2065,7 @@ export default function App() {
 
   const getAppVersionName = (backendData = null) => {
     if (nativeAppVersion) return nativeAppVersion;
-    try {
-      const savedVer = localStorage.getItem('installed_version_name');
-      if (savedVer) return savedVer;
-    } catch (e) { }
-    if (backendData?.currentVersionName) return backendData.currentVersionName;
-    return '1.0.14';
+    return pkg.version || '1.0.24';
   };
 
   const checkForUpdates = async (isSilent = true) => {
