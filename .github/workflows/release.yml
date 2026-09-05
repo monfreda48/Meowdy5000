@@ -24,11 +24,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          build-root-directory: frontend/android
-
       - name: Make Gradlew Executable
         run: chmod +x frontend/android/gradlew
 
@@ -48,7 +43,7 @@ jobs:
 
       - name: Build Debug APK
         working-directory: frontend/android
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Create Git Release & Upload APK
         uses: softprops/action-gh-release@v2
