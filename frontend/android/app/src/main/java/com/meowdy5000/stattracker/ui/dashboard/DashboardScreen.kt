@@ -168,6 +168,23 @@ fun DashboardScreen(
     var showCheckUpdateDialog by remember { mutableStateOf(false) }
     var isCheckingUpdate by remember { mutableStateOf(false) }
     var updateInfoText by remember { mutableStateOf("") }
+    val prefs = remember(context) { context.getSharedPreferences("dashboard_prefs", Context.MODE_PRIVATE) }
+
+    fun loadCardOrder(): List<String> {
+        val defaultList = listOf("OVERALL_STATS", "TOP_HEROES", "ROLE_BREAKDOWN", "RECENT_MATCHES")
+        val savedCsv = prefs.getString("dashboard_card_order", null)
+        if (savedCsv.isNullOrBlank()) return defaultList
+        val parsed = savedCsv.split(",").map { it.trim() }.filter { it in defaultList }
+        val missing = defaultList.filter { it !in parsed }
+        return parsed + missing
+    }
+
+    fun saveCardOrder(newOrder: List<String>) {
+        prefs.edit().putString("dashboard_card_order", newOrder.joinToString(",")).apply()
+    }
+
+    var cardOrder by remember { mutableStateOf(loadCardOrder()) }
+    var showCustomizeDialog by remember { mutableStateOf(false) }
     var showDonateDialog by remember { mutableStateOf(false) }
     var showClaimDialog by remember { mutableStateOf(false) }
     var claimInputUrl by remember { mutableStateOf("") }
@@ -484,6 +501,105 @@ fun DashboardScreen(
             dismissButton = {
                 TextButton(onClick = { showClaimDialog = false }) {
                     Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Customize Dashboard Stat Cards Layout Dialog
+    if (showCustomizeDialog) {
+        AlertDialog(
+            onDismissRequest = { showCustomizeDialog = false },
+            title = { Text("🎨 Customize Stat Cards", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Rearrange the order of stat cards rendered on your claimed profile dashboard:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                    )
+                    Spacer(Modifier.height(12.dp))
+
+                    cardOrder.forEachIndexed { index, cardId ->
+                        val (title, desc) = when (cardId) {
+                            "OVERALL_STATS" -> "⚔️ Overall Stats & Rank" to "Competitive rank, K/D & overview"
+                            "TOP_HEROES" -> "🦸 Top Heroes Pool" to "Top 3 hero win rates & stats"
+                            "ROLE_BREAKDOWN" -> "🛡️ Role Mastery" to "Vanguard, Duelist & Strategist"
+                            "RECENT_MATCHES" -> "📜 Recent Match History" to "Recent match logs & scores"
+                            else -> cardId to ""
+                        }
+
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            ),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                    Text(desc, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                                }
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(
+                                        enabled = index > 0,
+                                        onClick = {
+                                            if (index > 0) {
+                                                val newOrder = cardOrder.toMutableList()
+                                                val temp = newOrder[index]
+                                                newOrder[index] = newOrder[index - 1]
+                                                newOrder[index - 1] = temp
+                                                cardOrder = newOrder
+                                                saveCardOrder(newOrder)
+                                            }
+                                        }
+                                    ) {
+                                        Text("▲", fontWeight = FontWeight.Bold, color = if (index > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
+                                    }
+
+                                    IconButton(
+                                        enabled = index < cardOrder.size - 1,
+                                        onClick = {
+                                            if (index < cardOrder.size - 1) {
+                                                val newOrder = cardOrder.toMutableList()
+                                                val temp = newOrder[index]
+                                                newOrder[index] = newOrder[index + 1]
+                                                newOrder[index + 1] = temp
+                                                cardOrder = newOrder
+                                                saveCardOrder(newOrder)
+                                            }
+                                        }
+                                    ) {
+                                        Text("▼", fontWeight = FontWeight.Bold, color = if (index < cardOrder.size - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = { showCustomizeDialog = false }) {
+                    Text("Done")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    val defaultOrder = listOf("OVERALL_STATS", "TOP_HEROES", "ROLE_BREAKDOWN", "RECENT_MATCHES")
+                    cardOrder = defaultOrder
+                    saveCardOrder(defaultOrder)
+                }) {
+                    Text("Reset to Default")
                 }
             }
         )
@@ -983,13 +1099,14 @@ fun DashboardScreen(
                     val rolesArray = currentRoot.optJSONArray("role_performance") ?: currentRoot.optJSONArray("roles")
                     val matchesArray = currentRoot.optJSONArray("match_history") ?: currentRoot.optJSONArray("recent_matches") ?: currentRoot.optJSONArray("matches")
 
-                    // 1. Profile Header Card with Avatar & Claim Button
+                    // 1. Profile Header Card with Avatar, Claim Button & Edit Layout Button
                     item {
                         ProfileHeaderCard(
                             playerName = profileData.playerName,
                             avatarUrl = profileData.avatarUrl,
                             isClaimed = isClaimed,
-                            onClaimClick = { showClaimDialog = true }
+                            onClaimClick = { showClaimDialog = true },
+                            onCustomizeLayoutClick = { showCustomizeDialog = true }
                         )
                     }
 
@@ -1053,50 +1170,32 @@ fun DashboardScreen(
                             }
                         }
                     } else {
-                        // 2. Competitive Rank & Skill Rating Card
-                        item {
-                            CompetitiveRankCard(rankInfo = profileData.rank)
-                        }
-
-                        // 3. Combat Overview Accordion Card
-                        item {
-                            CombatOverviewCard(overview = profileData.overview)
-                        }
-
-                        // 4. Per-Minute Combat Rates Card
-                        item {
-                            CombatRatesCard(overview = profileData.overview)
-                        }
-
-                        // 5. Awards & Streaks Card
-                        item {
-                            AwardsCard(overview = profileData.overview, precision = profileData.precisionTotals)
-                        }
-
-                        // 6. Precision & Combat Totals Card
-                        item {
-                            PrecisionCard(precision = profileData.precisionTotals)
-                        }
-
-                        // 7. Role Performance Breakdown Card
-                        if (rolesArray != null && rolesArray.length() > 0) {
-                            item {
-                                RoleMasteryCard(rolesArray)
-                            }
-                        }
-
-                        // 8. Top 3 Heroes Card (with Square Hero Portraits)
-                        val topHeroList = if (profileData.topHeroes.isNotEmpty()) profileData.topHeroes else profileData.heroes.take(3)
-                        if (topHeroList.isNotEmpty()) {
-                            item {
-                                TopHeroesCard(heroes = topHeroList)
-                            }
-                        }
-
-                        // 9. Recent Match History Card (with Hero Thumbnails)
-                        if (matchesArray != null && matchesArray.length() > 0) {
-                            item {
-                                MatchHistoryCard(matchesArray)
+                        // Render Stat Cards in Custom Order
+                        cardOrder.forEach { cardId ->
+                            when (cardId) {
+                                "OVERALL_STATS" -> {
+                                    item { CompetitiveRankCard(rankInfo = profileData.rank) }
+                                    item { CombatOverviewCard(overview = profileData.overview) }
+                                    item { CombatRatesCard(overview = profileData.overview) }
+                                    item { AwardsCard(overview = profileData.overview, precision = profileData.precisionTotals) }
+                                    item { PrecisionCard(precision = profileData.precisionTotals) }
+                                }
+                                "TOP_HEROES" -> {
+                                    val topHeroList = if (profileData.topHeroes.isNotEmpty()) profileData.topHeroes else profileData.heroes.take(3)
+                                    if (topHeroList.isNotEmpty()) {
+                                        item { TopHeroesCard(heroes = topHeroList) }
+                                    }
+                                }
+                                "ROLE_BREAKDOWN" -> {
+                                    if (rolesArray != null && rolesArray.length() > 0) {
+                                        item { RoleMasteryCard(rolesArray) }
+                                    }
+                                }
+                                "RECENT_MATCHES" -> {
+                                    if (matchesArray != null && matchesArray.length() > 0) {
+                                        item { MatchHistoryCard(matchesArray) }
+                                    }
+                                }
                             }
                         }
 

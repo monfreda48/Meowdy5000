@@ -20,12 +20,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.meowdy5000.stattracker.data.ImageLoaderProvider
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
+
 @Composable
 fun ProfileHeaderCard(
     playerName: String,
     avatarUrl: String?,
     isClaimed: Boolean,
-    onClaimClick: () -> Unit
+    onClaimClick: () -> Unit,
+    onCustomizeLayoutClick: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val imageLoader = remember(context) { ImageLoaderProvider.get(context) }
@@ -89,6 +93,14 @@ fun ProfileHeaderCard(
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Text("Claim Profile", color = Color.Black, fontWeight = FontWeight.Bold)
+                }
+            } else if (onCustomizeLayoutClick != null) {
+                OutlinedButton(
+                    onClick = onCustomizeLayoutClick,
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
+                ) {
+                    Text("⚙️ Edit Layout", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                 }
             }
         }
