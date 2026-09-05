@@ -160,15 +160,15 @@ fun DashboardScreen(
     var showTimePicker by remember { mutableStateOf(false) }
     var isReminderEnabled by remember { mutableStateOf(DailyScheduler.isReminderEnabled(context)) }
 
-    // Settings & Options State
-    var autoSnapshotEnabled by remember { mutableStateOf(true) }
+    val prefs = remember(context) { context.getSharedPreferences("dashboard_prefs", Context.MODE_PRIVATE) }
+    var autoSnapshotEnabled by remember { mutableStateOf(prefs.getBoolean("auto_snapshot_enabled", true)) }
+    var snapshotInterval by remember { mutableStateOf(prefs.getString("snapshot_interval", "24hr") ?: "24hr") }
     var showIssueReportDialog by remember { mutableStateOf(false) }
     var issueNotes by remember { mutableStateOf("") }
     var issueReportSuccess by remember { mutableStateOf(false) }
     var showCheckUpdateDialog by remember { mutableStateOf(false) }
     var isCheckingUpdate by remember { mutableStateOf(false) }
     var updateInfoText by remember { mutableStateOf("") }
-    val prefs = remember(context) { context.getSharedPreferences("dashboard_prefs", Context.MODE_PRIVATE) }
 
     fun loadCardOrder(): List<String> {
         val defaultList = listOf("OVERALL_STATS", "TOP_HEROES", "ROLE_BREAKDOWN", "RECENT_MATCHES")
@@ -763,19 +763,61 @@ fun DashboardScreen(
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(Modifier.weight(1f)) {
-                                        Text("Auto Snapshot Tracking", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                                        Text("Record daily stat snapshots on lookups", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                                Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(Modifier.weight(1f)) {
+                                            Text("Auto Snapshot Tracking", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                            Text("Record stat snapshots on lookups", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                                        }
+                                        Switch(
+                                            checked = autoSnapshotEnabled,
+                                            onCheckedChange = {
+                                                autoSnapshotEnabled = it
+                                                prefs.edit().putBoolean("auto_snapshot_enabled", it).apply()
+                                            }
+                                        )
                                     }
-                                    Switch(
-                                        checked = autoSnapshotEnabled,
-                                        onCheckedChange = { autoSnapshotEnabled = it }
-                                    )
+
+                                    if (autoSnapshotEnabled) {
+                                        Spacer(Modifier.height(10.dp))
+                                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                                        Spacer(Modifier.height(8.dp))
+
+                                        Text(
+                                            text = "Snapshot Data Increment",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(Modifier.height(6.dp))
+
+                                        val intervals = listOf("12hr" to "12 Hours", "24hr" to "24 Hours", "1w" to "1 Week")
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            intervals.forEach { (key, _) ->
+                                                val isSelected = snapshotInterval == key
+                                                FilterChip(
+                                                    selected = isSelected,
+                                                    onClick = {
+                                                        snapshotInterval = key
+                                                        prefs.edit().putString("snapshot_interval", key).apply()
+                                                    },
+                                                    label = { Text(key, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
+                                                    modifier = Modifier.weight(1f),
+                                                    colors = FilterChipDefaults.filterChipColors(
+                                                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                                        selectedLabelColor = Color.Black
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
