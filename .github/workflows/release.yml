@@ -26,12 +26,18 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+        with:
+          build-root-directory: frontend/android
+
+      - name: Make Gradlew Executable
+        run: chmod +x frontend/android/gradlew
 
       - name: Extract Version Info
         id: get_version
+        working-directory: frontend/android
         run: |
-          V_CODE=$(grep -oE 'versionCode\s*=?\s*[0-9]+' frontend/android/app/build.gradle* frontend/android/app/version.properties 2>/dev/null | head -1 | grep -oE '[0-9]+')
-          V_NAME=$(grep -oE 'versionName\s*=?\s*["'\''"][^"'\'']+["'\''"]' frontend/android/app/build.gradle* frontend/android/app/version.properties 2>/dev/null | head -1 | sed -E 's/.*["'\''"]([^"'\'']+)["'\''"]/\1/')
+          V_CODE=$(grep -shoE 'versionCode\s*=?\s*[0-9]+' app/build.gradle* app/version.properties 2>/dev/null | head -1 | grep -oE '[0-9]+' || true)
+          V_NAME=$(grep -shoE 'versionName\s*=?\s*["'\''"][^"'\'']+["'\''"]' app/build.gradle* app/version.properties 2>/dev/null | head -1 | sed -E 's/.*["'\''"]([^"'\'']+)["'\''"]/\1/' || true)
           
           if [ -z "$V_CODE" ]; then V_CODE="23"; fi
           if [ -z "$V_NAME" ]; then V_NAME="1.0.23"; fi
@@ -40,24 +46,11 @@ jobs:
           echo "version_name=$V_NAME" >> $GITHUB_OUTPUT
           echo "tag=v$V_NAME" >> $GITHUB_OUTPUT
 
-      - name: Check if Tag Exists
-        id: check_tag
-        run: |
-          TAG="${{ steps.get_version.outputs.tag }}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Tag $TAG already exists. Skipping build."
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Build Debug APK
-        if: steps.check_tag.outputs.exists == 'false'
         working-directory: frontend/android
         run: ./gradlew assembleDebug
 
-      - name: Create Release & Upload APK
-        if: steps.check_tag.outputs.exists == 'false'
+      - name: Create Git Release & Upload APK
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.get_version.outputs.tag }}
