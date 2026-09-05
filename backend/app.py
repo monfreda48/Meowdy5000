@@ -26,9 +26,13 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB = os.path.join(BASE_DIR, 'stats.db')
 
+def get_db_connection():
+    return sqlite3.connect(DB)
+
 def init_db():
-    conn = sqlite3.connect(DB)
-    conn.execute('''
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS player_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             query TEXT,
@@ -37,9 +41,9 @@ def init_db():
             kd_ratio REAL,
             top_hero TEXT,
             tracker_score REAL
-        )
+        );
     ''')
-    conn.execute('''
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS error_reports (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp DATETIME,
@@ -48,9 +52,9 @@ def init_db():
             user_notes TEXT,
             user_agent TEXT,
             platform TEXT
-        )
+        );
     ''')
-    conn.execute('''
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS stat_reports (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp DATETIME,
@@ -61,9 +65,9 @@ def init_db():
             expected_value TEXT,
             reason TEXT,
             platform TEXT
-        )
+        );
     ''')
-    conn.execute('''
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS claimed_profiles (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
@@ -74,7 +78,18 @@ def init_db():
             rivals_tracker_url TEXT,
             claimed_at DATETIME,
             cached_stats TEXT
-        )
+        );
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS tracked_players (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            player_name TEXT UNIQUE NOT NULL,
+            profile_url TEXT NOT NULL,
+            platform TEXT DEFAULT 'pc',
+            is_claimed INTEGER DEFAULT 1,
+            last_scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            cached_stats TEXT
+        );
     ''')
     conn.commit()
     conn.close()

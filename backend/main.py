@@ -13,7 +13,7 @@ if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 import httpx
-from fastapi import FastAPI, Depends, Query, HTTPException, Response, Request
+from fastapi import FastAPI, Depends, Query, HTTPException, Response, Request, Body
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 
-from backend.database import init_db, get_db, User
+from backend.database import init_db, get_db, User, TrackedPlayer
 from backend.scrapers.season_scraper import get_season_info
 from backend.scrapers.profile_scraper import scrape_player_profile
 
@@ -92,6 +92,15 @@ class ClaimRequest(BaseModel):
     username: str
     profile_url: str
 
+class ProfileClaimRequest(BaseModel):
+    player_name: str
+    profile_url: str
+    platform: Optional[str] = "pc"
+    stats: Optional[Dict[str, Any]] = None
+
+class RefreshRequest(BaseModel):
+    player_name: Optional[str] = None
+
 class ErrorReportRequest(BaseModel):
     error: str
     stack: Optional[str] = None
@@ -149,6 +158,14 @@ async def get_latest_app_version(request: Request):
         "download_url": f"{base_url}/api/app/download/latest",
         "changelog": "Initial release."
     }
+
+@app.get("/api/check-update")
+async def check_update_alias(request: Request):
+    return await get_latest_app_version(request)
+
+@app.post("/api/report-error")
+async def report_error(payload: dict = Body(None)):
+    return {"status": "received"}
 
 @app.get("/api/app/download/latest")
 async def download_latest_apk():
@@ -278,6 +295,93 @@ async def claim_player_profile(req: ClaimRequest, db: AsyncSession = Depends(get
 
     await db.commit()
     return profile_data
+
+@app.post("/api/profile/claim")
+async def claim_profile_v2(req: ProfileClaimRequest, db: AsyncSession = Depends(get_db)):
+    clean_name = req.player_name.strip()
+    clean_url = req.profile_url.strip()
+    if not clean_name or not clean_url:
+        raise HTTPException(status_code=400, detail="player_name and profile_url are required.")
+    
+    result = await db.execute(select(TrackedPlayer).where(TrackedPlayer.player_name == clean_name))
+    player = result.scalars().first()
+    
+    stats_str = json.dumps(req.stats) if req.stats else None
+    now = datetime.utcnow()
+    
+    if player:
+        player.profile_url = clean_url
+        player.platform = req.platform or "pc"
+        player.is_claimed = 1
+        player.last_scraped_at = now
+        if stats_str:
+            player.cached_stats = stats_str
+    else:
+        player = TrackedPlayer(
+            player_name=clean_name,
+            profile_url=clean_url,
+            platform=req.platform or "pc",
+            is_claimed=1,
+            last_scraped_at=now,
+            cached_stats=stats_str
+        )
+        db.add(player)
+    
+    await db.commit()
+    return {
+        "status": "success",
+        "message": f"Profile for {clean_name} claimed successfully.",
+        "player_name": clean_name,
+        "profile_url": clean_url,
+        "is_claimed": 1
+    }
+
+@app.get("/api/profile/claimed")
+async def get_claimed_profile_v2(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(TrackedPlayer).where(TrackedPlayer.is_claimed == 1).order_by(TrackedPlayer.last_scraped_at.desc()))
+    player = result.scalars().first()
+    
+    if not player:
+        return {"claimed": False, "player": None}
+    
+    cached_stats = None
+    if player.cached_stats:
+        try:
+            cached_stats = json.loads(player.cached_stats)
+        except Exception:
+            pass
+            
+    return {
+        "claimed": True,
+        "player_name": player.player_name,
+        "profile_url": player.profile_url,
+        "platform": player.platform,
+        "last_scraped_at": player.last_scraped_at.isoformat() if player.last_scraped_at else None,
+        "cached_stats": cached_stats
+    }
+
+@app.post("/api/profile/refresh")
+async def refresh_claimed_profile(req: Optional[RefreshRequest] = None, db: AsyncSession = Depends(get_db)):
+    target_name = req.player_name.strip() if (req and req.player_name) else None
+    
+    if target_name:
+        result = await db.execute(select(TrackedPlayer).where(TrackedPlayer.player_name == target_name))
+        player = result.scalars().first()
+    else:
+        result = await db.execute(select(TrackedPlayer).where(TrackedPlayer.is_claimed == 1).order_by(TrackedPlayer.last_scraped_at.desc()))
+        player = result.scalars().first()
+        
+    if not player:
+        raise HTTPException(status_code=404, detail="No claimed player profile found to refresh.")
+        
+    fresh_data = await scrape_player_profile(player.player_name, profile_url=player.profile_url)
+    now = datetime.utcnow()
+    
+    player.last_scraped_at = now
+    player.cached_stats = json.dumps(fresh_data)
+    await db.commit()
+    
+    return fresh_data
 
 @app.get("/api/profile/{username}")
 async def get_profile(username: str, refresh: bool = Query(False), db: AsyncSession = Depends(get_db)):

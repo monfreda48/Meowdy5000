@@ -1135,23 +1135,25 @@ fun DashboardScreen(
                                 )
                             }
 
-                // 2. Search Bar below Season Banner
-                item {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Search player username...") },
-                        trailingIcon = {
-                            IconButton(onClick = { performSearch(searchQuery) }) {
-                                Icon(Icons.Default.Search, contentDescription = "Search")
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(onSearch = { performSearch(searchQuery) }),
-                        shape = RoundedCornerShape(12.dp)
-                    )
+                // 2. Search Bar below Season Banner (only shown when no profile is claimed)
+                if (!isClaimed) {
+                    item {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("Search player username...") },
+                            trailingIcon = {
+                                IconButton(onClick = { performSearch(searchQuery) }) {
+                                    Icon(Icons.Default.Search, contentDescription = "Search")
+                                }
+                            },
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                            keyboardActions = KeyboardActions(onSearch = { performSearch(searchQuery) }),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                    }
                 }
 
                 // 2.5 Live Search Telemetry Progress Bar with Silly Marvel Quotes

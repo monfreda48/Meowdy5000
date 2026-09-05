@@ -219,7 +219,7 @@ async def scrape_player_profile(username: str, profile_url: Optional[str] = None
             if len(parts) > 1:
                 clean_avatar = "https://" + urllib.parse.unquote(parts[1]).split("?")[0]
         encoded_avatar = urllib.parse.quote(clean_avatar, safe='')
-        avatar_url = f"https://meowdy5000.synology.me/api/image-proxy?url={encoded_avatar}"
+        avatar_url = f"/api/image-proxy?url={encoded_avatar}"
 
     # 5. Top Heroes Breakdown with Portraits
     liquipedia_icons = await sync_liquipedia_heroes(force=False)
@@ -253,7 +253,7 @@ async def scrape_player_profile(username: str, profile_url: Optional[str] = None
 
         if target_icon:
             encoded_target = urllib.parse.quote(target_icon, safe='')
-            h_icon = f"https://meowdy5000.synology.me/api/image-proxy?url={encoded_target}"
+            h_icon = f"/api/image-proxy?url={encoded_target}"
         else:
             h_icon = None
 

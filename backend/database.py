@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy import Column, Integer, String, Text, DateTime, text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 
@@ -34,10 +34,33 @@ class SeasonCache(Base):
     new_hero_icon = Column(String(500), nullable=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+class TrackedPlayer(Base):
+    __tablename__ = 'tracked_players'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    player_name = Column(String(100), unique=True, index=True, nullable=False)
+    profile_url = Column(String(500), nullable=False)
+    platform = Column(String(20), default='pc')
+    is_claimed = Column(Integer, default=1)
+    last_scraped_at = Column(DateTime, default=datetime.utcnow)
+    cached_stats = Column(Text, nullable=True)
+
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS tracked_players (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_name TEXT UNIQUE NOT NULL,
+                profile_url TEXT NOT NULL,
+                platform TEXT DEFAULT 'pc',
+                is_claimed INTEGER DEFAULT 1,
+                last_scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                cached_stats TEXT
+            );
+        """))
 
 async def get_db():
     async with AsyncSessionLocal() as session:
         yield session
+

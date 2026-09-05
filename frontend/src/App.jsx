@@ -154,11 +154,51 @@ const getApiUrl = (path) => {
     }
   } catch (e) { }
   if (typeof window !== 'undefined') {
-    if (window.Capacitor || window.location.hostname === 'localhost' || window.location.origin.includes('localhost')) {
+    if (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) {
       return `http://10.0.2.2:8000${path.startsWith('/') ? path : '/' + path}`;
     }
   }
-  return path;
+  return path.startsWith('/') ? path : '/' + path;
+};
+
+const formatPercent = (val) => {
+  if (val === undefined || val === null || val === 'N/A' || val === '') return 'N/A';
+  const str = String(val).trim();
+  return str.endsWith('%') ? str : `${str}%`;
+};
+
+const calculateTotalPlaytime = (overviewPlaytime, heroesList) => {
+  if (overviewPlaytime && overviewPlaytime !== 'N/A' && overviewPlaytime !== '0m') {
+    return overviewPlaytime;
+  }
+  if (!heroesList || !Array.isArray(heroesList) || heroesList.length === 0) {
+    return 'N/A';
+  }
+  let totalMinutes = 0;
+  for (const hero of heroesList) {
+    const timeStr = hero.time_played || hero.timePlayed || hero.time || '';
+    if (!timeStr) continue;
+    const hoursMatch = timeStr.match(/(\d+)\s*h/i);
+    const minsMatch = timeStr.match(/(\d+)\s*m/i);
+    const secsMatch = timeStr.match(/(\d+)\s*s/i);
+    let heroMins = 0;
+    if (hoursMatch) heroMins += parseInt(hoursMatch[1], 10) * 60;
+    if (minsMatch) heroMins += parseInt(minsMatch[1], 10);
+    if (secsMatch) heroMins += Math.round(parseInt(secsMatch[1], 10) / 60);
+    totalMinutes += heroMins;
+  }
+  if (totalMinutes > 0) {
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    return hours > 0 ? (mins > 0 ? `${hours}h ${mins}m` : `${hours}h`) : `${mins}m`;
+  }
+  const topHero = heroesList[0];
+  if (topHero && (topHero.time_played || topHero.timePlayed)) {
+    const heroTime = topHero.time_played || topHero.timePlayed;
+    const heroName = topHero.hero_name || topHero.name || 'Top Hero';
+    return `${heroTime} (${heroName})`;
+  }
+  return 'N/A';
 };
 
 export default function App() {
@@ -607,16 +647,19 @@ export default function App() {
       localStorage.setItem('claimed_tracking_sources', JSON.stringify(sources));
     } catch (e) { }
 
-    // Sync with backend API
-    if (backendBaseUrl) {
-      try {
-        fetch(getApiUrl('/api/claim-profile'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(claimObj)
-        }).catch(err => console.warn('[ClaimProfile] Backend sync note:', err));
-      } catch (err) {}
-    }
+    // Sync with backend API POST /api/profile/claim
+    try {
+      fetch(getApiUrl('/api/profile/claim'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          player_name: cleanUser,
+          profile_url: primarySavedUrl,
+          platform: (targetStats?.platform || selectedPlatform || 'pc').toLowerCase(),
+          stats: targetStats
+        })
+      }).catch(err => console.warn('[ClaimProfile] Backend sync note:', err));
+    } catch (err) {}
 
     if (targetStats) {
       togglePinHomeProfile(targetStats);
@@ -625,19 +668,85 @@ export default function App() {
       try { localStorage.setItem(`last_auto_snapshot_time_${targetUser.toLowerCase()}`, String(Date.now())); } catch (e) { }
     }
 
-    showNativeToast(`👑 ${targetUser} claimed! Direct URL saved for instant fast loading.`);
-    setUpdateToast({ type: 'success', message: `👑 ${targetUser} claimed! Saved direct URL (${savedUrl}) for instant fast loading.` });
+    triggerHaptic('success');
+    showNativeToast(`👑 TRACKING ACTIVE: ${cleanUser} profile claimed!`);
+    setUpdateToast({ type: 'success', message: `👑 TRACKING ACTIVE: ${cleanUser} profile claimed!` });
     setTimeout(() => setUpdateToast(null), 3500);
     setShowClaimModal(false);
   };
 
-  // On App Launch: Auto-load claimed profile and run 12h throttled snapshot saving
+  // On App Launch: Auto-load claimed profile from GET /api/profile/claimed
   useEffect(() => {
-    if (claimedProfile?.username) {
-      setQuery(claimedProfile.username);
-      fetchStats(null, claimedProfile.username, season);
-    }
+    const initClaimedProfile = async () => {
+      try {
+        const res = await fetch(getApiUrl('/api/profile/claimed'));
+        if (res.ok) {
+          const data = await res.json();
+          if (data.claimed && data.player_name) {
+            setQuery(data.player_name);
+            const claimObj = {
+              username: data.player_name,
+              trackerGgUrl: data.profile_url,
+              claimedAt: data.last_scraped_at
+            };
+            setClaimedProfile(claimObj);
+            try { localStorage.setItem('claimed_profile', JSON.stringify(claimObj)); } catch (e) {}
+            if (data.cached_stats) {
+              const normalized = normalizeBackendStatsToCurrent(data.cached_stats, data.player_name, season);
+              if (normalized) {
+                setStats(normalized);
+                return;
+              }
+            }
+            fetchStats(null, data.player_name, season);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('[AppInit] GET /api/profile/claimed note:', err);
+      }
+
+      if (claimedProfile?.username) {
+        setQuery(claimedProfile.username);
+        fetchStats(null, claimedProfile.username, season);
+      }
+    };
+
+    initClaimedProfile();
   }, []);
+
+  const handleRefreshClaimedProfile = async () => {
+    const targetUser = claimedProfile?.username || stats?.current?.username || query;
+    if (!targetUser) return;
+
+    triggerHaptic('medium');
+    showNativeToast('🔄 Syncing & refreshing stats from origin...');
+    setUpdateToast({ type: 'update', message: '🔄 Syncing stats from scraping origin...' });
+
+    try {
+      const res = await fetch(getApiUrl('/api/profile/refresh'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ player_name: targetUser })
+      });
+      if (res.ok) {
+        const freshData = await res.json();
+        const normalized = normalizeBackendStatsToCurrent(freshData, targetUser, season);
+        if (normalized) {
+          setStats(normalized);
+          triggerHaptic('success');
+          showNativeToast('✅ Stats updated from scraping origin!');
+          setUpdateToast({ type: 'success', message: '✅ Profile stats refreshed & synced successfully!' });
+          setTimeout(() => setUpdateToast(null), 3000);
+          return;
+        }
+      }
+      await fetchStats(null, targetUser, season);
+    } catch (err) {
+      console.warn('Refresh error:', err);
+      await fetchStats(null, targetUser, season);
+    }
+  };
 
   const handleUnclaimProfile = () => {
     const unclaimingUser = claimedProfile?.username;
@@ -2443,284 +2552,61 @@ ${payload.stack || 'No stack trace available.'}
 
 const DEFAULT_SEASON_NUM = 19;
 
-  const fetchDirectPlayerStats = async (queryVal, seasonVal, signal, overrideUid = null) => {
-    const cleanQuery = (queryVal || '').trim();
-    if (!cleanQuery) throw new Error('Please enter a username to search.');
-    const encodedQuery = encodeURIComponent(cleanQuery);
-    
-    let activeSeasonNum = parseInt(seasonVal, 10) || DEFAULT_SEASON_NUM;
-    const seasonParam = `?season=${activeSeasonNum}`;
+  const normalizeBackendStatsToCurrent = (backendData, queryVal, seasonVal) => {
+    if (!backendData) return null;
+    if (backendData.current) return backendData;
+    if (backendData.data && backendData.data.segments) return null;
 
-    let detectedPlatform = "PC";
-    let detectedIcon = "💻";
-    let detectedSlug = "ign";
+    const userProfile = backendData.user_profile || {};
+    const rankDetails = backendData.rank_details || {};
+    const overview = backendData.overview || {};
+    const combatOverview = backendData.combat_overview || {};
+    const combatRates = backendData.combat_rates || {};
+    const awards = backendData.awards_and_streaks || {};
+    const precision = backendData.precision_combat || {};
+    const rawHeroes = backendData.top_heroes || backendData.heroes || backendData.hero_mastery || [];
 
-    const fetchWithTimeout = async (url, parentSignal, timeoutMs = 2500) => {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const rawWinRate = overview.win_rate || combatOverview.win_rate || 'N/A';
+    const formattedWinRate = formatPercent(rawWinRate);
 
-      const onParentAbort = () => controller.abort();
-      if (parentSignal) {
-        if (parentSignal.aborted) controller.abort();
-        else parentSignal.addEventListener('abort', onParentAbort);
-      }
-
-      try {
-        const res = await fetch(url, {
-          signal: controller.signal,
-          headers: {
-            'Accept': 'application/json, text/plain, */*'
-          }
-        });
-        clearTimeout(timer);
-        if (parentSignal && parentSignal.removeEventListener) parentSignal.removeEventListener('abort', onParentAbort);
-        return res;
-      } catch (e) {
-        clearTimeout(timer);
-        if (parentSignal && parentSignal.removeEventListener) parentSignal.removeEventListener('abort', onParentAbort);
-        throw e;
-      }
-    };
-
-    const fetchCandidatesForSite = async (candidates) => {
-      for (const url of candidates) {
-        if (signal && signal.aborted) break;
-        try {
-          const res = await fetchWithTimeout(url, signal, 2500);
-          if (res && res.ok) {
-            const text = await res.text();
-            if (text && !text.trim().startsWith('<') && !text.toLowerCase().includes('<!doctype html')) {
-              let parsed = null;
-              try { parsed = JSON.parse(text); } catch (e) {}
-              if (parsed) {
-                if (typeof parsed.contents === 'string' && parsed.contents.startsWith('{')) {
-                  try { parsed = JSON.parse(parsed.contents); } catch (e) {}
-                }
-                if (parsed && (parsed.data?.segments || parsed.stats || parsed.name || parsed.username)) {
-                  return parsed;
-                }
-              }
-            }
-          }
-        } catch (e) {
-          // Try next candidate
-        }
-      }
-      return null;
-    };
-
-    // Primary search uses ign in-game username slug on Tracker.gg
-    const directTrackerApiUrl = `https://api.tracker.gg/api/v2/marvel-rivals/standard/profile/ign/${encodedQuery}`;
-    const trackerCandidates = [
-      `${directTrackerApiUrl}${seasonParam}`,
-      `https://corsproxy.io/?${encodeURIComponent(`${directTrackerApiUrl}${seasonParam}`)}`,
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(`${directTrackerApiUrl}${seasonParam}`)}`,
-      directTrackerApiUrl,
-      `https://corsproxy.io/?${encodeURIComponent(directTrackerApiUrl)}`,
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(directTrackerApiUrl)}`
-    ];
-
-    // STEP 1: SCRAPE SITE 1 - Tracker.gg
-    let trackerData = await fetchCandidatesForSite(trackerCandidates);
-    let upgradedSeason = null;
-
-    // IF Tracker.gg link breaks or returns no data for current season, TRY SEASON + 1!
-    if (!trackerData || !trackerData?.data?.segments) {
-      const nextSeasonNum = activeSeasonNum + 1;
-      const nextSeasonParam = `?season=${nextSeasonNum}`;
-      const fallbackCandidates = [
-        `${directTrackerApiUrl}${nextSeasonParam}`,
-        `https://corsproxy.io/?${encodeURIComponent(`${directTrackerApiUrl}${nextSeasonParam}`)}`,
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(`${directTrackerApiUrl}${nextSeasonParam}`)}`
-      ];
-
-      const fallbackTrackerData = await fetchCandidatesForSite(fallbackCandidates);
-      if (fallbackTrackerData && fallbackTrackerData?.data?.segments) {
-        console.log(`[SeasonAutoUpgrade] Tracker.gg link for season ${activeSeasonNum} failed. Upgraded to season ${nextSeasonNum}!`);
-        trackerData = fallbackTrackerData;
-        activeSeasonNum = nextSeasonNum;
-        upgradedSeason = nextSeasonNum;
-      }
+    let rawKda = overview.kda_ratio || combatOverview.kda_ratio || overview.kda || combatOverview.kda;
+    if ((rawKda === undefined || rawKda === null || rawKda === 'N/A') && precision.total_kills !== undefined && precision.total_deaths !== undefined && precision.total_assists !== undefined) {
+      const d = precision.total_deaths || 1;
+      rawKda = ((precision.total_kills + precision.total_assists) / d);
     }
+    const kdaRatioVal = (rawKda !== undefined && rawKda !== null && rawKda !== 'N/A' && !isNaN(Number(rawKda)))
+      ? Number(rawKda).toFixed(2)
+      : (rawKda || '0.00');
 
-    // Resolve Numeric Account UID from parameters, claimed profile, or Tracker.gg payload
-    const effectiveUid = (overrideUid || claimedProfile?.uid || trackerData?.data?.platformInfo?.platformUserId || '').trim();
-    const encodedUid = effectiveUid ? encodeURIComponent(effectiveUid) : encodedQuery;
-
-    // STEP 2 & 3: SCRAPE SITES 2 & 3 - RivalsMeta.com & RivalsTracker.com (using resolved UID)
-    const rivalsMetaCandidates = [
-      `https://rivalsmeta.com/api/player/${encodedUid}${seasonParam}`,
-      `https://corsproxy.io/?${encodeURIComponent(`https://rivalsmeta.com/api/player/${encodedUid}${seasonParam}`)}`,
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://rivalsmeta.com/api/player/${encodedUid}${seasonParam}`)}`
-    ];
-
-    const rivalsTrackerCandidates = [
-      `https://api.rivalstracker.com/api/player/${encodedUid}${seasonParam}`,
-      `https://corsproxy.io/?${encodeURIComponent(`https://api.rivalstracker.com/api/player/${encodedUid}${seasonParam}`)}`,
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://api.rivalstracker.com/api/player/${encodedUid}${seasonParam}`)}`
-    ];
-
-    // STEP 2 & 3: SCRAPE SITES 2 & 3 - RivalsMeta.com & RivalsTracker.com
-    const [rivalsMetaData, rivalsTrackerData] = await Promise.all([
-      fetchCandidatesForSite(rivalsMetaCandidates),
-      fetchCandidatesForSite(rivalsTrackerCandidates)
-    ]);
-
-    let tUsername = "", tAvatar = "", tRank = "", tPeakRank = "", tMatches = 0, tWins = 0, tKills = 0, tDeaths = 0, tAssists = 0;
-    let tWinRate = "N/A", tKdRatio = "N/A", tHeroList = [];
-
-    if (trackerData?.data?.segments) {
-      const segments = trackerData.data.segments;
-      const stats = segments[0]?.stats || {};
-      const platformInfo = trackerData.data.platformInfo || {};
-      tUsername = platformInfo.platformUserIdentifier || cleanQuery;
-      const rawAvatar = platformInfo.avatarUrl || "";
-      tAvatar = rawAvatar ? `https://imgsvc.trackercdn.com/url/size(128),fit(cover)/${encodeURIComponent(rawAvatar)}/image.jpg` : "";
-
-      const rankedStat = stats.ranked || stats.rank || {};
-      const tierName = rankedStat.metadata?.tierName || rankedStat.metadata?.tierShortName || "Unranked";
-      const rsVal = rankedStat.displayValue || rankedStat.value || "";
-      tRank = tierName !== "Unranked" && rsVal ? `${tierName} (${rsVal} RS)` : tierName;
-
-      const peakStat = stats.peakRanked || stats.lifetimePeakRanked || {};
-      const peakTier = peakStat.metadata?.tierName || peakStat.metadata?.tierShortName;
-      const peakRs = peakStat.displayValue || peakStat.value || "";
-      tPeakRank = peakTier && peakRs ? `${peakTier} (${peakRs} RS)` : (peakTier || "Unranked");
-
-      tMatches = parseInt(stats.matchesPlayed?.value || stats.matchesPlayed || 0, 10);
-      tWins = parseInt(stats.matchesWon?.value || stats.matchesWon || 0, 10);
-
-      const winPctStat = stats.matchesWinPct?.value ?? stats.winPct?.value;
-      if (winPctStat !== undefined && winPctStat !== null) {
-        tWinRate = parseFloat(winPctStat).toFixed(1);
-      } else if (tMatches > 0) {
-        tWinRate = ((tWins / tMatches) * 100).toFixed(1);
-      }
-
-      tKills = parseInt(stats.kills?.value || stats.kills || 0, 10);
-      tDeaths = parseInt(stats.deaths?.value || stats.deaths || 0, 10);
-      tAssists = parseInt(stats.assists?.value || stats.assists || 0, 10);
-
-      const kdaStat = stats.kdaRatio?.value ?? stats.kdRatio?.value ?? stats.kdaRatio?.displayValue ?? stats.kdRatio?.displayValue;
-      if (kdaStat !== undefined && kdaStat !== null && kdaStat !== "") {
-        tKdRatio = parseFloat(kdaStat).toFixed(2);
-      } else if (tDeaths > 0) {
-        tKdRatio = ((tKills + tAssists) / tDeaths).toFixed(2);
-      } else if (tKills || tAssists) {
-        tKdRatio = (tKills + tAssists).toFixed(2);
-      }
-
-      for (const seg of segments) {
-        if (seg.type === 'hero') {
-          const hName = seg.metadata?.name || 'Unknown Hero';
-          const hSt = seg.stats || {};
-          const hMatches = parseInt(hSt.matchesPlayed?.value || hSt.matchesPlayed || 0, 10);
-          const hWinRate = parseFloat((hSt.matchesWinPct?.value ?? hSt.winPct?.value ?? 0).toFixed(1));
-          const hKda = parseFloat((hSt.kdaRatio?.value ?? hSt.kdRatio?.value ?? 0).toFixed(2));
-          if (hMatches > 0) {
-            tHeroList.push({ id: String(seg.metadata?.heroId || hName), name: hName, matches: hMatches, winRate: hWinRate, kda: hKda });
-          }
-        }
-      }
-      tHeroList.sort((a, b) => b.matches - a.matches);
+    let rawKd = overview.kd_ratio || combatOverview.kd_ratio || overview.kd || combatOverview.kd;
+    if ((rawKd === undefined || rawKd === null || rawKd === 'N/A') && precision.total_kills !== undefined && precision.total_deaths !== undefined) {
+      const d = precision.total_deaths || 1;
+      rawKd = (precision.total_kills / d);
     }
+    const kdRatioVal = (rawKd !== undefined && rawKd !== null && rawKd !== 'N/A' && !isNaN(Number(rawKd)))
+      ? Number(rawKd).toFixed(2)
+      : (rawKd || '0.00');
 
-    let rmUsername = "", rmRank = "", rmMatches = 0, rmWins = 0, rmKills = 0, rmDeaths = 0, rmAssists = 0;
-    let rmWinRate = "N/A", rmKdRatio = "N/A", rmHeroList = [];
+    const totalDamageVal = overview.total_damage || backendData.total_damage || combatOverview.total_damage || 'N/A';
+    const damagePerMinVal = combatRates.damage_per_min || overview.damage_per_min || 'N/A';
 
-    if (rivalsMetaData?.stats || rivalsMetaData?.name) {
-      rmUsername = rivalsMetaData.name || cleanQuery;
-      rmRank = rivalsMetaData.rank ? String(rivalsMetaData.rank) : "Unranked";
-      const statsObj = rivalsMetaData.stats || {};
-      rmMatches = parseInt(statsObj.total_matches || 0, 10);
-      rmWins = parseInt(statsObj.total_wins || 0, 10);
-      rmKills = parseInt(statsObj.total_kills || 0, 10);
-      rmDeaths = parseInt(statsObj.total_deaths || 0, 10);
-      rmAssists = parseInt(statsObj.total_assists || 0, 10);
-      rmWinRate = rmMatches > 0 ? ((rmWins / rmMatches) * 100).toFixed(1) : "0.0";
-      rmKdRatio = rmDeaths > 0 ? ((rmKills + rmAssists) / rmDeaths).toFixed(2) : (rmKills + rmAssists).toString();
+    const rawPlaytime = overview.total_playtime || backendData.total_playtime || combatOverview.total_playtime;
+    const timePlayedVal = calculateTotalPlaytime(rawPlaytime, rawHeroes);
 
-      if (rivalsMetaData.heroes_ranked) {
-        Object.entries(rivalsMetaData.heroes_ranked).forEach(([hId, hData]) => {
-          const hMatches = parseInt(hData.total_matches || 0, 10);
-          const hWins = parseInt(hData.total_wins || 0, 10);
-          const hKills = parseInt(hData.total_kills || 0, 10);
-          const hDeaths = parseInt(hData.total_deaths || 0, 10);
-          const hAssists = parseInt(hData.total_assists || 0, 10);
-          const hWinRate = hMatches > 0 ? parseFloat(((hWins / hMatches) * 100).toFixed(1)) : 0;
-          const hKda = hDeaths > 0 ? parseFloat(((hKills + hAssists) / hDeaths).toFixed(2)) : (hKills + hAssists);
-          rmHeroList.push({
-            id: String(hId),
-            name: HERO_MAP_CLIENT[String(hId)] || `Hero #${hId}`,
-            matches: hMatches,
-            winRate: hWinRate,
-            kda: hKda
-          });
-        });
-        rmHeroList.sort((a, b) => b.matches - a.matches);
-      }
-    }
+    const heroList = rawHeroes.map(h => ({
+      name: h.hero_name || h.name || 'Unknown',
+      icon: h.hero_icon || h.icon || h.hero_icon_url || '',
+      matches: h.matches_played || h.matches || 0,
+      winRate: formatPercent(h.win_rate || h.winRate || '0%'),
+      kda: (!isNaN(Number(h.kda || h.kda_ratio))) ? Number(h.kda || h.kda_ratio).toFixed(2) : (h.kda || h.kda_ratio || '0.00'),
+      timePlayed: h.time_played || h.timePlayed || 'N/A'
+    }));
 
-    let rtUsername = "", rtRank = "", rtMatches = 0, rtWins = 0, rtKills = 0, rtDeaths = 0, rtAssists = 0;
-    let rtWinRate = "N/A", rtKdRatio = "N/A", rtHeroList = [];
-
-    if (rivalsTrackerData?.username || rivalsTrackerData?.rank || rivalsTrackerData?.winRate) {
-      rtUsername = rivalsTrackerData.username || cleanQuery;
-      rtRank = rivalsTrackerData.rank ? String(rivalsTrackerData.rank) : "Unranked";
-      rtMatches = parseInt(rivalsTrackerData.matchesPlayed || rivalsTrackerData.matches || 0, 10);
-      rtWins = parseInt(rivalsTrackerData.matchesWon || rivalsTrackerData.wins || 0, 10);
-      rtKills = parseInt(rivalsTrackerData.kills || 0, 10);
-      rtDeaths = parseInt(rivalsTrackerData.deaths || 0, 10);
-      rtAssists = parseInt(rivalsTrackerData.assists || 0, 10);
-      rtWinRate = rivalsTrackerData.winRate ? String(rivalsTrackerData.winRate) : (rtMatches > 0 ? ((rtWins / rtMatches) * 100).toFixed(1) : "0.0");
-      rtKdRatio = rivalsTrackerData.kdRatio ? String(rivalsTrackerData.kdRatio) : (rtDeaths > 0 ? ((rtKills + rtAssists) / rtDeaths).toFixed(2) : "0.0");
-    }
-
-    const sources = [];
-    if (trackerData) sources.push(`Tracker.gg (${detectedPlatform})`);
-    if (rivalsMetaData) sources.push(`RivalsMeta.com (${detectedPlatform})`);
-    if (rivalsTrackerData) sources.push(`RivalsTracker.com (${detectedPlatform})`);
-
-    if (sources.length === 0) {
-      throw new Error(`Player "${cleanQuery}" not found on Marvel Rivals across Tracker.gg, RivalsMeta.com, or RivalsTracker.com. Please verify the spelling and platform (${detectedPlatform}).`);
-    }
-
-    const username = tUsername || rmUsername || rtUsername || cleanQuery;
-    const avatarUrl = tAvatar || "";
-    const rank = tRank || rmRank || rtRank || "Unranked";
-    const peakRank = tPeakRank || rmRank || rtRank || "Unranked";
-    const winRate = tWinRate !== "N/A" ? tWinRate : (rmWinRate !== "N/A" ? rmWinRate : (rtWinRate !== "N/A" ? rtWinRate : "0.0"));
-    const kdRatio = tKdRatio !== "N/A" ? tKdRatio : (rmKdRatio !== "N/A" ? rmKdRatio : (rtKdRatio !== "N/A" ? rtKdRatio : "0.0"));
-    const matchesPlayed = tMatches || rmMatches || rtMatches || 0;
-    const matchesWon = tWins || rmWins || rtWins || 0;
-    const kills = tKills || rmKills || rtKills || 0;
-    const deaths = tDeaths || rmDeaths || rtDeaths || 0;
-    const assists = tAssists || rmAssists || rtAssists || 0;
-
-    const heroList = tHeroList.length > 0 ? tHeroList : (rmHeroList.length > 0 ? rmHeroList : rtHeroList);
-    const topHeroStr = heroList.slice(0, 3).map(h => h.name).join(", ") || "N/A";
-
-    const statBreakdown = {
-      winRate: {
-        ...(tWinRate !== "N/A" ? { trackerGg: `${tWinRate}%` } : {}),
-        ...(rmWinRate !== "N/A" ? { rivalsMeta: `${rmWinRate}%` } : {}),
-        ...(rtWinRate !== "N/A" ? { rivalsTracker: `${rtWinRate}%` } : {})
-      },
-      kdRatio: {
-        ...(tKdRatio !== "N/A" ? { trackerGg: tKdRatio } : {}),
-        ...(rmKdRatio !== "N/A" ? { rivalsMeta: rmKdRatio } : {}),
-        ...(rtKdRatio !== "N/A" ? { rivalsTracker: rtKdRatio } : {})
-      },
-      rank: {
-        ...(tRank ? { trackerGg: tRank } : {}),
-        ...(rmRank ? { rivalsMeta: rmRank } : {}),
-        ...(rtRank ? { rivalsTracker: rtRank } : {})
-      }
-    };
-
-    const trackerUrl = `https://tracker.gg/marvel-rivals/profile/ign/${encodedQuery}/overview?season=${seasonVal || '19'}`;
-    const rivalsMetaUrl = effectiveUid ? `https://rivalsmeta.com/player/${effectiveUid}` : `https://rivalsmeta.com/player/${encodedQuery}`;
-    const rivalsTrackerUrl = effectiveUid ? `https://rivalstracker.com/profile/${effectiveUid}` : `https://rivalstracker.com/profile/${encodedQuery}`;
+    const username = userProfile.player_name || backendData.username || queryVal;
+    const avatarUrl = userProfile.avatar_url || backendData.avatar_url || '';
+    const trackerUrl = userProfile.profile_url || `https://tracker.gg/marvel-rivals/profile/ign/${encodeURIComponent(username)}/overview?season=${seasonVal || '19'}`;
+    const rivalsMetaUrl = `https://rivalsmeta.com/search?q=${encodeURIComponent(username)}`;
+    const rivalsTrackerUrl = `https://rivalstracker.com/search?q=${encodeURIComponent(username)}`;
 
     const siteCards = [
       {
@@ -2729,17 +2615,17 @@ const DEFAULT_SEASON_NUM = 19;
         icon: '🌐',
         color: 'from-blue-600 to-indigo-700',
         borderColor: 'border-blue-500/50',
-        username: tUsername || cleanQuery,
-        platform: detectedPlatform,
-        avatarUrl: tAvatar || '',
-        rank: tRank || 'Unranked',
-        winRate: tWinRate !== 'N/A' ? `${tWinRate}%` : 'N/A',
-        kdRatio: tKdRatio !== 'N/A' ? tKdRatio : 'N/A',
-        topHero: tHeroList[0]?.name || 'N/A',
-        matches: tMatches,
+        username,
+        platform: 'PC',
+        avatarUrl,
+        rank: rankDetails.tier_name || 'Unranked',
+        winRate: formattedWinRate,
+        kdRatio: kdaRatioVal,
+        topHero: heroList[0]?.name || 'N/A',
+        matches: combatOverview.matches_played || overview.matches_played || 0,
         profileUrl: trackerUrl,
-        found: Boolean(trackerData),
-        enabled: Boolean(trackerData)
+        found: true,
+        enabled: true
       },
       {
         siteKey: 'rivalsMeta',
@@ -2747,17 +2633,17 @@ const DEFAULT_SEASON_NUM = 19;
         icon: '⚔️',
         color: 'from-purple-600 to-pink-700',
         borderColor: 'border-purple-500/50',
-        username: rmUsername || cleanQuery,
-        platform: detectedPlatform,
-        avatarUrl: tAvatar || '',
-        rank: rmRank || 'Unranked',
-        winRate: rmWinRate !== 'N/A' ? `${rmWinRate}%` : 'N/A',
-        kdRatio: rmKdRatio !== 'N/A' ? rmKdRatio : 'N/A',
-        topHero: rmHeroList[0]?.name || 'N/A',
-        matches: rmMatches,
+        username,
+        platform: 'PC',
+        avatarUrl,
+        rank: rankDetails.tier_name || 'Unranked',
+        winRate: formattedWinRate,
+        kdRatio: kdaRatioVal,
+        topHero: heroList[0]?.name || 'N/A',
+        matches: combatOverview.matches_played || overview.matches_played || 0,
         profileUrl: rivalsMetaUrl,
-        found: Boolean(rivalsMetaData),
-        enabled: Boolean(rivalsMetaData)
+        found: false,
+        enabled: false
       },
       {
         siteKey: 'rivalsTracker',
@@ -2765,17 +2651,17 @@ const DEFAULT_SEASON_NUM = 19;
         icon: '🎯',
         color: 'from-emerald-600 to-teal-700',
         borderColor: 'border-emerald-500/50',
-        username: rtUsername || cleanQuery,
-        platform: detectedPlatform,
-        avatarUrl: tAvatar || '',
-        rank: rtRank || 'Unranked',
-        winRate: rtWinRate !== 'N/A' ? `${rtWinRate}%` : 'N/A',
-        kdRatio: rtKdRatio !== 'N/A' ? rtKdRatio : 'N/A',
-        topHero: rtHeroList[0]?.name || 'N/A',
-        matches: rtMatches,
+        username,
+        platform: 'PC',
+        avatarUrl,
+        rank: rankDetails.tier_name || 'Unranked',
+        winRate: formattedWinRate,
+        kdRatio: kdaRatioVal,
+        topHero: heroList[0]?.name || 'N/A',
+        matches: combatOverview.matches_played || overview.matches_played || 0,
         profileUrl: rivalsTrackerUrl,
-        found: Boolean(rivalsTrackerData),
-        enabled: Boolean(rivalsTrackerData)
+        found: false,
+        enabled: false
       }
     ];
 
@@ -2783,31 +2669,34 @@ const DEFAULT_SEASON_NUM = 19;
       current: {
         username,
         avatarUrl,
-        platform: detectedPlatform,
-        platformIcon: detectedIcon,
-        platformSlug: detectedSlug,
-        seasonNum: String(activeSeasonNum),
-        upgradedSeason,
-        rank,
-        peakRank,
-        winRate,
-        kdRatio,
-        topHero: topHeroStr,
-        trackerScore: "4.8",
-        trackerUrl: trackerUrl,
-        matchesPlayed,
-        matchesWon,
-        kills,
-        deaths,
-        assists,
-        heroDamage: trackerData?.data?.segments?.[0]?.stats?.heroDamagePer10?.displayValue || "N/A",
-        healing: trackerData?.data?.segments?.[0]?.stats?.healingPer10?.displayValue || "N/A",
-        damageBlocked: trackerData?.data?.segments?.[0]?.stats?.damageBlockedPer10?.displayValue || "N/A",
-        accuracy: "N/A",
-        mvp: trackerData?.data?.segments?.[0]?.stats?.totalMvp?.value ? String(trackerData.data.segments[0].stats.totalMvp.value) : "0",
-        svp: trackerData?.data?.segments?.[0]?.stats?.totalSvp?.value ? String(trackerData.data.segments[0].stats.totalSvp.value) : "0",
-        timePlayed: trackerData?.data?.segments?.[0]?.stats?.timePlayed?.displayValue || "N/A",
-        sources,
+        platform: 'PC',
+        platformIcon: '💻',
+        platformSlug: 'ign',
+        seasonNum: String(seasonVal || '19'),
+        upgradedSeason: null,
+        rank: rankDetails.tier_name || 'Unranked',
+        peakRank: rankDetails.season_best || rankDetails.all_time_best || 'Unranked',
+        winRate: formattedWinRate,
+        kdRatio: kdaRatioVal,
+        kdaRatio: kdaRatioVal,
+        pureKdRatio: kdRatioVal,
+        totalDamage: totalDamageVal,
+        topHero: heroList[0]?.name || 'N/A',
+        trackerScore: '4.8',
+        trackerUrl,
+        matchesPlayed: combatOverview.matches_played ?? overview.matches_played ?? 0,
+        matchesWon: combatOverview.matches_won ?? overview.matches_won ?? 0,
+        kills: precision.total_kills ?? overview.total_kills ?? 0,
+        deaths: precision.total_deaths ?? overview.total_deaths ?? 0,
+        assists: precision.total_assists ?? overview.total_assists ?? 0,
+        heroDamage: damagePerMinVal,
+        healing: combatRates.healing_per_min || overview.healing_per_min || 'N/A',
+        damageBlocked: combatRates.damage_blocked || overview.damage_blocked || 'N/A',
+        accuracy: precision.weapon_accuracy || 'N/A',
+        mvp: String(awards.mvp_count ?? overview.mvp_count ?? 0),
+        svp: String(awards.svp_count ?? overview.svp_count ?? 0),
+        timePlayed: timePlayedVal,
+        sources: ['🌐 Tracker.gg (via Backend API)'],
         siteUrls: {
           trackerGg: trackerUrl,
           rivalsMeta: rivalsMetaUrl,
@@ -2816,9 +2705,36 @@ const DEFAULT_SEASON_NUM = 19;
         siteCards,
         topHeroesDetailed: heroList.slice(0, 3),
         allHeroesFull: heroList,
-        statBreakdown
+        statBreakdown: backendData.match_history || backendData.recent_matches || []
       }
     };
+  };
+
+  const fetchDirectPlayerStats = async (queryVal, seasonVal, signal, overrideUid = null) => {
+    const cleanQuery = (queryVal || '').trim();
+    if (!cleanQuery) throw new Error('Please enter a username to search.');
+    const encodedQuery = encodeURIComponent(cleanQuery);
+    
+    let activeSeasonNum = parseInt(seasonVal, 10) || DEFAULT_SEASON_NUM;
+
+    const apiUrl = getApiUrl(`/api/stats?query=${encodedQuery}&season=${activeSeasonNum}`);
+    const res = await fetch(apiUrl, {
+      signal,
+      headers: {
+        'bypass-tunnel-reminder': 'true',
+        'Accept': 'application/json'
+      }
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || err.error || "Player not found");
+    }
+    const backendData = await res.json();
+    const normalized = normalizeBackendStatsToCurrent(backendData, cleanQuery, activeSeasonNum);
+    if (!normalized) {
+      throw new Error('Player not found');
+    }
+    return normalized;
   };
 
   const fetchStats = async (e, overrideQuery = null, overrideSeason = null, overrideUid = null) => {
@@ -2860,6 +2776,8 @@ const DEFAULT_SEASON_NUM = 19;
 
     const isClaimedMatch = claimedProfile && claimedProfile.username?.toLowerCase() === activeQuery.trim().toLowerCase();
 
+    const isWeb = typeof window !== 'undefined' && (!window.Capacitor || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform());
+
     try {
       let data = null;
       if (isClaimedMatch && claimedProfile.cachedStats) {
@@ -2872,12 +2790,13 @@ const DEFAULT_SEASON_NUM = 19;
             sources: [`👑 Claimed Profile (Saved Direct URL: ${claimedProfile.savedUrl})`]
           }
         };
-      } else if (backendBaseUrl) {
+      } else {
         try {
           const backendController = new AbortController();
-          const bTimeout = setTimeout(() => backendController.abort(), 2000);
+          const bTimeout = setTimeout(() => backendController.abort(), 20000);
+          const apiUrl = getApiUrl(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`);
           const response = await fetch(
-            getApiUrl(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`),
+            apiUrl,
             {
               signal: backendController.signal,
               headers: {
@@ -2887,16 +2806,21 @@ const DEFAULT_SEASON_NUM = 19;
             }
           );
           clearTimeout(bTimeout);
-          data = await safeFetchJson(response);
-          if (!response.ok || data?.status === 'pending_upgrade') {
-            throw new Error(data?.error || 'Backend scraper pending upgrade');
+          if (response.ok) {
+            const rawData = await safeFetchJson(response);
+            data = normalizeBackendStatsToCurrent(rawData, activeQuery, activeSeason);
+          } else {
+            const errJson = await safeFetchJson(response);
+            throw new Error(errJson?.detail || errJson?.error || `Backend returned status ${response.status}`);
           }
         } catch (backendErr) {
-          console.warn('[FetchStats] Custom backend request failed or timed out (2s), falling back to direct client fetch:', backendErr);
-          data = await fetchDirectPlayerStats(activeQuery, activeSeason, controller.signal, overrideUid);
+          console.warn('[FetchStats] Backend stats request failed:', backendErr);
+          if (isWeb) {
+            throw backendErr;
+          } else {
+            data = await fetchDirectPlayerStats(activeQuery, activeSeason, controller.signal, overrideUid);
+          }
         }
-      } else {
-        data = await fetchDirectPlayerStats(activeQuery, activeSeason, controller.signal, overrideUid);
       }
 
       clearTimeout(timeoutId);
@@ -3164,31 +3088,33 @@ const DEFAULT_SEASON_NUM = 19;
             </span>
           </div>
 
-          {/* Top Bar Quick Profile Lookup Search Bar */}
-          <form onSubmit={handleProfileLookup} className="flex-1 max-w-[200px] xs:max-w-xs sm:max-w-md mx-2">
-            <div className="relative flex items-center">
-              <input
-                type="text"
-                value={lookupQuery}
-                onChange={(e) => setLookupQuery(e.target.value)}
-                placeholder="Search..."
-                className="w-full bg-[#131b2f] border border-slate-700/70 hover:border-emerald-500/50 focus:border-emerald-500 rounded-xl py-1.5 pl-8 pr-12 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all shadow-inner"
-              />
-              <span className="absolute left-2.5 text-slate-400 text-xs pointer-events-none">🔍</span>
-              {lookupQuery.trim() ? (
-                <button
-                  type="submit"
-                  className="absolute right-1 px-2 py-0.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[10px] rounded-lg uppercase tracking-wider transition-all cursor-pointer shadow"
-                >
-                  Search
-                </button>
-              ) : (
-                <span className="absolute right-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline select-none">
-                  Search
-                </span>
-              )}
-            </div>
-          </form>
+          {/* Top Bar Quick Profile Lookup Search Bar (hidden when profile is claimed) */}
+          {!claimedProfile?.username && (
+            <form onSubmit={handleProfileLookup} className="flex-1 max-w-[200px] xs:max-w-xs sm:max-w-md mx-2">
+              <div className="relative flex items-center">
+                <input
+                  type="text"
+                  value={lookupQuery}
+                  onChange={(e) => setLookupQuery(e.target.value)}
+                  placeholder="Search..."
+                  className="w-full bg-[#131b2f] border border-slate-700/70 hover:border-emerald-500/50 focus:border-emerald-500 rounded-xl py-1.5 pl-8 pr-12 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all shadow-inner"
+                />
+                <span className="absolute left-2.5 text-slate-400 text-xs pointer-events-none">🔍</span>
+                {lookupQuery.trim() ? (
+                  <button
+                    type="submit"
+                    className="absolute right-1 px-2 py-0.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[10px] rounded-lg uppercase tracking-wider transition-all cursor-pointer shadow"
+                  >
+                    Search
+                  </button>
+                ) : (
+                  <span className="absolute right-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline select-none">
+                    Search
+                  </span>
+                )}
+              </div>
+            </form>
+          )}
 
           {/* Right Nav Menu Button */}
           <div className="flex items-center gap-2">
@@ -3328,26 +3254,6 @@ const DEFAULT_SEASON_NUM = 19;
               </div>
             </div>
           )}
-
-          {/* Expandable "How Tracking Works" Box */}
-          <div className={`w-full ${isMobileView ? '' : 'max-w-3xl'} text-left`}>
-            <details className="group bg-[#131b2f] border border-slate-700/50 rounded-xl overflow-hidden shadow-lg transition-all duration-300">
-              <summary className="flex cursor-pointer items-center justify-between px-4 py-3 font-bold text-slate-400 hover:text-emerald-400 transition-colors list-none">
-                <span className="flex items-center gap-2 uppercase tracking-widest text-[11px]">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  How does tracking work?
-                </span>
-                <svg className="w-4 h-4 transition-transform duration-300 group-open:-rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </summary>
-              <div className="px-4 pb-4 text-slate-300 text-xs sm:text-sm leading-relaxed border-t border-slate-700/50 pt-3 bg-[#0f1526]">
-                <strong>M5 Stat Tracker</strong> aggregates real-time career data across 3 major competitive stats providers (Tracker.gg, RivalsMeta.com, and RivalsTracker.com). Your primary claimed profile automatically logs data snapshots on app launch, blending multi-site statistics to calculate merged averages, peak ranks, and historical performance trends day by day!
-              </div>
-            </details>
-          </div>
 
           {/* Error Message with Prominent Report Button */}
           {error && (
@@ -3597,19 +3503,28 @@ const DEFAULT_SEASON_NUM = 19;
                     className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-red-600 hover:to-rose-600 text-white transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20 border border-emerald-400/50 uppercase tracking-wider font-black group"
                     title="Click to unclaim profile"
                   >
-                    <span className="group-hover:hidden">👑 Profile Claimed</span>
-                    <span className="hidden group-hover:inline">✕ Unclaim</span>
+                    <span className="group-hover:hidden">👑 TRACKING ACTIVE</span>
+                    <span className="hidden group-hover:inline">✕ Unclaim Profile</span>
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={() => handleClaimProfile(stats.current)}
                     className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-amber-500/20 border border-amber-400/50 uppercase tracking-wider font-black hover:scale-105 active:scale-95"
-                    title="Claim profile & save direct URL for instant fast loading"
+                    title="Claim profile to start tracking"
                   >
-                    <span>👑 Claim Profile</span>
+                    <span>👑 CLAIM YOUR USERNAME TO START TRACKING</span>
                   </button>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => handleRefreshClaimedProfile()}
+                  className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20 border border-emerald-400/50 uppercase tracking-wider font-black hover:scale-105 active:scale-95"
+                  title="Refresh / Sync Stats using saved scraping origin"
+                >
+                  <span>🔄 Refresh / Sync Stats</span>
+                </button>
 
                 <button
                   type="button"
@@ -3777,12 +3692,12 @@ const DEFAULT_SEASON_NUM = 19;
                         {parseFloat(stats.current.winRate || 0) < 50 ? (
                           <li className="flex items-start gap-2">
                             <span className="text-amber-400 font-bold">•</span>
-                            <span><strong>Objective Control:</strong> Win Rate is {stats.current.winRate}%. Prioritize team group-ups before contesting objective points.</span>
+                            <span><strong>Objective Control:</strong> Win Rate is {formatPercent(stats.current.winRate)}. Prioritize team group-ups before contesting objective points.</span>
                           </li>
                         ) : (
                           <li className="flex items-start gap-2">
                             <span className="text-emerald-400 font-bold">•</span>
-                            <span><strong>Maintain Momentum:</strong> Solid Win Rate ({stats.current.winRate}%). Keep leveraging main hero compositions during ranked matches.</span>
+                            <span><strong>Maintain Momentum:</strong> Solid Win Rate ({formatPercent(stats.current.winRate)}). Keep leveraging main hero compositions during ranked matches.</span>
                           </li>
                         )}
 
@@ -3807,7 +3722,7 @@ const DEFAULT_SEASON_NUM = 19;
                       </div>
                       <div className="text-xs text-slate-300 space-y-2 leading-relaxed">
                         <p>
-                          <strong>Current Snapshot:</strong> {stats.current.winRate}% Win Rate | {stats.current.kdRatio} K/D/A | Top Hero: {stats.current.topHero}
+                          <strong>Current Snapshot:</strong> {formatPercent(stats.current.winRate)} Win Rate | {stats.current.kdRatio} K/D/A | Top Hero: {stats.current.topHero}
                         </p>
                         <p className="text-[11px] text-slate-400">
                           📂 Saved to local data file <code className="text-emerald-400">tracked_stats_{stats.current.username.toLowerCase()}.json</code> on device.
@@ -4601,7 +4516,7 @@ const DEFAULT_SEASON_NUM = 19;
                         </button>
                       </span>
                       <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                        {stats.current.winRate}% WR
+                        {formatPercent(stats.current.winRate)} WR
                       </span>
                     </span>
                     <div className="mt-2 flex items-baseline gap-2 flex-wrap">
@@ -4615,7 +4530,7 @@ const DEFAULT_SEASON_NUM = 19;
                         <span className="text-[10px] text-amber-300 font-bold">This stat looks wrong?</span>
                         <button
                           type="button"
-                          onClick={() => reportSpecificStatInaccuracy('matches', 'Matches & Wins', `${stats.current.matchesWon} Wins / ${stats.current.matchesPlayed} Total (${stats.current.winRate}% WR)`)}
+                          onClick={() => reportSpecificStatInaccuracy('matches', 'Matches & Wins', `${stats.current.matchesWon} Wins / ${stats.current.matchesPlayed} Total (${formatPercent(stats.current.winRate)} WR)`)}
                           className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-black text-[10px] uppercase tracking-wider transition-all shadow-md cursor-pointer shrink-0"
                         >
                           ⚠️ Report Accuracy Issue
@@ -4639,7 +4554,7 @@ const DEFAULT_SEASON_NUM = 19;
                         </button>
                       </span>
                       <span className="text-[10px] text-blue-400 font-semibold bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
-                        {stats.current.kdRatio} KDA
+                        {(!isNaN(Number(stats.current.kdRatio))) ? Number(stats.current.kdRatio).toFixed(2) : (stats.current.kdRatio || '0.00')} KDA
                       </span>
                     </span>
                     <div className="mt-2 flex items-center gap-1.5 text-xs sm:text-sm font-black flex-wrap">
@@ -4663,7 +4578,7 @@ const DEFAULT_SEASON_NUM = 19;
                     )}
                   </div>
 
-                  {/* Card 3: Hero Damage */}
+                  {/* Card 3: Total Damage */}
                   <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between relative">
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
@@ -4680,9 +4595,9 @@ const DEFAULT_SEASON_NUM = 19;
                     </span>
                     <div className="mt-2 flex items-baseline gap-1 truncate">
                       <span className="text-lg sm:text-xl md:text-2xl font-black text-emerald-400 truncate">
-                        {typeof stats.current.heroDamage === 'number'
-                          ? stats.current.heroDamage.toLocaleString()
-                          : (stats.current.heroDamage || 'N/A')}
+                        {typeof stats.current.totalDamage === 'number'
+                          ? stats.current.totalDamage.toLocaleString()
+                          : (stats.current.totalDamage || 'N/A')}
                       </span>
                     </div>
                     {activeStatReport === 'damage' && (
@@ -4690,7 +4605,7 @@ const DEFAULT_SEASON_NUM = 19;
                         <span className="text-[10px] text-amber-300 font-bold">This stat looks wrong?</span>
                         <button
                           type="button"
-                          onClick={() => reportSpecificStatInaccuracy('damage', 'Total Damage', `${stats.current.heroDamage}`)}
+                          onClick={() => reportSpecificStatInaccuracy('damage', 'Total Damage', `${stats.current.totalDamage}`)}
                           className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-black text-[10px] uppercase tracking-wider transition-all shadow-md cursor-pointer shrink-0"
                         >
                           ⚠️ Report Accuracy Issue
@@ -5679,26 +5594,19 @@ const DEFAULT_SEASON_NUM = 19;
                   </div>
                 </div>
 
-                {/* Drawer Group 0.4: My Claimed Profile Card */}
+                {/* Drawer Group 0.4: My Claimed Profile Card & Unclaim Button */}
                 {claimedProfile?.username && (
                   <div className="space-y-2 bg-gradient-to-br from-[#131b2f] to-[#0d1424] border-2 border-amber-500/60 p-3.5 rounded-2xl shadow-xl text-left relative overflow-hidden">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
                         <span>👑</span> Claimed Profile (Fast Loaded)
                       </span>
-                      <button
-                        type="button"
-                        onClick={handleUnclaimProfile}
-                        className="text-[10px] text-red-400 hover:text-red-300 font-bold bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 px-2 py-0.5 rounded cursor-pointer"
-                      >
-                        Unclaim
-                      </button>
                     </div>
 
                     <div className="flex items-center justify-between gap-3 pt-1">
-                      <div>
-                        <h4 className="text-base font-black text-white">{claimedProfile.username}</h4>
-                        <p className="text-[10px] text-slate-400 font-mono truncate max-w-[200px]">
+                      <div className="overflow-hidden">
+                        <h4 className="text-base font-black text-white truncate">{claimedProfile.username}</h4>
+                        <p className="text-[10px] text-slate-400 font-mono truncate max-w-[180px]">
                           Direct URL: {claimedProfile.savedUrl}
                         </p>
                       </div>
@@ -5713,6 +5621,20 @@ const DEFAULT_SEASON_NUM = 19;
                         className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl transition-all shadow-md uppercase tracking-wider shrink-0 cursor-pointer"
                       >
                         ⚡ Fast Load
+                      </button>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          handleUnclaimProfile();
+                        }}
+                        className="w-full py-2.5 px-3 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/40 text-red-400 hover:text-red-300 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        <span>👑</span>
+                        <span>Unclaim Profile</span>
                       </button>
                     </div>
                   </div>
@@ -5759,6 +5681,26 @@ const DEFAULT_SEASON_NUM = 19;
                       <div className="w-4 h-4 rounded-full bg-white shadow-md"></div>
                     </button>
                   </div>
+                </div>
+
+                {/* How Tracking Works Box in Hamburger Menu */}
+                <div className="bg-[#131b2f] border border-slate-700/60 rounded-2xl overflow-hidden shadow-lg text-left">
+                  <details className="group">
+                    <summary className="flex cursor-pointer items-center justify-between p-3.5 font-bold text-slate-300 hover:text-emerald-400 transition-colors list-none">
+                      <span className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-emerald-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        How does tracking work?
+                      </span>
+                      <svg className="w-4 h-4 text-slate-400 transition-transform duration-300 group-open:-rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </summary>
+                    <div className="px-3.5 pb-3.5 text-slate-300 text-xs leading-relaxed border-t border-slate-800/80 pt-3 bg-[#0f1526]">
+                      Every time the app opens, up to a max of once every 12 hours a snapshot of your stats will be taken. You can view these to track progress over time.
+                    </div>
+                  </details>
                 </div>
 
                 {/* Drawer Group 0.55: Favorite Primary Data Site Drop-Down */}
