@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import json
 import logging
@@ -95,50 +96,93 @@ class ErrorReportRequest(BaseModel):
     stack: Optional[str] = None
     client_info: Optional[str] = None
 
+GITHUB_REPO = "monfreda48/Meowdy5000"
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "") # Optional, needed if repo is private
 RELEASES_DIR = os.path.join(os.path.dirname(__file__), "releases")
 os.makedirs(RELEASES_DIR, exist_ok=True)
+LATEST_APK_PATH = os.path.join(RELEASES_DIR, "app-latest.apk")
+VERSION_CACHE_PATH = os.path.join(RELEASES_DIR, "version.json")
+
+async def fetch_github_release():
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "FastAPI-Updater"}
+    if GITHUB_TOKEN:
+        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+    
+    async with httpx.AsyncClient(follow_redirects=True, timeout=15.0) as client:
+        res = await client.get(f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest", headers=headers)
+        if res.status_code != 200:
+            return None
+        return res.json()
 
 # App Self-Update Endpoints
-@app.get("/api/app/version/latest", response_model=AppVersionInfo)
+@app.get("/api/app/version/latest")
 async def get_latest_app_version(request: Request):
-    """Reads current app update distribution metadata with dynamic host resolution."""
-    version_meta_path = os.path.join(RELEASES_DIR, "version.json")
-    
-    # Dynamically build base URL from the incoming request (preserves tunnel, LAN, or cellular domains)
     base_url = str(request.base_url).rstrip("/")
-    dynamic_download_url = f"{base_url}/api/app/download/latest"
+    release_data = await fetch_github_release()
 
-    if not os.path.exists(version_meta_path):
-        return {
-            "version_code": 999,
-            "version_name": "1.0.1",
-            "download_url": dynamic_download_url,
-            "changelog": "Dynamic network failover & live telemetry enhancements."
+    if release_data:
+        tag = release_data.get("tag_name", "v1.0.0")
+        # Extract version code (e.g., 'v1.0.23' -> 23)
+        match = re.search(r'\d+$', tag)
+        version_code = int(match.group()) if match else 1
+
+        meta = {
+            "version_code": version_code,
+            "version_name": tag.lstrip("v"),
+            "download_url": f"{base_url}/api/app/download/latest",
+            "changelog": release_data.get("body") or "Bug fixes and improvements.",
+            "release_notes": release_data.get("body") or "Bug fixes and improvements.",
+            "github_tag": tag
         }
+        with open(VERSION_CACHE_PATH, "w", encoding="utf-8") as f:
+            json.dump(meta, f, indent=2)
+        return meta
 
-    with open(version_meta_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-        # Override hardcoded download_url if it targets loopback 10.0.2.2 or 127.0.0.1
-        if "10.0.2.2" in data.get("download_url", "") or "127.0.0.1" in data.get("download_url", ""):
-            data["download_url"] = dynamic_download_url
-        return data
+    if os.path.exists(VERSION_CACHE_PATH):
+        with open(VERSION_CACHE_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    return {
+        "version_code": 1,
+        "version_name": "1.0.0",
+        "download_url": f"{base_url}/api/app/download/latest",
+        "changelog": "Initial release."
+    }
 
 @app.get("/api/app/download/latest")
 async def download_latest_apk():
-    """Serves the latest APK binary distribution."""
-    apk_candidates = [
-        os.path.join(RELEASES_DIR, "app-latest.apk"),
-        os.path.join(os.path.dirname(__file__), "..", "frontend", "android", "app", "build", "outputs", "apk", "debug", "app-debug.apk"),
-        os.path.join(os.path.dirname(__file__), "..", "app", "build", "outputs", "apk", "debug", "app-debug.apk")
-    ]
-    for path in apk_candidates:
-        if os.path.exists(path):
-            return FileResponse(
-                path=path,
-                filename="rivals_tracker_update.apk",
-                media_type="application/vnd.android.package-archive"
-            )
-    raise HTTPException(status_code=404, detail="No APK build available for distribution.")
+    release_data = await fetch_github_release()
+    if not release_data and not os.path.exists(LATEST_APK_PATH):
+        raise HTTPException(status_code=404, detail="No APK available")
+
+    if release_data:
+        assets = release_data.get("assets", [])
+        apk_asset = next((a for a in assets if a["name"].endswith(".apk")), None)
+        if not apk_asset:
+            raise HTTPException(status_code=404, detail="No APK asset found in latest GitHub release")
+
+        # Download APK from GitHub if not already cached
+        asset_download_url = apk_asset.get("browser_download_url")
+        headers = {"User-Agent": "FastAPI-Updater"}
+        if GITHUB_TOKEN:
+            # Private repo asset API endpoint requires octet-stream header
+            asset_download_url = apk_asset.get("url")
+            headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+            headers["Accept"] = "application/octet-stream"
+
+        async with httpx.AsyncClient(follow_redirects=True, timeout=60.0) as client:
+            res = await client.get(asset_download_url, headers=headers)
+            if res.status_code == 200:
+                with open(LATEST_APK_PATH, "wb") as f:
+                    f.write(res.content)
+
+    if os.path.exists(LATEST_APK_PATH):
+        return FileResponse(
+            path=LATEST_APK_PATH,
+            media_type="application/vnd.android.package-archive",
+            filename="Meowdy5000_update.apk"
+        )
+    raise HTTPException(status_code=404, detail="APK failed to download from GitHub")
 
 # API Endpoints
 

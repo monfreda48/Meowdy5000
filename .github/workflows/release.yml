@@ -1,0 +1,65 @@
+﻿name: Auto Build & Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Extract Version Info from build.gradle
+        id: get_version
+        run: |
+          # Works with both Groovy (build.gradle) and Kotlin DSL (build.gradle.kts)
+          V_NAME=$(grep -oE 'versionName\s*=?\s*["'\''"][^"'\'']+["'\''"]' app/build.gradle* | head -1 | sed -E 's/.*["'\''"]([^"'\'']+)["'\''"]/\1/')
+          V_CODE=$(grep -oE 'versionCode\s*=?\s*[0-9]+' app/build.gradle* | head -1 | grep -oE '[0-9]+')
+          
+          echo "version_name=$V_NAME" >> $GITHUB_OUTPUT
+          echo "version_code=$V_CODE" >> $GITHUB_OUTPUT
+          echo "tag=v$V_NAME" >> $GITHUB_OUTPUT
+
+      - name: Check if Release Tag Already Exists
+        id: check_tag
+        run: |
+          TAG="${{ steps.get_version.outputs.tag }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag $TAG already exists. Skipping release creation."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build Debug APK
+        if: steps.check_tag.outputs.exists == 'false'
+        run: ./gradlew assembleDebug
+
+      - name: Create Git Release & Upload APK
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_version.outputs.tag }}
+          name: Release ${{ steps.get_version.outputs.tag }} (Build ${{ steps.get_version.outputs.version_code }})
+          files: app/build/outputs/apk/debug/app-debug.apk
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

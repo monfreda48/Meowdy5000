@@ -682,21 +682,6 @@ fun DashboardScreen(
                                 }
                             )
 
-                            Spacer(Modifier.height(8.dp))
-                            NavigationDrawerItem(
-                                label = {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(imageVector = Icons.Default.Settings, contentDescription = null)
-                                        Spacer(modifier = Modifier.width(12.dp))
-                                        Text("Server Connection")
-                                    }
-                                },
-                                selected = false,
-                                onClick = {
-                                    showServerDialog = true
-                                }
-                            )
-
                             Spacer(Modifier.height(16.dp))
                             HorizontalDivider()
                             Spacer(Modifier.height(12.dp))
@@ -704,26 +689,21 @@ fun DashboardScreen(
                             // 6. Storage & Persistence
                             Text("💾 STORAGE & PERSISTENCE", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.height(8.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text("SAF Storage Write Permission", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                                    val isGranted = PersistentSafStorageManager.hasValidPermission(context)
-                                    Text(if (isGranted) "Status: Granted (Persistent)" else "Status: Ready", style = MaterialTheme.typography.bodySmall, color = if (isGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-                                }
-                                Button(onClick = {
+                            NavigationDrawerItem(
+                                label = {
+                                    Column {
+                                        Text("Export Local Data (JSON)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                        Text("Export cached player profiles and match logs", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                                    }
+                                },
+                                icon = { Icon(imageVector = Icons.Default.Share, contentDescription = "Export") },
+                                selected = false,
+                                onClick = {
                                     if (loadedDataJson != null) {
-                                        val file = java.io.File(context.cacheDir, "stats_export.json").apply { writeText(loadedDataJson!!) }
-                                        val uri = Uri.parse("content://com.meowdy5000.stattracker.fileprovider/external_files/stats_export.json")
                                         PersistentSafStorageManager.writeJson(context, loadedDataJson!!)
                                     }
-                                }) {
-                                    Text("Export JSON")
                                 }
-                            }
+                            )
 
                             Spacer(Modifier.height(16.dp))
                             HorizontalDivider()
@@ -733,7 +713,30 @@ fun DashboardScreen(
                             Text("🛠️ DEVELOPER TOOLS & ISSUES", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.height(8.dp))
                             OutlinedButton(
-                                onClick = { showIssueReportDialog = true },
+                                onClick = {
+                                    val url = "https://github.com/monfreda48/Meowdy5000/issues/new?labels=enhancement&title=%5BFeature%5D%3A+"
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    context.startActivity(intent)
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("💡", fontSize = 16.sp)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Suggest a Feature")
+                            }
+
+                            Spacer(Modifier.height(8.dp))
+
+                            OutlinedButton(
+                                onClick = {
+                                    val url = "https://github.com/monfreda48/Meowdy5000/issues/new?labels=bug&title=%5BBug%5D%3A+"
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    context.startActivity(intent)
+                                },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Icon(Icons.Default.Warning, contentDescription = null)
