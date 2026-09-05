@@ -34,6 +34,7 @@ frontend/android/captures/
 frontend/android/.idea/
 .gradle/
 *.apk
+!app-debug.apk
 scratch/
 /android
 
