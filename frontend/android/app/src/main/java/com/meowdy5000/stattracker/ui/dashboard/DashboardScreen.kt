@@ -187,7 +187,6 @@ fun DashboardScreen(
     var showCustomizeDialog by remember { mutableStateOf(false) }
     var showDonateDialog by remember { mutableStateOf(false) }
     var showClaimDialog by remember { mutableStateOf(false) }
-    var claimInputUrl by remember { mutableStateOf("") }
     var showServerDialog by remember { mutableStateOf(false) }
 
     val rootJson = remember(loadedDataJson) {
@@ -208,8 +207,8 @@ fun DashboardScreen(
         return JSONObject().apply {
             put("player_name", clean)
             put("is_fallback", true)
-            put("notice", "No live stats found for '$clean'. Enter your direct Tracker.gg URL or player tag (e.g. Meowdy 5000#1234) and tap 'Claim Profile'.")
-            put("error", "Live statistics could not be fetched automatically. Please enter your direct Tracker.gg URL or full player tag.")
+            put("notice", "No live stats found for '$clean'. Tap 'Claim Profile' to set as your profile.")
+            put("error", "Live statistics could not be fetched automatically for '$clean'.")
             put("rank", rankObj)
             put("heroes", JSONArray())
         }.toString()
@@ -468,34 +467,42 @@ fun DashboardScreen(
         )
     }
 
-    // Claim Profile Input Dialog
+    val activePlayerName = remember(loadedDataJson, searchQuery) {
+        if (rootJson != null) {
+            val name = rootJson.optString("player_name", "").ifBlank {
+                rootJson.optJSONObject("overview")?.optString("player_name", "") ?: ""
+            }
+            if (name.isNotBlank()) name else searchQuery.ifBlank { "this player" }
+        } else {
+            searchQuery.ifBlank { "this player" }
+        }
+    }
+
+    // Claim Profile Confirmation Dialog
     if (showClaimDialog) {
         AlertDialog(
             onDismissRequest = { showClaimDialog = false },
-            title = { Text("👑 Claim Profile & Sync Stats", fontWeight = FontWeight.Bold) },
+            title = { Text("👑 Claim Profile", fontWeight = FontWeight.Bold) },
             text = {
-                Column {
-                    Text("Enter your exact Tracker.gg URL or full player tag (e.g. Meowdy 5000#1234):", style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = claimInputUrl,
-                        onValueChange = { claimInputUrl = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("https://tracker.gg/marvel-rivals/profile/...") },
-                        singleLine = true
-                    )
-                }
+                Text(
+                    text = "Claim $activePlayerName as your profile?",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             },
             confirmButton = {
-                Button(onClick = {
-                    val target = claimInputUrl.ifBlank { searchQuery }
-                    if (target.isNotBlank()) {
-                        performSearch(target)
+                Button(
+                    onClick = {
                         isClaimed = true
-                    }
-                    showClaimDialog = false
-                }) {
-                    Text("Sync & Claim")
+                        prefs.edit().putBoolean("profile_is_claimed", true).apply()
+                        if (activePlayerName.isNotBlank() && activePlayerName != "this player") {
+                            prefs.edit().putString("claimed_player_name", activePlayerName).apply()
+                        }
+                        showClaimDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Claim Profile", color = Color.Black, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
