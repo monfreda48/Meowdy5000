@@ -27,6 +27,7 @@ def currentVersionCode = versionProps.getProperty('VERSION_CODE', '1').toInteger
 android {
     namespace 'com.meowdy5000.stattracker'
     compileSdk 35
+    compileSdkVersion 35
 
     defaultConfig {
         applicationId "com.meowdy5000.stattracker"
