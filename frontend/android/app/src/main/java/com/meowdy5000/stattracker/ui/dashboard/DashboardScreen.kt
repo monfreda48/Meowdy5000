@@ -62,6 +62,13 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import org.json.JSONArray
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.widget.Toast
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import com.meowdy5000.stattracker.data.DataExporter
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -189,6 +196,28 @@ fun DashboardScreen(
     var showClaimDialog by remember { mutableStateOf(false) }
     var showUnclaimDialog by remember { mutableStateOf(false) }
     var showServerDialog by remember { mutableStateOf(false) }
+
+    val exportJsonLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri != null) {
+            val success = DataExporter.exportSnapshotToUri(
+                context = context,
+                targetUri = uri,
+                loadedDataJson = loadedDataJson,
+                isClaimed = isClaimed,
+                cardOrder = cardOrder,
+                themeName = currentTheme.displayName,
+                autoSnapshotEnabled = autoSnapshotEnabled,
+                snapshotInterval = snapshotInterval
+            )
+            if (success) {
+                Toast.makeText(context, "Snapshot exported successfully", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Failed to export snapshot", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     val rootJson = remember(loadedDataJson) {
         if (loadedDataJson != null) {
@@ -901,9 +930,9 @@ fun DashboardScreen(
                                 icon = { Icon(imageVector = Icons.Default.Share, contentDescription = "Export") },
                                 selected = false,
                                 onClick = {
-                                    if (loadedDataJson != null) {
-                                        PersistentSafStorageManager.writeJson(context, loadedDataJson!!)
-                                    }
+                                    val timestamp = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date())
+                                    val defaultFileName = "meowdy5000_stats_$timestamp.json"
+                                    exportJsonLauncher.launch(defaultFileName)
                                 }
                             )
 
