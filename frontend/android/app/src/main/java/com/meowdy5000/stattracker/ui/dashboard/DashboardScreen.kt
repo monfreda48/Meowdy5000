@@ -501,7 +501,7 @@ fun DashboardScreen(
             title = { Text("🍕 Support Development", fontWeight = FontWeight.Bold) },
             text = {
                 Column {
-                    Text("Enjoying Meowdy 5000 Rivals Tracker?", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text("Enjoying M5 Stat Tracker?", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(4.dp))
                     Text("Help support server hosting, scraper maintenance, and future features!", style = MaterialTheme.typography.bodyMedium)
                 }
@@ -1390,7 +1390,7 @@ fun DashboardScreen(
                                     }
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "Meowdy 5000 Rivals Tracker",
+                                        text = "M5 Stat Tracker",
                                         fontWeight = FontWeight.Bold,
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurface

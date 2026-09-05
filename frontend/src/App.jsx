@@ -1651,7 +1651,7 @@ export default function App() {
 
       const datasetObj = {
         metadata: {
-          app: "Meowdy 5000 Rivals Tracker",
+          app: "M5 Stat Tracker",
           downloadedAt: new Date().toISOString(),
           player: username,
           season: seasonName,
@@ -2340,7 +2340,7 @@ ${payload.stack || 'No stack trace available.'}
     const winRate = stats.current.winRate || 0;
     const kdRatio = stats.current.kdRatio || 0;
     const topHero = stats.current.topHero || 'Unknown';
-    const shareText = `🦸 Marvel Rivals Stat Sheet for ${username}:\n🏆 Win Rate: ${winRate}%\n⚔️ K/D Ratio: ${kdRatio}\n⭐ Top Hero: ${topHero}\nTracked with Meowdy 5000 Rivals Tracker!`;
+    const shareText = `🦸 Marvel Rivals Stat Sheet for ${username}:\n🏆 Win Rate: ${winRate}%\n⚔️ K/D Ratio: ${kdRatio}\n⭐ Top Hero: ${topHero}\nTracked with M5 Stat Tracker!`;
 
     try {
       if (window.Capacitor && window.Capacitor.isNativePlatform()) {
@@ -3019,7 +3019,7 @@ const DEFAULT_SEASON_NUM = 19;
           </div>
 
           <h1 className="text-xl sm:text-3xl font-black text-white uppercase tracking-wider mb-2">
-            MEOWDY 5000 <br /> RIVALS TRACKER
+            M5 STAT TRACKER
           </h1>
 
           <p className="text-xs text-slate-400 font-medium mt-3 flex items-center gap-2">

@@ -15,6 +15,7 @@ if sys.platform == "win32":
 import httpx
 from fastapi import FastAPI, Depends, Query, HTTPException, Response, Request
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -330,25 +331,24 @@ async def get_stats_legacy(query: str = Query(...), season: str = Query("19")):
     """Backward compatibility stats lookup route."""
     return await scrape_player_profile(query)
 
-FRONTEND_DIST = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"))
+DIST_DIR = os.path.join(os.path.dirname(__file__), "dist")
+if not os.path.exists(DIST_DIR):
+    DIST_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"))
 
-@app.get("/")
-async def serve_root():
-    index_path = os.path.join(FRONTEND_DIST, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-    return {"status": "Meowdy 5000 Backend Running"}
+if os.path.exists(DIST_DIR):
+    assets_path = os.path.join(DIST_DIR, "assets")
+    if os.path.exists(assets_path):
+        app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
 
-@app.get("/{path:path}")
-async def serve_spa(path: str):
-    if path.startswith("api/"):
-        raise HTTPException(status_code=404, detail="API route not found")
-    file_path = os.path.join(FRONTEND_DIST, path)
-    if path != "" and os.path.exists(file_path) and os.path.isfile(file_path):
-        return FileResponse(file_path)
-    index_path = os.path.join(FRONTEND_DIST, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-    return {"status": "Meowdy 5000 Backend Running"}
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        # Prevent intercepting /api calls that happen to 404
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not Found")
+        file_path = os.path.join(DIST_DIR, full_path)
+        if full_path != "" and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(DIST_DIR, "index.html"))
+
 
 
