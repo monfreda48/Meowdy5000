@@ -35,7 +35,7 @@ fun MatchHistoryListCard(matches: List<MatchInfo>) {
     val context = LocalContext.current
     val imageLoader = remember(context) { ImageLoaderProvider.get(context) }
 
-    ExpandableStatCard(title = "📜 Recent Match History", initiallyExpanded = true) {
+    ExpandableStatCard(title = "📜 Recent Match History", initiallyExpanded = false) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             matches.forEach { match ->
                 val resultLower = match.score.lowercase()

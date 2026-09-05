@@ -25,7 +25,7 @@ fun HeroMasteryCard(heroes: List<HeroStat>) {
     val context = LocalContext.current
     val imageLoader = remember(context) { ImageLoaderProvider.get(context) }
 
-    ExpandableStatCard(title = "🦸 Hero Mastery Breakdown", initiallyExpanded = true) {
+    ExpandableStatCard(title = "🦸 Hero Mastery Breakdown", initiallyExpanded = false) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (heroes.isNotEmpty()) {
                 heroes.forEachIndexed { index, hero ->

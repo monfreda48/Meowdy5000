@@ -6,10 +6,11 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
+import android.util.Log
+import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.FileProvider
 import com.meowdy5000.stattracker.BuildConfig
 import com.meowdy5000.stattracker.data.NetworkModule
-import com.meowdy5000.stattracker.data.network.DynamicHostInterceptor
 import com.meowdy5000.stattracker.data.models.AppVersionResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,10 +33,14 @@ sealed class UpdateStatus {
 }
 
 class AppUpdateManager(private val context: Context) {
-    // Use the shared client equipped with DynamicHostInterceptor failover
     private val client = NetworkModule.provideOkHttpClient(context)
     private val _status = MutableStateFlow<UpdateStatus>(UpdateStatus.Idle)
     val status: StateFlow<UpdateStatus> = _status
+
+    var pendingApkFile: File? = null
+        private set
+
+    var permissionLauncher: ActivityResultLauncher<Intent>? = null
 
     suspend fun checkForUpdates() {
         _status.value = UpdateStatus.Checking
@@ -66,7 +71,6 @@ class AppUpdateManager(private val context: Context) {
                 var downloadUrl = versionInfo.download_url
                 val releaseNotes = versionInfo.release_notes ?: "Bug fixes and performance improvements."
 
-                // If downloadUrl is relative, format it with base URL
                 if (downloadUrl.startsWith("/")) {
                     downloadUrl = "$baseUrl$downloadUrl"
                 }
@@ -147,30 +151,62 @@ class AppUpdateManager(private val context: Context) {
         }
     }
 
-    fun triggerInstall(apkFile: File) {
+    fun canInstallPackages(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.packageManager.canRequestPackageInstalls()
+        } else {
+            true
+        }
+    }
+
+    fun triggerInstall(apkFile: File): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (!context.packageManager.canRequestPackageInstalls()) {
+                pendingApkFile = apkFile
+                Log.w("AppUpdateManager", "Unknown app sources permission missing. Prompting user...")
                 val permissionIntent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
                     data = Uri.parse("package:${context.packageName}")
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
-                context.startActivity(permissionIntent)
-                return
+                val launcher = permissionLauncher
+                if (launcher != null) {
+                    launcher.launch(permissionIntent)
+                } else {
+                    context.startActivity(permissionIntent)
+                }
+                return false
             }
         }
 
-        val apkUri: Uri = FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.fileprovider",
-            apkFile
-        )
+        return try {
+            val apkUri: Uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                apkFile
+            )
 
-        val installIntent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(apkUri, "application/vnd.android.package-archive")
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            val installIntent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(apkUri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(installIntent)
+            pendingApkFile = null
+            true
+        } catch (e: Exception) {
+            Log.e("AppUpdateManager", "Failed to launch package installer: ${e.message}", e)
+            _status.value = UpdateStatus.Error(e.message ?: "Failed to launch package installer.")
+            false
         }
-        context.startActivity(installIntent)
+    }
+
+    fun checkAndResumePendingInstall(): Boolean {
+        val pending = pendingApkFile ?: return false
+        if (canInstallPackages()) {
+            Log.i("AppUpdateManager", "Unknown app sources permission granted. Auto-resuming pending APK installation...")
+            return triggerInstall(pending)
+        }
+        return false
     }
 
     fun resetStatus() {

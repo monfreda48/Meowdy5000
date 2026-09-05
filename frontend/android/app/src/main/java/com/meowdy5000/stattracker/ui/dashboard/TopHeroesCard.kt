@@ -28,7 +28,7 @@ fun TopHeroesCard(heroes: List<HeroStat>) {
     val context = LocalContext.current
     val imageLoader = remember(context) { ImageLoaderProvider.get(context) }
     val top3 = heroes.take(3)
-    ExpandableStatCard(title = "🌟 Top 3 Heroes", initiallyExpanded = true) {
+    ExpandableStatCard(title = "🌟 Top 3 Heroes", initiallyExpanded = false) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (top3.isNotEmpty()) {
                 top3.forEachIndexed { index, hero ->

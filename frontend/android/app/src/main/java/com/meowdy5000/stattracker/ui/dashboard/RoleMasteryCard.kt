@@ -13,7 +13,7 @@ import org.json.JSONArray
 fun RoleMasteryCard(rolesArray: JSONArray) {
     if (rolesArray.length() == 0) return
 
-    ExpandableStatCard(title = "🛡️ Role Performance", initiallyExpanded = true) {
+    ExpandableStatCard(title = "🛡️ Role Performance", initiallyExpanded = false) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             for (i in 0 until rolesArray.length()) {
                 val roleObj = rolesArray.optJSONObject(i) ?: continue

@@ -219,6 +219,32 @@ fun DashboardScreen(
         }
     }
 
+    val unknownAppSourcesLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        updateManager.checkAndResumePendingInstall()
+        com.meowdy5000.stattracker.storage.ApkUpdateManager.checkAndResumePendingInstall(context)
+    }
+
+    LaunchedEffect(unknownAppSourcesLauncher) {
+        updateManager.permissionLauncher = unknownAppSourcesLauncher
+    }
+
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                updateManager.checkAndResumePendingInstall()
+                com.meowdy5000.stattracker.storage.ApkUpdateManager.checkAndResumePendingInstall(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+
     val rootJson = remember(loadedDataJson) {
         if (loadedDataJson != null) {
             try { JSONObject(loadedDataJson!!) } catch (e: Exception) { JSONObject() }

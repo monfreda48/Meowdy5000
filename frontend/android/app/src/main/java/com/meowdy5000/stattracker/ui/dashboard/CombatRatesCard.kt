@@ -11,7 +11,7 @@ import com.meowdy5000.stattracker.ui.components.ExpandableStatCard
 
 @Composable
 fun CombatRatesCard(overview: CompleteOverview) {
-    ExpandableStatCard(title = "⏱️ Combat Rates & Output", initiallyExpanded = true) {
+    ExpandableStatCard(title = "⏱️ Combat Rates & Output", initiallyExpanded = false) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
                 Text("Damage / Min:", color = MaterialTheme.colorScheme.onSurface)

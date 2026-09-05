@@ -11,7 +11,7 @@ import com.meowdy5000.stattracker.ui.components.ExpandableStatCard
 
 @Composable
 fun PrecisionCard(precision: PrecisionTotals) {
-    ExpandableStatCard(title = "🎯 Precision & Combat Totals", initiallyExpanded = true) {
+    ExpandableStatCard(title = "🎯 Precision & Combat Totals", initiallyExpanded = false) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
                 Text("Total K / D / A:", color = MaterialTheme.colorScheme.onSurface)

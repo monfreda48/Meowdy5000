@@ -26,7 +26,7 @@ fun ExtendedStatsCard(extendedObj: JSONObject?) {
 
     ExpandableStatCard(
         title = "🎯 Detailed Combat & Precision (\"More Stats\")",
-        initiallyExpanded = true
+        initiallyExpanded = false
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             // Row 1: Solo Kills & Final Blows

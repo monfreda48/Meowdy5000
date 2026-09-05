@@ -11,7 +11,7 @@ import com.meowdy5000.stattracker.ui.components.ExpandableStatCard
 
 @Composable
 fun CombatOverviewCard(overview: CompleteOverview) {
-    ExpandableStatCard(title = "⚔️ Combat Overview", initiallyExpanded = true) {
+    ExpandableStatCard(title = "⚔️ Combat Overview", initiallyExpanded = false) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
                 Text("Win Rate:", color = MaterialTheme.colorScheme.onSurface)

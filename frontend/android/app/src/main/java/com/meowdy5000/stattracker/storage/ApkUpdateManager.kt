@@ -24,6 +24,9 @@ object ApkUpdateManager {
     private const val TAG = "ApkUpdateManager"
     private const val UPDATES_DIR_NAME = "updates"
 
+    var pendingApkFile: File? = null
+        private set
+
     /**
      * Gets or creates the updates directory in external files path.
      */
@@ -128,7 +131,8 @@ object ApkUpdateManager {
      */
     fun installApk(context: Context, apkFile: File): Boolean {
         if (!canInstallPackages(context)) {
-            Log.w(TAG, "Package install permission missing. Requesting permission...")
+            Log.w(TAG, "Package install permission missing. Storing pending APK and requesting permission...")
+            pendingApkFile = apkFile
             requestInstallPermission(context)
             return false
         }
@@ -151,11 +155,24 @@ object ApkUpdateManager {
             }
 
             context.startActivity(intent)
+            pendingApkFile = null
             Log.i(TAG, "Successfully launched system package installer for: ${apkFile.name}")
             true
         } catch (e: Exception) {
             Log.e(TAG, "Error launching package installer for ${apkFile.name}: ${e.message}", e)
             false
         }
+    }
+
+    /**
+     * Auto-resumes pending APK installation if permission has been granted.
+     */
+    fun checkAndResumePendingInstall(context: Context): Boolean {
+        val pending = pendingApkFile ?: return false
+        if (canInstallPackages(context)) {
+            Log.i(TAG, "Unknown app sources permission granted. Resuming pending APK installation...")
+            return installApk(context, pending)
+        }
+        return false
     }
 }

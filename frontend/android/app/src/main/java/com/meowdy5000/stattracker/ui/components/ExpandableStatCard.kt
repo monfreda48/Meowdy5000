@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun ExpandableStatCard(
     title: String,
-    initiallyExpanded: Boolean = true,
+    initiallyExpanded: Boolean = false,
     content: @Composable () -> Unit
 ) {
     var expanded by remember { mutableStateOf(initiallyExpanded) }

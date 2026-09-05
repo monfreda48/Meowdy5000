@@ -12,7 +12,7 @@ import com.meowdy5000.stattracker.ui.components.ExpandableStatCard
 
 @Composable
 fun AwardsCard(overview: CompleteOverview, precision: PrecisionTotals) {
-    ExpandableStatCard(title = "🏅 Awards & Streaks", initiallyExpanded = true) {
+    ExpandableStatCard(title = "🏅 Awards & Streaks", initiallyExpanded = false) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
                 Text("MVP Awards:", color = MaterialTheme.colorScheme.onSurface)

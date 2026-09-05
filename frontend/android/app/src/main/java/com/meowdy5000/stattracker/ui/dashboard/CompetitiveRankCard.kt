@@ -14,7 +14,7 @@ import com.meowdy5000.stattracker.ui.components.ExpandableStatCard
 
 @Composable
 fun CompetitiveRankCard(rankInfo: RankInfo) {
-    ExpandableStatCard(title = "🏆 Competitive Rank & Skill Rating", initiallyExpanded = true) {
+    ExpandableStatCard(title = "🏆 Competitive Rank & Skill Rating", initiallyExpanded = false) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
