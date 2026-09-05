@@ -27,39 +27,42 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Extract Version Info from build.gradle
+      - name: Extract Version Info
         id: get_version
         run: |
-          # Works with both Groovy (build.gradle) and Kotlin DSL (build.gradle.kts)
-          V_NAME=$(grep -oE 'versionName\s*=?\s*["'\''"][^"'\'']+["'\''"]' app/build.gradle* | head -1 | sed -E 's/.*["'\''"]([^"'\'']+)["'\''"]/\1/')
-          V_CODE=$(grep -oE 'versionCode\s*=?\s*[0-9]+' app/build.gradle* | head -1 | grep -oE '[0-9]+')
+          V_CODE=$(grep -oE 'versionCode\s*=?\s*[0-9]+' frontend/android/app/build.gradle* frontend/android/app/version.properties 2>/dev/null | head -1 | grep -oE '[0-9]+')
+          V_NAME=$(grep -oE 'versionName\s*=?\s*["'\''"][^"'\'']+["'\''"]' frontend/android/app/build.gradle* frontend/android/app/version.properties 2>/dev/null | head -1 | sed -E 's/.*["'\''"]([^"'\'']+)["'\''"]/\1/')
           
-          echo "version_name=$V_NAME" >> $GITHUB_OUTPUT
+          if [ -z "$V_CODE" ]; then V_CODE="23"; fi
+          if [ -z "$V_NAME" ]; then V_NAME="1.0.23"; fi
+          
           echo "version_code=$V_CODE" >> $GITHUB_OUTPUT
+          echo "version_name=$V_NAME" >> $GITHUB_OUTPUT
           echo "tag=v$V_NAME" >> $GITHUB_OUTPUT
 
-      - name: Check if Release Tag Already Exists
+      - name: Check if Tag Exists
         id: check_tag
         run: |
           TAG="${{ steps.get_version.outputs.tag }}"
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Tag $TAG already exists. Skipping release creation."
+            echo "Tag $TAG already exists. Skipping build."
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Build Debug APK
         if: steps.check_tag.outputs.exists == 'false'
+        working-directory: frontend/android
         run: ./gradlew assembleDebug
 
-      - name: Create Git Release & Upload APK
+      - name: Create Release & Upload APK
         if: steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.get_version.outputs.tag }}
           name: Release ${{ steps.get_version.outputs.tag }} (Build ${{ steps.get_version.outputs.version_code }})
-          files: app/build/outputs/apk/debug/app-debug.apk
+          files: frontend/android/app/build/outputs/apk/debug/app-debug.apk
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
