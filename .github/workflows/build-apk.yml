@@ -64,14 +64,26 @@ jobs:
           name: Meowdy5000-StatTracker-APK
           path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
 
+      - name: Extract Version Info
+        id: get_version
+        run: |
+          V_CODE=$(grep -shoE 'versionCode\s*=?\s*[0-9]+' frontend/android/app/build.gradle* frontend/android/app/version.properties 2>/dev/null | head -1 | grep -oE '[0-9]+' || true)
+          V_NAME=$(grep -shoE 'versionName\s*=?\s*["'\''"][^"'\'']+["'\''"]' frontend/android/app/build.gradle* frontend/android/app/version.properties 2>/dev/null | head -1 | sed -E 's/.*["'\''"]([^"'\'']+)["'\''"]/\1/' || true)
+          if [ -z "$V_CODE" ]; then V_CODE="23"; fi
+          if [ -z "$V_NAME" ]; then V_NAME="1.0.23"; fi
+          echo "version_code=$V_CODE" >> $GITHUB_OUTPUT
+          echo "version_name=$V_NAME" >> $GITHUB_OUTPUT
+          echo "tag=v$V_NAME" >> $GITHUB_OUTPUT
+
       - name: Publish APK to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v1.0.0"
+          tag_name: ${{ steps.get_version.outputs.tag }}
           target_commitish: "main"
-          name: "Meowdy 5000 Stat Tracker APK"
+          name: Release ${{ steps.get_version.outputs.tag }} (Build ${{ steps.get_version.outputs.version_code }})
           body: "Latest automated Android APK build from main branch."
           files: frontend/android/app/build/outputs/apk/debug/app-debug.apk
           make_latest: true
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
