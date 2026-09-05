@@ -449,10 +449,16 @@ if os.path.exists(DIST_DIR):
         # Prevent intercepting /api calls that happen to 404
         if full_path.startswith("api/"):
             raise HTTPException(status_code=404, detail="Not Found")
-        file_path = os.path.join(DIST_DIR, full_path)
+        no_cache_headers = {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
         if full_path != "" and os.path.isfile(file_path):
+            if file_path.endswith(".html"):
+                return FileResponse(file_path, headers=no_cache_headers)
             return FileResponse(file_path)
-        return FileResponse(os.path.join(DIST_DIR, "index.html"))
+        return FileResponse(os.path.join(DIST_DIR, "index.html"), headers=no_cache_headers)
 
 
 
