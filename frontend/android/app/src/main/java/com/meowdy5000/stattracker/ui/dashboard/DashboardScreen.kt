@@ -187,6 +187,7 @@ fun DashboardScreen(
     var showCustomizeDialog by remember { mutableStateOf(false) }
     var showDonateDialog by remember { mutableStateOf(false) }
     var showClaimDialog by remember { mutableStateOf(false) }
+    var showUnclaimDialog by remember { mutableStateOf(false) }
     var showServerDialog by remember { mutableStateOf(false) }
 
     val rootJson = remember(loadedDataJson) {
@@ -513,6 +514,42 @@ fun DashboardScreen(
         )
     }
 
+    // Unclaim Profile Confirmation Dialog
+    if (showUnclaimDialog) {
+        AlertDialog(
+            onDismissRequest = { showUnclaimDialog = false },
+            title = { Text("Unclaim Profile?", fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    text = "Are you sure you want to unclaim this profile? Your customized dashboard layout will be disabled until a profile is claimed again.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        prefs.edit().putBoolean("profile_is_claimed", false).remove("claimed_player_name").apply()
+                        isClaimed = false
+                        loadedDataJson = null
+                        snapshotManager.clearCache()
+                        searchQuery = ""
+                        showUnclaimDialog = false
+                        scope.launch { drawerState.close() }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Unclaim", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUnclaimDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     // Customize Dashboard Stat Cards Layout Dialog
     if (showCustomizeDialog) {
         AlertDialog(
@@ -827,6 +864,23 @@ fun DashboardScreen(
                                     }
                                 }
                             )
+
+                            if (isClaimed) {
+                                Spacer(Modifier.height(8.dp))
+                                NavigationDrawerItem(
+                                    label = {
+                                        Column {
+                                            Text("Unclaim Profile", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+                                            Text("Remove claimed profile link and restore default view", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                                        }
+                                    },
+                                    icon = { Icon(imageVector = Icons.Default.Close, contentDescription = "Unclaim Profile", tint = MaterialTheme.colorScheme.error) },
+                                    selected = false,
+                                    onClick = {
+                                        showUnclaimDialog = true
+                                    }
+                                )
+                            }
 
                             Spacer(Modifier.height(16.dp))
                             HorizontalDivider()
