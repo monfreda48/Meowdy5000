@@ -1,11 +1,11 @@
 package com.meowdy5000.stattracker.ui.dashboard
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -17,7 +17,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil.compose.SubcomposeAsyncImage
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.meowdy5000.stattracker.data.ImageLoaderProvider
 import com.meowdy5000.stattracker.data.models.HeroStat
 import com.meowdy5000.stattracker.ui.components.ExpandableStatCard
@@ -41,9 +42,19 @@ fun TopHeroesCard(heroes: List<HeroStat>) {
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.weight(1f)
                         ) {
-                            if (!hero.heroIconUrl.isNullOrBlank()) {
-                                SubcomposeAsyncImage(
-                                    model = hero.heroIconUrl,
+                            if (!hero.heroIconUrl.isNullOrBlank() && hero.heroIconUrl != "null") {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data(hero.heroIconUrl)
+                                        .crossfade(true)
+                                        .listener(
+                                            onStart = { Log.d("HeroImage", "Loading start: ${hero.heroIconUrl}") },
+                                            onSuccess = { _, _ -> Log.d("HeroImage", "Successfully loaded: ${hero.heroName}") },
+                                            onError = { _, result -> 
+                                                Log.e("HeroImage", "FAILED to load ${hero.heroName} from ${hero.heroIconUrl}", result.throwable) 
+                                            }
+                                        )
+                                        .build(),
                                     imageLoader = imageLoader,
                                     contentDescription = hero.heroName,
                                     contentScale = ContentScale.Crop,
@@ -51,21 +62,7 @@ fun TopHeroesCard(heroes: List<HeroStat>) {
                                         .size(52.dp)
                                         .clip(RoundedCornerShape(8.dp))
                                         .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
-                                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                                    loading = {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                                        }
-                                    },
-                                    error = {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(
-                                                imageVector = Icons.Default.Person,
-                                                contentDescription = "Fallback",
-                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
+                                        .background(MaterialTheme.colorScheme.surfaceVariant)
                                 )
                             } else {
                                 Box(
@@ -84,7 +81,6 @@ fun TopHeroesCard(heroes: List<HeroStat>) {
                                     )
                                 }
                             }
-
 
                             Column {
                                 Text(

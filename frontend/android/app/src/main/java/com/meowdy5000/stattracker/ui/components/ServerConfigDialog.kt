@@ -25,15 +25,15 @@ fun ServerConfigDialog(
         text = {
             Column {
                 Text(
-                    text = "Specify a designated LAN IP, custom port (e.g. 192.168.1.145:8000), or a public tunnel URL for cellular access:",
+                    text = "Specify a custom host URL (defaults to production backend https://monfreda48.synology.me):",
                     style = MaterialTheme.typography.bodySmall
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 OutlinedTextField(
                     value = inputUrl,
                     onValueChange = { inputUrl = it },
-                    label = { Text("Host:Port or URL") },
-                    placeholder = { Text("e.g. 192.168.1.145:8000 or https://xyz.trycloudflare.com") },
+                    label = { Text("Backend URL") },
+                    placeholder = { Text("e.g. https://monfreda48.synology.me") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )

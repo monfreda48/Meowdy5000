@@ -23,7 +23,13 @@ class DynamicHostInterceptor(private val context: Context) : Interceptor {
                 || Build.FINGERPRINT.startsWith("unknown")
                 || Build.MODEL.contains("google_sdk")
                 || Build.MODEL.contains("Emulator")
-                || Build.MODEL.contains("Android SDK built for x86"))
+                || Build.MODEL.contains("Android SDK built for x86")
+                || Build.MODEL.lowercase().contains("sdk_gphone")
+                || Build.HARDWARE.contains("goldfish")
+                || Build.HARDWARE.contains("ranchu")
+                || Build.PRODUCT.lowercase().contains("sdk")
+                || Build.BOARD.lowercase().contains("goldfish")
+                || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")))
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
@@ -67,32 +73,27 @@ class DynamicHostInterceptor(private val context: Context) : Interceptor {
         val customUrl = prefs.getString(KEY_CUSTOM_URL, null)?.trim()
         if (!customUrl.isNullOrEmpty()) {
             val formatted = if (!customUrl.startsWith("http://") && !customUrl.startsWith("https://")) {
-                "http://$customUrl"
+                "https://$customUrl"
             } else customUrl
             candidates.add(formatted)
         }
 
-        // 2. Previously verified working URL
-        prefs.getString(KEY_ACTIVE_URL, null)?.let {
-            if (!candidates.contains(it)) candidates.add(it)
+        // 2. Production HTTPS Endpoint (Primary default)
+        candidates.add("https://monfreda48.synology.me")
+
+        // 3. Previously verified working URL
+        prefs.getString(KEY_ACTIVE_URL, null)?.let { active ->
+            if (!candidates.contains(active)) candidates.add(active)
         }
-
-        // 3. Emulator Loopback
-        if (isEmulator) {
-            candidates.add("http://10.0.2.2:8000")
-        }
-
-        // 4. USB / ADB Reverse Port
-        candidates.add("http://127.0.0.1:8000")
-        candidates.add("http://localhost:8000")
-
-        // 5. Default Wi-Fi LAN IP fallback
-        candidates.add("http://192.168.1.145:8000")
 
         return candidates.distinct()
     }
 
     fun resolveBaseUrl(): String {
-        return getCandidateEndpoints().firstOrNull() ?: "http://10.0.2.2:8000"
+        val active = prefs.getString(KEY_ACTIVE_URL, null)?.trim()
+        if (!active.isNullOrEmpty()) {
+            return active
+        }
+        return getCandidateEndpoints().firstOrNull() ?: "https://monfreda48.synology.me/"
     }
 }

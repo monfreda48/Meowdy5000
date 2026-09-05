@@ -157,7 +157,7 @@ async def search_player(req: SearchRequest, db: AsyncSession = Depends(get_db)):
     Search for a player by username.
     Returns cached profile if claimed, otherwise scrapes preview data.
     """
-    clean_username = req.username.strip()
+    clean_username = req.username.strip().replace("\r", "").replace("\n", "")
     if not clean_username:
         raise HTTPException(status_code=400, detail="Username is required.")
 

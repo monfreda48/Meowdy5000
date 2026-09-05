@@ -55,6 +55,10 @@ import com.meowdy5000.stattracker.ui.theme.AppThemeOption
 import com.meowdy5000.stattracker.ui.theme.ThemeViewModel
 import com.meowdy5000.stattracker.updater.AppUpdateManager
 import com.meowdy5000.stattracker.updater.UpdateStatus
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import org.json.JSONArray
@@ -114,8 +118,44 @@ fun DashboardScreen(
 
 
 
-    var searchQuery by remember { mutableStateOf("Meowdy 5000") }
+    val marvelQuotes = listOf(
+        "🕶️ Helping Daredevil find his keys...",
+        "👁️ Obtaining the Eye of Agamotto...",
+        "🔨 Bribing Eitri to forge Uru stats...",
+        "⚡ Charging Iron Man's Arc Reactor (400%)...",
+        "🕷️ Swiping Peter Parker's web-shooters...",
+        "🧪 Injecting Super Soldier Serum into backend...",
+        "💥 Hulk Smashed the web scraper API...",
+        "🛡️ Borrowing Captain America's Vibranium Shield...",
+        "🐱 Consulting Bast in Wakanda...",
+        "🌌 Stealing the Space Stone from Thanos...",
+        "📜 Reading the Darkhold for hidden KDA stats...",
+        "🌭 Deadpool stole the loading bar...",
+        "🎯 Hawkeye never misses a single match record...",
+        "🔮 Doctor Strange checking 14,000,605 stat timelines...",
+        "🐺 Wolverine is sharpening his Adamantium claws...",
+        "🚀 Rocket Raccoon is stealing a prosthetic arm...",
+        "🌴 Groot says: I AM GROOT (fetching data)...",
+        "🌀 Opening a Bifrost portal to Tracker.gg...",
+        "⚡ Thor summoned Lightning to speed up scraping...",
+        "🐜 Ant-Man went subatomic to find missing data...",
+        "🧠 Professor X is telepathically reading the server database...",
+        "🏎️ Ghost Rider is doing a Penance Stare on bad KDA data...",
+        "🍕 Spider-Man: Peter Parker is delivering pizzas on the way...",
+        "🍏 Loki is shapeshifting into a fast database query...",
+        "💥 Punisher is eliminating 404 network timeout errors...",
+        "🏹 Kate Bishop shot an arrow through the lag spike...",
+        "🔮 Scarlet Witch altered reality to boost your KDA...",
+        "🤖 JARVIS is optimizing the cloud neural network...",
+        "🐱 Goose the Flerken swallowed the slow network packets...",
+        "🃏 Gambit is charging up your stat cards with kinetic energy..."
+    )
+
+    var searchQuery by remember { mutableStateOf("") }
     var loadedDataJson by remember { mutableStateOf<String?>(null) }
+    var isSearching by remember { mutableStateOf(false) }
+    var searchProgress by remember { mutableStateOf(0f) }
+    var searchProgressMsg by remember { mutableStateOf("") }
     var isClaimed by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
     var isReminderEnabled by remember { mutableStateOf(DailyScheduler.isReminderEnabled(context)) }
@@ -159,43 +199,71 @@ fun DashboardScreen(
     }
 
     val performSearch: (String) -> Unit = { queryText ->
-        val targetName = queryText.ifBlank { "Meowdy 5000" }.trim()
-        searchQuery = targetName
+        val targetName = queryText.replace("\r", "").replace("\n", "").trim().ifBlank { "Meowdy 5000" }
+        searchQuery = queryText
+        isSearching = true
+        searchProgress = 0.15f
+        searchProgressMsg = marvelQuotes.random()
         Log.e("DashboardSearch", "Initiating search for targetName='$targetName'")
         scope.launch {
-            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                try {
-                    val urlStr = NetworkModule.getSearchUrl(context)
-                    val conn = NetworkModule.createConnection(urlStr)
-                    conn.requestMethod = "POST"
-                    conn.setRequestProperty("Content-Type", "application/json")
-                    conn.doOutput = true
+            val progressJob = launch {
+                while (isActive) {
+                    delay(300)
+                    if (searchProgress < 0.35f) searchProgress += 0.05f
+                    else if (searchProgress < 0.65f) searchProgress += 0.03f
+                    else if (searchProgress < 0.85f) searchProgress += 0.02f
+                    else if (searchProgress < 0.94f) searchProgress += 0.01f
+                }
+            }
+            val quoteJob = launch {
+                while (isActive) {
+                    delay(2200)
+                    searchProgressMsg = marvelQuotes.filter { it != searchProgressMsg }.random()
+                }
+            }
 
-                    val jsonPayload = JSONObject().apply {
-                        put("username", targetName)
-                    }.toString()
+            try {
+                val minDisplayDelay = launch { delay(2500) }
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    try {
+                        val urlStr = NetworkModule.getSearchUrl(context)
+                        val conn = NetworkModule.createConnection(urlStr)
+                        conn.requestMethod = "POST"
+                        conn.setRequestProperty("Content-Type", "application/json")
+                        conn.doOutput = true
 
-                    conn.outputStream.use { os ->
-                        os.write(jsonPayload.toByteArray(Charsets.UTF_8))
-                    }
+                        val jsonPayload = JSONObject().apply {
+                            put("username", targetName)
+                        }.toString()
 
-                    val code = conn.responseCode
-                    if (code == 200) {
-                        val responseText = conn.inputStream.bufferedReader().use { it.readText() }
-                        val root = JSONObject(responseText)
-                        val dataObj = root.optJSONObject("data")
-                        val resJson = dataObj?.toString() ?: responseText
-                        val checkRoot = try { JSONObject(resJson) } catch (e: Exception) { null }
-                        val hasError = checkRoot?.optString("error", "")?.isNotBlank() == true
-                        val isFallback = checkRoot?.optBoolean("is_fallback", false) == true
-                        val overviewObj = checkRoot?.optJSONObject("overview")
-                        val winRateStr = overviewObj?.optString("win_rate", "") ?: ""
-                        val hasOverviewData = overviewObj != null && overviewObj.length() > 0 && winRateStr != "N/A" && !isFallback
+                        conn.outputStream.use { os ->
+                            os.write(jsonPayload.toByteArray(Charsets.UTF_8))
+                        }
 
-                        if (checkRoot != null && !hasError && hasOverviewData) {
-                            snapshotManager.saveScrapedData(resJson, targetName, "19")
-                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                loadedDataJson = resJson
+                        val code = conn.responseCode
+                        if (code == 200) {
+                            val responseText = conn.inputStream.bufferedReader().use { it.readText() }
+                            val root = JSONObject(responseText)
+                            val dataObj = root.optJSONObject("data")
+                            val resJson = dataObj?.toString() ?: responseText
+                            val checkRoot = try { JSONObject(resJson) } catch (e: Exception) { null }
+                            val hasError = checkRoot?.optString("error", "")?.isNotBlank() == true
+                            val isFallback = checkRoot?.optBoolean("is_fallback", false) == true
+                            val overviewObj = checkRoot?.optJSONObject("overview")
+                            val winRateStr = overviewObj?.optString("win_rate", "") ?: ""
+                            val hasOverviewData = overviewObj != null && overviewObj.length() > 0 && winRateStr != "N/A" && !isFallback
+
+                            if (checkRoot != null && !hasError && hasOverviewData) {
+                                snapshotManager.saveScrapedData(resJson, targetName, "19")
+                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                    loadedDataJson = resJson
+                                }
+                            } else {
+                                val fb = generateAndroidFallbackProfile(targetName)
+                                snapshotManager.saveScrapedData(fb, targetName, "19")
+                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                    loadedDataJson = fb
+                                }
                             }
                         } else {
                             val fb = generateAndroidFallbackProfile(targetName)
@@ -204,20 +272,22 @@ fun DashboardScreen(
                                 loadedDataJson = fb
                             }
                         }
-                    } else {
+                    } catch (e: Exception) {
                         val fb = generateAndroidFallbackProfile(targetName)
                         snapshotManager.saveScrapedData(fb, targetName, "19")
                         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                             loadedDataJson = fb
                         }
                     }
-                } catch (e: Exception) {
-                    val fb = generateAndroidFallbackProfile(targetName)
-                    snapshotManager.saveScrapedData(fb, targetName, "19")
-                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                        loadedDataJson = fb
-                    }
                 }
+                minDisplayDelay.join()
+            } finally {
+                progressJob.cancel()
+                quoteJob.cancel()
+                searchProgress = 1.0f
+                searchProgressMsg = "💥 Avengers Assembled! Stats Ready."
+                delay(300)
+                isSearching = false
             }
         }
     }
@@ -795,6 +865,70 @@ fun DashboardScreen(
                         keyboardActions = KeyboardActions(onSearch = { performSearch(searchQuery) }),
                         shape = RoundedCornerShape(12.dp)
                     )
+                }
+
+                // 2.5 Live Search Telemetry Progress Bar with Silly Marvel Quotes
+                if (isSearching) {
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(18.dp),
+                                            strokeWidth = 2.dp,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Text(
+                                            text = searchProgressMsg,
+                                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    Text(
+                                        text = "${(searchProgress * 100).toInt()}%",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(start = 8.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(10.dp))
+                                LinearProgressIndicator(
+                                    progress = { searchProgress },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(3.dp)),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
+                    }
                 }
 
                 // Conditional Stats Rendering: No stats if user hasn't searched or bound account yet

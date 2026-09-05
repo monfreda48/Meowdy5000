@@ -219,7 +219,7 @@ async def scrape_player_profile(username: str, profile_url: Optional[str] = None
             if len(parts) > 1:
                 clean_avatar = "https://" + urllib.parse.unquote(parts[1]).split("?")[0]
         encoded_avatar = urllib.parse.quote(clean_avatar, safe='')
-        avatar_url = f"http://10.0.2.2:8000/api/image-proxy?url={encoded_avatar}"
+        avatar_url = f"https://monfreda48.synology.me/api/image-proxy?url={encoded_avatar}"
 
     # 5. Top Heroes Breakdown with Portraits
     liquipedia_icons = await sync_liquipedia_heroes(force=False)
@@ -236,7 +236,7 @@ async def scrape_player_profile(username: str, profile_url: Optional[str] = None
 
         if liquipedia_url:
             encoded_target = urllib.parse.quote(liquipedia_url, safe='')
-            h_icon = f"http://10.0.2.2:8000/api/image-proxy?url={encoded_target}"
+            h_icon = f"https://monfreda48.synology.me/api/image-proxy?url={encoded_target}"
         else:
             if raw_icon and ("url=" in raw_icon or "https%3A%2F%2F" in raw_icon):
                 parts = raw_icon.split("https%3A%2F%2F")
@@ -248,7 +248,7 @@ async def scrape_player_profile(username: str, profile_url: Optional[str] = None
 
             if raw_icon:
                 encoded_target = urllib.parse.quote(raw_icon, safe='')
-                h_icon = f"http://10.0.2.2:8000/api/image-proxy?url={encoded_target}"
+                h_icon = f"https://monfreda48.synology.me/api/image-proxy?url={encoded_target}"
             else:
                 h_icon = None
 

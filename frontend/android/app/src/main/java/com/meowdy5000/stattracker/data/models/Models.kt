@@ -21,9 +21,11 @@ data class ProfileData(
         fun fromJson(json: JSONObject?): ProfileData {
             if (json == null) return ProfileData(playerName = "Meowdy 5000")
             val userProf = json.optJSONObject("user_profile")
+            val avatar = userProf?.optString("avatar_url")?.takeIf { it.isNotBlank() && it != "null" }
+                ?: json.optString("avatar_url").takeIf { it.isNotBlank() && it != "null" }
             return ProfileData(
                 playerName = userProf?.optString("player_name") ?: json.optString("player_name", "Meowdy 5000"),
-                avatarUrl = userProf?.optString("avatar_url") ?: json.optString("avatar_url", null),
+                avatarUrl = avatar,
                 profileUrl = userProf?.optString("profile_url") ?: json.optString("profile_url", ""),
                 isFallback = json.optBoolean("is_fallback", false),
                 rank = RankInfo.fromJson(json.optJSONObject("rank_details") ?: json.optJSONObject("rank")),
@@ -63,7 +65,7 @@ data class RankInfo(
                 seasonBest = json.optString("season_best", "4,478 RS"),
                 allTimeBest = json.optString("all_time_best", "4,603 RS"),
                 ratingChange = json.optString("rating_delta", json.optString("rating_change", "+173 Rating")),
-                rankIconUrl = json.optString("rank_icon_url", null)
+                rankIconUrl = json.optString("rank_icon_url").takeIf { it.isNotBlank() && it != "null" }
             )
         }
     }
@@ -182,7 +184,7 @@ data class MatchInfo(
                 modeName = json.optString("mode_name", json.optString("mode", "Competitive")),
                 score = json.optString("result_score", json.optString("score", json.optString("result", "Victory"))),
                 heroName = json.optString("hero_name", "Hero"),
-                heroIconUrl = json.optString("hero_icon_url", null),
+                heroIconUrl = json.optString("hero_icon_url").takeIf { it.isNotBlank() && it != "null" },
                 kills = json.optInt("kills", 0),
                 deaths = json.optInt("deaths", 0),
                 assists = json.optInt("assists", 0),
@@ -210,13 +212,13 @@ data class HeroStat(
             val wrDisplay = if (wrRaw.endsWith("%")) wrRaw else "$wrRaw%"
             return HeroStat(
                 heroName = json.optString("hero_name", "Hero"),
-                heroIconUrl = json.optString("hero_icon_url", null),
+                heroIconUrl = json.optString("hero_icon_url").takeIf { it.isNotBlank() && it != "null" },
                 matches = json.optInt("matches", 0),
                 wins = json.optInt("wins", 0),
                 losses = json.optInt("losses", 0),
                 winRate = wrDisplay,
                 kda = json.optString("kda", "0.0"),
-                kdaSplit = json.optString("kda_split", null),
+                kdaSplit = json.optString("kda_split").takeIf { it.isNotBlank() && it != "null" },
                 timePlayed = json.optString("time_played", "0m")
             )
         }
@@ -233,3 +235,28 @@ typealias PrecisionData = PrecisionTotals
 typealias HeroMasteryItem = HeroStat
 typealias MatchHistoryItem = MatchInfo
 typealias ExtendedStats = PrecisionTotals
+
+data class AppVersionResponse(
+    val version_code: Int,
+    val version_name: String,
+    val download_url: String,
+    val release_notes: String? = null
+) {
+    companion object {
+        fun fromJson(json: JSONObject?): AppVersionResponse {
+            if (json == null) return AppVersionResponse(0, "", "")
+            val notes = if (json.has("release_notes") && !json.isNull("release_notes")) {
+                json.optString("release_notes")
+            } else if (json.has("changelog") && !json.isNull("changelog")) {
+                json.optString("changelog")
+            } else null
+
+            return AppVersionResponse(
+                version_code = json.optInt("version_code", 0),
+                version_name = json.optString("version_name", ""),
+                download_url = json.optString("download_url", ""),
+                release_notes = notes
+            )
+        }
+    }
+}

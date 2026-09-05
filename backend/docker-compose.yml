@@ -1,0 +1,14 @@
+services:
+  marvel-rivals:
+    build: .
+    container_name: marvel-rivals-backend
+    ports:
+      - "8000:8000"
+    shm_size: '1gb'
+    restart: unless-stopped
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflare-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token eyJhIjoiNGM4MGVmN2QwMjk2YTEyM2ExYTkzNDUxMWY2NDYyNmMiLCJ0IjoiYWEwOWY0NWMtM2E5NC00OWRkLTllNDAtOWM5NjA0MTc5ZmMxIiwicyI6Ill6VTNaR0prTUdNdE1UUTJOUzAwTURsakxUbGlNemt0WlRSaE9HRXhZMlZqTVdGayJ9

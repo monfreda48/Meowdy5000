@@ -10,6 +10,7 @@ import androidx.core.content.FileProvider
 import com.meowdy5000.stattracker.BuildConfig
 import com.meowdy5000.stattracker.data.NetworkModule
 import com.meowdy5000.stattracker.data.network.DynamicHostInterceptor
+import com.meowdy5000.stattracker.data.models.AppVersionResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,10 +41,9 @@ class AppUpdateManager(private val context: Context) {
         _status.value = UpdateStatus.Checking
         withContext(Dispatchers.IO) {
             try {
-                // The interceptor rewrites "http://api-server" to whichever endpoint is active:
-                // Custom Tunnel (cellular) -> LAN Wi-Fi IP -> ADB reverse -> Emulator loopback
+                val baseUrl = NetworkModule.getBaseUrl(context).trimEnd('/')
                 val request = Request.Builder()
-                    .url("http://api-server/api/app/version/latest")
+                    .url("$baseUrl/api/app/version/latest")
                     .build()
 
                 val (isSuccess, statusErr, body) = client.newCall(request).execute().use { response ->
@@ -60,18 +60,19 @@ class AppUpdateManager(private val context: Context) {
                 }
 
                 val json = JSONObject(body)
-                val serverCode = json.optInt("version_code", 0)
-                val serverName = json.optString("version_name", "")
-                var downloadUrl = json.optString("download_url", "")
-                val changelog = json.optString("changelog", "Bug fixes and performance improvements.")
+                val versionInfo = AppVersionResponse.fromJson(json)
+                val serverCode = versionInfo.version_code
+                val serverName = versionInfo.version_name
+                var downloadUrl = versionInfo.download_url
+                val releaseNotes = versionInfo.release_notes ?: "Bug fixes and performance improvements."
 
-                // If downloadUrl is relative, format it for the dynamic interceptor
+                // If downloadUrl is relative, format it with base URL
                 if (downloadUrl.startsWith("/")) {
-                    downloadUrl = "http://api-server$downloadUrl"
+                    downloadUrl = "$baseUrl$downloadUrl"
                 }
 
                 if (serverCode > BuildConfig.VERSION_CODE) {
-                    _status.value = UpdateStatus.Available(serverName, changelog, downloadUrl)
+                    _status.value = UpdateStatus.Available(serverName, releaseNotes, downloadUrl)
                 } else {
                     _status.value = UpdateStatus.UpToDate
                 }
@@ -89,13 +90,18 @@ class AppUpdateManager(private val context: Context) {
                 val apkFile = File(targetDir, "update.apk")
                 if (apkFile.exists()) apkFile.delete()
 
-                // If the download URL contains a dead local address (10.0.2.2 or 127.0.0.1) while on Wi-Fi or cellular,
-                // rewrite it to use http://api-server so DynamicHostInterceptor routes it to the reachable network interface
-                val safeUrl = if (downloadUrl.contains("10.0.2.2") || downloadUrl.contains("127.0.0.1")) {
-                    val path = downloadUrl.toHttpUrlOrNull()?.encodedPath ?: "/api/app/download/latest"
-                    "http://api-server$path"
+                val safeUrl = if (downloadUrl.startsWith("http://") || downloadUrl.startsWith("https://")) {
+                    if (downloadUrl.contains("10.0.2.2") || downloadUrl.contains("127.0.0.1") || downloadUrl.contains("localhost")) {
+                        val path = downloadUrl.toHttpUrlOrNull()?.encodedPath ?: "/api/app/download/latest"
+                        val baseUrl = NetworkModule.getBaseUrl(context).trimEnd('/')
+                        "$baseUrl$path"
+                    } else {
+                        downloadUrl
+                    }
                 } else {
-                    downloadUrl
+                    val baseUrl = NetworkModule.getBaseUrl(context).trimEnd('/')
+                    val path = if (downloadUrl.startsWith("/")) downloadUrl else "/$downloadUrl"
+                    "$baseUrl$path"
                 }
 
                 val request = Request.Builder().url(safeUrl).build()
