@@ -1157,6 +1157,23 @@ export default function App() {
     { name: "Squirrel Girl", url: "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31060005.jpg" }
   ];
 
+  const FALLBACK_IMAGE_SVG = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="%2310b981" stroke-width="1.5"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 21v-2a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v2"/></svg>';
+
+  const formatImageUrl = (url) => {
+    if (!url) return '';
+    let cleanUrl = String(url).trim();
+    if (!cleanUrl) return '';
+
+    if (cleanUrl.startsWith('/api/')) {
+      if (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform()) {
+        const host = backendBaseUrl || 'https://meowdy5000.synology.me';
+        return `${host.replace(/\/+$/, '')}${cleanUrl}`;
+      }
+      return cleanUrl;
+    }
+    return cleanUrl;
+  };
+
   const getDisplayAvatar = (username) => {
     let raw = '';
     if (!username) raw = stats?.current?.avatarUrl || '';
@@ -1168,12 +1185,12 @@ export default function App() {
       try {
         if (raw.includes('url=')) {
           const urlParam = raw.split('url=')[1]?.split('&')[0];
-          if (urlParam) return `/api/image-proxy?url=${urlParam}`;
+          if (urlParam) return formatImageUrl(`/api/image-proxy?url=${urlParam}`);
         }
       } catch (e) { }
-      return raw.replace(/https?:\/\/[^\/]+/, '');
+      return formatImageUrl(raw.replace(/https?:\/\/[^\/]+/, ''));
     }
-    return raw;
+    return formatImageUrl(raw);
   };
 
   const handleSaveCustomAvatar = (username, newAvatarUrl) => {
@@ -3383,12 +3400,12 @@ const DEFAULT_SEASON_NUM = 19;
                 <div className="flex items-center gap-3.5">
                   {pinnedHomeProfile.avatarUrl ? (
                     <img
-                      src={pinnedHomeProfile.avatarUrl}
+                      src={formatImageUrl(pinnedHomeProfile.avatarUrl)}
                       alt={pinnedHomeProfile.username}
                       className="w-12 h-12 rounded-xl border border-emerald-500/60 object-cover shadow-md overflow-hidden shrink-0"
                       onError={(e) => {
                         e.currentTarget.onerror = null;
-                        e.currentTarget.src = 'https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31030002.jpg';
+                        e.currentTarget.src = FALLBACK_IMAGE_SVG;
                       }}
                     />
                   ) : (
@@ -3507,7 +3524,7 @@ const DEFAULT_SEASON_NUM = 19;
                       className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-emerald-500/60 shadow-lg shadow-emerald-500/20 object-cover group-hover:opacity-80 transition-opacity"
                       onError={(e) => {
                         e.currentTarget.onerror = null;
-                        e.currentTarget.src = 'https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31030002.jpg';
+                        e.currentTarget.src = FALLBACK_IMAGE_SVG;
                       }}
                     />
                   ) : (
@@ -4242,10 +4259,13 @@ const DEFAULT_SEASON_NUM = 19;
                                     </div>
                                     {hero.icon && (
                                       <img
-                                        src={hero.icon}
+                                        src={formatImageUrl(hero.icon)}
                                         alt={hero.name}
                                         className="w-7 h-7 rounded-lg object-cover border border-emerald-500/40 shrink-0 bg-slate-900"
-                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                        onError={(e) => {
+                                          e.currentTarget.onerror = null;
+                                          e.currentTarget.src = FALLBACK_IMAGE_SVG;
+                                        }}
                                       />
                                     )}
                                     <span className="text-sm sm:text-base font-black text-emerald-400 truncate">{hero.name}</span>
@@ -5052,7 +5072,7 @@ const DEFAULT_SEASON_NUM = 19;
                           className="w-10 h-10 rounded-2xl border-2 border-emerald-400 object-cover shadow-md shrink-0 overflow-hidden"
                           onError={(e) => {
                             e.currentTarget.onerror = null;
-                            e.currentTarget.src = 'https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31030002.jpg';
+                            e.currentTarget.src = FALLBACK_IMAGE_SVG;
                           }}
                         />
                       ) : (
@@ -5733,7 +5753,7 @@ const DEFAULT_SEASON_NUM = 19;
                   className="w-16 h-16 rounded-2xl border-2 border-emerald-500 shadow-md object-cover overflow-hidden shrink-0"
                   onError={(e) => {
                     e.currentTarget.onerror = null;
-                    e.currentTarget.src = 'https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31030002.jpg';
+                    e.currentTarget.src = FALLBACK_IMAGE_SVG;
                   }}
                 />
               ) : (

@@ -50,25 +50,48 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Image Proxy Endpoint
-@app.api_route("/api/image-proxy", methods=["GET", "HEAD"])
-async def proxy_image(url: str = Query(...)):
-    referer = "https://liquipedia.net/" if "liquipedia" in url else "https://tracker.gg/"
+DEFAULT_IMAGE_SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 21v-2a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v2"/></svg>"""
 
+# Image Proxy Endpoints (supports /api/image-proxy, /api/proxy/portrait, and /api/proxy/avatar)
+@app.api_route("/api/image-proxy", methods=["GET", "HEAD"])
+@app.api_route("/api/proxy/portrait", methods=["GET", "HEAD"])
+@app.api_route("/api/proxy/avatar", methods=["GET", "HEAD"])
+async def proxy_image(url: Optional[str] = Query(None)):
+    if not url or not url.strip():
+        return Response(content=DEFAULT_IMAGE_SVG, media_type="image/svg+xml")
+
+    target_url = urllib.parse.unquote(url.strip())
+    if target_url.startswith("/"):
+        return Response(content=DEFAULT_IMAGE_SVG, media_type="image/svg+xml")
+
+    referer = "https://liquipedia.net/" if "liquipedia" in target_url else "https://tracker.gg/"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
         "Referer": referer,
         "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
     }
-    async with httpx.AsyncClient(follow_redirects=True, timeout=12.0) as client:
-        try:
-            resp = await client.get(url, headers=headers)
+
+    try:
+        async with httpx.AsyncClient(follow_redirects=True, timeout=12.0) as client:
+            resp = await client.get(target_url, headers=headers)
             if resp.status_code == 200:
                 content_type = resp.headers.get("content-type", "image/png")
-                return Response(content=resp.content, media_type=content_type)
-            return Response(status_code=resp.status_code)
-        except Exception as e:
-            return Response(status_code=500, content=str(e).encode('utf-8'))
+                return Response(
+                    content=resp.content,
+                    media_type=content_type,
+                    headers={
+                        "Cache-Control": "public, max-age=604800",
+                        "Access-Control-Allow-Origin": "*"
+                    }
+                )
+    except Exception as e:
+        logger.warning(f"Image proxy fetch error for {target_url}: {e}")
+
+    return Response(
+        content=DEFAULT_IMAGE_SVG,
+        media_type="image/svg+xml",
+        headers={"Cache-Control": "public, max-age=86400", "Access-Control-Allow-Origin": "*"}
+    )
 
 @app.post("/api/heroes/sync-icons")
 async def refresh_hero_icons():

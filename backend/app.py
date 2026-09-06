@@ -146,11 +146,20 @@ def calc_per_10m(stat_dict, per10_keys, total_keys, time_sec):
 
     return "N/A"
 
+DEFAULT_IMAGE_SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 21v-2a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v2"/></svg>"""
+
 @app.route('/api/image-proxy', methods=['GET'])
+@app.route('/api/proxy/portrait', methods=['GET'])
+@app.route('/api/proxy/avatar', methods=['GET'])
 def image_proxy():
-    url = request.args.get('url', '')
-    if not url:
-        return jsonify({"error": "Missing URL parameter"}), 400
+    raw_url = request.args.get('url', '')
+    if not raw_url or not raw_url.strip():
+        return Response(DEFAULT_IMAGE_SVG, mimetype='image/svg+xml', status=200)
+
+    url = urllib.parse.unquote(raw_url.strip())
+    if url.startswith('/'):
+        return Response(DEFAULT_IMAGE_SVG, mimetype='image/svg+xml', status=200)
+
     referer = "https://liquipedia.net/" if "liquipedia" in url else "https://tracker.gg/"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
@@ -162,10 +171,17 @@ def image_proxy():
             resp = client.get(url, headers=headers)
             if resp.status_code == 200:
                 content_type = resp.headers.get("content-type", "image/png")
-                return Response(resp.content, mimetype=content_type, status=200)
-            return Response(status=resp.status_code)
+                res = Response(resp.content, mimetype=content_type, status=200)
+                res.headers['Cache-Control'] = 'public, max-age=604800'
+                res.headers['Access-Control-Allow-Origin'] = '*'
+                return res
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        pass
+
+    res = Response(DEFAULT_IMAGE_SVG, mimetype='image/svg+xml', status=200)
+    res.headers['Cache-Control'] = 'public, max-age=86400'
+    res.headers['Access-Control-Allow-Origin'] = '*'
+    return res
 
 @app.route('/api/hero-leaderboards')
 def get_hero_leaderboards():
