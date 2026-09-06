@@ -2213,7 +2213,7 @@ export default function App() {
     return (import.meta.env.VITE_APP_COMMIT_SHA || '').slice(0, 7);
   };
 
-  const getAppVersionName = () => nativeAppVersion || pkg.version || '1.0.30';
+  const getAppVersionName = () => nativeAppVersion || pkg.version || '1.0.31';
 
   const checkForUpdates = async (isSilent = true) => {
     if (!isSilent) {
@@ -2608,7 +2608,7 @@ ${payload.stack || 'No stack trace available.'}
 
   useEffect(() => {
     try {
-      const currentVer = pkg.version || '1.0.30';
+      const currentVer = pkg.version || '1.0.31';
       const savedVer = localStorage.getItem('installed_app_version');
       if (savedVer !== currentVer) {
         localStorage.setItem('installed_app_version', currentVer);
@@ -3094,7 +3094,7 @@ const DEFAULT_SEASON_NUM = 19;
               🐱
             </div>
             <div className="absolute -bottom-2 -right-2 bg-slate-900 border border-emerald-400/60 text-emerald-400 p-1.5 rounded-full text-[10px] font-black shadow-lg uppercase tracking-wider">
-              v1.0.30
+              v1.0.31
             </div>
           </div>
 
@@ -4553,7 +4553,7 @@ const DEFAULT_SEASON_NUM = 19;
               <div className="bg-[#131b2f] border border-slate-700/60 p-3 rounded-xl text-left text-xs space-y-1">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Target Commit:</span>
-                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.30 (${getAppLocalSha()})`}</span>
+                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.31 (${getAppLocalSha()})`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Status:</span>
@@ -4845,13 +4845,13 @@ const DEFAULT_SEASON_NUM = 19;
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Installed Version:</span>
                   <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
-                    {upToDateDetails?.currentSha || `v1.0.30 (${getAppLocalSha()})`}
+                    {upToDateDetails?.currentSha || `v1.0.31 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Latest Release SHA:</span>
                   <span className="font-mono text-teal-300 font-bold">
-                    {upToDateDetails?.latestSha || `v1.0.30 (${getAppLocalSha()})`}
+                    {upToDateDetails?.latestSha || `v1.0.31 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 {upToDateDetails?.commitMsg && (
