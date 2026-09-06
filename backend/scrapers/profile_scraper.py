@@ -224,7 +224,8 @@ async def scrape_player_profile(username: str, profile_url: Optional[str] = None
     # 5. Top Heroes Breakdown with Portraits
     liquipedia_icons = await sync_liquipedia_heroes(force=False)
     heroes_list = []
-    for h in [s for s in segments if s.get("type") == "hero"]:
+    hero_segments = [s for s in segments if s.get("type") == "hero" and int(s.get("stats", {}).get("matchesPlayed", {}).get("value", 0)) > 0]
+    for h in hero_segments:
         h_stats = h.get("stats", {})
         h_meta = h.get("metadata", {})
         h_name = h_meta.get("name", "Unknown")
@@ -287,7 +288,7 @@ async def scrape_player_profile(username: str, profile_url: Optional[str] = None
         })
 
     # Sort heroes by matches played descending & slice Top 3
-    heroes_list.sort(key=lambda x: x["matches"], reverse=True)
+    heroes_list.sort(key=lambda x: (int(x.get("matches", 0)), int(x.get("wins", 0))), reverse=True)
     top_heroes_list = heroes_list[:3]
 
     # 6. Matches List

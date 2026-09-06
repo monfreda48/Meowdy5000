@@ -2595,7 +2595,7 @@ const DEFAULT_SEASON_NUM = 19;
     const combatRates = backendData.combat_rates || {};
     const awards = backendData.awards_and_streaks || {};
     const precision = backendData.precision_combat || {};
-    const rawHeroes = backendData.top_heroes || backendData.heroes || backendData.hero_mastery || [];
+    const rawHeroesList = backendData.heroes || backendData.hero_mastery || backendData.top_heroes || [];
 
     const rawWinRate = overview.win_rate || combatOverview.win_rate || 'N/A';
     const formattedWinRate = formatPercent(rawWinRate);
@@ -2622,22 +2622,35 @@ const DEFAULT_SEASON_NUM = 19;
     const damagePerMinVal = combatRates.damage_per_min || overview.damage_per_min || 'N/A';
 
     const rawPlaytime = overview.total_playtime || backendData.total_playtime || combatOverview.total_playtime;
-    const timePlayedVal = calculateTotalPlaytime(rawPlaytime, rawHeroes);
+    const timePlayedVal = calculateTotalPlaytime(rawPlaytime, rawHeroesList);
 
-    const heroList = rawHeroes.map(h => ({
-      name: h.hero_name || h.name || 'Unknown',
-      icon: h.hero_icon || h.icon || h.hero_icon_url || '',
-      matches: h.matches_played || h.matches || 0,
-      winRate: formatPercent(h.win_rate || h.winRate || '0%'),
-      kda: (!isNaN(Number(h.kda || h.kda_ratio))) ? Number(h.kda || h.kda_ratio).toFixed(2) : (h.kda || h.kda_ratio || '0.00'),
-      timePlayed: h.time_played || h.timePlayed || 'N/A'
-    }));
+    const heroList = rawHeroesList.map(h => {
+      const rawName = h.hero_name || h.name || 'Unknown';
+      const cleanName = rawName.replace(/\s*\([^)]*\)/g, '').trim();
+      const rawWr = h.win_rate || h.winRate || '0%';
+      const cleanWr = formatPercent(rawWr);
+      return {
+        name: cleanName || rawName,
+        rawName: rawName,
+        icon: h.hero_icon_url || h.hero_icon || h.icon || '',
+        matches: Number(h.matches_played ?? h.matches ?? 0),
+        wins: Number(h.wins ?? h.matches_won ?? 0),
+        winRate: cleanWr,
+        kda: (!isNaN(Number(h.kda || h.kda_ratio))) ? Number(h.kda || h.kda_ratio).toFixed(2) : (h.kda || h.kda_ratio || '0.00'),
+        timePlayed: h.time_played || h.timePlayed || 'N/A'
+      };
+    });
+
+    heroList.sort((a, b) => (b.matches - a.matches) || (b.wins - a.wins));
 
     const username = userProfile.player_name || backendData.username || queryVal;
     const avatarUrl = userProfile.avatar_url || backendData.avatar_url || '';
     const trackerUrl = userProfile.profile_url || `https://tracker.gg/marvel-rivals/profile/ign/${encodeURIComponent(username)}/overview?season=${seasonVal || '19'}`;
     const rivalsMetaUrl = `https://rivalsmeta.com/search?q=${encodeURIComponent(username)}`;
     const rivalsTrackerUrl = `https://rivalstracker.com/search?q=${encodeURIComponent(username)}`;
+
+    const playedHeroes = heroList.filter(h => h.matches > 0);
+    const primaryHeroList = playedHeroes.length > 0 ? playedHeroes : heroList;
 
     const siteCards = [
       {
@@ -2652,7 +2665,7 @@ const DEFAULT_SEASON_NUM = 19;
         rank: rankDetails.tier_name || 'Unranked',
         winRate: formattedWinRate,
         kdRatio: kdaRatioVal,
-        topHero: heroList[0]?.name || 'N/A',
+        topHero: primaryHeroList[0]?.name || 'N/A',
         matches: combatOverview.matches_played || overview.matches_played || 0,
         profileUrl: trackerUrl,
         found: true,
@@ -2670,7 +2683,7 @@ const DEFAULT_SEASON_NUM = 19;
         rank: rankDetails.tier_name || 'Unranked',
         winRate: formattedWinRate,
         kdRatio: kdaRatioVal,
-        topHero: heroList[0]?.name || 'N/A',
+        topHero: primaryHeroList[0]?.name || 'N/A',
         matches: combatOverview.matches_played || overview.matches_played || 0,
         profileUrl: rivalsMetaUrl,
         found: false,
@@ -2688,7 +2701,7 @@ const DEFAULT_SEASON_NUM = 19;
         rank: rankDetails.tier_name || 'Unranked',
         winRate: formattedWinRate,
         kdRatio: kdaRatioVal,
-        topHero: heroList[0]?.name || 'N/A',
+        topHero: primaryHeroList[0]?.name || 'N/A',
         matches: combatOverview.matches_played || overview.matches_played || 0,
         profileUrl: rivalsTrackerUrl,
         found: false,
@@ -2712,7 +2725,7 @@ const DEFAULT_SEASON_NUM = 19;
         kdaRatio: kdaRatioVal,
         pureKdRatio: kdRatioVal,
         totalDamage: totalDamageVal,
-        topHero: heroList[0]?.name || 'N/A',
+        topHero: primaryHeroList[0]?.name || 'N/A',
         trackerScore: '4.8',
         trackerUrl,
         matchesPlayed: combatOverview.matches_played ?? overview.matches_played ?? 0,
@@ -2735,8 +2748,8 @@ const DEFAULT_SEASON_NUM = 19;
           rivalsTracker: rivalsTrackerUrl
         },
         siteCards,
-        topHeroesDetailed: heroList.slice(0, 3),
-        allHeroesFull: heroList,
+        topHeroesDetailed: primaryHeroList.slice(0, 3),
+        allHeroesFull: primaryHeroList,
         statBreakdown: backendData.match_history || backendData.recent_matches || []
       }
     };
@@ -2990,6 +3003,14 @@ const DEFAULT_SEASON_NUM = 19;
         <div className="w-full bg-amber-500/20 border-b border-amber-500/40 px-4 py-2 text-center text-amber-300 text-xs font-bold flex items-center justify-center gap-2 z-[60] backdrop-blur-md sticky top-0">
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
           <span>⚠️ Offline Mode — Network connection lost. Online statistics & auto-update checks are paused.</span>
+        </div>
+      )}
+
+      {/* Web App Unstable/iOS Preview Disclaimer Banner */}
+      {typeof window !== 'undefined' && (!window.Capacitor || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform()) && (
+        <div className="w-full bg-[#0b101d]/90 border-b border-amber-500/30 px-4 py-2 text-center text-slate-300 text-[11px] sm:text-xs font-medium flex items-center justify-center gap-2 z-[55] backdrop-blur-md relative">
+          <span className="text-amber-400 font-bold shrink-0">⚠️ Notice:</span>
+          <span>This web version may be unstable and is intended to be used until the official iOS version is released.</span>
         </div>
       )}
 
@@ -4174,20 +4195,28 @@ const DEFAULT_SEASON_NUM = 19;
                             stats.current.topHeroesDetailed.map((hero, index) => (
                               <details key={index} className="group bg-[#0f1526] rounded-xl border border-slate-700/50 overflow-hidden shadow-sm">
                                 <summary className="cursor-pointer flex items-center justify-between p-2.5 hover:bg-slate-800/50 transition-colors list-none">
-                                  <div className="flex items-center gap-2.5">
-                                    <div className="w-5 h-5 rounded bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-400 shadow-inner">
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <div className="w-5 h-5 rounded bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-300 shrink-0 shadow-inner">
                                       {index + 1}
                                     </div>
-                                    <span className="text-base font-black text-emerald-400 truncate">{hero.name}</span>
+                                    {hero.icon && (
+                                      <img
+                                        src={hero.icon}
+                                        alt={hero.name}
+                                        className="w-7 h-7 rounded-lg object-cover border border-emerald-500/40 shrink-0 bg-slate-900"
+                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                      />
+                                    )}
+                                    <span className="text-sm sm:text-base font-black text-emerald-400 truncate">{hero.name}</span>
                                   </div>
-                                  <svg className="w-4 h-4 text-slate-500 transition-transform duration-300 group-open:-rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <svg className="w-4 h-4 text-slate-500 transition-transform duration-300 group-open:-rotate-180 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                   </svg>
                                 </summary>
                                 <div className="p-3 border-t border-slate-700/50 bg-[#0b101e] grid grid-cols-2 gap-y-2.5 gap-x-3 text-left">
                                   <div>
                                     <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Win Rate</p>
-                                    <p className="text-sm font-black text-emerald-400">{hero.winRate}%</p>
+                                    <p className="text-sm font-black text-emerald-400">{hero.winRate}</p>
                                   </div>
                                   <div>
                                     <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">KDA Ratio</p>

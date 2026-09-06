@@ -560,8 +560,14 @@ def handle_claim_profile():
                 for r in rows
             ])
 
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
+@app.route('/app-debug.apk', methods=['GET', 'HEAD'])
+def download_app_debug_apk():
+    if app.static_folder and os.path.exists(os.path.join(app.static_folder, 'app-debug.apk')):
+        return send_from_directory(app.static_folder, 'app-debug.apk', mimetype='application/vnd.android.package-archive')
+    return jsonify({"error": "APK not found"}), 404
+
+@app.route("/", defaults={"path": ""}, methods=['GET', 'HEAD'])
+@app.route("/<path:path>", methods=['GET', 'HEAD'])
 def serve_spa(path):
     if path != "" and app.static_folder and os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)

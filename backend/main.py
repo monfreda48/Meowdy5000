@@ -444,17 +444,22 @@ if os.path.exists(DIST_DIR):
     if os.path.exists(assets_path):
         app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
 
-    @app.get("/{full_path:path}")
+    @app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
     async def serve_spa(full_path: str):
         # Prevent intercepting /api calls that happen to 404
         if full_path.startswith("api/"):
             raise HTTPException(status_code=404, detail="Not Found")
+        
+        file_path = os.path.join(DIST_DIR, full_path)
+        
         no_cache_headers = {
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "Pragma": "no-cache",
             "Expires": "0"
         }
         if full_path != "" and os.path.isfile(file_path):
+            if file_path.endswith(".apk"):
+                return FileResponse(file_path, media_type="application/vnd.android.package-archive")
             if file_path.endswith(".html"):
                 return FileResponse(file_path, headers=no_cache_headers)
             return FileResponse(file_path)
