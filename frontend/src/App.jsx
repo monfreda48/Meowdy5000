@@ -1982,6 +1982,7 @@ export default function App() {
     if (attemptedSha) {
       try {
         sessionStorage.setItem('last_attempted_update_sha', attemptedSha);
+        localStorage.setItem('last_attempted_update_sha', attemptedSha);
         localStorage.setItem('installed_commit_sha', attemptedSha);
       } catch (e) { }
     }
@@ -2046,8 +2047,11 @@ export default function App() {
         setUpdateStatusMsg('📦 Launching Android Package Installer...');
         showNativeToast('📦 Opening Package Installer...');
 
-        if (readyToInstallUpdate?.latestVersion) {
-          localStorage.setItem('installed_commit_sha', readyToInstallUpdate.latestVersion);
+        if (attemptedSha) {
+          try {
+            localStorage.setItem('installed_commit_sha', attemptedSha);
+            localStorage.setItem('last_attempted_update_sha', attemptedSha);
+          } catch (e) { }
         }
 
         if (window.Capacitor.Plugins && window.Capacitor.Plugins.ApkInstaller) {
@@ -2084,7 +2088,10 @@ export default function App() {
         const data = await safeFetchJson(res);
         if (data.success) {
           if (data.newVersion) {
-            try { localStorage.setItem('installed_commit_sha', data.newVersion); } catch (e) { }
+            try {
+              localStorage.setItem('installed_commit_sha', data.newVersion);
+              localStorage.setItem('last_attempted_update_sha', data.newVersion);
+            } catch (e) { }
           }
           setUpdateStatusMsg('✅ Update successfully applied! Reloading app...');
           showNativeToast('⚡ App updated to latest release version');
@@ -2128,13 +2135,15 @@ export default function App() {
     try {
       const savedCommit = localStorage.getItem('installed_commit_sha');
       if (savedCommit && savedCommit.length >= 6) return savedCommit.slice(0, 7);
+      const lastAttempted = localStorage.getItem('last_attempted_update_sha');
+      if (lastAttempted && lastAttempted.length >= 6) return lastAttempted.slice(0, 7);
     } catch (e) { }
     if (backendData?.currentVersion) return backendData.currentVersion.slice(0, 7);
     if (backendData?.localVersion) return backendData.localVersion.slice(0, 7);
-    return (import.meta.env.VITE_APP_COMMIT_SHA || 'afab44e').slice(0, 7);
+    return (import.meta.env.VITE_APP_COMMIT_SHA || '').slice(0, 7);
   };
 
-  const getAppVersionName = () => pkg.version || '1.0.24';
+  const getAppVersionName = () => nativeAppVersion || pkg.version || '1.0.27';
 
   const checkForUpdates = async (isSilent = true) => {
     if (!isSilent) {
@@ -2173,36 +2182,56 @@ export default function App() {
       } catch (e) { }
 
       const localSha = getAppLocalSha(backendData);
-      const lastAttempted = isSilent ? (sessionStorage.getItem('last_attempted_update_sha') || '').slice(0, 7) : '';
+      const lastAttemptedSession = (sessionStorage.getItem('last_attempted_update_sha') || '').slice(0, 7);
+      const lastAttemptedLocal = (localStorage.getItem('last_attempted_update_sha') || '').slice(0, 7);
+      const installedCommit = (localStorage.getItem('installed_commit_sha') || '').slice(0, 7);
+      const currentBuiltSha = (import.meta.env.VITE_APP_COMMIT_SHA || '').slice(0, 7);
 
-      const hasUpdate = Boolean(
-        latestSha &&
-        localSha &&
-        localSha.toLowerCase().slice(0, 7) !== latestSha.toLowerCase().slice(0, 7) &&
-        (!lastAttempted || lastAttempted.toLowerCase() !== latestSha.toLowerCase())
+      const targetShaClean = latestSha.toLowerCase().slice(0, 7);
+
+      const isMatchingLatest = Boolean(
+        targetShaClean &&
+        (
+          localSha.toLowerCase().slice(0, 7) === targetShaClean ||
+          lastAttemptedSession.toLowerCase() === targetShaClean ||
+          lastAttemptedLocal.toLowerCase() === targetShaClean ||
+          installedCommit.toLowerCase() === targetShaClean ||
+          currentBuiltSha.toLowerCase() === targetShaClean
+        )
       );
+
+      const hasUpdate = Boolean(latestSha && !isMatchingLatest);
 
       if (hasUpdate) {
         triggerHaptic('success');
-        showNativeToast(`⚡ Update found (${latestSha})! Auto-installing...`);
-        setUpdateToast({ type: 'update', message: `⚡ New update found (${latestSha})! Downloading & installing...` });
         setUpdateInfo({
+          hasUpdate: true,
           latestVersion: latestSha,
           releaseNotes: latestMessage || 'New fixes & performance updates',
           apkUrl: 'https://github.com/monfreda48/Meowdy5000/releases/latest/download/app-debug.apk'
         });
-        await applyUpdateNow(latestSha);
-      } else if (!isSilent) {
-        triggerHaptic('success');
-        showNativeToast('✅ Your app is up to date!');
-        setUpToDateDetails({
-          currentSha: localSha,
-          latestSha: latestSha || localSha,
-          commitMsg: latestMessage || 'Latest enhancements & bugfixes applied.'
-        });
-        setShowUpToDateModal(true);
-        setUpdateToast({ type: 'success', message: `✅ App is up to date! (Commit ${localSha})` });
-        setTimeout(() => setUpdateToast(null), 4000);
+
+        if (!isSilent) {
+          showNativeToast(`⚡ Update found (${latestSha})! Auto-installing...`);
+          setUpdateToast({ type: 'update', message: `⚡ New update found (${latestSha})! Downloading & installing...` });
+          await applyUpdateNow(latestSha);
+        } else {
+          setUpdateToast({ type: 'update', message: `⚡ New update (${latestSha}) available. Tap Menu to update.` });
+        }
+      } else {
+        setUpdateInfo(prev => prev ? { ...prev, hasUpdate: false } : null);
+        if (!isSilent) {
+          triggerHaptic('success');
+          showNativeToast('✅ Your app is up to date!');
+          setUpToDateDetails({
+            currentSha: localSha || currentBuiltSha || 'latest',
+            latestSha: latestSha || localSha,
+            commitMsg: latestMessage || 'Latest enhancements & bugfixes applied.'
+          });
+          setShowUpToDateModal(true);
+          setUpdateToast({ type: 'success', message: `✅ App is up to date! (Commit ${localSha || currentBuiltSha})` });
+          setTimeout(() => setUpdateToast(null), 4000);
+        }
       }
     } catch (err) {
       console.error('Update check error:', err);
@@ -2508,6 +2537,18 @@ ${payload.stack || 'No stack trace available.'}
   }, []);
 
   useEffect(() => {
+    try {
+      const currentVer = pkg.version || '1.0.27';
+      const savedVer = localStorage.getItem('installed_app_version');
+      if (savedVer !== currentVer) {
+        localStorage.setItem('installed_app_version', currentVer);
+        if (import.meta.env.VITE_APP_COMMIT_SHA) {
+          localStorage.setItem('installed_commit_sha', import.meta.env.VITE_APP_COMMIT_SHA);
+          localStorage.setItem('last_attempted_update_sha', import.meta.env.VITE_APP_COMMIT_SHA);
+        }
+      }
+    } catch (e) { }
+
     cleanupOldApkFiles();
     checkForUpdates(true);
 
