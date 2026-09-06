@@ -201,8 +201,51 @@ const calculateTotalPlaytime = (overviewPlaytime, heroesList) => {
   return 'N/A';
 };
 
+const isProfileMatch = (profileA, profileB) => {
+  if (!profileA || !profileB) return false;
+
+  const idA = String(
+    typeof profileA === 'object' ? profileA.uid || profileA.id || profileA.player_id || '' : ''
+  ).trim();
+
+  const idB = String(
+    typeof profileB === 'object' ? profileB.uid || profileB.id || profileB.player_id || '' : ''
+  ).trim();
+
+  if (idA && idB && idA === idB) return true;
+
+  const nameA = String(
+    typeof profileA === 'string'
+      ? profileA
+      : profileA.username || profileA.name || profileA.player_name || profileA.ign || ''
+  )
+    .trim()
+    .toLowerCase()
+    .replace(/#/g, '');
+
+  const nameB = String(
+    typeof profileB === 'string'
+      ? profileB
+      : profileB.username || profileB.name || profileB.player_name || profileB.ign || ''
+  )
+    .trim()
+    .toLowerCase()
+    .replace(/#/g, '');
+
+  return Boolean(nameA && nameB && nameA === nameB);
+};
+
 export default function App() {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(() => {
+    try {
+      const saved = localStorage.getItem('claimed_profile');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed?.username || parsed?.name || '';
+      }
+    } catch (e) {}
+    return '';
+  });
   const [season, setSeason] = useState('19');
   const [timeframe, setTimeframe] = useState('all');
   const [expandedMetrics, setExpandedMetrics] = useState({});
@@ -951,6 +994,16 @@ export default function App() {
 
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const isClaimed = Boolean(
+    claimedProfile &&
+    isProfileMatch(claimedProfile, stats?.current || query)
+  );
+
+  const hasClaimedProfile = Boolean(
+    claimedProfile &&
+    (claimedProfile.username || claimedProfile.name || claimedProfile.uid || claimedProfile.id)
+  );
   const [error, setError] = useState(null);
   const [searchProgress, setSearchProgress] = useState(0);
   const [searchProgressMsg, setSearchProgressMsg] = useState('');
@@ -2160,7 +2213,7 @@ export default function App() {
     return (import.meta.env.VITE_APP_COMMIT_SHA || '').slice(0, 7);
   };
 
-  const getAppVersionName = () => nativeAppVersion || pkg.version || '1.0.27';
+  const getAppVersionName = () => nativeAppVersion || pkg.version || '1.0.30';
 
   const checkForUpdates = async (isSilent = true) => {
     if (!isSilent) {
@@ -2555,7 +2608,7 @@ ${payload.stack || 'No stack trace available.'}
 
   useEffect(() => {
     try {
-      const currentVer = pkg.version || '1.0.27';
+      const currentVer = pkg.version || '1.0.30';
       const savedVer = localStorage.getItem('installed_app_version');
       if (savedVer !== currentVer) {
         localStorage.setItem('installed_app_version', currentVer);
@@ -2877,7 +2930,7 @@ const DEFAULT_SEASON_NUM = 19;
       if (controller) controller.abort();
     }, 45000);
 
-    const isClaimedMatch = claimedProfile && claimedProfile.username?.toLowerCase() === activeQuery.trim().toLowerCase();
+    const isClaimedMatch = isProfileMatch(claimedProfile, activeQuery);
 
     const isWeb = typeof window !== 'undefined' && (!window.Capacitor || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform());
 
@@ -2963,7 +3016,7 @@ const DEFAULT_SEASON_NUM = 19;
 
       if (data?.current?.username || data?.username) {
         const uKey = (data.current?.username || data.username).toLowerCase();
-        const isClaimedUser = claimedProfile && claimedProfile.username?.toLowerCase() === uKey;
+        const isClaimedUser = isProfileMatch(claimedProfile, data?.current || data || uKey);
 
         if (isClaimedUser) {
           const lastSaveKey = `last_auto_snapshot_time_${uKey}`;
@@ -3041,7 +3094,7 @@ const DEFAULT_SEASON_NUM = 19;
               🐱
             </div>
             <div className="absolute -bottom-2 -right-2 bg-slate-900 border border-emerald-400/60 text-emerald-400 p-1.5 rounded-full text-[10px] font-black shadow-lg uppercase tracking-wider">
-              v1.0.15
+              v1.0.30
             </div>
           </div>
 
@@ -3200,7 +3253,7 @@ const DEFAULT_SEASON_NUM = 19;
           </div>
 
           {/* Top Bar Quick Profile Lookup Search Bar (hidden when profile is claimed) */}
-          {!claimedProfile?.username && (
+          {!isClaimed && (
             <form onSubmit={handleProfileLookup} className="flex-1 max-w-[200px] xs:max-w-xs sm:max-w-md mx-2">
               <div className="relative flex items-center">
                 <input
@@ -3296,7 +3349,7 @@ const DEFAULT_SEASON_NUM = 19;
           </div>
 
           {/* Claim Your Username Helper Subtitle (only shown when no profile is claimed) */}
-          {!claimedProfile?.username && (
+          {!isClaimed && (
             <p className="text-xs sm:text-sm font-bold text-slate-300 tracking-wider uppercase flex items-center justify-center gap-1.5 pt-1">
               <span>👑</span>
               <span>Claim your username to start tracking</span>
@@ -3304,7 +3357,7 @@ const DEFAULT_SEASON_NUM = 19;
           )}
 
           {/* Big Search Box (only shown when no profile is claimed) */}
-          {!claimedProfile?.username && (
+          {!isClaimed && (
             <form onSubmit={fetchStats} className={`w-full ${isMobileView ? 'mt-1' : 'max-w-3xl mt-3 sm:mt-8'}`}>
               <div className={`flex bg-[#131b2f] p-2.5 sm:p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${isMobileView ? 'flex-col gap-2' : 'flex-row items-center gap-3'
                 }`}>
@@ -3475,7 +3528,7 @@ const DEFAULT_SEASON_NUM = 19;
 
 
             {/* Profile Confirmation Banner before committing to track */}
-            {(!claimedProfile || claimedProfile.username?.toLowerCase() !== stats.current.username?.toLowerCase()) && (
+            {!isClaimed && (
               <div className="bg-gradient-to-r from-[#131b2f] via-[#0f172a] to-[#131b2f] border-2 border-emerald-500/70 p-4 sm:p-6 rounded-2xl shadow-2xl space-y-3 text-left animate-in fade-in slide-in-from-top-3 duration-300">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-start sm:items-center gap-3.5">
@@ -3584,7 +3637,7 @@ const DEFAULT_SEASON_NUM = 19;
 
 
               <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                {claimedProfile?.username?.toLowerCase() === stats.current.username?.toLowerCase() ? (
+                {isClaimed ? (
                   <div className="flex items-center gap-2">
                     <div className="px-3.5 py-2.5 rounded-xl font-black text-xs sm:text-sm bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/20 border border-emerald-400/50 uppercase tracking-wider cursor-default flex items-center gap-1.5">
                       <span>👑</span>
@@ -4500,7 +4553,7 @@ const DEFAULT_SEASON_NUM = 19;
               <div className="bg-[#131b2f] border border-slate-700/60 p-3 rounded-xl text-left text-xs space-y-1">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Target Commit:</span>
-                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.14 (${getAppLocalSha()})`}</span>
+                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.30 (${getAppLocalSha()})`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Status:</span>
@@ -4792,13 +4845,13 @@ const DEFAULT_SEASON_NUM = 19;
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Installed Version:</span>
                   <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
-                    {upToDateDetails?.currentSha || `v1.0.14 (${getAppLocalSha()})`}
+                    {upToDateDetails?.currentSha || `v1.0.30 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Latest Release SHA:</span>
                   <span className="font-mono text-teal-300 font-bold">
-                    {upToDateDetails?.latestSha || `v1.0.14 (${getAppLocalSha()})`}
+                    {upToDateDetails?.latestSha || `v1.0.30 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 {upToDateDetails?.commitMsg && (
@@ -5063,7 +5116,7 @@ const DEFAULT_SEASON_NUM = 19;
               {/* Drawer Header */}
               <div className="space-y-6 p-4">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                  {claimedProfile?.username ? (
+                  {hasClaimedProfile ? (
                     <div className="flex items-center gap-3 overflow-hidden text-left">
                       {getDisplayAvatar(claimedProfile.username) ? (
                         <img
@@ -5111,7 +5164,7 @@ const DEFAULT_SEASON_NUM = 19;
                 </div>
 
                 {/* Drawer Group 0.4: My Claimed Profile Card & Unclaim Button */}
-                {claimedProfile?.username && (
+                {hasClaimedProfile && (
                   <div className="space-y-2 bg-gradient-to-br from-[#131b2f] to-[#0d1424] border-2 border-amber-500/60 p-3.5 rounded-2xl shadow-xl text-left relative overflow-hidden">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
@@ -5121,7 +5174,7 @@ const DEFAULT_SEASON_NUM = 19;
 
                     <div className="flex items-center justify-between gap-3 pt-1">
                       <div className="overflow-hidden">
-                        <h4 className="text-base font-black text-white truncate">{claimedProfile.username}</h4>
+                        <h4 className="text-base font-black text-white truncate">{claimedProfile.username || claimedProfile.name}</h4>
                         <p className="text-[10px] text-slate-400 font-mono truncate max-w-[180px]">
                           Direct URL: {claimedProfile.savedUrl}
                         </p>
@@ -5131,8 +5184,9 @@ const DEFAULT_SEASON_NUM = 19;
                         type="button"
                         onClick={() => {
                           setIsMenuOpen(false);
-                          setQuery(claimedProfile.username);
-                          fetchStats(null, claimedProfile.username, season);
+                          const userToFetch = claimedProfile.username || claimedProfile.name;
+                          setQuery(userToFetch);
+                          fetchStats(null, userToFetch, season);
                         }}
                         className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl transition-all shadow-md uppercase tracking-wider shrink-0 cursor-pointer"
                       >
@@ -5155,6 +5209,36 @@ const DEFAULT_SEASON_NUM = 19;
                         <span>Unclaim Profile</span>
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {/* Drawer Group 0.45: Search Another Player when profile is claimed */}
+                {hasClaimedProfile && (
+                  <div className="space-y-2 bg-[#131b2f] border border-slate-700/60 p-3.5 rounded-2xl text-left">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                      <span>🔍</span> Search Another Player
+                    </span>
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!lookupQuery.trim()) return;
+                      setIsMenuOpen(false);
+                      setQuery(lookupQuery.trim());
+                      fetchStats(e, lookupQuery.trim(), season);
+                    }} className="flex gap-2 pt-1">
+                      <input
+                        type="text"
+                        value={lookupQuery}
+                        onChange={(e) => setLookupQuery(e.target.value)}
+                        placeholder="Enter player IGN..."
+                        className="w-full bg-[#0b101e] border border-slate-700/70 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500"
+                      />
+                      <button
+                        type="submit"
+                        className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-3 py-1.5 rounded-xl uppercase tracking-wider transition-all cursor-pointer shadow"
+                      >
+                        Search
+                      </button>
+                    </form>
                   </div>
                 )}
 
