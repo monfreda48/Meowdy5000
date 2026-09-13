@@ -298,144 +298,86 @@ def build_reconciled_stats(
         })
     }
 
+from backend.services.identity import IdentityManager
+from backend.adapters.rivalsdata import fetch_rivalsdata_profile
 from backend.adapters.rivalstracker import fetch_rivalstracker_profile
-from backend.adapters.rivalsmeta import fetch_rivalsmeta_profile
-from backend.adapters.trackergg import fetch_trackergg_profile
+from backend.adapters.rivalsmeta import fetch_all_rivalsmeta_tabs, fetch_rivalsmeta_profile
+from backend.adapters.trackergg import fetch_all_trackergg_tabs, fetch_trackergg_profile
 from backend.services.transformer import TelemetryTransformer
-from backend.services.resolver import resolve_canonical_uid
 
 async def get_player_profile(identifier: str, force_refresh: bool = False) -> Dict[str, Any]:
     ident = str(identifier).strip()
     if not ident:
         return {"success": False, "error": "Empty player identifier"}
 
-    # 1. Resolve UID dynamically via URL redirect resolver
-    resolved_uid = await resolve_canonical_uid(ident)
+    # 1. Resolve Bidirectional Identity
+    identity = await IdentityManager.resolve_identity(ident)
+    target_uid = identity["uid"]           # Numeric UID for NetEase-indexed sources
+    target_user = identity["username"]     # Username for Tracker.gg
+
+    print(f"\n[DISPATCH PIPELINE]")
+    print(f"  • Numeric UID Target (RivalsMeta, RivalsTracker, RivalsData) : {target_uid}")
+    print(f"  • Handle Target      (Tracker.gg)                            : {target_user}")
 
     # 2. Check local database cache
     if not force_refresh:
-        cached = get_cached_player_profile(resolved_uid)
+        cached = get_cached_player_profile(target_uid)
         if cached and cached.get("current", {}).get("scraped_at"):
             cached_lvl = safe_int(cached.get("level") or cached.get("current", {}).get("level") or cached.get("player_level"))
             if cached_lvl > 1:
                 plat = cached.get("platform") or cached.get("current", {}).get("platform", "pc")
-            reconciled = build_reconciled_stats(cached, cached.get("rivalstracker_stats"), cached.get("rivalsmeta_stats"), cached.get("trackergg_stats"))
-            canonical = TelemetryTransformer.unify_player_payload(
-                resolved_uid,
-                cached,
-                cached.get("rivalstracker_stats") or {},
-                cached.get("rivalsmeta_stats") or {},
-                cached.get("trackergg_stats") or {}
-            )
-            canonical["reconciled_stats"] = reconciled
-            canonical["success"] = True
-            canonical["data"] = cached
-            canonical["platform"] = plat
-            canonical["source_attribution"] = "database_cache"
-            canonical["is_fallback"] = True
-            canonical["is_stale"] = False
-            canonical["scraped_at"] = cached.get("current", {}).get("scraped_at")
-            return canonical
+                reconciled = build_reconciled_stats(cached, cached.get("rivalstracker_stats"), cached.get("rivalsmeta_stats"), cached.get("trackergg_stats"))
+                canonical = TelemetryTransformer.unify_player_payload(
+                    target_uid,
+                    cached,
+                    cached.get("rivalstracker_stats") or {},
+                    cached.get("rivalsmeta_stats") or {},
+                    cached.get("trackergg_stats") or {}
+                )
+                canonical["reconciled_stats"] = reconciled
+                canonical["success"] = True
+                canonical["data"] = cached
+                canonical["platform"] = plat
+                canonical["source_attribution"] = "database_cache"
+                canonical["is_fallback"] = True
+                canonical["is_stale"] = False
+                canonical["scraped_at"] = cached.get("current", {}).get("scraped_at")
+                return canonical
 
-    # 3. Live telemetry scrape with two-way identity handshake
+    # 3. Parallel Upstream Fetch
     try:
-        clean_id = ident
-        if clean_id.isdigit():
-            # UID was provided: fetch RivalsData first to extract player name for Tracker.gg
-            resolved_uid = clean_id
-            data = await fetch_rivalsdata_profile(clean_id)
-            player_name = data.get("username") or data.get("current", {}).get("username") or clean_id
+        tasks = [
+            fetch_rivalsdata_profile(target_uid),
+            fetch_rivalstracker_profile(target_uid),
+            fetch_all_rivalsmeta_tabs(target_uid),
+            fetch_all_trackergg_tabs(target_user),
+        ]
+        rd, rt, rm, tgg = await asyncio.gather(*tasks, return_exceptions=True)
 
-            rt_task = fetch_rivalstracker_profile(clean_id)
-            rm_task = fetch_rivalsmeta_profile(clean_id)
-            tgg_task = fetch_trackergg_profile(player_name)
+        rd = rd if isinstance(rd, dict) and not isinstance(rd, Exception) else {}
+        rt = rt if isinstance(rt, dict) and not isinstance(rt, Exception) else {}
+        rm = rm if isinstance(rm, dict) and not isinstance(rm, Exception) else {}
+        tgg = tgg if isinstance(tgg, dict) and not isinstance(tgg, Exception) else {}
 
-            rt_data, rm_data, tgg_data = await asyncio.gather(rt_task, rm_task, tgg_task)
-        else:
-            # Username was provided: resolve UID from RivalsData redirect
-            canonical_uid = await resolve_canonical_uid(clean_id)
-            resolved_uid = canonical_uid
-            print(f"[AGGREGATOR] Executing multi-source scrape with Canonical UID: {canonical_uid}")
-
-            tgg_task = fetch_trackergg_profile(clean_id)
-            rd_task = fetch_rivalsdata_profile(canonical_uid)
-            rt_task = fetch_rivalstracker_profile(canonical_uid)
-            rm_task = fetch_rivalsmeta_profile(canonical_uid)
-
-            tgg_data, data, rt_data, rm_data = await asyncio.gather(tgg_task, rd_task, rt_task, rm_task)
-
-        if rt_data:
+        if rt:
             try:
                 from backend.database import save_rivalstracker_telemetry
-                save_rivalstracker_telemetry(resolved_uid, rt_data)
+                save_rivalstracker_telemetry(target_uid, rt)
             except Exception as err:
-                logger.warning(f"[aggregator] Failed to save RivalsTracker telemetry for {resolved_uid}: {err}")
+                logger.warning(f"[aggregator] Failed to save RivalsTracker telemetry for {target_uid}: {err}")
 
-            data["rivalstracker_stats"] = {
-                "rank": rt_data.get("rank", "Unranked"),
-                "score": rt_data.get("rank_score") or rt_data.get("score", 0),
-                "peak_rank": rt_data.get("peak_rank", "Unranked"),
-                "peak_score": rt_data.get("peak_rank_score") or rt_data.get("peak_score", 0),
-                "teammates": rt_data.get("best_teammates") or rt_data.get("teammates", []),
-                "summary": rt_data.get("summary", {}),
-                "match_history": rt_data.get("match_history", [])
-            }
-            if rt_data.get("best_teammates") or rt_data.get("teammates"):
-                data["squad_synergy"] = rt_data.get("best_teammates") or rt_data["teammates"]
-                if "current" in data:
-                    data["current"]["squad_synergy"] = rt_data.get("best_teammates") or rt_data["teammates"]
-
-            if rt_data.get("platform") and rt_data["platform"] != "unknown":
-                data["platform"] = rt_data["platform"]
-                if "current" in data:
-                    data["current"]["platform"] = rt_data["platform"]
-
-        if rm_data:
-            data["rivalsmeta_stats"] = {
-                "rank": rm_data.get("rank", "Unranked"),
-                "rank_score": rm_data.get("rank_score", 0),
-                "peak_rank": rm_data.get("peak_rank", "Unranked"),
-                "peak_score": rm_data.get("peak_score", 0),
-                "win_rate": rm_data.get("win_rate", 0.0),
-                "kda": rm_data.get("kda", 0.0),
-                "hero_stats": rm_data.get("hero_stats", [])
-            }
-            if rm_data.get("hero_stats"):
-                data["advanced_telemetry"] = {
-                    "hero_stats": rm_data["hero_stats"]
-                }
-            if rm_data.get("platform") and rm_data["platform"] != "unknown" and data.get("platform") in ["unknown", "pc"]:
-                data["platform"] = rm_data["platform"]
-                if "current" in data:
-                    data["current"]["platform"] = rm_data["platform"]
-
-        if tgg_data:
-            data["trackergg_stats"] = {
-                "rank": tgg_data.get("rank", "Unranked"),
-                "rank_score": tgg_data.get("rank_score", 0),
-                "win_rate": tgg_data.get("win_rate"),
-                "kda": tgg_data.get("kda"),
-                "wins": tgg_data.get("wins", 0),
-                "losses": tgg_data.get("losses", 0),
-                "total_matches": tgg_data.get("total_matches", 0),
-                "top_hero": tgg_data.get("top_hero")
-            }
-
-        reconciled = build_reconciled_stats(data, rt_data, rm_data, tgg_data)
-        data["reconciled_stats"] = reconciled
-
-        upsert_player_profile(data)
-        plat = data.get("platform") or data.get("current", {}).get("platform", "pc")
-
-        canonical = TelemetryTransformer.unify_player_payload(resolved_uid, data, rt_data or {}, rm_data or {}, tgg_data or {})
+        reconciled = build_reconciled_stats(rd, rt, rm, tgg)
+        canonical = TelemetryTransformer.unify_player_payload(target_uid, rd, rt, rm, tgg)
         canonical["reconciled_stats"] = reconciled
+        canonical["uid"] = target_uid
+        canonical["username"] = target_user
         canonical["success"] = True
-        canonical["data"] = data
-        canonical["platform"] = plat
-        canonical["source_attribution"] = "rivalsdata"
-        canonical["is_fallback"] = False
-        canonical["is_stale"] = False
-        canonical["scraped_at"] = data.get("scraped_at")
+
+        # Link verified pair back to SQLite identity cache
+        if target_user != target_uid and target_uid.isdigit():
+            IdentityManager.link_identity(target_user, target_uid)
+
+        cache_player_profile(target_uid, canonical)
 
         return canonical
     except PlayerNotFoundError as pnf:
