@@ -130,6 +130,69 @@ async def resolve_player_identity(query: str) -> List[Dict[str, Any]]:
 
     return unique_candidates
 
+from bs4 import BeautifulSoup
+
+def parse_rivalsdata_html(html_content: str) -> Dict[str, Any]:
+    if not html_content:
+        return {}
+
+    soup = BeautifulSoup(html_content, "html.parser")
+    data: Dict[str, Any] = {}
+
+    # 1. Exact Platform Detection (/assets/platforms/playstation.svg -> 'ps5')
+    platform_img = soup.select_one('img[src*="/assets/platforms/"]')
+    if platform_img:
+        alt = (platform_img.get("alt") or "").lower()
+        src = (platform_img.get("src") or "").lower()
+        if "playstation" in alt or "playstation" in src or "psn" in src or "ps5" in src:
+            data["platform"] = "ps5"
+        elif "xbox" in alt or "xbox" in src or "xbl" in src:
+            data["platform"] = "xbox"
+        elif any(p in alt or p in src for p in ["pc", "steam", "windows", "desktop"]):
+            data["platform"] = "pc"
+        else:
+            data["platform"] = "unknown"
+    else:
+        platform_div = soup.select_one('div[title="PlayStation"], div[title="Xbox"], div[title="PC"]')
+        if platform_div:
+            t = (platform_div.get("title") or "").lower()
+            data["platform"] = "ps5" if "playstation" in t or "ps" in t else ("xbox" if "xbox" in t else "pc")
+        else:
+            data["platform"] = "unknown"
+
+    # 2. Player Username & Level Badge
+    name_el = soup.select_one("h2")
+    if name_el and name_el.get_text(strip=True):
+        data["username"] = name_el.get_text(strip=True)
+
+    avatar_img = soup.select_one('img[src*="/assets/icons/"]')
+    if avatar_img and avatar_img.parent:
+        level_span = avatar_img.parent.find("span")
+        if level_span and level_span.get_text(strip=True).isdigit():
+            data["level"] = int(level_span.get_text(strip=True))
+
+    # 3. Active Season Combobox
+    season_btn = soup.select_one('button[role="combobox"] span')
+    if season_btn and season_btn.get_text(strip=True):
+        data["season"] = season_btn.get_text(strip=True)
+
+    # 4. Competitive Rank Tier & Rank Score (RS)
+    rs_node = soup.find(string=re.compile(r"\bRS\b"))
+    if rs_node and rs_node.parent:
+        data["rank_points"] = int(re.sub(r"[^\d]", "", str(rs_node)) or 0)
+        rank_name_container = rs_node.find_parent("div")
+        if rank_name_container:
+            rank_span = rank_name_container.find_previous_sibling("span")
+            if rank_span and rank_span.get_text(strip=True):
+                data["rank"] = rank_span.get_text(strip=True)
+
+    # 5. Season Record & Win Rate (e.g., '47% WR', '9W - 10L')
+    wr_node = soup.find(string=re.compile(r"%\s*WR"))
+    if wr_node:
+        data["win_rate"] = str(wr_node).strip()
+
+    return data
+
 async def fetch_rivalsdata_profile(uid: str, platform: str = "pc") -> Dict[str, Any]:
     target_uid = str(uid).strip()
     if not target_uid:
@@ -149,6 +212,7 @@ async def fetch_rivalsdata_profile(uid: str, platform: str = "pc") -> Dict[str, 
     scraped_data: Dict[str, Any] = None
     html_content = ""
     detected_platform = None
+    parsed_dom: Dict[str, Any] = {}
 
     try:
         async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
@@ -178,36 +242,24 @@ async def fetch_rivalsdata_profile(uid: str, platform: str = "pc") -> Dict[str, 
     except Exception as err:
         logger.warning(f"Live RivalsData scrape error for UID '{target_uid}': {err}")
 
-    # Search BeautifulSoup HTML for platform image (/assets/platforms/)
-    if not detected_platform and html_content:
-        try:
-            from bs4 import BeautifulSoup
-            soup = BeautifulSoup(html_content, "html.parser")
-            platform_img = soup.find("img", src=lambda s: s and "/assets/platforms/" in s)
-            if platform_img:
-                alt_text = (platform_img.get("alt") or "").lower()
-                src_text = (platform_img.get("src") or "").lower()
-
-                if "playstation" in alt_text or "playstation" in src_text or "psn" in src_text or "ps5" in src_text or "ps4" in src_text:
-                    detected_platform = "ps5"
-                elif "xbox" in alt_text or "xbox" in src_text or "xbl" in src_text:
-                    detected_platform = "xbox"
-                elif any(p in alt_text or p in src_text for p in ["pc", "steam", "windows", "desktop"]):
-                    detected_platform = "pc"
-        except Exception as soup_err:
-            logger.debug(f"BeautifulSoup platform parse error: {soup_err}")
+    # Parse exact DOM markup if html_content is available
+    if html_content:
+        parsed_dom = parse_rivalsdata_html(html_content)
+        if not detected_platform and parsed_dom.get("platform") and parsed_dom["platform"] != "unknown":
+            detected_platform = parsed_dom["platform"]
 
     if not detected_platform:
         detected_platform = norm_platform
 
-    # Build standardized telemetry dictionary
-    username = scraped_data.get("username") or scraped_data.get("name") if scraped_data else f"Player {target_uid}"
-    rank = scraped_data.get("rank") or scraped_data.get("rank_name") or "Grandmaster I" if scraped_data else "Grandmaster I"
-    win_rate = str(scraped_data.get("win_rate") or scraped_data.get("winRate") or "54.2%") if scraped_data else "54.2%"
+    # Build standardized telemetry dictionary using scraped_data & parsed_dom
+    username = (scraped_data.get("username") or scraped_data.get("name") if scraped_data else None) or parsed_dom.get("username") or f"Player {target_uid}"
+    rank = (scraped_data.get("rank") or scraped_data.get("rank_name") if scraped_data else None) or parsed_dom.get("rank") or "Grandmaster I"
+    win_rate = str((scraped_data.get("win_rate") or scraped_data.get("winRate") if scraped_data else None) or parsed_dom.get("win_rate") or "54.2%")
     kda = str(scraped_data.get("kda") or scraped_data.get("kda_ratio") or "3.10") if scraped_data else "3.10"
     total_matches = int(scraped_data.get("total_matches") or scraped_data.get("matches") or 110) if scraped_data else 110
     time_played = str(scraped_data.get("time_played") or scraped_data.get("playtime") or "24h") if scraped_data else "24h"
     avatar_url = scraped_data.get("avatar_url") if scraped_data else "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31029208.jpg"
+    level = (scraped_data.get("level") if scraped_data else None) or parsed_dom.get("level") or 1
 
     heroes = scraped_data.get("heroes", []) if scraped_data else [
         {"hero_name": "Magneto", "mastery_level": 18, "current_xp": 8450, "next_level_xp": 10000},
@@ -222,9 +274,11 @@ async def fetch_rivalsdata_profile(uid: str, platform: str = "pc") -> Dict[str, 
             "username": username,
             "platform": detected_platform,
             "avatarUrl": avatar_url,
-            "level": scraped_data.get("level", 1) if scraped_data else 1,
+            "level": level,
             "rank": rank,
             "rank_name": rank,
+            "rank_points": parsed_dom.get("rank_points", 0),
+            "season": parsed_dom.get("season", "Season 10"),
             "win_rate": win_rate,
             "winRate": win_rate,
             "kda": kda,
