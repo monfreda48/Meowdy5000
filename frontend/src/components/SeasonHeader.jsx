@@ -105,14 +105,6 @@ export default function SeasonHeader({ getApiUrl }) {
             </span>
           </div>
         )}
-
-        {/* Upcoming Hero Teaser Badge */}
-        {!loading && seasonMeta?.upcoming_hero && (
-          <div className="bg-purple-500/10 border border-purple-500/30 px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-bold text-purple-300">
-            <span>🎯</span>
-            <span>Teaser: {seasonMeta.upcoming_hero}</span>
-          </div>
-        )}
       </div>
     </div>
   );
