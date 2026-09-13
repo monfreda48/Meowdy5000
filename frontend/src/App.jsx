@@ -1213,14 +1213,7 @@ export default function App() {
   const [readyToInstallUpdate, setReadyToInstallUpdate] = useState(null);
   const [nativeAppVersion, setNativeAppVersion] = useState(null);
 
-  const [showSplashOverlay, setShowSplashOverlay] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowSplashOverlay(false);
-    }, 1800);
-    return () => clearTimeout(timer);
-  }, []);
+  const [showSplashOverlay, setShowSplashOverlay] = useState(false);
 
   useEffect(() => {
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
@@ -2636,23 +2629,8 @@ ${payload.stack || 'No stack trace available.'}
 
 
 
-  const [showSplash, setShowSplash] = useState(true);
-  const [splashFading, setSplashFading] = useState(false);
-
-  useEffect(() => {
-    const fadeTimer = setTimeout(() => {
-      setSplashFading(true);
-    }, 2200);
-
-    const removeTimer = setTimeout(() => {
-      setShowSplash(false);
-    }, 2800);
-
-    return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(removeTimer);
-    };
-  }, []);
+  const [showSplash, setShowSplash] = useState(false);
+  const [splashFading, setSplashFading] = useState(true);
 
   // 1. Monitor Network Connectivity (@capacitor/network)
   useEffect(() => {
