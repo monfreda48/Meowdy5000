@@ -227,6 +227,25 @@ def resolve_player():
             }]
         })
 
+@app.route('/api/worker/tracker/scrape', methods=['GET', 'POST'])
+def worker_tracker_scrape():
+    username = request.args.get('username') or (request.json.get('username') if request.is_json else None)
+    if not username:
+        return jsonify({"error": "Username is required"}), 400
+    try:
+        import asyncio
+        from backend.workers.tracker_worker import TrackerScraperWorker
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        worker = TrackerScraperWorker()
+        data = loop.run_until_complete(worker.scrape_player(username))
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/stats')
 def get_stats():
     query = request.args.get('query', '')
