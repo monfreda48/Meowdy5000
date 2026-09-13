@@ -190,6 +190,8 @@ def update_player_platform(uid: str, platform_input: str) -> bool:
                 logger.debug(f"[aggregator] Platform update error in {db_path}: {e}")
     return updated_any
 
+from backend.adapters.rivalstracker import fetch_rivalstracker_profile
+
 async def get_player_profile(identifier: str, force_refresh: bool = False) -> Dict[str, Any]:
     ident = str(identifier).strip()
     if not ident:
@@ -212,15 +214,34 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
                 "data": cached,
                 "platform": plat,
                 "current": cached.get("current"),
+                "squad_synergy": cached.get("squad_synergy") or cached.get("current", {}).get("squad_synergy", []),
                 "source_attribution": "database_cache",
                 "is_fallback": True,
                 "is_stale": False,
                 "scraped_at": cached.get("current", {}).get("scraped_at")
             }
 
-    # 3. Live telemetry scrape from RivalsData
+    # 3. Live telemetry scrape from RivalsData & RivalsTracker
     try:
         data = await fetch_rivalsdata_profile(resolved_uid)
+        rt_data = await fetch_rivalstracker_profile(resolved_uid)
+        if rt_data:
+            data["rivalstracker_stats"] = {
+                "rank": rt_data.get("rank", "Unranked"),
+                "score": rt_data.get("score", 0),
+                "peak_rank": rt_data.get("peak_rank", "Unranked"),
+                "peak_score": rt_data.get("peak_score", 0)
+            }
+            if rt_data.get("teammates"):
+                data["squad_synergy"] = rt_data["teammates"]
+                if "current" in data:
+                    data["current"]["squad_synergy"] = rt_data["teammates"]
+
+            if rt_data.get("platform") and rt_data["platform"] != "unknown":
+                data["platform"] = rt_data["platform"]
+                if "current" in data:
+                    data["current"]["platform"] = rt_data["platform"]
+
         upsert_player_profile(data)
         plat = data.get("platform") or data.get("current", {}).get("platform", "pc")
         return {
@@ -228,6 +249,7 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
             "data": data,
             "platform": plat,
             "current": data.get("current"),
+            "squad_synergy": data.get("squad_synergy", []),
             "source_attribution": "rivalsdata",
             "is_fallback": False,
             "is_stale": False,

@@ -1,12 +1,20 @@
 import { useState, useEffect } from 'react';
 
-export default function SquadSynergyCard({ uid, getApiUrl }) {
+export default function SquadSynergyCard({ uid, playerData, getApiUrl }) {
   const [synergyData, setSynergyData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortBy, setSortBy] = useState('win_rate'); // 'win_rate' | 'matches'
 
   useEffect(() => {
+    // 1. If playerData has squad_synergy, use it immediately
+    const directSynergy = playerData?.squad_synergy || playerData?.current?.squad_synergy;
+    if (Array.isArray(directSynergy) && directSynergy.length > 0) {
+      setSynergyData(directSynergy);
+      setLoading(false);
+      return;
+    }
+
     if (!uid) {
       setLoading(false);
       return;
@@ -45,10 +53,29 @@ export default function SquadSynergyCard({ uid, getApiUrl }) {
     return () => {
       isMounted = false;
     };
-  }, [uid, getApiUrl]);
+  }, [uid, playerData, getApiUrl]);
+
+  // Normalize items for rendering
+  const normalizedList = (synergyData || []).map((t) => {
+    const name = t.teammate_name || t.username || t.name || 'Teammate';
+    const matches = parseInt(t.matches_together || t.matches || t.games || 0);
+    const wrRaw = t.win_rate || t.winRate || '0%';
+    const wrNum = typeof wrRaw === 'number' ? wrRaw : (parseFloat(String(wrRaw).replace(/[^0-9.]/g, '')) || 0);
+    const wins = t.wins !== undefined ? t.wins : Math.round(matches * (wrNum / 100));
+    const losses = t.losses !== undefined ? t.losses : Math.max(0, matches - wins);
+    return {
+      teammate_name: name,
+      matches_together: matches,
+      win_rate: wrNum,
+      win_rate_str: typeof wrRaw === 'string' && wrRaw.includes('%') ? wrRaw : `${wrNum.toFixed(1)}%`,
+      wins,
+      losses,
+      avg_kda: t.avg_kda || t.kda || 0
+    };
+  });
 
   // Sorting logic
-  const sortedSynergy = [...synergyData].sort((a, b) => {
+  const sortedSynergy = [...normalizedList].sort((a, b) => {
     if (sortBy === 'win_rate') {
       if (b.win_rate !== a.win_rate) {
         return b.win_rate - a.win_rate;
@@ -95,7 +122,7 @@ export default function SquadSynergyCard({ uid, getApiUrl }) {
         </div>
 
         {/* Sorting Toggle */}
-        {!loading && synergyData.length > 0 && (
+        {!loading && sortedSynergy.length > 0 && (
           <div className="flex items-center bg-[#070a13] p-1 rounded-xl border border-slate-800 self-start sm:self-auto shrink-0">
             <button
               type="button"
@@ -153,7 +180,7 @@ export default function SquadSynergyCard({ uid, getApiUrl }) {
             const initial = (t.teammate_name || '?')[0].toUpperCase();
             return (
               <div
-                key={t.id || `${t.teammate_name}-${idx}`}
+                key={`${t.teammate_name}-${idx}`}
                 className="bg-[#070a13] border border-slate-800 hover:border-slate-700/80 p-3.5 rounded-xl flex items-center justify-between gap-3 transition-all hover:bg-[#090d19]"
               >
                 {/* Teammate Identity */}
@@ -183,11 +210,13 @@ export default function SquadSynergyCard({ uid, getApiUrl }) {
                       t.win_rate
                     )}`}
                   >
-                    {t.win_rate.toFixed(1)}% WR
+                    {t.win_rate_str}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-mono font-semibold bg-slate-800/40 px-1.5 py-0.5 rounded">
-                    KDA: {(t.avg_kda || 0).toFixed(2)}
-                  </span>
+                  {t.avg_kda > 0 && (
+                    <span className="text-[10px] text-slate-400 font-mono font-semibold bg-slate-800/40 px-1.5 py-0.5 rounded">
+                      KDA: {t.avg_kda.toFixed(2)}
+                    </span>
+                  )}
                 </div>
               </div>
             );

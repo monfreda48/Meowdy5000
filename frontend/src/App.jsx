@@ -4670,6 +4670,7 @@ const DEFAULT_SEASON_NUM = 19;
                 {/* Squad Synergy, Map Performance, Hero Mastery & Account Health Panels */}
                 <div className="mt-4 space-y-4">
                   <SquadSynergyCard
+                    playerData={stats}
                     uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
                     getApiUrl={getApiUrl}
                   />
