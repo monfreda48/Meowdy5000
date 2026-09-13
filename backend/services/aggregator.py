@@ -298,12 +298,30 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
             canonical["scraped_at"] = cached.get("current", {}).get("scraped_at")
             return canonical
 
-    # 3. Live telemetry scrape from RivalsData, RivalsTracker, RivalsMeta & Tracker.gg
+    # 3. Live telemetry scrape with two-way identity handshake
     try:
-        data = await fetch_rivalsdata_profile(resolved_uid)
-        rt_data = await fetch_rivalstracker_profile(resolved_uid)
-        rm_data = await fetch_rivalsmeta_profile(resolved_uid)
-        tgg_data = await fetch_trackergg_profile(resolved_uid)
+        clean_id = ident
+        if clean_id.isdigit():
+            # UID was provided: fetch RivalsData first to extract player name for Tracker.gg
+            resolved_uid = clean_id
+            data = await fetch_rivalsdata_profile(clean_id)
+            player_name = data.get("username") or data.get("current", {}).get("username") or clean_id
+
+            rt_task = fetch_rivalstracker_profile(clean_id)
+            rm_task = fetch_rivalsmeta_profile(clean_id)
+            tgg_task = fetch_trackergg_profile(player_name)
+
+            rt_data, rm_data, tgg_data = await asyncio.gather(rt_task, rm_task, tgg_task)
+        else:
+            # Username was provided: resolve UID from RivalsData redirect
+            resolved_uid = await resolve_canonical_uid(clean_id)
+
+            tgg_task = fetch_trackergg_profile(clean_id)
+            rd_task = fetch_rivalsdata_profile(resolved_uid)
+            rt_task = fetch_rivalstracker_profile(resolved_uid)
+            rm_task = fetch_rivalsmeta_profile(resolved_uid)
+
+            tgg_data, data, rt_data, rm_data = await asyncio.gather(tgg_task, rd_task, rt_task, rm_task)
 
         if rt_data:
             data["rivalstracker_stats"] = {

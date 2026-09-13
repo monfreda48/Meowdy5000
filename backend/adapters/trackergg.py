@@ -92,11 +92,20 @@ def parse_trackergg_html(html_content: str) -> dict:
 
     return data
 
-async def fetch_trackergg_profile(identifier: str) -> dict:
-    ident = str(identifier).strip()
-    if not ident:
+def build_trackergg_url(username: str, season: int = 20) -> str:
+    """
+    Constructs the canonical Tracker.gg profile overview URL.
+    Encodes spaces to %20 without altering unspaced characters.
+    """
+    clean_username = str(username).strip()
+    encoded_username = urllib.parse.quote(clean_username, safe="")
+    return f"https://tracker.gg/marvel-rivals/profile/ign/{encoded_username}/overview?season={season}"
+
+async def fetch_trackergg_profile(username: str, season: int = 20) -> dict:
+    clean_name = str(username).strip()
+    if not clean_name:
         return parse_trackergg_html("")
-    url = f"https://tracker.gg/marvel-rivals/profile/ign/{urllib.parse.quote(ident)}/overview?season=20"
+    url = build_trackergg_url(clean_name, season)
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
@@ -107,5 +116,5 @@ async def fetch_trackergg_profile(identifier: str) -> dict:
             if res.status_code == 200:
                 return parse_trackergg_html(res.text)
     except Exception as e:
-        logger.warning(f"[trackergg] Scrape error for player '{ident}': {e}")
+        logger.warning(f"[trackergg] Scrape error for player '{clean_name}': {e}")
     return parse_trackergg_html("")
