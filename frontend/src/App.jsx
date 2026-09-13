@@ -3410,7 +3410,7 @@ const DEFAULT_SEASON_NUM = 19;
 
       {/* Top Navigation Bar */}
       <nav className="border-b border-slate-800 bg-[#0f1526]/90 backdrop-blur-md sticky top-0 z-50 overflow-x-hidden nav-safe-area">
-        <div className="max-w-6xl mx-auto px-2.5 sm:px-6 py-2 sm:py-3.5 flex items-center justify-between gap-1.5 sm:gap-3">
+        <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10 2xl:px-16 py-2 sm:py-3.5 flex items-center justify-between gap-1.5 sm:gap-3">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-xs sm:text-sm tracking-tighter shadow-[0_0_18px_rgba(16,185,129,0.6)] border border-emerald-500/70 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)] relative overflow-hidden">
               {/* Horizontal Right-To-Left Spinning Green Grid Sphere Overlay */}
@@ -3489,7 +3489,7 @@ const DEFAULT_SEASON_NUM = 19;
       </nav>
 
       {/* Main Layout Container */}
-      <main className={`mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 transition-all duration-300 w-full ${isMobileView ? 'max-w-full sm:max-w-md py-2' : 'max-w-7xl'
+      <main className={`mx-auto py-4 sm:py-8 transition-all duration-150 w-full ${isMobileView ? 'max-w-full sm:max-w-md px-4 py-2' : 'max-w-[1720px] px-4 sm:px-6 lg:px-10 2xl:px-16'
         }`}>
 
 
@@ -3893,7 +3893,7 @@ const DEFAULT_SEASON_NUM = 19;
                 )}
 
                 {/* Primary Tracked Metrics Grid */}
-                <div className={`grid gap-4 mb-6 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+                <div className={`grid gap-4 mb-6 w-full ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4'
                   }`}>
                   {selectedMetrics.map((metricId, orderIndex) => {
                     if (metricId === 'winRate') return (

@@ -156,14 +156,18 @@ html[data-theme="jean-grey"], html[data-theme="jeangrey"], html[data-theme="mono
   background-color: var(--accent-primary) !important;
 }
 
-body {
+html, body, #root {
+  width: 100%;
+  min-height: 100vh;
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
+}
+
+body {
   background-color: var(--bg-app);
   color: var(--text-primary);
-  overflow-x: hidden;
   transition: background-color 0.2s ease, color 0.2s ease;
-  min-height: 100vh;
 }
 
 /* Safe area inset wrapper for mobile taskbars */
