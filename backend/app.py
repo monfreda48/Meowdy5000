@@ -221,6 +221,41 @@ def get_meta_season():
             "error": str(e)
         })
 
+@app.route('/api/player/<uid>/maps', methods=['GET'])
+def get_player_maps_flask(uid):
+    try:
+        import asyncio
+        from backend.adapters.telemetry_scraper import scrape_player_maps, get_player_maps_from_db
+        records = get_player_maps_from_db(uid)
+        if not records:
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            records = loop.run_until_complete(scrape_player_maps(uid))
+        return jsonify(records)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/player/<uid>/synergy', methods=['GET'])
+def get_player_synergy_flask(uid):
+    min_matches = int(request.args.get('min_matches', 2))
+    try:
+        import asyncio
+        from backend.adapters.telemetry_scraper import scrape_player_synergy, get_player_synergy_from_db
+        records = get_player_synergy_from_db(uid, min_matches=min_matches)
+        if not records:
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            records = loop.run_until_complete(scrape_player_synergy(uid))
+        return jsonify(records)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/player/resolve', methods=['GET'])
 def resolve_player():
     query = request.args.get('query', '')

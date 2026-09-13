@@ -243,6 +243,29 @@ async def get_rivalsmeta_season_endpoint(refresh: bool = Query(False)):
     from backend.adapters.rivalsmeta import fetch_rivalsmeta_season
     return await fetch_rivalsmeta_season(force_refresh=refresh)
 
+@app.get("/api/player/{uid}/maps")
+async def get_player_maps_endpoint(uid: str):
+    """
+    Returns array of map performance records for player UID, sorted by matches_played DESC.
+    """
+    from backend.adapters.telemetry_scraper import scrape_player_maps, get_player_maps_from_db
+    records = get_player_maps_from_db(uid)
+    if not records:
+        records = await scrape_player_maps(uid)
+    return records
+
+@app.get("/api/player/{uid}/synergy")
+async def get_player_synergy_endpoint(uid: str, min_matches: int = Query(2)):
+    """
+    Returns array of teammate synergy records for player UID with matches_together >= min_matches,
+    sorted by matches_together DESC, then win_rate DESC.
+    """
+    from backend.adapters.telemetry_scraper import scrape_player_synergy, get_player_synergy_from_db
+    records = get_player_synergy_from_db(uid, min_matches=min_matches)
+    if not records:
+        records = await scrape_player_synergy(uid)
+    return records
+
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok", "service": "Meowdy 5000 Rivals Tracker API", "version": "2.0.0"}
