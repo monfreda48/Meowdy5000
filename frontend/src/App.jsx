@@ -1224,6 +1224,24 @@ export default function App() {
       }).catch(() => {});
     }
   }, []);
+
+  const [isAICoachingEnabled, setIsAICoachingEnabled] = useState(() => {
+    try {
+      return localStorage.getItem('m5_ai_coaching') !== 'false';
+    } catch (e) {
+      return true;
+    }
+  });
+
+  const toggleAICoaching = () => {
+    const nextVal = !isAICoachingEnabled;
+    setIsAICoachingEnabled(nextVal);
+    try {
+      localStorage.setItem('m5_ai_coaching', String(nextVal));
+    } catch (e) {}
+    showNativeToast(`🤖 AI Coaching & Insights ${nextVal ? 'Enabled' : 'Disabled'}`);
+  };
+
   const [showSnapshotHistoryModal, setShowSnapshotHistoryModal] = useState(false);
   const [showViewReportsModal, setShowViewReportsModal] = useState(false);
   const [fetchedReports, setFetchedReports] = useState([]);
@@ -4659,10 +4677,13 @@ const DEFAULT_SEASON_NUM = 19;
                     uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
                     getApiUrl={getApiUrl}
                   />
-                  <GoalRecommendationsCard
-                    uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
-                    getApiUrl={getApiUrl}
-                  />
+                  {isAICoachingEnabled && (
+                    <GoalRecommendationsCard
+                      stats={stats}
+                      uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
+                      getApiUrl={getApiUrl}
+                    />
+                  )}
                   <HeroMasteryPanel
                     uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
                     API_BASE_URL={getApiUrl()}
@@ -5415,6 +5436,30 @@ const DEFAULT_SEASON_NUM = 19;
 
                 {/* Drawer Group 0.58: Daily Tracking Reminder */}
                 <NotificationSettings showNativeToast={showNativeToast} />
+
+                {/* Drawer Group 0.59: AI Coaching & Insights Toggle */}
+                <div className="bg-[#131b2f] border border-slate-700/80 p-3.5 rounded-2xl flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-sm">
+                      🤖
+                    </div>
+                    <div className="text-left">
+                      <h4 className="text-xs font-bold text-white">🤖 AI Coaching & Insights</h4>
+                      <p className="text-[10px] text-slate-400">Display automated telemetry feedback and performance analysis</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={toggleAICoaching}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer shrink-0 ${
+                      isAICoachingEnabled
+                        ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-400'
+                        : 'bg-slate-800 border-slate-700 text-slate-400'
+                    }`}
+                  >
+                    {isAICoachingEnabled ? 'ON' : 'OFF'}
+                  </button>
+                </div>
 
                 {/* Drawer Group 0.6: App Color Scheme & Themes */}
                 <div className="space-y-2.5 bg-[#131b2f] border border-slate-700/60 p-3.5 rounded-2xl">

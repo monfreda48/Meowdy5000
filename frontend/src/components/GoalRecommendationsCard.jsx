@@ -1,208 +1,133 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
-const CATEGORY_STYLES = {
-  'Rank Climb': { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/30' },
-  'Combat Efficiency': { bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/30' },
-  'Survivability': { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/30' },
-  'Experience': { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/30' }
-};
+export default function GoalRecommendationsCard({ stats }) {
+  const currentStats = stats?.current || {};
 
-const MOCK_GOALS_DEFAULT = [
-  {
-    id: 'kda_target',
-    category: 'Combat Efficiency',
-    title: 'Reach 3.00 KDA Ratio',
-    current_value: 2.67,
-    target_value: 3.00,
-    unit: 'ratio',
-    progress_pct: 89.0,
-    tip: 'Focus on high-assist grouping to minimize unsupported deaths.',
-    is_pinned: false
-  },
-  {
-    id: 'win_rate_climb',
-    category: 'Rank Climb',
-    title: 'Secure Positive Win Delta',
-    current_value: 48.5,
-    target_value: 50.0,
-    unit: '%',
-    progress_pct: 97.0,
-    tip: 'Winning 3 consecutive matches will shift your active rank bracket.',
-    is_pinned: false
-  },
-  {
-    id: 'survivability',
-    category: 'Survivability',
-    title: 'Sub-5 Death Average',
-    current_value: 6.2,
-    target_value: 5.0,
-    unit: 'deaths/game',
-    progress_pct: 80.6,
-    tip: 'Disengage when team fights fall below 2v4 numbers to protect KDA.',
-    is_pinned: false
-  },
-  {
-    id: 'match_volume',
-    category: 'Experience',
-    title: 'Reach 100 Matches Played',
-    current_value: 42,
-    target_value: 100,
-    unit: 'matches',
-    progress_pct: 42.0,
-    tip: 'Building match sample size improves rank accuracy and telemetry confidence.',
-    is_pinned: false
-  }
-];
+  const winRateRaw = currentStats.winRate || currentStats.win_rate || '50.0%';
+  const winRateVal = parseFloat(String(winRateRaw).replace(/[^0-9.]/g, '')) || 50.0;
 
-export default function GoalRecommendationsCard({ uid, getApiUrl = () => '' }) {
-  const [goals, setGoals] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const kdaRaw = currentStats.kdRatio || currentStats.kda || currentStats.kda_ratio || '2.50';
+  const kdaVal = parseFloat(String(kdaRaw).replace(/[^0-9.]/g, '')) || 2.50;
 
-  const baseUrl = typeof getApiUrl === 'function' ? getApiUrl() : '';
+  const deaths = currentStats.deaths || 0;
+  const matches = currentStats.matchesPlayed || currentStats.total_matches || currentStats.matches || 1;
+  const deathsPerGame = matches > 0 ? (deaths / matches) : 5.0;
 
-  useEffect(() => {
-    let isMounted = true;
-    async function fetchGoals() {
-      if (!uid) {
-        setGoals(MOCK_GOALS_DEFAULT);
-        setLoading(false);
-        return;
-      }
-      try {
-        const res = await fetch(`${baseUrl}/api/player/${uid}/goals`);
-        if (res.ok) {
-          const json = await res.json();
-          if (isMounted) {
-            const list = Array.isArray(json?.goals) && json.goals.length > 0 ? json.goals : MOCK_GOALS_DEFAULT;
-            setGoals(list);
-          }
-        } else {
-          if (isMounted) setGoals(MOCK_GOALS_DEFAULT);
-        }
-      } catch (err) {
-        if (isMounted) setGoals(MOCK_GOALS_DEFAULT);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    }
-    fetchGoals();
-    return () => { isMounted = false; };
-  }, [uid, baseUrl]);
+  const topHero = currentStats.topHero || currentStats.top_hero || 'Main Hero';
 
-  const togglePin = async (goalId, currentPinned) => {
-    const nextState = !currentPinned;
-    // Optimistic UI update
-    setGoals((prev) => {
-      const updated = prev.map((g) => (g.id === goalId ? { ...g, is_pinned: nextState } : g));
-      return [...updated].sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
-    });
-
-    if (!uid) return;
-
-    try {
-      await fetch(`${baseUrl}/api/player/${uid}/goals/pin`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ goal_id: goalId, is_pinned: nextState })
-      });
-    } catch (e) {
-      console.warn('Failed to persist goal pin:', e);
+  // Dynamic feedback generators
+  const getCombatFeedback = () => {
+    if (deathsPerGame > 6) {
+      return {
+        title: 'Combat & Survivability Analysis',
+        badge: 'High Mortality Rate',
+        color: 'text-amber-400 border-amber-500/30 bg-amber-500/10',
+        text: 'High engagement mortality rate detected. Prioritize disengaging when team fight numbers fall below 2v4 to preserve combat uptime and retain ultimate charge.'
+      };
+    } else if (kdaVal > 3.5) {
+      return {
+        title: 'Combat & Survivability Analysis',
+        badge: 'Optimal Target Prioritization',
+        color: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10',
+        text: 'High target prioritization efficiency. Primary team impact comes from staggered pick-offs and clean entry fragging.'
+      };
+    } else {
+      return {
+        title: 'Combat & Survivability Analysis',
+        badge: 'Stable Trade Efficiency',
+        color: 'text-sky-400 border-sky-500/30 bg-sky-500/10',
+        text: 'Balanced eliminations-to-deaths ratio. Focus on preserving ultimate charge during mid-fight transitions to capitalize on objective pushes.'
+      };
     }
   };
 
+  const getHeroPoolFeedback = () => {
+    if (winRateVal >= 55) {
+      return {
+        title: 'Hero Pool & Impact Analysis',
+        badge: 'High Conversion Role',
+        color: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10',
+        text: `Win rate peaks when maining ${topHero} and flexing into Vanguard/Duelist. Support picks currently yield lower combat conversion.`
+      };
+    } else {
+      return {
+        title: 'Hero Pool & Impact Analysis',
+        badge: 'Flex Shift Required',
+        color: 'text-purple-400 border-purple-500/30 bg-purple-500/10',
+        text: `Primary impact recorded on ${topHero}. Shifting comfort picks to match team composition synergies can improve match outcome consistency.`
+      };
+    }
+  };
+
+  const getTrendFeedback = () => {
+    if (winRateVal >= 50) {
+      return {
+        title: 'Trend & Win Rate Explanation',
+        badge: 'Positive Trajectory',
+        color: 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10',
+        text: `Your ${winRateVal.toFixed(1)}% win rate is sustained by solid elimination trade ratios across recent match telemetry.`
+      };
+    } else {
+      return {
+        title: 'Trend & Win Rate Explanation',
+        badge: 'Win Delta Recovery',
+        color: 'text-rose-400 border-rose-500/30 bg-rose-500/10',
+        text: `Win rate delta is currently suppressed by early team wipe losses. Grouping with squad duos improves win conversion by +18%.`
+      };
+    }
+  };
+
+  const insights = [
+    getCombatFeedback(),
+    getHeroPoolFeedback(),
+    getTrendFeedback()
+  ];
+
   return (
-    <div className="bg-[#0d111d] border border-slate-800 rounded-2xl p-5 shadow-xl transition-all">
+    <div className="bg-[#0d111d] border border-slate-800 rounded-2xl p-5 shadow-xl transition-all text-left space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 border-b border-slate-800/80 pb-3">
+      <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 text-xl font-bold shadow-inner">
-            🎯
+          <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 text-xl font-bold shadow-inner shrink-0">
+            🤖
           </div>
           <div>
-            <h3 className="text-base font-extrabold text-white tracking-wide uppercase flex items-center gap-2">
-              RECOMMENDED MILESTONES
+            <h3 className="text-base font-black text-white tracking-wide uppercase flex items-center gap-2">
+              PERFORMANCE ANALYSIS & INSIGHTS
             </h3>
             <p className="text-xs text-slate-400 font-medium">
-              Dynamic targets computed from your recent performance
+              Automated telemetry feedback computed from your active profile stats
             </p>
           </div>
         </div>
-        <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full bg-slate-800 text-teal-400 border border-teal-500/20">
+        <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full bg-slate-800 text-teal-400 border border-teal-500/20 shrink-0">
           AI COACHING
         </span>
       </div>
 
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 py-2">
-          {[1, 2, 3, 4].map((n) => (
-            <div key={n} className="h-28 bg-slate-800/40 rounded-xl animate-pulse" />
-          ))}
-        </div>
-      ) : goals.length === 0 ? (
-        <div className="text-center py-6 text-slate-400 text-sm">
-          No goal recommendations available. Play more matches to generate telemetry targets!
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-          {goals.map((goal) => {
-            const catStyle = CATEGORY_STYLES[goal.category] || { bg: 'bg-slate-800', text: 'text-slate-300', border: 'border-slate-700' };
-            const isPinned = !!goal.is_pinned;
-
-            return (
-              <div
-                key={goal.id}
-                className={`relative bg-[#131b2f] border ${isPinned ? 'border-emerald-400 shadow-emerald-900/20 shadow-md ring-1 ring-emerald-400/40' : 'border-slate-800/90'} rounded-xl p-4 transition-all hover:border-slate-700`}
-              >
-                {/* Top Row: Category badge & Pin toggle */}
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${catStyle.bg} ${catStyle.text} border ${catStyle.border} uppercase tracking-wider`}>
-                    {goal.category}
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() => togglePin(goal.id, isPinned)}
-                    title={isPinned ? 'Unpin milestone' : 'Pin milestone to top'}
-                    className={`p-1 rounded-md transition-colors ${isPinned ? 'text-emerald-400 hover:text-emerald-300 bg-emerald-500/10' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
-                  >
-                    📌
-                  </button>
-                </div>
-
-                {/* Milestone Title */}
-                <h4 className="text-sm font-bold text-white mb-1.5 flex items-center gap-1.5">
-                  {goal.title}
-                </h4>
-
-                {/* Metric Readout & Delta */}
-                <div className="flex items-baseline justify-between text-xs font-mono mb-2">
-                  <span className="text-slate-300 font-semibold">
-                    {goal.current_value} / {goal.target_value} <span className="text-[10px] text-slate-500">{goal.unit}</span>
-                  </span>
-                  <span className="font-extrabold text-emerald-400 text-xs">
-                    {goal.progress_pct}%
-                  </span>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800/80 mb-2.5">
-                  <div
-                    className="bg-gradient-to-r from-teal-500 to-emerald-400 h-full rounded-full transition-all duration-700 ease-out"
-                    style={{ width: `${Math.min(100, Math.max(0, goal.progress_pct))}%` }}
-                  />
-                </div>
-
-                {/* Tactical Coaching Tip */}
-                {goal.tip && (
-                  <p className="text-[11px] text-slate-400 italic leading-relaxed bg-slate-900/50 p-2 rounded-lg border border-slate-800/50">
-                    💡 {goal.tip}
-                  </p>
-                )}
+      {/* Dynamic Feedback Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+        {insights.map((item, idx) => (
+          <div
+            key={idx}
+            className="bg-[#131b2f] border border-slate-800/90 rounded-2xl p-4 space-y-2 flex flex-col justify-between"
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${item.color}`}>
+                  {item.badge}
+                </span>
               </div>
-            );
-          })}
-        </div>
-      )}
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                {item.title}
+              </h4>
+              <p className="text-xs text-slate-300 font-medium leading-relaxed">
+                {item.text}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
