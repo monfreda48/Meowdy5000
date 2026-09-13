@@ -248,17 +248,24 @@ async def resolve_player(query: str = Query(..., description="Player display nam
         raise HTTPException(status_code=400, detail="Query parameter is required.")
     return await resolve_player_query(query.strip())
 
-@app.post("/api/worker/tracker/scrape")
-async def scrape_tracker_worker_endpoint(req: ScrapeWorkerRequest):
+@app.api_route("/api/worker/tracker/scrape", methods=["GET", "POST"])
+async def scrape_tracker_worker_endpoint(
+    req: Optional[ScrapeWorkerRequest] = None,
+    username: Optional[str] = Query(None),
+    force_refresh: Optional[bool] = Query(False)
+):
     """
     Internal worker endpoint for containerized Tracker.gg Cloudflare TLS-bypass scraping.
     """
-    if not req.username or not req.username.strip():
-        raise HTTPException(status_code=400, detail="Username is required.")
+    target_username = (req.username if req else None) or username
+    target_force = (req.force_refresh if req else None) if req and req.force_refresh is not None else force_refresh
+
+    if not target_username or not target_username.strip():
+        raise HTTPException(status_code=400, detail="Username parameter is required.")
     try:
         from backend.workers.tracker_worker import TrackerScraperWorker
         worker = TrackerScraperWorker()
-        data = await worker.scrape_player(req.username, force_refresh=req.force_refresh)
+        data = await worker.scrape_player(target_username.strip(), force_refresh=bool(target_force))
         return data
     except Exception as e:
         logger.error(f"Tracker worker endpoint exception: {e}")
