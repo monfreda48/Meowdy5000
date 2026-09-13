@@ -265,18 +265,15 @@ from backend.adapters.rivalstracker import fetch_rivalstracker_profile
 from backend.adapters.rivalsmeta import fetch_rivalsmeta_profile
 from backend.adapters.trackergg import fetch_trackergg_profile
 from backend.services.transformer import TelemetryTransformer
+from backend.services.resolver import resolve_canonical_uid
 
 async def get_player_profile(identifier: str, force_refresh: bool = False) -> Dict[str, Any]:
     ident = str(identifier).strip()
     if not ident:
         return {"success": False, "error": "Empty player identifier"}
 
-    # 1. Resolve UID if non-numeric
-    resolved_uid = ident
-    if not re.match(r'^\d{8,12}$', ident):
-        candidates = await resolve_player_identity(ident)
-        if candidates and candidates[0].get("uid"):
-            resolved_uid = candidates[0]["uid"]
+    # 1. Resolve UID dynamically via URL redirect resolver
+    resolved_uid = await resolve_canonical_uid(ident)
 
     # 2. Check local database cache
     if not force_refresh:
