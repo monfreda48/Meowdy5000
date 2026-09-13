@@ -4729,6 +4729,8 @@ const DEFAULT_SEASON_NUM = 19;
                     />
                   )}
                   <HeroMasteryPanel
+                    heroes={stats?.current?.top_heroes || stats?.current?.topHeroes || stats?.top_heroes || []}
+                    season={stats?.current?.season || "Season 10"}
                     uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
                     API_BASE_URL={getApiUrl()}
                   />
