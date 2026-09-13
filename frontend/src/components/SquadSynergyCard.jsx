@@ -7,8 +7,8 @@ export default function SquadSynergyCard({ uid, playerData, getApiUrl }) {
   const [sortBy, setSortBy] = useState('win_rate'); // 'win_rate' | 'matches'
 
   useEffect(() => {
-    // 1. If playerData has squad_synergy, use it immediately
-    const directSynergy = playerData?.squad_synergy || playerData?.current?.squad_synergy;
+    // 1. If playerData has squad_synergy or best_teammates, use it immediately
+    const directSynergy = playerData?.squad_synergy || playerData?.current?.squad_synergy || playerData?.best_teammates || playerData?.current?.best_teammates;
     if (Array.isArray(directSynergy) && directSynergy.length > 0) {
       setSynergyData(directSynergy);
       setLoading(false);
