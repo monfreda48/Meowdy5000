@@ -28,6 +28,9 @@ import AccountHealthPanel from './components/AccountHealthPanel';
 import GoalRecommendationsCard from './components/GoalRecommendationsCard';
 import { checkForAppUpdate } from './utils/updater';
 import UpdateModal from './components/UpdateModal';
+import PrivateProfileBanner from './components/PrivateProfileBanner';
+import PlayerProfile from './pages/PlayerProfile';
+
 
 const triggerHaptic = async (type = 'light') => {
   try {
@@ -1665,9 +1668,9 @@ export default function App() {
           season: activeProfile.season || activeProfile.seasonName || season || 'Season 1'
         },
         stats: {
-          kda: activeProfile.kda || activeProfile.kda_ratio || activeProfile.kd || '0.00',
+          kda: activeProfile.kda || activeProfile.kdRatio || activeProfile.kda_ratio || activeProfile.kd || '0.00',
           win_rate: activeProfile.win_rate || activeProfile.winRate || activeProfile.winrate || '0%',
-          total_matches: activeProfile.total_matches ?? activeProfile.matches_played ?? activeProfile.totalMatches ?? activeProfile.matches ?? 0,
+          total_matches: activeProfile.total_matches ?? activeProfile.matches_played ?? activeProfile.matchesPlayed ?? activeProfile.totalMatches ?? activeProfile.matches ?? 0,
           time_played: activeProfile.time_played || activeProfile.timePlayed || activeProfile.playtime || '0h'
         },
         heroes: heroesArr,
@@ -3006,7 +3009,7 @@ const DEFAULT_SEASON_NUM = 19;
     fetchStats(null, activeQuery, season, selectedUid, selectedPlatform);
   };
 
-  const fetchStats = async (e, overrideQuery = null, overrideSeason = null, overrideUid = null, overridePlatform = null) => {
+  const fetchStats = async (e, overrideQuery = null, overrideSeason = null, overrideUid = null, overridePlatform = null, forceRefresh = false) => {
     if (e) e.preventDefault();
     const activeQuery = overrideQuery !== null ? overrideQuery : query;
     const activeSeason = overrideSeason !== null ? overrideSeason : season;
@@ -3049,7 +3052,7 @@ const DEFAULT_SEASON_NUM = 19;
 
     try {
       let data = null;
-      if (isClaimedMatch && claimedProfile.cachedStats) {
+      if (isClaimedMatch && claimedProfile.cachedStats && !forceRefresh) {
         console.log(`[ClaimedProfile] Instant loading for claimed user '${activeQuery}' using saved URL (${claimedProfile.savedUrl})`);
         data = {
           current: {
@@ -3066,6 +3069,7 @@ const DEFAULT_SEASON_NUM = 19;
           let apiUrl = getApiUrl(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`);
           if (overridePlatform) apiUrl += `&platform=${encodeURIComponent(overridePlatform)}`;
           if (overrideUid) apiUrl += `&uid=${encodeURIComponent(overrideUid)}`;
+          if (forceRefresh) apiUrl += `&force=true`;
           const response = await fetch(
             apiUrl,
             {
@@ -3799,7 +3803,16 @@ const DEFAULT_SEASON_NUM = 19;
               </div>
             </div>
 
-            <div className="space-y-6 animate-in fade-in duration-300">
+            {Boolean(stats?.current?.is_private === true || stats?.current?.error_code === 'PROFILE_PRIVATE' || stats?.is_private === true) ? (
+              <PrivateProfileBanner
+                username={stats?.current?.username || query}
+                loading={loading}
+                onRecheck={() => fetchStats(null, query, season, null, selectedPlatform, true)}
+                onOpenUidGuide={() => setShowFindUIDModal(true)}
+              />
+            ) : (
+              <div className="space-y-6 animate-in fade-in duration-300">
+
 
 
 
@@ -4673,6 +4686,7 @@ const DEFAULT_SEASON_NUM = 19;
                   />
                 </div>
               </div>
+            )}
 
           </div>
         )}

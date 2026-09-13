@@ -38,4 +38,10 @@ frontend/android/.idea/
 scratch/
 /android
 
+# Signing Credentials & Keystores
+*.jks
+*.keystore
+keystore.properties
+
+
 

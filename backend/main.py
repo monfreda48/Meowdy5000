@@ -327,6 +327,12 @@ async def get_player_synergy_endpoint(uid: str, min_matches: int = Query(2)):
 async def health_check():
     return {"status": "ok", "service": "Meowdy 5000 Rivals Tracker API", "version": "2.0.0"}
 
+@app.get("/api/admin/sources")
+async def get_admin_sources_health(force: bool = Query(False)):
+    from backend.services.health_monitor import get_health_status
+    return await get_health_status(force_refresh=force)
+
+
 @app.get("/api/player/resolve")
 async def resolve_player(query: str = Query(..., description="Player display name or numeric UID")):
     """

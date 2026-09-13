@@ -6,6 +6,8 @@ from typing import Dict, Any, Optional
 
 from backend.workers.tracker_worker import TrackerScraperWorker
 from backend.adapters.rivalstracker import RivalsTrackerAdapter
+from backend.services.tracker import normalize_private_profile_response, is_private_profile_data
+
 
 logger = logging.getLogger("ingestion_orchestrator")
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

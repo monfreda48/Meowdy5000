@@ -494,6 +494,19 @@ def worker_tracker_scrape():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/admin/sources', methods=['GET'])
+def get_admin_sources():
+    import asyncio
+    from backend.services.health_monitor import get_health_status
+    force = request.args.get('force', 'false').lower() == 'true'
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    res = loop.run_until_complete(get_health_status(force_refresh=force))
+    return jsonify(res)
+
 @app.route('/api/stats')
 def get_stats():
     query = request.args.get('query', '')
