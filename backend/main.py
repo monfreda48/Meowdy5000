@@ -196,48 +196,62 @@ async def get_latest_app_version(request: Request):
         "changelog": "Initial release."
     }
 
-@app.get("/api/check-update")
-async def check_update_alias(request: Request):
-    return await get_latest_app_version(request)
+@app.get("/api/app/version")
+@app.get("/api/version")
+async def get_app_version_info(request: Request):
+    """
+    Exposes in-app update metadata: version_name, version_code, min_supported_version,
+    download_url, release_notes, and release timestamp.
+    """
+    base_url = str(request.base_url).rstrip("/")
+    download_url = f"{base_url}/download/m5-tracker-latest.apk"
+    if "synology.me" in base_url or "localhost" in base_url:
+        download_url = "https://meowdy5000.synology.me/download/m5-tracker-latest.apk"
 
-@app.post("/api/report-error")
-async def report_error(payload: dict = Body(None)):
-    return {"status": "received"}
+    return {
+        "version_name": "1.0.32",
+        "version_code": 32,
+        "min_supported_version": "1.0.0",
+        "download_url": download_url,
+        "release_notes": [
+            "Squad Synergy matrix & map telemetry breakdown",
+            "Hero Progression Mastery & Account Conduct Logging",
+            "Global Color Scheme Engine with instant anti-flicker theme switching",
+            "Dynamic Goal Recommendations Engine with milestone pinning",
+            "RivalsTracker.com ingestion failover pipeline"
+        ],
+        "released_at": "2026-09-13T12:00:00Z"
+    }
+
+@app.get("/download/m5-tracker-latest.apk")
+@app.get("/download/m5-stat-tracker.apk")
+async def serve_latest_apk_binary():
+    """
+    Direct self-hosted APK downloader serving the latest compiled Android binary.
+    """
+    possible_paths = [
+        "/app/dist/m5-tracker-latest.apk",
+        "/app/dist/m5-stat-tracker.apk",
+        os.path.join(os.path.dirname(__file__), "dist", "m5-tracker-latest.apk"),
+        os.path.join(os.path.dirname(__file__), "..", "app-debug.apk"),
+        os.path.join(os.path.dirname(__file__), "..", "frontend", "android", "app", "build", "outputs", "apk", "debug", "app-debug.apk")
+    ]
+    for p in possible_paths:
+        if os.path.exists(p) and os.path.getsize(p) > 1000:
+            return FileResponse(
+                path=p,
+                filename="m5-stat-tracker.apk",
+                media_type="application/vnd.android.package-archive",
+                headers={
+                    "Cache-Control": "no-cache, no-store, must-revalidate",
+                    "Content-Disposition": "attachment; filename=m5-stat-tracker.apk"
+                }
+            )
+    raise HTTPException(status_code=404, detail="APK binary file not found on server.")
 
 @app.get("/api/app/download/latest")
 async def download_latest_apk():
-    release_data = await fetch_github_release()
-    if not release_data and not os.path.exists(LATEST_APK_PATH):
-        raise HTTPException(status_code=404, detail="No APK available")
-
-    if release_data:
-        assets = release_data.get("assets", [])
-        apk_asset = next((a for a in assets if a["name"].endswith(".apk")), None)
-        if not apk_asset:
-            raise HTTPException(status_code=404, detail="No APK asset found in latest GitHub release")
-
-        # Download APK from GitHub if not already cached
-        asset_download_url = apk_asset.get("browser_download_url")
-        headers = {"User-Agent": "FastAPI-Updater"}
-        if GITHUB_TOKEN:
-            # Private repo asset API endpoint requires octet-stream header
-            asset_download_url = apk_asset.get("url")
-            headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
-            headers["Accept"] = "application/octet-stream"
-
-        async with httpx.AsyncClient(follow_redirects=True, timeout=60.0) as client:
-            res = await client.get(asset_download_url, headers=headers)
-            if res.status_code == 200:
-                with open(LATEST_APK_PATH, "wb") as f:
-                    f.write(res.content)
-
-    if os.path.exists(LATEST_APK_PATH):
-        return FileResponse(
-            path=LATEST_APK_PATH,
-            media_type="application/vnd.android.package-archive",
-            filename="Meowdy5000_update.apk"
-        )
-    raise HTTPException(status_code=404, detail="APK failed to download from GitHub")
+    return await serve_latest_apk_binary()
 
 # API Endpoints
 

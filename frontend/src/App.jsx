@@ -26,6 +26,8 @@ import PlatformIcon from './components/PlatformIcon';
 import HeroMasteryPanel from './components/HeroMasteryPanel';
 import AccountHealthPanel from './components/AccountHealthPanel';
 import GoalRecommendationsCard from './components/GoalRecommendationsCard';
+import { checkForAppUpdate } from './utils/updater';
+import UpdateModal from './components/UpdateModal';
 
 const triggerHaptic = async (type = 'light') => {
   try {
@@ -584,6 +586,28 @@ export default function App() {
   const [showUidGuideModal, setShowUidGuideModal] = useState(false);
   const [showBugReportModal, setShowBugReportModal] = useState(false);
   const [showFeatureSuggestionModal, setShowFeatureSuggestionModal] = useState(false);
+  const [apkUpdateInfo, setApkUpdateInfo] = useState(null);
+  const [showApkUpdateModal, setShowApkUpdateModal] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function checkVersion() {
+      try {
+        const info = await checkForAppUpdate(getApiUrl());
+        if (isMounted && info && info.updateAvailable) {
+          setApkUpdateInfo(info);
+          setShowApkUpdateModal(true);
+        }
+      } catch (e) {
+        console.warn('In-app update check failed:', e);
+      }
+    }
+    const timer = setTimeout(checkVersion, 2500);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, []);
 
   // 3-Site Profile Verification & Confirmation State
   const [searchConfirmationData, setSearchConfirmationData] = useState(null);
@@ -5443,6 +5467,32 @@ const DEFAULT_SEASON_NUM = 19;
                 {/* Drawer Group 0.58: Daily Tracking Reminder */}
                 <NotificationSettings showNativeToast={showNativeToast} />
 
+                {/* Manual In-App Update Checker Button */}
+                <div className="bg-[#131b2f] border border-slate-700/60 p-3.5 rounded-2xl flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span>🚀</span> In-App Version Checker
+                    </h4>
+                    <p className="text-[10px] text-slate-400">v{pkg?.version || '1.0.32'} (Build 32)</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      showNativeToast('Checking for latest APK build...');
+                      const info = await checkForAppUpdate(getApiUrl());
+                      if (info && info.updateAvailable) {
+                        setApkUpdateInfo(info);
+                        setShowApkUpdateModal(true);
+                      } else {
+                        showNativeToast('You are on the latest version!');
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                  >
+                    Check Update
+                  </button>
+                </div>
+
                 {/* Drawer Group 0.6: App Color Scheme & Themes */}
                 <div className="space-y-2.5 bg-[#131b2f] border border-slate-700/60 p-3.5 rounded-2xl">
                   <div className="flex items-center justify-between">
@@ -6740,6 +6790,15 @@ const DEFAULT_SEASON_NUM = 19;
         appVersion={pkg?.version || '1.0.32'}
         getApiUrl={getApiUrl}
       />
+
+      {/* In-App APK Update Modal */}
+      {showApkUpdateModal && apkUpdateInfo && (
+        <UpdateModal
+          updateInfo={apkUpdateInfo}
+          onClose={() => setShowApkUpdateModal(false)}
+          showNativeToast={showNativeToast}
+        />
+      )}
 
       </main>
     </div>

@@ -198,6 +198,40 @@ def get_hero_leaderboards():
         "leaderboards": []
     })
 
+@app.route('/api/app/version', methods=['GET'])
+@app.route('/api/version', methods=['GET'])
+def get_app_version_flask():
+    return jsonify({
+        "version_name": "1.0.32",
+        "version_code": 32,
+        "min_supported_version": "1.0.0",
+        "download_url": "https://meowdy5000.synology.me/download/m5-tracker-latest.apk",
+        "release_notes": [
+            "Squad Synergy matrix & map telemetry breakdown",
+            "Hero Progression Mastery & Account Conduct Logging",
+            "Global Color Scheme Engine with instant anti-flicker theme switching",
+            "Dynamic Goal Recommendations Engine with milestone pinning",
+            "RivalsTracker.com ingestion failover pipeline"
+        ],
+        "released_at": "2026-09-13T12:00:00Z"
+    })
+
+@app.route('/download/m5-tracker-latest.apk', methods=['GET'])
+@app.route('/download/m5-stat-tracker.apk', methods=['GET'])
+def download_latest_apk_flask():
+    from flask import send_file
+    possible_paths = [
+        "/app/dist/m5-tracker-latest.apk",
+        "/app/dist/m5-stat-tracker.apk",
+        os.path.join(BASE_DIR, "dist", "m5-tracker-latest.apk"),
+        os.path.join(BASE_DIR, "..", "app-debug.apk"),
+        os.path.join(BASE_DIR, "..", "frontend", "android", "app", "build", "outputs", "apk", "debug", "app-debug.apk")
+    ]
+    for p in possible_paths:
+        if os.path.exists(p) and os.path.getsize(p) > 1000:
+            return send_file(p, mimetype="application/vnd.android.package-archive", as_attachment=True, download_name="m5-stat-tracker.apk")
+    return jsonify({"error": "APK binary file not found on server."}), 404
+
 @app.route('/api/meta/season', methods=['GET'])
 def get_meta_season():
     refresh = request.args.get('refresh', 'false').lower() == 'true'
