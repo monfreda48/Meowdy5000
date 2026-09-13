@@ -14,6 +14,8 @@ import { ScreenOrientation } from '@capacitor/screen-orientation';
 import pkg from '../package.json';
 import SeasonHeader from './components/SeasonHeader';
 import FindUIDModal from './components/FindUIDModal';
+import SquadSynergyCard from './components/SquadSynergyCard';
+import MapBreakdownGrid from './components/MapBreakdownGrid';
 
 const triggerHaptic = async (type = 'light') => {
   try {
@@ -4598,6 +4600,18 @@ const DEFAULT_SEASON_NUM = 19;
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Squad Synergy & Map Performance Analytical Panels */}
+                <div className="mt-4 space-y-4">
+                  <SquadSynergyCard
+                    uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
+                    getApiUrl={getApiUrl}
+                  />
+                  <MapBreakdownGrid
+                    uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
+                    getApiUrl={getApiUrl}
+                  />
                 </div>
               </div>
 
