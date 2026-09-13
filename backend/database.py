@@ -137,6 +137,18 @@ class AccountConduct(Base):
     last_incident_date = Column(String(50), nullable=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+class GlobalTierList(Base):
+    __tablename__ = 'global_tier_lists'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    hero_name = Column(String(100), nullable=False)
+    role = Column(String(50), nullable=False)
+    tier = Column(String(10), nullable=False)
+    win_rate = Column(Text, default=0.0)
+    pick_rate = Column(Text, default=0.0)
+    source = Column(String(100), default='rivalstracker.com')
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -245,6 +257,19 @@ async def init_db():
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS global_tier_lists (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                hero_name TEXT NOT NULL,
+                role TEXT NOT NULL,
+                tier TEXT NOT NULL,
+                win_rate REAL,
+                pick_rate REAL,
+                source TEXT DEFAULT 'rivalstracker.com',
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(hero_name, source)
+            );
+        """))
 
         for tbl in ['players', 'tracked_players']:
             try:
@@ -268,6 +293,7 @@ async def init_db():
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_maps_uid ON player_maps(player_uid);"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_synergy_uid ON player_synergy(player_uid);"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_mastery_uid ON hero_mastery(player_uid);"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_tier_hero ON global_tier_lists(hero_name);"))
 
 def migrate_sqlite_db_file(db_filename):
     import sqlite3
@@ -366,6 +392,19 @@ def migrate_sqlite_db_file(db_filename):
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS global_tier_lists (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                hero_name TEXT NOT NULL,
+                role TEXT NOT NULL,
+                tier TEXT NOT NULL,
+                win_rate REAL,
+                pick_rate REAL,
+                source TEXT DEFAULT 'rivalstracker.com',
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(hero_name, source)
+            );
+        """)
         for tbl in ['players', 'tracked_players']:
             try:
                 cur.execute(f"PRAGMA table_info({tbl});")
@@ -385,6 +424,7 @@ def migrate_sqlite_db_file(db_filename):
         cur.execute("CREATE INDEX IF NOT EXISTS idx_maps_uid ON player_maps(player_uid);")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_synergy_uid ON player_synergy(player_uid);")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_mastery_uid ON hero_mastery(player_uid);")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_tier_hero ON global_tier_lists(hero_name);")
         conn.commit()
         conn.close()
     except Exception:
@@ -593,5 +633,59 @@ def get_account_conduct_from_db(player_uid: str, db_filename: str = "rivals_trac
     except Exception as e:
         print(f"[DB Error] get_account_conduct_from_db failed for {player_uid}: {e}")
     return default_record
+
+def upsert_global_tier_list(hero_name: str, role: str, tier: str, win_rate: float, pick_rate: float, source: str = "rivalstracker.com", db_filename: str = "rivals_tracker.db"):
+    import sqlite3
+    db_path = os.path.join(BASE_DIR, db_filename)
+    try:
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO global_tier_lists (hero_name, role, tier, win_rate, pick_rate, source, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(hero_name, source) DO UPDATE SET
+                role=excluded.role,
+                tier=excluded.tier,
+                win_rate=excluded.win_rate,
+                pick_rate=excluded.pick_rate,
+                updated_at=CURRENT_TIMESTAMP;
+        """, (hero_name, role, tier, win_rate, pick_rate, source))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[DB Error] upsert_global_tier_list failed for {hero_name}: {e}")
+
+def get_global_tier_lists_from_db(source: str = "rivalstracker.com", db_filename: str = "rivals_tracker.db") -> List[Dict[str, Any]]:
+    import sqlite3
+    db_path = os.path.join(BASE_DIR, db_filename)
+    results = []
+    if not os.path.exists(db_path):
+        return results
+    try:
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT hero_name, role, tier, win_rate, pick_rate, source, updated_at
+            FROM global_tier_lists
+            WHERE source = ?
+            ORDER BY 
+              CASE tier 
+                WHEN 'S+' THEN 1 
+                WHEN 'S' THEN 2 
+                WHEN 'A' THEN 3 
+                WHEN 'B' THEN 4 
+                WHEN 'C' THEN 5 
+                ELSE 6 
+              END, win_rate DESC;
+        """, (source,))
+        rows = cur.fetchall()
+        for r in rows:
+            results.append(dict(r))
+        conn.close()
+    except Exception as e:
+        print(f"[DB Error] get_global_tier_lists_from_db failed for {source}: {e}")
+    return results
+
 
 

@@ -246,6 +246,42 @@ async def get_rivalsmeta_season_endpoint(refresh: bool = Query(False)):
     from backend.adapters.rivalsmeta import fetch_rivalsmeta_season
     return await fetch_rivalsmeta_season(force_refresh=refresh)
 
+@app.get("/api/meta/tier-list")
+async def get_meta_tier_list_endpoint(source: str = Query("rivalstracker", description="Source provider"), refresh: bool = Query(False)):
+    """
+    Returns JSON list of global hero tier lists grouped by tier with win rates and role tags.
+    Enforces 24-hour cache TTL in SQLite to avoid continuous external requests.
+    """
+    from backend.database import get_global_tier_lists_from_db
+    from backend.adapters.rivalstracker import RivalsTrackerAdapter
+    
+    src_key = "rivalstracker.com" if "rivalstracker" in source.lower() else source
+    records = []
+    if not refresh:
+        records = get_global_tier_lists_from_db(source=src_key)
+    
+    if not records:
+        adapter = RivalsTrackerAdapter()
+        res = await adapter.scrape_tier_list()
+        records = get_global_tier_lists_from_db(source=src_key)
+        if not records and res.get("data", {}).get("tier_list"):
+            records = res["data"]["tier_list"]
+            
+    return {
+        "source": src_key,
+        "count": len(records),
+        "tier_list": records
+    }
+
+@app.get("/api/player/{uid}/stats")
+async def get_player_stats_endpoint(uid: str, platform: Optional[str] = Query("pc")):
+    """
+    Returns player stats using the 3-tier fallback pipeline (Tracker.gg -> RivalsTracker.com -> SQLite cache).
+    Includes source_attribution in response payload.
+    """
+    from backend.services.ingestion import get_player_rank_with_fallback
+    return await get_player_rank_with_fallback(uid, platform)
+
 @app.get("/api/player/{uid}/maps")
 async def get_player_maps_endpoint(uid: str):
     """

@@ -221,6 +221,56 @@ def get_meta_season():
             "error": str(e)
         })
 
+@app.route('/api/meta/tier-list', methods=['GET'])
+def get_meta_tier_list_flask():
+    try:
+        import asyncio
+        from backend.database import get_global_tier_lists_from_db
+        from backend.adapters.rivalstracker import RivalsTrackerAdapter
+        source = request.args.get('source', 'rivalstracker')
+        refresh = request.args.get('refresh', 'false').lower() == 'true'
+        src_key = "rivalstracker.com" if "rivalstracker" in source.lower() else source
+        
+        records = []
+        if not refresh:
+            records = get_global_tier_lists_from_db(source=src_key)
+        
+        if not records:
+            adapter = RivalsTrackerAdapter()
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            res = loop.run_until_complete(adapter.scrape_tier_list())
+            records = get_global_tier_lists_from_db(source=src_key)
+            if not records and res.get("data", {}).get("tier_list"):
+                records = res["data"]["tier_list"]
+                
+        return jsonify({
+            "source": src_key,
+            "count": len(records),
+            "tier_list": records
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/player/<uid>/stats', methods=['GET'])
+def get_player_stats_flask(uid):
+    try:
+        import asyncio
+        from backend.services.ingestion import get_player_rank_with_fallback
+        platform = request.args.get('platform', 'pc')
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        data = loop.run_until_complete(get_player_rank_with_fallback(uid, platform))
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/player/<uid>/maps', methods=['GET'])
 def get_player_maps_flask(uid):
     try:
