@@ -811,66 +811,41 @@ fun DashboardScreen(
                             HorizontalDivider()
                             Spacer(Modifier.height(12.dp))
 
-                            // 2. Snapshot Tracking Mode
-                            Text("⚡ SNAPSHOT TRACKING MODE", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                            // 3. Tracking Frequency
+                            Text("⚡ TRACKING FREQUENCY", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.height(8.dp))
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+                                Column(Modifier.padding(12.dp)) {
+                                    Text(
+                                        text = "Select snapshot frequency for your claimed profile.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+
+                                    val options = listOf("12 hrs", "24 hrs", "1 week", "Off")
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
-                                        Column(Modifier.weight(1f)) {
-                                            Text("Auto Snapshot Tracking", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                                            Text("Record stat snapshots on lookups", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-                                        }
-                                        Switch(
-                                            checked = autoSnapshotEnabled,
-                                            onCheckedChange = {
-                                                autoSnapshotEnabled = it
-                                                prefs.edit().putBoolean("auto_snapshot_enabled", it).apply()
-                                            }
-                                        )
-                                    }
-
-                                    if (autoSnapshotEnabled) {
-                                        Spacer(Modifier.height(10.dp))
-                                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                                        Spacer(Modifier.height(8.dp))
-
-                                        Text(
-                                            text = "Snapshot Data Increment",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                        Spacer(Modifier.height(6.dp))
-
-                                        val intervals = listOf("12hr" to "12 Hours", "24hr" to "24 Hours", "1w" to "1 Week")
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            intervals.forEach { (key, _) ->
-                                                val isSelected = snapshotInterval == key
-                                                FilterChip(
-                                                    selected = isSelected,
-                                                    onClick = {
-                                                        snapshotInterval = key
-                                                        prefs.edit().putString("snapshot_interval", key).apply()
-                                                    },
-                                                    label = { Text(key, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
-                                                    modifier = Modifier.weight(1f),
-                                                    colors = FilterChipDefaults.filterChipColors(
-                                                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                                        selectedLabelColor = Color.Black
-                                                    )
+                                        options.forEach { opt ->
+                                            val isSelected = snapshotInterval == opt
+                                            FilterChip(
+                                                selected = isSelected,
+                                                onClick = {
+                                                    snapshotInterval = opt
+                                                    prefs.edit().putString("snapshot_interval", opt).apply()
+                                                },
+                                                label = { Text(opt, fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
+                                                modifier = Modifier.weight(1f),
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                                    selectedLabelColor = Color.Black
                                                 )
-                                            }
+                                            )
                                         }
                                     }
                                 }
