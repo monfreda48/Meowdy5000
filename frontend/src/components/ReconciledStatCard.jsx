@@ -38,7 +38,7 @@ export default function ReconciledStatCard({ label, statObj, icon: Icon, iconEmo
       {has_divergence && isExpanded && (
         <div className="mt-3 pt-3 border-t border-slate-800 flex flex-col gap-1.5 text-xs animate-in fade-in duration-200">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Source Telemetry (tap to select):</span>
-          <div className={`grid ${sourceKeys.length >= 3 ? 'grid-cols-3' : 'grid-cols-2'} gap-2 mt-1`}>
+          <div className={`grid ${sourceKeys.length >= 4 ? 'grid-cols-2 sm:grid-cols-4' : (sourceKeys.length >= 3 ? 'grid-cols-3' : 'grid-cols-2')} gap-2 mt-1`}>
             {sourceKeys.map((src) => (
               <button
                 key={src}

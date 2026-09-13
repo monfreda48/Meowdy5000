@@ -190,20 +190,16 @@ def update_player_platform(uid: str, platform_input: str) -> bool:
                 logger.debug(f"[aggregator] Platform update error in {db_path}: {e}")
     return updated_any
 
-def reconcile_metric(val_rd, val_rt, val_rm=None, label=""):
-    sources = {}
-    if val_rd is not None and str(val_rd).strip() != "":
-        sources["RivalsData"] = val_rd
-    if val_rt is not None and str(val_rt).strip() != "":
-        sources["RivalsTracker"] = val_rt
-    if val_rm is not None and str(val_rm).strip() != "":
-        sources["RivalsMeta"] = val_rm
+def reconcile_metric(**sources):
+    clean_sources = {k: v for k, v in sources.items() if v is not None and v != 0 and str(v).strip() != ""}
+    if not clean_sources:
+        return {"value": "--", "has_divergence": False, "sources": {}}
 
-    vals = list(sources.values())
+    values = list(clean_sources.values())
     has_divergence = False
-    if len(vals) > 1:
-        first = vals[0]
-        for v in vals[1:]:
+    if len(values) > 1:
+        first = values[0]
+        for v in values[1:]:
             try:
                 num1 = float(re.sub(r'[^0-9.]', '', str(first)))
                 num2 = float(re.sub(r'[^0-9.]', '', str(v)))
@@ -215,26 +211,59 @@ def reconcile_metric(val_rd, val_rt, val_rm=None, label=""):
                     has_divergence = True
                     break
 
+    primary_val = clean_sources.get("Tracker.gg") or clean_sources.get("RivalsData") or values[0]
+
     return {
-        "value": val_rd if val_rd is not None else (val_rt if val_rt is not None else val_rm),
+        "value": primary_val,
         "has_divergence": has_divergence,
-        "sources": sources
+        "sources": clean_sources
     }
 
-def build_reconciled_stats(rd_data: Dict[str, Any], rt_data: Optional[Dict[str, Any]] = None, rm_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def build_reconciled_stats(
+    rd_data: Dict[str, Any],
+    rt_data: Optional[Dict[str, Any]] = None,
+    rm_data: Optional[Dict[str, Any]] = None,
+    tgg_data: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     curr = rd_data.get("current") or {}
     rt = rt_data or {}
     rm = rm_data or {}
+    tgg = tgg_data or {}
     return {
-        "rank": reconcile_metric(curr.get("rank"), rt.get("rank"), rm.get("rank")),
-        "win_rate": reconcile_metric(curr.get("win_rate"), rt.get("win_rate"), rm.get("win_rate")),
-        "total_matches": reconcile_metric(curr.get("total_matches"), rt.get("total_matches")),
-        "kda": reconcile_metric(curr.get("kda"), rt.get("kda"), rm.get("kda")),
-        "rank_points": reconcile_metric(curr.get("rank_points", 0), rt.get("score", 0), rm.get("rank_score", 0))
+        "rank": reconcile_metric(
+            TrackerGG=tgg.get("rank"),
+            RivalsData=curr.get("rank"),
+            RivalsTracker=rt.get("rank"),
+            RivalsMeta=rm.get("rank")
+        ),
+        "win_rate": reconcile_metric(
+            RivalsData=curr.get("win_rate"),
+            RivalsTracker=rt.get("win_rate"),
+            RivalsMeta=rm.get("win_rate"),
+            TrackerGG=tgg.get("win_rate")
+        ),
+        "total_matches": reconcile_metric(
+            RivalsData=curr.get("total_matches"),
+            RivalsTracker=rt.get("total_matches"),
+            TrackerGG=tgg.get("total_matches")
+        ),
+        "kda": reconcile_metric(
+            RivalsData=curr.get("kda"),
+            RivalsTracker=rt.get("kda"),
+            RivalsMeta=rm.get("kda"),
+            TrackerGG=tgg.get("kda")
+        ),
+        "rank_points": reconcile_metric(
+            TrackerGG=tgg.get("rank_score"),
+            RivalsData=curr.get("rank_points"),
+            RivalsTracker=rt.get("score"),
+            RivalsMeta=rm.get("rank_score")
+        )
     }
 
 from backend.adapters.rivalstracker import fetch_rivalstracker_profile
 from backend.adapters.rivalsmeta import fetch_rivalsmeta_profile
+from backend.adapters.trackergg import fetch_trackergg_profile
 
 async def get_player_profile(identifier: str, force_refresh: bool = False) -> Dict[str, Any]:
     ident = str(identifier).strip()
@@ -253,7 +282,7 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
         cached = get_cached_player_profile(resolved_uid)
         if cached and cached.get("current", {}).get("scraped_at"):
             plat = cached.get("platform") or cached.get("current", {}).get("platform", "pc")
-            reconciled = build_reconciled_stats(cached, cached.get("rivalstracker_stats"), cached.get("rivalsmeta_stats"))
+            reconciled = build_reconciled_stats(cached, cached.get("rivalstracker_stats"), cached.get("rivalsmeta_stats"), cached.get("trackergg_stats"))
             return {
                 "success": True,
                 "data": cached,
@@ -267,11 +296,12 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
                 "scraped_at": cached.get("current", {}).get("scraped_at")
             }
 
-    # 3. Live telemetry scrape from RivalsData, RivalsTracker & RivalsMeta
+    # 3. Live telemetry scrape from RivalsData, RivalsTracker, RivalsMeta & Tracker.gg
     try:
         data = await fetch_rivalsdata_profile(resolved_uid)
         rt_data = await fetch_rivalstracker_profile(resolved_uid)
         rm_data = await fetch_rivalsmeta_profile(resolved_uid)
+        tgg_data = await fetch_trackergg_profile(resolved_uid)
 
         if rt_data:
             data["rivalstracker_stats"] = {
@@ -309,7 +339,19 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
                 if "current" in data:
                     data["current"]["platform"] = rm_data["platform"]
 
-        reconciled = build_reconciled_stats(data, rt_data, rm_data)
+        if tgg_data:
+            data["trackergg_stats"] = {
+                "rank": tgg_data.get("rank", "Unranked"),
+                "rank_score": tgg_data.get("rank_score", 0),
+                "win_rate": tgg_data.get("win_rate"),
+                "kda": tgg_data.get("kda"),
+                "wins": tgg_data.get("wins", 0),
+                "losses": tgg_data.get("losses", 0),
+                "total_matches": tgg_data.get("total_matches", 0),
+                "top_hero": tgg_data.get("top_hero")
+            }
+
+        reconciled = build_reconciled_stats(data, rt_data, rm_data, tgg_data)
         data["reconciled_stats"] = reconciled
 
         upsert_player_profile(data)
