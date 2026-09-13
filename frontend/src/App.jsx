@@ -1041,14 +1041,45 @@ export default function App() {
     return unit && !String(fallback).endsWith(unit) && fallback !== 'N/A' ? `${fallback}${unit}` : fallback;
   };
 
+  const getSourceVal = (sources, siteName) => {
+    if (!sources || typeof sources !== 'object') return null;
+    const target = siteName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    for (const [k, v] of Object.entries(sources)) {
+      const cleanK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (cleanK === target || cleanK.includes(target) || target.includes(cleanK)) {
+        return v !== null && v !== undefined && v !== '' ? String(v) : null;
+      }
+    }
+    return null;
+  };
+
   const render3SiteBreakdown = (metricKey) => {
     if (!expandedMetrics[metricKey]) return null;
     const bd = stats?.statBreakdown?.[metricKey] || {};
+    const recStats = stats?.reconciled_stats || stats?.data?.reconciled_stats || {};
+
+    let normKey = metricKey;
+    if (metricKey === 'winRate') normKey = 'win_rate';
+    if (metricKey === 'kdRatio') normKey = 'kda';
+    if (metricKey === 'heroDamage') normKey = 'damage_10m';
+    if (metricKey === 'healing') normKey = 'healing_10m';
+    if (metricKey === 'damageBlocked') normKey = 'dmg_blocked_10m';
+    if (metricKey === 'matchesPlayed') normKey = 'total_matches';
+
+    const sources = recStats[normKey]?.sources || {};
+
+    const getValForSite = (siteKey, siteName, fallbackVal) => {
+      const srcVal = getSourceVal(sources, siteName);
+      if (srcVal) return srcVal;
+      if (bd[siteKey]) return formatStatDisplayValue(metricKey, bd[siteKey]);
+      if (fallbackVal && fallbackVal !== 'N/A') return formatStatDisplayValue(metricKey, fallbackVal);
+      return 'N/A';
+    };
 
     const sites = [
-      { key: 'trackerGg', name: 'Tracker.gg', icon: '🌐', val: formatStatDisplayValue(metricKey, bd.trackerGg || (stats?.current && stats.current[metricKey]) || 'N/A'), color: 'border-purple-500/40 text-purple-400 bg-purple-500/10' },
-      { key: 'rivalsMeta', name: 'RivalsMeta', icon: '⚔️', val: formatStatDisplayValue(metricKey, bd.rivalsMeta || 'N/A'), color: 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10' },
-      { key: 'rivalsTracker', name: 'RivalsTracker', icon: '🎯', val: formatStatDisplayValue(metricKey, bd.rivalsTracker || 'N/A'), color: 'border-amber-500/40 text-amber-400 bg-amber-500/10' }
+      { key: 'trackerGg', name: 'Tracker.gg', icon: '🌐', val: getValForSite('trackerGg', 'Tracker.gg', stats?.current?.[metricKey]), color: 'border-purple-500/40 text-purple-400 bg-purple-500/10' },
+      { key: 'rivalsMeta', name: 'RivalsMeta', icon: '⚔️', val: getValForSite('rivalsMeta', 'RivalsMeta', null), color: 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10' },
+      { key: 'rivalsTracker', name: 'RivalsTracker', icon: '🎯', val: getValForSite('rivalsTracker', 'RivalsTracker', null), color: 'border-amber-500/40 text-amber-400 bg-amber-500/10' }
     ];
 
     const metricLabelUpper = (METRIC_LABELS[metricKey] || metricKey).toUpperCase();
