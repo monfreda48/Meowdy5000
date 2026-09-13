@@ -27,6 +27,10 @@ class ScrapeWorkerRequest(BaseModel):
     platform: Optional[str] = "pc"
     force_refresh: Optional[bool] = False
 
+class PinGoalPayload(BaseModel):
+    goal_id: str
+    is_pinned: bool = True
+
 
 from backend.database import (
     init_db, get_db, User, TrackedPlayer, save_bug_report, save_feature_suggestion,
@@ -638,6 +642,33 @@ async def get_player_mastery_endpoint(uid: str):
 async def get_player_conduct_endpoint(uid: str):
     record = get_account_conduct_from_db(uid)
     return record
+
+@app.get("/api/player/{uid}/goals")
+async def get_player_goals_endpoint(uid: str):
+    from backend.database import get_user_goals_state
+    from backend.services.goals_engine import generate_goal_recommendations
+    from backend.services.ingestion import get_cached_player
+    
+    cached = get_cached_player(uid) or {}
+    stats_data = cached.get("stats") or cached
+    computed_goals = generate_goal_recommendations(stats_data)
+    
+    pinned_state = get_user_goals_state(uid)
+    for g in computed_goals:
+        gid = g["id"]
+        if gid in pinned_state:
+            g["is_pinned"] = pinned_state[gid].get("is_pinned", False)
+        else:
+            g["is_pinned"] = False
+            
+    computed_goals.sort(key=lambda x: (not x["is_pinned"], x["id"]))
+    return {"goals": computed_goals}
+
+@app.post("/api/player/{uid}/goals/pin")
+async def pin_player_goal_endpoint(uid: str, payload: PinGoalPayload):
+    from backend.database import upsert_user_goal_pin
+    upsert_user_goal_pin(uid, payload.goal_id, payload.is_pinned)
+    return {"status": "success", "goal_id": payload.goal_id, "is_pinned": payload.is_pinned}
 
 DIST_DIR = os.path.join(os.path.dirname(__file__), "dist")
 if not os.path.exists(DIST_DIR):

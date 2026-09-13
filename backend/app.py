@@ -271,6 +271,44 @@ def get_player_stats_flask(uid):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/player/<uid>/goals', methods=['GET'])
+def get_player_goals_flask(uid):
+    try:
+        from backend.database import get_user_goals_state
+        from backend.services.goals_engine import generate_goal_recommendations
+        from backend.services.ingestion import get_cached_player
+        
+        cached = get_cached_player(uid) or {}
+        stats_data = cached.get("stats") or cached
+        computed_goals = generate_goal_recommendations(stats_data)
+        
+        pinned_state = get_user_goals_state(uid)
+        for g in computed_goals:
+            gid = g["id"]
+            if gid in pinned_state:
+                g["is_pinned"] = pinned_state[gid].get("is_pinned", False)
+            else:
+                g["is_pinned"] = False
+                
+        computed_goals.sort(key=lambda x: (not x["is_pinned"], x["id"]))
+        return jsonify({"goals": computed_goals})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/player/<uid>/goals/pin', methods=['POST'])
+def pin_player_goal_flask(uid):
+    try:
+        from backend.database import upsert_user_goal_pin
+        data = request.get_json(force=True, silent=True) or {}
+        goal_id = str(data.get('goal_id') or '').strip()
+        is_pinned = bool(data.get('is_pinned', True))
+        if not goal_id:
+            return jsonify({"error": "goal_id is required."}), 422
+        upsert_user_goal_pin(uid, goal_id, is_pinned)
+        return jsonify({"status": "success", "goal_id": goal_id, "is_pinned": is_pinned})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/player/<uid>/maps', methods=['GET'])
 def get_player_maps_flask(uid):
     try:

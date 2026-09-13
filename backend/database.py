@@ -149,6 +149,20 @@ class GlobalTierList(Base):
     source = Column(String(100), default='rivalstracker.com')
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+class UserGoal(Base):
+    __tablename__ = 'user_goals'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    player_uid = Column(String(50), index=True, nullable=False)
+    goal_id = Column(String(100), nullable=False)
+    title = Column(String(200), nullable=False)
+    category = Column(String(100), nullable=False)
+    current_value = Column(Text, default=0.0)
+    target_value = Column(Text, default=0.0)
+    is_pinned = Column(Integer, default=0)
+    is_completed = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -270,6 +284,21 @@ async def init_db():
                 UNIQUE(hero_name, source)
             );
         """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS user_goals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_uid TEXT NOT NULL,
+                goal_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                category TEXT NOT NULL,
+                current_value REAL,
+                target_value REAL,
+                is_pinned BOOLEAN DEFAULT 0,
+                is_completed BOOLEAN DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(player_uid, goal_id)
+            );
+        """))
 
         for tbl in ['players', 'tracked_players']:
             try:
@@ -294,6 +323,7 @@ async def init_db():
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_synergy_uid ON player_synergy(player_uid);"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_mastery_uid ON hero_mastery(player_uid);"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_tier_hero ON global_tier_lists(hero_name);"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_user_goals_uid ON user_goals(player_uid);"))
 
 def migrate_sqlite_db_file(db_filename):
     import sqlite3
@@ -405,6 +435,21 @@ def migrate_sqlite_db_file(db_filename):
                 UNIQUE(hero_name, source)
             );
         """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS user_goals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_uid TEXT NOT NULL,
+                goal_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                category TEXT NOT NULL,
+                current_value REAL,
+                target_value REAL,
+                is_pinned BOOLEAN DEFAULT 0,
+                is_completed BOOLEAN DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(player_uid, goal_id)
+            );
+        """)
         for tbl in ['players', 'tracked_players']:
             try:
                 cur.execute(f"PRAGMA table_info({tbl});")
@@ -425,6 +470,7 @@ def migrate_sqlite_db_file(db_filename):
         cur.execute("CREATE INDEX IF NOT EXISTS idx_synergy_uid ON player_synergy(player_uid);")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_mastery_uid ON hero_mastery(player_uid);")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_tier_hero ON global_tier_lists(hero_name);")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_user_goals_uid ON user_goals(player_uid);")
         conn.commit()
         conn.close()
     except Exception:
@@ -686,6 +732,55 @@ def get_global_tier_lists_from_db(source: str = "rivalstracker.com", db_filename
     except Exception as e:
         print(f"[DB Error] get_global_tier_lists_from_db failed for {source}: {e}")
     return results
+
+def upsert_user_goal_pin(player_uid: str, goal_id: str, is_pinned: bool, title: str = "", category: str = "", current_value: float = 0.0, target_value: float = 0.0, db_filename: str = "rivals_tracker.db"):
+    import sqlite3
+    db_path = os.path.join(BASE_DIR, db_filename)
+    try:
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO user_goals (player_uid, goal_id, title, category, current_value, target_value, is_pinned, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(player_uid, goal_id) DO UPDATE SET
+                is_pinned=excluded.is_pinned,
+                title=CASE WHEN excluded.title != '' THEN excluded.title ELSE user_goals.title END,
+                category=CASE WHEN excluded.category != '' THEN excluded.category ELSE user_goals.category END,
+                current_value=excluded.current_value,
+                target_value=excluded.target_value;
+        """, (player_uid, goal_id, title, category, current_value, target_value, 1 if is_pinned else 0))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[DB Error] upsert_user_goal_pin failed for {player_uid} - {goal_id}: {e}")
+
+def get_user_goals_state(player_uid: str, db_filename: str = "rivals_tracker.db") -> Dict[str, Dict[str, Any]]:
+    import sqlite3
+    db_path = os.path.join(BASE_DIR, db_filename)
+    results = {}
+    if not os.path.exists(db_path):
+        return results
+    try:
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT goal_id, title, category, current_value, target_value, is_pinned, is_completed
+            FROM user_goals
+            WHERE player_uid = ?;
+        """, (player_uid,))
+        rows = cur.fetchall()
+        for r in rows:
+            d = dict(r)
+            results[d["goal_id"]] = {
+                "is_pinned": bool(d.get("is_pinned")),
+                "is_completed": bool(d.get("is_completed"))
+            }
+        conn.close()
+    except Exception as e:
+        print(f"[DB Error] get_user_goals_state failed for {player_uid}: {e}")
+    return results
+
 
 
 

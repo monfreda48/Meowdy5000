@@ -25,6 +25,7 @@ import NotificationSettings from './components/NotificationSettings';
 import PlatformIcon from './components/PlatformIcon';
 import HeroMasteryPanel from './components/HeroMasteryPanel';
 import AccountHealthPanel from './components/AccountHealthPanel';
+import GoalRecommendationsCard from './components/GoalRecommendationsCard';
 
 const triggerHaptic = async (type = 'light') => {
   try {
@@ -4631,6 +4632,10 @@ const DEFAULT_SEASON_NUM = 19;
                     getApiUrl={getApiUrl}
                   />
                   <MapBreakdownGrid
+                    uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
+                    getApiUrl={getApiUrl}
+                  />
+                  <GoalRecommendationsCard
                     uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
                     getApiUrl={getApiUrl}
                   />
