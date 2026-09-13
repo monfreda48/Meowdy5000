@@ -3765,41 +3765,7 @@ const DEFAULT_SEASON_NUM = 19;
 
 
 
-            {/* Profile Confirmation Banner before committing to track */}
-            {!isClaimed && (
-              <div className="bg-gradient-to-r from-[#131b2f] via-[#0f172a] to-[#131b2f] border-2 border-emerald-500/70 p-4 sm:p-6 rounded-2xl shadow-2xl space-y-3 text-left animate-in fade-in slide-in-from-top-3 duration-300">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-start sm:items-center gap-3.5">
-                    <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center font-bold text-2xl shrink-0 shadow-lg shadow-emerald-500/20">
-                      👑
-                    </div>
-                    <div>
-                      <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-wider flex items-center gap-2 flex-wrap">
-                        <span>Profile Found: {stats.current.username}</span>
-                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                          Inspect & Confirm
-                        </span>
-                      </h3>
-                      <p className="text-xs text-slate-300 font-medium mt-0.5 leading-relaxed">
-                        Inspect the player stats below. Click <strong>Confirm & Claim Profile</strong> to save this profile so it automatically loads on app startup!
-                      </p>
-                    </div>
-                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic('success');
-                      handleClaimProfile(stats.current.username);
-                    }}
-                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs sm:text-sm px-6 py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-500/30 uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shrink-0 hover:scale-105 active:scale-95"
-                  >
-                    <span>👑</span>
-                    <span>Confirm & Claim Profile</span>
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* Player Header Banner */}
             {/* Player Header Banner with Interactive Track Player Switch */}
