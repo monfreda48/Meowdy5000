@@ -273,4 +273,120 @@ async def fetch_rivalsmeta_season(force_refresh: bool = False) -> Dict[str, Any]
         "source": "net_ease_default",
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
-    return meta_data
+def parse_rivalsmeta_html(html_content: str) -> dict:
+    if not html_content:
+        return {
+            "platform": "unknown",
+            "rank": "Unranked",
+            "rank_score": 0,
+            "peak_rank": "Unranked",
+            "peak_score": 0,
+            "win_rate": 0.0,
+            "kda": 0.0,
+            "hero_stats": [],
+            "teammates": []
+        }
+
+    soup = BeautifulSoup(html_content, "html.parser")
+    data = {
+        "platform": "unknown",
+        "rank": "Unranked",
+        "rank_score": 0,
+        "peak_rank": "Unranked",
+        "peak_score": 0,
+        "win_rate": 0.0,
+        "kda": 0.0,
+        "hero_stats": [],
+        "teammates": []
+    }
+
+    # 1. Platform Detection from SVG Path
+    device_icon = soup.select_one(".device-icon svg")
+    if device_icon:
+        path_d = device_icon.select_one("path")
+        if path_d and "M603" in path_d.get("d", ""):
+            data["platform"] = "ps5"
+        elif "xbox" in str(device_icon).lower():
+            data["platform"] = "xbox"
+        else:
+            data["platform"] = "pc"
+
+    # 2. Competitive Rank & Peak
+    curr_rank = soup.select_one(".rank .current")
+    if curr_rank:
+        name_el = curr_rank.select_one(".name")
+        score_el = curr_rank.select_one(".score")
+        if name_el:
+            data["rank"] = name_el.get_text(strip=True)
+        if score_el:
+            digits = re.sub(r"[^\d]", "", score_el.get_text())
+            data["rank_score"] = int(digits) if digits else 0
+
+    highest_rank = soup.select_one(".rank .highest")
+    if highest_rank:
+        h_name = highest_rank.select_one(".name")
+        h_score = highest_rank.select_one(".score")
+        if h_name:
+            data["peak_rank"] = h_name.get_text(strip=True)
+        if h_score:
+            digits = re.sub(r"[^\d]", "", h_score.get_text())
+            data["peak_score"] = int(digits) if digits else 0
+
+    # 3. KDA and Win Rate from Stats Grid
+    kda_ratio = soup.select_one(".kda-ratio-badge .ratio-num")
+    if kda_ratio:
+        try:
+            data["kda"] = float(kda_ratio.get_text(strip=True))
+        except ValueError:
+            pass
+
+    winrate_pct = soup.select_one(".winrate-card .circle-center .pct")
+    if winrate_pct:
+        try:
+            data["win_rate"] = float(re.sub(r"[^\d.]", "", winrate_pct.get_text()))
+        except ValueError:
+            pass
+
+    # 4. Granular Hero Table (Damage/min, Heal/min, Accuracy, MVPs)
+    hero_rows = soup.select(".heroes-table tbody tr")
+    for row in hero_rows:
+        name_cell = row.select_one(".hero-name")
+        matches_cell = row.select_one("td:nth-child(2)")
+        wr_cell = row.select_one("td:nth-child(3)")
+        dmg_cell = row.select_one("td:nth-child(5)")
+        heal_cell = row.select_one("td:nth-child(6)")
+        acc_cell = row.select_one("td:nth-child(7)")
+        mvp_cell = row.select_one("td:nth-child(8)")
+        svp_cell = row.select_one("td:nth-child(9)")
+
+        if name_cell:
+            data["hero_stats"].append({
+                "hero": name_cell.get_text(strip=True),
+                "matches": int(matches_cell.get_text(strip=True)) if matches_cell and matches_cell.text.strip().isdigit() else 0,
+                "win_rate": wr_cell.get_text(strip=True) if wr_cell else "0%",
+                "damage_per_min": dmg_cell.get_text(strip=True).replace("/min", "").strip() if dmg_cell else "0",
+                "heal_per_min": heal_cell.get_text(strip=True).replace("/min", "").strip() if heal_cell else "0",
+                "accuracy": acc_cell.get_text(strip=True) if acc_cell else "0%",
+                "mvps": int(mvp_cell.get_text(strip=True)) if mvp_cell and mvp_cell.text.strip().isdigit() else 0,
+                "svps": int(svp_cell.get_text(strip=True)) if svp_cell and svp_cell.text.strip().isdigit() else 0,
+            })
+
+    return data
+
+async def fetch_rivalsmeta_profile(uid: str) -> dict:
+    ident = str(uid).strip()
+    if not ident:
+        return parse_rivalsmeta_html("")
+    url = f"https://rivalsmeta.com/player/{ident}"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+    }
+    try:
+        async with httpx.AsyncClient(timeout=8.0, follow_redirects=True) as client:
+            res = await client.get(url, headers=headers)
+            if res.status_code == 200:
+                return parse_rivalsmeta_html(res.text)
+    except Exception as e:
+        logger.warning(f"[rivalsmeta] Scrape error for player UID '{ident}': {e}")
+    return parse_rivalsmeta_html("")

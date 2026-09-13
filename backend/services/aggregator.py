@@ -190,41 +190,51 @@ def update_player_platform(uid: str, platform_input: str) -> bool:
                 logger.debug(f"[aggregator] Platform update error in {db_path}: {e}")
     return updated_any
 
-def reconcile_metric(val_rd, val_rt, label=""):
+def reconcile_metric(val_rd, val_rt, val_rm=None, label=""):
     sources = {}
     if val_rd is not None and str(val_rd).strip() != "":
         sources["RivalsData"] = val_rd
     if val_rt is not None and str(val_rt).strip() != "":
         sources["RivalsTracker"] = val_rt
+    if val_rm is not None and str(val_rm).strip() != "":
+        sources["RivalsMeta"] = val_rm
 
-    values = list(sources.values())
+    vals = list(sources.values())
     has_divergence = False
-    if len(values) > 1:
-        try:
-            num1 = float(re.sub(r'[^0-9.]', '', str(values[0])))
-            num2 = float(re.sub(r'[^0-9.]', '', str(values[1])))
-            has_divergence = abs(num1 - num2) > 0.05
-        except Exception:
-            has_divergence = str(values[0]).strip().lower() != str(values[1]).strip().lower()
+    if len(vals) > 1:
+        first = vals[0]
+        for v in vals[1:]:
+            try:
+                num1 = float(re.sub(r'[^0-9.]', '', str(first)))
+                num2 = float(re.sub(r'[^0-9.]', '', str(v)))
+                if abs(num1 - num2) > 0.1:
+                    has_divergence = True
+                    break
+            except Exception:
+                if str(first).strip().lower() != str(v).strip().lower():
+                    has_divergence = True
+                    break
 
     return {
-        "value": val_rd if val_rd is not None else val_rt,
+        "value": val_rd if val_rd is not None else (val_rt if val_rt is not None else val_rm),
         "has_divergence": has_divergence,
         "sources": sources
     }
 
-def build_reconciled_stats(rd_data: Dict[str, Any], rt_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def build_reconciled_stats(rd_data: Dict[str, Any], rt_data: Optional[Dict[str, Any]] = None, rm_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     curr = rd_data.get("current") or {}
     rt = rt_data or {}
+    rm = rm_data or {}
     return {
-        "rank": reconcile_metric(curr.get("rank"), rt.get("rank")),
-        "win_rate": reconcile_metric(curr.get("win_rate"), rt.get("win_rate")),
+        "rank": reconcile_metric(curr.get("rank"), rt.get("rank"), rm.get("rank")),
+        "win_rate": reconcile_metric(curr.get("win_rate"), rt.get("win_rate"), rm.get("win_rate")),
         "total_matches": reconcile_metric(curr.get("total_matches"), rt.get("total_matches")),
-        "kda": reconcile_metric(curr.get("kda"), rt.get("kda")),
-        "rank_points": reconcile_metric(curr.get("rank_points", 0), rt.get("score", 0))
+        "kda": reconcile_metric(curr.get("kda"), rt.get("kda"), rm.get("kda")),
+        "rank_points": reconcile_metric(curr.get("rank_points", 0), rt.get("score", 0), rm.get("rank_score", 0))
     }
 
 from backend.adapters.rivalstracker import fetch_rivalstracker_profile
+from backend.adapters.rivalsmeta import fetch_rivalsmeta_profile
 
 async def get_player_profile(identifier: str, force_refresh: bool = False) -> Dict[str, Any]:
     ident = str(identifier).strip()
@@ -243,7 +253,7 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
         cached = get_cached_player_profile(resolved_uid)
         if cached and cached.get("current", {}).get("scraped_at"):
             plat = cached.get("platform") or cached.get("current", {}).get("platform", "pc")
-            reconciled = build_reconciled_stats(cached, cached.get("rivalstracker_stats"))
+            reconciled = build_reconciled_stats(cached, cached.get("rivalstracker_stats"), cached.get("rivalsmeta_stats"))
             return {
                 "success": True,
                 "data": cached,
@@ -257,10 +267,12 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
                 "scraped_at": cached.get("current", {}).get("scraped_at")
             }
 
-    # 3. Live telemetry scrape from RivalsData & RivalsTracker
+    # 3. Live telemetry scrape from RivalsData, RivalsTracker & RivalsMeta
     try:
         data = await fetch_rivalsdata_profile(resolved_uid)
         rt_data = await fetch_rivalstracker_profile(resolved_uid)
+        rm_data = await fetch_rivalsmeta_profile(resolved_uid)
+
         if rt_data:
             data["rivalstracker_stats"] = {
                 "rank": rt_data.get("rank", "Unranked"),
@@ -278,7 +290,26 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
                 if "current" in data:
                     data["current"]["platform"] = rt_data["platform"]
 
-        reconciled = build_reconciled_stats(data, rt_data)
+        if rm_data:
+            data["rivalsmeta_stats"] = {
+                "rank": rm_data.get("rank", "Unranked"),
+                "rank_score": rm_data.get("rank_score", 0),
+                "peak_rank": rm_data.get("peak_rank", "Unranked"),
+                "peak_score": rm_data.get("peak_score", 0),
+                "win_rate": rm_data.get("win_rate", 0.0),
+                "kda": rm_data.get("kda", 0.0),
+                "hero_stats": rm_data.get("hero_stats", [])
+            }
+            if rm_data.get("hero_stats"):
+                data["advanced_telemetry"] = {
+                    "hero_stats": rm_data["hero_stats"]
+                }
+            if rm_data.get("platform") and rm_data["platform"] != "unknown" and data.get("platform") in ["unknown", "pc"]:
+                data["platform"] = rm_data["platform"]
+                if "current" in data:
+                    data["current"]["platform"] = rm_data["platform"]
+
+        reconciled = build_reconciled_stats(data, rt_data, rm_data)
         data["reconciled_stats"] = reconciled
 
         upsert_player_profile(data)
