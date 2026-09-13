@@ -3849,33 +3849,7 @@ const DEFAULT_SEASON_NUM = 19;
 
 
 
-                {/* Bulk Expand / Collapse All Cards Controls */}
-                <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black uppercase tracking-wider text-slate-300">
-                      Primary Stat Cards
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                      Multi-Expand Enabled
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={expandAllMetrics}
-                      className="px-3 py-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold uppercase transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
-                    >
-                      <span>📖 Expand All</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={collapseAllMetrics}
-                      className="px-3 py-1 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/80 text-xs font-bold uppercase transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
-                    >
-                      <span>📁 Collapse All</span>
-                    </button>
-                  </div>
-                </div>
+
 
                 {/* Primary Tracked Metrics Grid */}
                 <div className={`grid gap-4 mb-6 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
