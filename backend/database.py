@@ -91,6 +91,28 @@ class PlayerSynergy(Base):
     avg_kda = Column(Text, default=0.0)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+class BugReport(Base):
+    __tablename__ = 'bug_reports'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    title = Column(Text, nullable=False)
+    description = Column(Text, nullable=False)
+    player_uid = Column(String(50), nullable=True)
+    app_version = Column(String(50), nullable=True)
+    platform = Column(String(50), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class FeatureSuggestion(Base):
+    __tablename__ = 'feature_suggestions'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    title = Column(Text, nullable=False)
+    description = Column(Text, nullable=False)
+    category = Column(String(100), default='General')
+    player_uid = Column(String(50), nullable=True)
+    app_version = Column(String(50), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -150,6 +172,28 @@ async def init_db():
                 avg_kda REAL DEFAULT 0.0,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(player_uid, teammate_name)
+            );
+        """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS bug_reports (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                player_uid TEXT,
+                app_version TEXT,
+                platform TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS feature_suggestions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                category TEXT DEFAULT 'General',
+                player_uid TEXT,
+                app_version TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """))
 
@@ -225,6 +269,28 @@ def migrate_sqlite_db_file(db_filename):
                 UNIQUE(player_uid, teammate_name)
             );
         """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS bug_reports (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                player_uid TEXT,
+                app_version TEXT,
+                platform TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS feature_suggestions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                category TEXT DEFAULT 'General',
+                player_uid TEXT,
+                app_version TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
         for tbl in ['players', 'tracked_players']:
             try:
                 cur.execute(f"PRAGMA table_info({tbl});")
@@ -295,6 +361,56 @@ def upsert_player_synergy(player_uid: str, teammate_name: str, teammate_uid: Opt
         conn.close()
     except Exception as e:
         print(f"[DB Error] upsert_player_synergy failed for {player_uid} with {teammate_name}: {e}")
+
+def save_bug_report(title: str, description: str, player_uid: Optional[str] = None, app_version: Optional[str] = None, platform: Optional[str] = None, db_filename: str = "rivals_tracker.db") -> int:
+    import sqlite3
+    db_path = os.path.join(BASE_DIR, db_filename)
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS bug_reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            player_uid TEXT,
+            app_version TEXT,
+            platform TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
+    cur.execute("""
+        INSERT INTO bug_reports (title, description, player_uid, app_version, platform, created_at)
+        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP);
+    """, (title, description, player_uid, app_version, platform))
+    report_id = cur.lastrowid
+    conn.commit()
+    conn.close()
+    return report_id
+
+def save_feature_suggestion(title: str, description: str, category: str = "General", player_uid: Optional[str] = None, app_version: Optional[str] = None, db_filename: str = "rivals_tracker.db") -> int:
+    import sqlite3
+    db_path = os.path.join(BASE_DIR, db_filename)
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS feature_suggestions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            category TEXT DEFAULT 'General',
+            player_uid TEXT,
+            app_version TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
+    cur.execute("""
+        INSERT INTO feature_suggestions (title, description, category, player_uid, app_version, created_at)
+        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP);
+    """, (title, description, category, player_uid, app_version))
+    suggestion_id = cur.lastrowid
+    conn.commit()
+    conn.close()
+    return suggestion_id
 
 async def get_db():
     async with AsyncSessionLocal() as session:

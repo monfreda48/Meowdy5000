@@ -28,7 +28,7 @@ class ScrapeWorkerRequest(BaseModel):
     force_refresh: Optional[bool] = False
 
 
-from backend.database import init_db, get_db, User, TrackedPlayer
+from backend.database import init_db, get_db, User, TrackedPlayer, save_bug_report, save_feature_suggestion
 from backend.scrapers.season_scraper import get_season_info
 from backend.scrapers.profile_scraper import scrape_player_profile
 from backend.services.resolver import resolve_player_query
@@ -529,6 +529,56 @@ async def get_seasons_list():
 async def get_stats_legacy(query: str = Query(...), season: str = Query("19")):
     """Backward compatibility stats lookup route."""
     return await scrape_player_profile(query)
+
+class BugReportPayload(BaseModel):
+    title: str
+    description: str
+    player_uid: Optional[str] = None
+    app_version: Optional[str] = None
+    platform: Optional[str] = None
+
+class FeatureSuggestionPayload(BaseModel):
+    title: str
+    description: str
+    category: Optional[str] = "General"
+    player_uid: Optional[str] = None
+    app_version: Optional[str] = None
+
+@app.post("/api/feedback/bug")
+async def create_bug_report(payload: BugReportPayload):
+    title = (payload.title or "").strip()
+    description = (payload.description or "").strip()
+    if not title or not description:
+        raise HTTPException(status_code=422, detail="Title and description are required.")
+    try:
+        report_id = save_bug_report(
+            title=title,
+            description=description,
+            player_uid=payload.player_uid,
+            app_version=payload.app_version,
+            platform=payload.platform
+        )
+        return {"status": "success", "id": report_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/feedback/suggestion")
+async def create_feature_suggestion(payload: FeatureSuggestionPayload):
+    title = (payload.title or "").strip()
+    description = (payload.description or "").strip()
+    if not title or not description:
+        raise HTTPException(status_code=422, detail="Title and description are required.")
+    try:
+        suggestion_id = save_feature_suggestion(
+            title=title,
+            description=description,
+            category=payload.category or "General",
+            player_uid=payload.player_uid,
+            app_version=payload.app_version
+        )
+        return {"status": "success", "id": suggestion_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 DIST_DIR = os.path.join(os.path.dirname(__file__), "dist")
 if not os.path.exists(DIST_DIR):

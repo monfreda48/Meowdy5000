@@ -256,6 +256,46 @@ def get_player_synergy_flask(uid):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/feedback/bug', methods=['POST'])
+def submit_bug_report_flask():
+    try:
+        from backend.database import save_bug_report
+        data = request.get_json(force=True, silent=True) or {}
+        title = str(data.get('title') or '').strip()
+        description = str(data.get('description') or '').strip()
+        if not title or not description:
+            return jsonify({"error": "Title and description are required."}), 422
+        report_id = save_bug_report(
+            title=title,
+            description=description,
+            player_uid=data.get('player_uid'),
+            app_version=data.get('app_version'),
+            platform=data.get('platform')
+        )
+        return jsonify({"status": "success", "id": report_id}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/feedback/suggestion', methods=['POST'])
+def submit_feature_suggestion_flask():
+    try:
+        from backend.database import save_feature_suggestion
+        data = request.get_json(force=True, silent=True) or {}
+        title = str(data.get('title') or '').strip()
+        description = str(data.get('description') or '').strip()
+        if not title or not description:
+            return jsonify({"error": "Title and description are required."}), 422
+        suggestion_id = save_feature_suggestion(
+            title=title,
+            description=description,
+            category=data.get('category') or 'General',
+            player_uid=data.get('player_uid'),
+            app_version=data.get('app_version')
+        )
+        return jsonify({"status": "success", "id": suggestion_id}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/player/resolve', methods=['GET'])
 def resolve_player():
     query = request.args.get('query', '')

@@ -16,6 +16,8 @@ import SeasonHeader from './components/SeasonHeader';
 import FindUIDModal from './components/FindUIDModal';
 import SquadSynergyCard from './components/SquadSynergyCard';
 import MapBreakdownGrid from './components/MapBreakdownGrid';
+import BugReportModal from './components/BugReportModal';
+import FeatureSuggestionModal from './components/FeatureSuggestionModal';
 
 const triggerHaptic = async (type = 'light') => {
   try {
@@ -551,6 +553,8 @@ export default function App() {
   const [disambiguationCandidates, setDisambiguationCandidates] = useState([]);
   const [showDisambiguationModal, setShowDisambiguationModal] = useState(false);
   const [showUidGuideModal, setShowUidGuideModal] = useState(false);
+  const [showBugReportModal, setShowBugReportModal] = useState(false);
+  const [showFeatureSuggestionModal, setShowFeatureSuggestionModal] = useState(false);
 
   // 3-Site Profile Verification & Confirmation State
   const [searchConfirmationData, setSearchConfirmationData] = useState(null);
@@ -5625,22 +5629,75 @@ const DEFAULT_SEASON_NUM = 19;
                     🛠️ Developer Tools & Issue Reporting
                   </span>
 
+                  {/* Donate Support */}
                   <button
-                    onClick={() => { setIsMenuOpen(false); setShowReportModal(true); }}
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      triggerHaptic('success');
+                      const paypalUrl = 'https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meowdy5000@gmail.com&item_name=M5+Stat+Tracker+Support&currency_code=USD';
+                      openExternalUrl(paypalUrl);
+                    }}
                     className="w-full bg-[#131b2f] hover:bg-amber-500/10 border border-slate-700/80 hover:border-amber-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
-                        ⚠️
+                        ☕
                       </div>
                       <div>
                         <h4 className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">
-                          Report an Issue / Bug
+                          Support M5 Stat Tracker (Donate)
                         </h4>
-                        <p className="text-[10px] text-slate-400">Send diagnostic stack trace to developers</p>
+                        <p className="text-[10px] text-slate-400">Contribute via PayPal to support server infrastructure</p>
                       </div>
                     </div>
-                    <span className="text-xs text-slate-500 group-hover:text-amber-400 font-bold">→</span>
+                    <span className="text-xs text-slate-500 group-hover:text-amber-400 font-bold">↗</span>
+                  </button>
+
+                  {/* Bug Report */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setShowBugReportModal(true);
+                    }}
+                    className="w-full bg-[#131b2f] hover:bg-rose-500/10 border border-slate-700/80 hover:border-rose-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-sm">
+                        🐛
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white group-hover:text-rose-400 transition-colors">
+                          Report a Bug
+                        </h4>
+                        <p className="text-[10px] text-slate-400">Submit an issue or bug report to developers</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 group-hover:text-rose-400 font-bold">→</span>
+                  </button>
+
+                  {/* Feature Suggestion */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setShowFeatureSuggestionModal(true);
+                    }}
+                    className="w-full bg-[#131b2f] hover:bg-cyan-500/10 border border-slate-700/80 hover:border-cyan-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-sm">
+                        💡
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white group-hover:text-cyan-400 transition-colors">
+                          Feature Suggestion
+                        </h4>
+                        <p className="text-[10px] text-slate-400">Propose new features or UI ideas</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 group-hover:text-cyan-400 font-bold">→</span>
                   </button>
 
                   <div className="bg-[#131b2f] border border-slate-700/80 p-3 rounded-xl flex items-center justify-between gap-3">
@@ -6236,7 +6293,7 @@ const DEFAULT_SEASON_NUM = 19;
                   } catch (e) {
                     try { navigator.clipboard.writeText('support@m5stattracker.com'); } catch (err) {}
                   }
-                  const sendMoneyUrl = 'https://www.paypal.com/myaccount/transfer/homepage';
+                  const sendMoneyUrl = 'https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meowdy5000@gmail.com&item_name=M5+Stat+Tracker+Support&currency_code=USD';
                   openExternalUrl(sendMoneyUrl);
                   showNativeToast('📋 Copied support@m5stattracker.com! Opening PayPal Send Money...');
                 }}
@@ -6607,6 +6664,24 @@ const DEFAULT_SEASON_NUM = 19;
         isOpen={showUidGuideModal}
         onClose={() => setShowUidGuideModal(false)}
         onSelectUid={(u) => setQuery(u)}
+      />
+
+      {/* Bug Report Modal */}
+      <BugReportModal
+        isOpen={showBugReportModal}
+        onClose={() => setShowBugReportModal(false)}
+        uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
+        appVersion={pkg?.version || '1.0.32'}
+        getApiUrl={getApiUrl}
+      />
+
+      {/* Feature Suggestion Modal */}
+      <FeatureSuggestionModal
+        isOpen={showFeatureSuggestionModal}
+        onClose={() => setShowFeatureSuggestionModal(false)}
+        uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
+        appVersion={pkg?.version || '1.0.32'}
+        getApiUrl={getApiUrl}
       />
 
       </main>
