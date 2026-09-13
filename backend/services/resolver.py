@@ -1,57 +1,47 @@
 import os
 import re
-import json
 import urllib.parse
-import httpx
 import sqlite3
 import logging
 from typing import Dict, Any, List, Optional
+from backend.services.stealth_fetcher import fetch_profile_html
+from backend.database import get_connection
 
 logger = logging.getLogger("resolver")
 
 UID_CACHE = {}
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-def get_cached_uid(identifier: str, db_filename: str = "rivals_tracker.db") -> Optional[str]:
-    clean_id = identifier.strip().lower()
-    if clean_id in UID_CACHE:
-        return UID_CACHE[clean_id]
-    db_path = os.path.join(BASE_DIR, db_filename) if not os.path.isabs(db_filename) else db_filename
-    if not os.path.exists(db_path):
-        return None
+def get_cached_uid(identifier: str) -> Optional[str]:
+    clean = identifier.strip().lower()
+    if clean in UID_CACHE:
+        return UID_CACHE[clean]
     try:
-        with sqlite3.connect(db_path, timeout=5.0) as conn:
+        with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                "SELECT uid FROM players WHERE LOWER(username) = ? AND uid IS NOT NULL AND uid != '' LIMIT 1",
-                (clean_id,)
-            )
-            row = cursor.fetchone()
+            cursor.execute("CREATE TABLE IF NOT EXISTS identity_cache (username TEXT PRIMARY KEY, uid TEXT, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);")
+            row = cursor.execute("SELECT uid FROM identity_cache WHERE LOWER(username) = ?", (clean,)).fetchone()
             if row and row[0]:
-                UID_CACHE[clean_id] = str(row[0])
+                UID_CACHE[clean] = str(row[0])
                 return str(row[0])
     except Exception as e:
         logger.debug(f"[resolver] Cache query error: {e}")
     return None
 
-def cache_resolved_identity(username: str, uid: str, db_filename: str = "rivals_tracker.db"):
-    clean_user = username.strip()
-    if not clean_user or not uid:
+def save_cached_uid(identifier: str, uid: str):
+    clean = identifier.strip().lower()
+    if not clean or not uid:
         return
-    UID_CACHE[clean_user.lower()] = str(uid)
-    db_path = os.path.join(BASE_DIR, db_filename) if not os.path.isabs(db_filename) else db_filename
+    UID_CACHE[clean] = str(uid).strip()
     try:
-        with sqlite3.connect(db_path, timeout=5.0) as conn:
+        with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                """
-                INSERT INTO players (uid, username, last_scraped_at)
-                VALUES (?, ?, CURRENT_TIMESTAMP)
-                ON CONFLICT(uid) DO UPDATE SET username = excluded.username;
-                """,
-                (str(uid), clean_user)
-            )
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS identity_cache (username TEXT PRIMARY KEY, uid TEXT, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+            """)
+            cursor.execute("""
+                INSERT INTO identity_cache (username, uid) VALUES (?, ?)
+                ON CONFLICT(username) DO UPDATE SET uid=excluded.uid, updated_at=CURRENT_TIMESTAMP;
+            """, (clean, str(uid).strip()))
             conn.commit()
     except Exception as e:
         logger.debug(f"[resolver] Cache save error: {e}")
@@ -61,52 +51,64 @@ async def resolve_canonical_uid(identifier: str) -> str:
     if not clean_id:
         return clean_id
 
-    # 1. If already a numeric UID, return immediately
     if clean_id.isdigit():
         return clean_id
 
-    lower_id = clean_id.lower()
-    if lower_id in UID_CACHE:
-        return UID_CACHE[lower_id]
-
-    # Check local database cache
+    # 1. Check local SQLite cache first
     cached = get_cached_uid(clean_id)
     if cached:
+        print(f"[RESOLVER CACHE] Found cached UID {cached} for '{clean_id}'")
         return cached
 
-    # URL-encode the username so spaces do not crash httpx
     encoded_id = urllib.parse.quote(clean_id, safe="")
     target_url = f"https://rivalsdata.com/player/{encoded_id}"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
-    }
 
+    print(f"[RESOLVER] Fetching RivalsData via stealth fetcher for '{clean_id}'...")
     try:
-        async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
-            resp = await client.get(target_url, headers=headers)
-            if resp.status_code == 200:
-                # 1. Check redirected URL pattern: /player/(\d+)
-                url_match = re.search(r"/player/(\d+)", str(resp.url))
-                if url_match:
-                    resolved_uid = url_match.group(1)
-                    UID_CACHE[lower_id] = resolved_uid
-                    cache_resolved_identity(clean_id, resolved_uid)
-                    print(f"[RESOLVER SUCCESS] Resolved '{clean_id}' -> UID {resolved_uid} via URL redirect")
-                    return resolved_uid
+        html = await fetch_profile_html(target_url)
+        if html and len(html) > 500:
+            # Extraction Strategy A: Canonical tag or og:url with /player/{digits}
+            url_match = re.search(r'rivalsdata\.com/player/(\d{7,10})', html)
+            if url_match:
+                uid = url_match.group(1)
+                save_cached_uid(clean_id, uid)
+                print(f"[RESOLVER SUCCESS] Resolved '{clean_id}' -> UID {uid} via canonical metadata")
+                return uid
 
-                # 2. Check JSON/HTML body metadata
-                body_match = re.search(r'["\'](?:player_id|uid)["\']:\s*["\']?(\d{7,10})["\']?', resp.text)
-                if body_match:
-                    resolved_uid = body_match.group(1)
-                    UID_CACHE[lower_id] = resolved_uid
-                    cache_resolved_identity(clean_id, resolved_uid)
-                    print(f"[RESOLVER SUCCESS] Resolved '{clean_id}' -> UID {resolved_uid} via body metadata")
-                    return resolved_uid
-            else:
-                print(f"[RESOLVER WARNING] RivalsData returned HTTP {resp.status_code} for {target_url}")
+            # Extraction Strategy B: Embedded JSON / state script
+            body_match = re.search(r'["\'](?:player_id|uid|id)["\']:\s*["\']?(\d{7,10})["\']?', html)
+            if body_match:
+                uid = body_match.group(1)
+                save_cached_uid(clean_id, uid)
+                print(f"[RESOLVER SUCCESS] Resolved '{clean_id}' -> UID {uid} via embedded JSON")
+                return uid
+
+            # Extraction Strategy C: Profile links
+            link_match = re.search(r'/player/(\d{7,10})', html)
+            if link_match:
+                uid = link_match.group(1)
+                save_cached_uid(clean_id, uid)
+                print(f"[RESOLVER SUCCESS] Resolved '{clean_id}' -> UID {uid} via internal link")
+                return uid
+        else:
+            print(f"[RESOLVER WARNING] Stealth fetch returned empty/short HTML for {target_url}")
     except Exception as e:
-        print(f"[RESOLVER ERROR] Failed to resolve '{clean_id}': {e}")
+        print(f"[RESOLVER ERROR] Stealth resolution failed for '{clean_id}': {e}")
+
+    # 2. Fallback Strategy: Scrape RivalsTracker Search if RivalsData fails
+    try:
+        rt_search_url = f"https://rivalstracker.com/profile/{encoded_id}"
+        print(f"[RESOLVER FALLBACK] Fetching RivalsTracker for '{clean_id}'...")
+        rt_html = await fetch_profile_html(rt_search_url)
+        if rt_html and len(rt_html) > 500:
+            match = re.search(r'rivalstracker\.com/profile/(\d{7,10})', rt_html) or re.search(r'/profile/(\d{7,10})', rt_html)
+            if match:
+                uid = match.group(1)
+                save_cached_uid(clean_id, uid)
+                print(f"[RESOLVER SUCCESS] Resolved '{clean_id}' -> UID {uid} via RivalsTracker fallback")
+                return uid
+    except Exception as err:
+        print(f"[RESOLVER FALLBACK ERROR] RivalsTracker fallback failed for '{clean_id}': {err}")
 
     return clean_id
 
