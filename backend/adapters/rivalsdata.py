@@ -33,7 +33,7 @@ async def fetch_rivalsdata_profile(uid: str, username: Optional[str] = None, pla
             "kda_ratio": "2.50",
             "total_matches": 0,
             "time_played": "0h",
-            "season": "Season 1",
+            "season": None,
             "avatarUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31029208.jpg"
         },
         "stats": {

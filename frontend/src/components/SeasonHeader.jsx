@@ -1,13 +1,8 @@
 import { useState, useEffect } from 'react';
 
 export default function SeasonHeader({ getApiUrl }) {
-  const [seasonMeta, setSeasonMeta] = useState({
-    season_name: 'Season 1',
-    end_timestamp: '2026-10-15T00:00:00Z',
-    days_remaining: 32,
-    upcoming_hero: 'Hawkeye',
-    source: 'rivalsmeta.com'
-  });
+  const [seasonMeta, setSeasonMeta] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const calculateTimeLeft = (endTimestamp) => {
     if (!endTimestamp) return { days: 0, hours: 0, minutes: 0 };
@@ -20,34 +15,46 @@ export default function SeasonHeader({ getApiUrl }) {
     };
   };
 
-  const [timeLeft, setTimeLeft] = useState(() => calculateTimeLeft(seasonMeta.end_timestamp));
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
 
   useEffect(() => {
+    let isMounted = true;
     const fetchSeasonMeta = async () => {
       try {
+        setLoading(true);
         const url = getApiUrl ? getApiUrl('/api/meta/season') : '/api/meta/season';
         const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
-          if (data && data.season_name) {
+          if (isMounted && data && data.season_name && !data.error) {
             setSeasonMeta(data);
             setTimeLeft(calculateTimeLeft(data.end_timestamp));
+            setLoading(false);
+            return;
           }
+        }
+        if (isMounted) {
+          setLoading(false);
         }
       } catch (err) {
         console.warn('Could not fetch season meta from backend:', err);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchSeasonMeta();
+    return () => { isMounted = false; };
   }, [getApiUrl]);
 
   useEffect(() => {
+    if (!seasonMeta?.end_timestamp) return;
     const timer = setInterval(() => {
       setTimeLeft(calculateTimeLeft(seasonMeta.end_timestamp));
     }, 60000);
     return () => clearInterval(timer);
-  }, [seasonMeta.end_timestamp]);
+  }, [seasonMeta?.end_timestamp]);
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#131b2f]/90 border border-slate-700/60 p-3.5 sm:p-4 rounded-2xl shadow-xl w-full max-w-3xl mb-4 backdrop-blur-md">
@@ -58,11 +65,25 @@ export default function SeasonHeader({ getApiUrl }) {
         <div className="text-left">
           <div className="flex items-center gap-2">
             <h2 className="text-sm sm:text-base font-black text-white uppercase tracking-wider">
-              {seasonMeta.season_name}
+              {loading ? (
+                <span className="inline-block w-28 h-5 bg-slate-700/50 rounded animate-pulse" />
+              ) : seasonMeta?.season_name ? (
+                seasonMeta.season_name
+              ) : (
+                <span className="text-amber-400">Season Unconfirmed</span>
+              )}
             </h2>
-            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-              LIVE
-            </span>
+            {loading ? (
+              <span className="inline-block w-10 h-4 bg-slate-700/50 rounded-full animate-pulse" />
+            ) : seasonMeta?.season_name ? (
+              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                LIVE
+              </span>
+            ) : (
+              <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                UNCONFIRMED
+              </span>
+            )}
           </div>
           <p className="text-[11px] text-slate-400 font-medium">
             Official Marvel Rivals Competitive Period
@@ -72,15 +93,17 @@ export default function SeasonHeader({ getApiUrl }) {
 
       <div className="flex items-center gap-2.5 flex-wrap justify-end">
         {/* Real-time UTC Countdown Badge */}
-        <div className="bg-[#0b101e] border border-slate-700/80 px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-mono font-bold text-slate-200 shadow-inner">
-          <span className="text-emerald-400 animate-pulse">⏳</span>
-          <span>
-            {timeLeft.days}d {String(timeLeft.hours).padStart(2, '0')}h {String(timeLeft.minutes).padStart(2, '0')}m remaining
-          </span>
-        </div>
+        {!loading && seasonMeta?.end_timestamp && (
+          <div className="bg-[#0b101e] border border-slate-700/80 px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-mono font-bold text-slate-200 shadow-inner">
+            <span className="text-emerald-400 animate-pulse">⏳</span>
+            <span>
+              {timeLeft.days}d {String(timeLeft.hours).padStart(2, '0')}h {String(timeLeft.minutes).padStart(2, '0')}m remaining
+            </span>
+          </div>
+        )}
 
         {/* Upcoming Hero Teaser Badge */}
-        {seasonMeta.upcoming_hero && (
+        {!loading && seasonMeta?.upcoming_hero && (
           <div className="bg-purple-500/10 border border-purple-500/30 px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-bold text-purple-300">
             <span>🎯</span>
             <span>Teaser: {seasonMeta.upcoming_hero}</span>

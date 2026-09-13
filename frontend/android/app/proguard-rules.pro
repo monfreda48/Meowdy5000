@@ -16,7 +16,10 @@
     @com.getcapacitor.PluginMethod public void *(com.getcapacitor.PluginCall);
 }
 
-# Keep custom Native Plugins (FileViewerPlugin)
+# Keep custom Native Plugins (FileViewerPlugin, ApkInstallerPlugin, SafStoragePlugin)
+-keep class com.meowdy5000.stattracker.FileViewerPlugin { *; }
+-keep class com.meowdy5000.stattracker.ApkInstallerPlugin { *; }
+-keep class com.meowdy5000.stattracker.SafStoragePlugin { *; }
 -keep class com.wahl.rivals.FileViewerPlugin { *; }
 
 # Keep official Capacitor Plugins (App, Browser, Filesystem, LocalNotifications)

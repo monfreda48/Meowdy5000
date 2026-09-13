@@ -262,7 +262,21 @@ async def get_rivalsmeta_season_endpoint(refresh: bool = Query(False)):
     and upcoming hero teaser fetched & cached from rivalsmeta.com (12h TTL).
     """
     from backend.adapters.rivalsmeta import fetch_rivalsmeta_season
-    return await fetch_rivalsmeta_season(force_refresh=refresh)
+    res = await fetch_rivalsmeta_season(force_refresh=refresh)
+    if isinstance(res, dict) and res.get("error"):
+        raise HTTPException(
+            status_code=res.get("http_status", 502),
+            detail=res.get("message", "Failed to scrape current season metadata from upstream.")
+        )
+    return res
+
+@app.get("/api/meta/season/debug")
+async def get_season_meta_debug_endpoint():
+    """
+    Diagnostic debug endpoint bypassing SQLite cache completely to probe fresh upstream markup.
+    """
+    from backend.adapters.rivalsmeta import debug_scrape_rivalsmeta_season
+    return await debug_scrape_rivalsmeta_season()
 
 @app.get("/api/meta/tier-list")
 async def get_meta_tier_list_endpoint(source: str = Query("rivalstracker", description="Source provider"), refresh: bool = Query(False)):

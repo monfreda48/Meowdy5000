@@ -247,13 +247,9 @@ def get_meta_season():
         return jsonify(data)
     except Exception as e:
         return jsonify({
-            "season_name": "Season 1",
-            "end_timestamp": "2026-10-15T00:00:00Z",
-            "days_remaining": 32,
-            "upcoming_hero": "Hawkeye",
-            "source": "rivalsmeta.com",
-            "error": str(e)
-        })
+            "status": "error",
+            "message": f"Failed to scrape current season metadata: {e}"
+        }), 502
 
 @app.route('/api/meta/tier-list', methods=['GET'])
 def get_meta_tier_list_flask():

@@ -1685,7 +1685,7 @@ export default function App() {
           uid: activeProfile.uid || activeProfile.player_id || activeProfile.id || claimedProfile?.uid || 'N/A',
           platform: activeProfile.platform || claimedProfile?.platform || 'pc',
           rank: activeProfile.rank || activeProfile.rank_name || activeProfile.rankName || 'Unranked',
-          season: activeProfile.season || activeProfile.seasonName || season || 'Season 1'
+          season: activeProfile.season || activeProfile.seasonName || season || 'Active Season'
         },
         stats: {
           kda: activeProfile.kda || activeProfile.kdRatio || activeProfile.kda_ratio || activeProfile.kd || '0.00',
@@ -2026,7 +2026,7 @@ export default function App() {
   const downloadUserDataset = async (data) => {
     try {
       const username = data.current?.username || 'Player';
-      const seasonName = data.current?.season || 'Season 1';
+      const seasonName = data.current?.season || season || 'Active Season';
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 
       const datasetObj = {
