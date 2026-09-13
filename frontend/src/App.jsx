@@ -6422,17 +6422,47 @@ const DEFAULT_SEASON_NUM = 19;
                   📊
                 </div>
                 <div>
-                  <h3 className="text-lg sm:text-xl font-black text-white tracking-wide">All Overview & Extended Metrics</h3>
-                  <p className="text-xs text-slate-400 font-medium">Categorized stats for {stats?.current?.username || 'Player'}</p>
+                  <h3 className="text-lg sm:text-xl font-black text-white tracking-wide">All Scraped Metrics Explorer</h3>
+                  <p className="text-xs text-slate-400 font-medium">Check/uncheck stats to customize your Main Page dashboard display</p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowMoreStatsModal(false)}
-                className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-lg transition-colors cursor-pointer shrink-0"
-              >
-                ✕
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const allKeys = [];
+                    const currentStats = stats?.current || {};
+                    const totalMatches = currentStats.matchesPlayed || currentStats.total_matches || currentStats.matches || 0;
+                    const rawMore = currentStats.moreStats || {};
+                    const baseKeys = ['winRate', 'kdRatio', 'matchesPlayed', 'timePlayed', 'heroDamage', 'heroDamageMin', 'healing', 'healingMin', 'damageBlocked', 'damageBlockedMin', 'kills', 'assists', 'deaths', 'accuracy', 'mvp', 'svp'];
+                    allKeys.push(...baseKeys);
+                    Object.values(rawMore).forEach(arr => (arr || []).forEach(s => allKeys.push(s.key || s.label.toLowerCase().replace(/[^a-z0-9]/g, '_'))));
+                    const uniqueKeys = [...new Set(allKeys)];
+                    setSelectedMetrics(uniqueKeys);
+                    try { localStorage.setItem('tracked_metrics', JSON.stringify(uniqueKeys)); } catch (e) {}
+                  }}
+                  className="px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[10px] font-black uppercase rounded-lg cursor-pointer transition-colors"
+                >
+                  Select All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedMetrics([]);
+                    try { localStorage.setItem('tracked_metrics', JSON.stringify([])); } catch (e) {}
+                  }}
+                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] font-black uppercase rounded-lg cursor-pointer transition-colors border border-slate-700"
+                >
+                  Deselect All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowMoreStatsModal(false)}
+                  className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-lg transition-colors cursor-pointer shrink-0 ml-1"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Modal Controls: Search & Category Tabs */}
@@ -6440,7 +6470,7 @@ const DEFAULT_SEASON_NUM = 19;
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search metric (e.g., Kills, Win %, Heal, Head, Continue)..."
+                  placeholder="Search metric (e.g., Damage, Healing, Kills, Win Rate)..."
                   value={moreStatsFilter}
                   onChange={(e) => setMoreStatsFilter(e.target.value)}
                   className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 pl-10 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/60 transition-colors"
@@ -6459,7 +6489,7 @@ const DEFAULT_SEASON_NUM = 19;
 
               {/* Category Pills */}
               <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                {['All', 'Game', 'Combat', 'Support & Healing', 'Defense & Damage', 'Additional Metrics'].map((cat) => (
+                {['All', 'Core Summary', 'Combat Output (Rates)', 'Combat Totals'].map((cat) => (
                   <button
                     key={cat}
                     type="button"
@@ -6482,21 +6512,89 @@ const DEFAULT_SEASON_NUM = 19;
             {/* Modal Body / Stat Cards */}
             <div className="p-5 overflow-y-auto space-y-6 flex-1 custom-scrollbar">
               {(() => {
-                const rawMoreStats = stats?.current?.moreStats;
-                if (!rawMoreStats || Object.keys(rawMoreStats).length === 0) {
+                const currentStats = stats?.current;
+                if (!currentStats) {
                   return (
                     <div className="py-12 text-center space-y-3">
                       <div className="text-4xl animate-pulse">⌛</div>
                       <h4 className="text-lg font-bold text-slate-300">Extended Metrics Indexing or Unavailable</h4>
                       <p className="text-xs text-slate-500 max-w-md mx-auto">
-                        Detailed overview metrics are being fetched or indexed from Tracker.gg for this profile. Try refreshing or checking back shortly.
+                        Detailed metrics are being fetched or indexed for this profile. Try refreshing or checking back shortly.
                       </p>
                     </div>
                   );
                 }
 
+                // Compute dual rates and categories
+                const totalMatches = currentStats.matchesPlayed || currentStats.total_matches || currentStats.matches || 0;
+                const wins = currentStats.matchesWon || currentStats.wins || 0;
+                const winRate = currentStats.winRate || currentStats.win_rate || '0.0%';
+                const kda = currentStats.kdRatio || currentStats.kda || currentStats.kda_ratio || '0.00';
+                const kills = currentStats.kills || 0;
+                const deaths = currentStats.deaths || 0;
+                const assists = currentStats.assists || 0;
+                const totalDamage = currentStats.totalDamage || currentStats.heroDamage || 0;
+                const totalHealing = currentStats.healing || 0;
+                const totalBlocked = currentStats.damageBlocked || 0;
+                const accuracy = currentStats.accuracy || '0.0%';
+                const playtime = currentStats.timePlayed || currentStats.time_played || '0h';
+
+                const dmgRaw = typeof totalDamage === 'number' ? totalDamage : parseFloat(String(totalDamage).replace(/[^0-9.]/g, '')) || 0;
+                const healRaw = typeof totalHealing === 'number' ? totalHealing : parseFloat(String(totalHealing).replace(/[^0-9.]/g, '')) || 0;
+                const blockRaw = typeof totalBlocked === 'number' ? totalBlocked : parseFloat(String(totalBlocked).replace(/[^0-9.]/g, '')) || 0;
+
+                const dmg10m = dmgRaw > 0 ? (dmgRaw > 50000 ? Math.round(dmgRaw / (totalMatches || 1)) : dmgRaw) : 0;
+                const dmgMin = Math.round(dmg10m / 10);
+
+                const heal10m = healRaw > 0 ? (healRaw > 50000 ? Math.round(healRaw / (totalMatches || 1)) : healRaw) : 0;
+                const healMin = Math.round(heal10m / 10);
+
+                const block10m = blockRaw > 0 ? (blockRaw > 50000 ? Math.round(blockRaw / (totalMatches || 1)) : blockRaw) : 0;
+                const blockMin = Math.round(block10m / 10);
+
+                const categoriesData = {
+                  'Core Summary': [
+                    { key: 'winRate', label: 'Win Rate', value: formatPercent(winRate) },
+                    { key: 'kdRatio', label: 'K/D/A Ratio', value: String(kda) },
+                    { key: 'matchesPlayed', label: 'Matches Played', value: `${totalMatches} (${wins} Wins)` },
+                    { key: 'timePlayed', label: 'Total Playtime', value: String(playtime) }
+                  ],
+                  'Combat Output (Rates)': [
+                    { key: 'heroDamage', label: 'Damage / 10 Min', value: dmg10m > 0 ? `${dmg10m.toLocaleString()} / 10m` : 'N/A', altRate: dmgMin > 0 ? `${dmgMin.toLocaleString()} / min` : null },
+                    { key: 'heroDamageMin', label: 'Damage / Minute', value: dmgMin > 0 ? `${dmgMin.toLocaleString()} / min` : 'N/A', altRate: dmg10m > 0 ? `${dmg10m.toLocaleString()} / 10m` : null },
+                    { key: 'healing', label: 'Healing / 10 Min', value: heal10m > 0 ? `${heal10m.toLocaleString()} / 10m` : 'N/A', altRate: healMin > 0 ? `${healMin.toLocaleString()} / min` : null },
+                    { key: 'healingMin', label: 'Healing / Minute', value: healMin > 0 ? `${healMin.toLocaleString()} / min` : 'N/A', altRate: heal10m > 0 ? `${heal10m.toLocaleString()} / 10m` : null },
+                    { key: 'damageBlocked', label: 'Dmg Blocked / 10 Min', value: block10m > 0 ? `${block10m.toLocaleString()} / 10m` : 'N/A', altRate: blockMin > 0 ? `${blockMin.toLocaleString()} / min` : null },
+                    { key: 'damageBlockedMin', label: 'Dmg Blocked / Minute', value: blockMin > 0 ? `${blockMin.toLocaleString()} / min` : 'N/A', altRate: block10m > 0 ? `${block10m.toLocaleString()} / 10m` : null }
+                  ],
+                  'Combat Totals': [
+                    { key: 'kills', label: 'Total Eliminations', value: kills.toLocaleString() },
+                    { key: 'assists', label: 'Total Assists', value: assists.toLocaleString() },
+                    { key: 'deaths', label: 'Total Deaths', value: deaths.toLocaleString() },
+                    { key: 'accuracy', label: 'Weapon Accuracy', value: formatPercent(accuracy) },
+                    { key: 'mvp', label: 'MVPs Earned', value: String(currentStats.mvps || currentStats.mvp || 0) },
+                    { key: 'svp', label: 'SVPs Earned', value: String(currentStats.svps || currentStats.svp || 0) }
+                  ]
+                };
+
+                const rawMore = currentStats.moreStats || {};
+                Object.keys(rawMore).forEach(rawCat => {
+                  if (!categoriesData[rawCat]) categoriesData[rawCat] = [];
+                  (rawMore[rawCat] || []).forEach(item => {
+                    const itemKey = item.key || item.label.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                    const exists = categoriesData[rawCat].some(c => c.key === itemKey);
+                    if (!exists) {
+                      categoriesData[rawCat].push({
+                        key: itemKey,
+                        label: item.label,
+                        value: item.value
+                      });
+                    }
+                  });
+                });
+
                 const filterLower = moreStatsFilter.trim().toLowerCase();
-                const categoriesToDisplay = Object.keys(rawMoreStats).filter(cat => 
+                const categoriesToDisplay = Object.keys(categoriesData).filter(cat => 
                   moreStatsCategory === 'All' || moreStatsCategory === cat
                 );
 
@@ -6505,7 +6603,7 @@ const DEFAULT_SEASON_NUM = 19;
                 return (
                   <>
                     {categoriesToDisplay.map((category) => {
-                      const items = (rawMoreStats[category] || []).filter(item =>
+                      const items = (categoriesData[category] || []).filter(item =>
                         !filterLower || item.label.toLowerCase().includes(filterLower) || item.key.toLowerCase().includes(filterLower)
                       );
 
@@ -6521,19 +6619,52 @@ const DEFAULT_SEASON_NUM = 19;
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                            {items.map((stat, idx) => (
-                              <div
-                                key={idx}
-                                className="bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 rounded-2xl p-3 flex items-center justify-between gap-3 transition-colors"
-                              >
-                                <span className="text-xs font-bold text-slate-300 truncate" title={stat.label}>
-                                  {stat.label}
-                                </span>
-                                <span className="text-xs font-black text-emerald-400 shrink-0 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl">
-                                  {stat.value}
-                                </span>
-                              </div>
-                            ))}
+                            {items.map((stat) => {
+                              const isChecked = selectedMetrics.includes(stat.key);
+                              return (
+                                <div
+                                  key={stat.key}
+                                  onClick={() => toggleMetric(stat.key)}
+                                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-2 select-none ${
+                                    isChecked
+                                      ? 'bg-emerald-500/10 border-emerald-500/50 shadow-md shadow-emerald-500/10'
+                                      : 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 overflow-hidden">
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={() => {}}
+                                        className="w-4 h-4 rounded border-slate-700 text-emerald-500 focus:ring-emerald-500 bg-slate-950 cursor-pointer shrink-0"
+                                      />
+                                      <span className="text-xs font-bold text-slate-200 truncate" title={stat.label}>
+                                        {stat.label}
+                                      </span>
+                                    </div>
+                                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border shrink-0 ${
+                                      isChecked
+                                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                        : 'bg-slate-800 text-slate-400 border-slate-700'
+                                    }`}>
+                                      {isChecked ? '✓ Main Page' : '+ Add'}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-baseline justify-between gap-2 pt-1 border-t border-slate-800/60">
+                                    <span className="text-sm font-black text-emerald-400">
+                                      {stat.value}
+                                    </span>
+                                    {stat.altRate && (
+                                      <span className="text-[10px] text-cyan-400 font-mono font-bold bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                                        {stat.altRate}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       );
