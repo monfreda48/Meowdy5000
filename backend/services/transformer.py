@@ -236,7 +236,23 @@ class TelemetryTransformer:
             # Synergy, Heroes & Multi-Tab Telemetry
             "squad_synergy": squad_synergy,
             "squadSynergy": squad_synergy,
-            "teammates": squad_synergy,
+            "teammates": squad_synergy
+        }
+        rm_heroes = rm.get("heroes", {}).get("heroes", []) if isinstance(rm.get("heroes"), dict) else []
+        rm_roles = rm.get("heroes", {}).get("roles", []) if isinstance(rm.get("heroes"), dict) else []
+
+        if rm_heroes:
+            all_heroes = rm_heroes
+            h0 = rm_heroes[0]
+            top_hero_name = h0.get("hero") or h0.get("hero_name") or top_hero_name
+            top_hero_time = h0.get("time_played") or top_hero_time
+            if h0.get("damage_10m"):
+                damage_10m = h0["damage_10m"]
+            if h0.get("heal_10m"):
+                healing_10m = h0["heal_10m"]
+
+        canonical.update({
+            "role_breakdown": rm_roles,
             "top_heroes": all_heroes,
             "topHeroes": all_heroes,
             "heroes": all_heroes,
@@ -258,7 +274,7 @@ class TelemetryTransformer:
                 "RivalsMeta": bool(rm),
                 "TrackerGG": bool(tgg)
             }
-        }
+        })
 
         # Keep current sub-dict and stats sub-dict for backward compatibility
         canonical["current"] = {

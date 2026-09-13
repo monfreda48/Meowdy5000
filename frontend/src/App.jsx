@@ -25,6 +25,7 @@ import NotificationSettings from './components/NotificationSettings';
 import PlatformIcon from './components/PlatformIcon';
 import HeroMasteryPanel from './components/HeroMasteryPanel';
 import AccountHealthPanel from './components/AccountHealthPanel';
+import HeroProgression from './components/HeroProgression';
 import GoalRecommendationsCard from './components/GoalRecommendationsCard';
 import { checkForAppUpdate } from './utils/updater';
 import UpdateModal from './components/UpdateModal';
@@ -4725,6 +4726,10 @@ const DEFAULT_SEASON_NUM = 19;
                     season={stats?.current?.season || "Season 10"}
                     uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
                     API_BASE_URL={getApiUrl()}
+                  />
+                  <HeroProgression
+                    heroes={stats?.top_heroes || stats?.current?.top_heroes || stats?.heroes || []}
+                    roles={stats?.role_breakdown || []}
                   />
                   <AccountHealthPanel
                     punishments={stats?.current?.punishments || stats?.punishments || []}

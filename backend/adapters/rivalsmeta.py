@@ -386,6 +386,111 @@ RIVALSMETA_TABS = [
     "punishments"
 ]
 
+def parse_rivalsmeta_heroes_tab(html_content: str) -> Dict[str, Any]:
+    if not html_content:
+        return {"active_mode": "Quick Play", "roles": [], "heroes": []}
+    soup = BeautifulSoup(html_content, "html.parser")
+    
+    active_mode_el = soup.select_one(".profile-heroes .modes button.active")
+    active_mode = active_mode_el.get_text(strip=True) if active_mode_el else "Quick Play"
+
+    role_stats = []
+    for btn in soup.select(".profile-heroes .classes button.class, .classes button.class"):
+        name_el = btn.select_one(".left .name, .name")
+        right_el = btn.select_one(".right")
+        if not name_el or not right_el:
+            continue
+            
+        role_name = name_el.get_text(strip=True)
+        right_text = right_el.get_text(" ", strip=True)
+        
+        wr_match = re.search(r"([\d.]+)%", right_text)
+        wl_match = re.search(r"\((\d+)W\s*(\d+)L\)", right_text)
+        
+        win_rate = float(wr_match.group(1)) if wr_match else 0.0
+        wins = int(wl_match.group(1)) if wl_match else 0
+        losses = int(wl_match.group(2)) if wl_match else 0
+
+        role_stats.append({
+            "role": role_name,
+            "win_rate": win_rate,
+            "wins": wins,
+            "losses": losses,
+            "matches": wins + losses
+        })
+
+    heroes = []
+    for tr in soup.select("table.heroes-table tbody tr"):
+        tds = tr.find_all("td")
+        if len(tds) < 10:
+            continue
+
+        hero_cell = tds[0]
+        name_el = hero_cell.select_one(".hero-name")
+        if not name_el:
+            continue
+            
+        hero_name = name_el.get_text(strip=True)
+        img_el = hero_cell.select_one("img.hero-face")
+        avatar_src = img_el.get("src", "") if img_el else ""
+        if avatar_src.startswith("/"):
+            avatar_src = f"https://rivalsmeta.com{avatar_src}"
+
+        matches_raw = re.sub(r"[^\d]", "", tds[1].get_text(strip=True))
+        matches = int(matches_raw) if matches_raw else 0
+        
+        wr_match = re.search(r"([\d.]+)%", tds[2].get_text(strip=True))
+        win_rate = float(wr_match.group(1)) if wr_match else 0.0
+
+        kda_b = tds[3].select_one("b")
+        kda_em = tds[3].select_one("em")
+        kda_match = re.search(r"([\d.]+)", kda_b.get_text(strip=True)) if kda_b else None
+        kda = float(kda_match.group(1)) if kda_match else 0.0
+        kda_split = kda_em.get_text(strip=True) if kda_em else ""
+
+        dmg_clean = tds[4].get_text(strip=True).replace("/min", "").replace(",", "").strip()
+        heal_clean = tds[5].get_text(strip=True).replace("/min", "").replace(",", "").strip()
+        dmg_per_min = float(dmg_clean) if dmg_clean.replace(".", "", 1).isdigit() else 0.0
+        heal_per_min = float(heal_clean) if heal_clean.replace(".", "", 1).isdigit() else 0.0
+
+        acc_match = re.search(r"([\d.]+)%", tds[6].get_text(strip=True))
+        accuracy = float(acc_match.group(1)) if acc_match else 0.0
+
+        mvps_raw = re.sub(r"[^\d]", "", tds[7].get_text(strip=True))
+        svps_raw = re.sub(r"[^\d]", "", tds[8].get_text(strip=True))
+        mvps = int(mvps_raw) if mvps_raw else 0
+        svps = int(svps_raw) if svps_raw else 0
+
+        time_played = tds[9].get_text(strip=True)
+
+        heroes.append({
+            "hero": hero_name,
+            "hero_name": hero_name,
+            "avatar": avatar_src,
+            "matches": matches,
+            "win_rate": f"{win_rate:.2f}%",
+            "win_rate_val": win_rate,
+            "kda": kda,
+            "kda_split": kda_split,
+            "damage_per_min": dmg_per_min,
+            "damage_10m": int(dmg_per_min * 10),
+            "heal_per_min": heal_per_min,
+            "heal_10m": int(heal_per_min * 10),
+            "accuracy": f"{accuracy:.1f}%",
+            "accuracy_val": accuracy,
+            "mvps": mvps,
+            "svps": svps,
+            "time_played": time_played
+        })
+
+    heroes.sort(key=lambda x: x["matches"], reverse=True)
+
+    return {
+        "active_mode": active_mode,
+        "roles": role_stats,
+        "heroes": heroes
+    }
+
 def parse_rivalsmeta_tab(tab: str, html: str) -> Dict[str, Any]:
     if not html:
         return {}
@@ -424,27 +529,7 @@ def parse_rivalsmeta_tab(tab: str, html: str) -> Dict[str, Any]:
         out["teammates"] = teammates
 
     elif tab == "heroes":
-        heroes = []
-        for tr in soup.select("table.heroes-table tbody tr, .heroes-list tr"):
-            tds = tr.find_all("td")
-            name_el = tr.select_one(".hero-name, td:first-child span")
-            if name_el and len(tds) >= 8:
-                kda_el = tds[3].select_one("b") or tds[3]
-                split_el = tds[3].select_one("em, small")
-                heroes.append({
-                    "hero_name": name_el.get_text(strip=True),
-                    "matches": int(re.sub(r"[^\d]", "", tds[1].get_text()) or 0),
-                    "win_rate": float(re.search(r"(\d+(\.\d+)?)", tds[2].get_text()).group(1) if re.search(r"(\d+(\.\d+)?)", tds[2].get_text()) else 0.0),
-                    "kda": float(re.search(r"(\d+(\.\d+)?)", kda_el.get_text()).group(1) if re.search(r"(\d+(\.\d+)?)", kda_el.get_text()) else 0.0),
-                    "kda_split": split_el.get_text(strip=True) if split_el else "",
-                    "damage_per_min": float(re.sub(r"[^\d.]", "", tds[4].get_text()) or 0.0),
-                    "heal_per_min": float(re.sub(r"[^\d.]", "", tds[5].get_text()) or 0.0),
-                    "accuracy_pct": float(re.sub(r"[^\d.]", "", tds[6].get_text()) or 0.0),
-                    "mvps": int(re.sub(r"[^\d]", "", tds[7].get_text()) or 0),
-                    "svps": int(re.sub(r"[^\d]", "", tds[8].get_text()) or 0) if len(tds) > 8 else 0,
-                    "time_played": tds[9].get_text(strip=True) if len(tds) > 9 else ""
-                })
-        out["heroes"] = heroes
+        out = parse_rivalsmeta_heroes_tab(html)
 
     elif tab == "maps":
         maps = []
