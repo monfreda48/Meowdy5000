@@ -289,6 +289,18 @@ export default function App() {
   const [season, setSeason] = useState('19');
   const [timeframe, setTimeframe] = useState('all');
   const [expandedMetrics, setExpandedMetrics] = useState({});
+  const [allCollapsed, setAllCollapsed] = useState(false);
+
+  const toggleCollapseAll = () => {
+    const nextState = !allCollapsed;
+    setAllCollapsed(nextState);
+    const updated = {};
+    const metricKeys = ['winRate', 'kdRatio', 'heroDamage', 'healing', 'damageBlocked', 'accuracy', 'mvp', 'svp', 'timePlayed', 'matchesPlayed'];
+    metricKeys.forEach(id => {
+      updated[id] = !nextState;
+    });
+    setExpandedMetrics(updated);
+  };
   const [seasonsList, setSeasonsList] = useState(DEFAULT_SEASONS);
   const [currentSeasonName, setCurrentSeasonName] = useState('Season 9.5');
 
@@ -3909,6 +3921,31 @@ const DEFAULT_SEASON_NUM = 19;
               />
             ) : (
               <div className="space-y-6 animate-in fade-in duration-300">
+                {/* Active Metrics Bar & Expand/Collapse Controls */}
+                <div className="flex items-center justify-between gap-3 mb-4 flex-wrap bg-[#0d111d] p-3.5 rounded-2xl border border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-300">
+                      Active Metrics ({selectedMetrics.length})
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={toggleCollapseAll}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer"
+                    >
+                      <span>{allCollapsed ? '▼ Expand All' : '▲ Collapse All'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowMoreStatsModal(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30 transition-colors cursor-pointer"
+                    >
+                      ⚙ Customise Display
+                    </button>
+                  </div>
+                </div>
 
 
 
