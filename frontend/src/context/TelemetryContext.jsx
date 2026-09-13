@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useMemo } from 'react';
 
-const TelemetryContext = createContext();
+const TelemetryContext = createContext(null);
 
 export function TelemetryProvider({ children, rawData }) {
-  const [mode, setMode] = useState('all'); // 'competitive' | 'quickplay' | 'all'
+  const [mode, setMode] = useState('all'); // 'all' | 'competitive' | 'quickplay'
   const [heroSortKey, setHeroSortKey] = useState('matches');
   const [heroSortDir, setHeroSortDir] = useState('desc');
 
@@ -41,18 +41,19 @@ export function TelemetryProvider({ children, rawData }) {
       matchups: rm.matchups?.matchups || rawData.matchups || [],
       maps: rm.maps?.maps || rawData.maps || [],
       punishments: rm.punishments?.punishments || rawData.punishments || [],
-      accolades: rm.all_time?.all_time?.accolades || rawData.accolades || {}
+      accolades: rm.all_time?.all_time?.accolades || rawData.accolades || {},
+      allTime: rm.all_time || rawData.all_time || {}
     };
   }, [rawData, mode, heroSortKey, heroSortDir]);
 
   const value = {
+    data: filteredData,
     mode,
     setMode,
     heroSortKey,
     setHeroSortKey,
     heroSortDir,
-    setHeroSortDir,
-    filteredData
+    setHeroSortDir
   };
 
   return (
