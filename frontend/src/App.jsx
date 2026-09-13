@@ -18,7 +18,7 @@ import SquadSynergyCard from './components/SquadSynergyCard';
 import MapBreakdownGrid from './components/MapBreakdownGrid';
 import BugReportModal from './components/BugReportModal';
 import FeatureSuggestionModal from './components/FeatureSuggestionModal';
-import { saveExportToCache, FileViewer } from './utils/exporter';
+import { saveExportToCache, FileViewer, openExportCacheFolder } from './utils/exporter';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { initNotificationChannel } from './utils/notifications';
 import NotificationSettings from './components/NotificationSettings';
@@ -5884,6 +5884,35 @@ const DEFAULT_SEASON_NUM = 19;
                       {isMobileView ? 'Mobile' : 'Desktop'}
                     </button>
                   </div>
+
+                  {/* View Files in Cache Folder Action */}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setIsMenuOpen(false);
+                      triggerHaptic('medium');
+                      const res = await openExportCacheFolder();
+                      if (res.isWeb) {
+                        showNativeToast('📁 Cache folder viewing is available on native Android app');
+                      } else if (!res.success) {
+                        showNativeToast(`⚠️ ${res.error || 'Failed to open cache folder'}`);
+                      }
+                    }}
+                    className="w-full bg-[#131b2f] hover:bg-cyan-500/10 border border-slate-700/80 hover:border-cyan-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-sm">
+                        📁
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white group-hover:text-cyan-400 transition-colors">
+                          View Files in Folder
+                        </h4>
+                        <p className="text-[10px] text-slate-400">Open exported tracker datasets in scoped cache</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 group-hover:text-cyan-400 font-bold">↗</span>
+                  </button>
                 </div>
 
                 {/* Drawer Group 4: Community & Meta Resources */}
