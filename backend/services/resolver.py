@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import urllib.parse
 import httpx
 import sqlite3
 import logging
@@ -64,35 +65,48 @@ async def resolve_canonical_uid(identifier: str) -> str:
     if clean_id.isdigit():
         return clean_id
 
-    # 2. Check memory & database caches
+    lower_id = clean_id.lower()
+    if lower_id in UID_CACHE:
+        return UID_CACHE[lower_id]
+
+    # Check local database cache
     cached = get_cached_uid(clean_id)
     if cached:
         return cached
 
-    # 3. Query RivalsData with username and extract UID from resolved URL
+    # URL-encode the username so spaces do not crash httpx
+    encoded_id = urllib.parse.quote(clean_id, safe="")
+    target_url = f"https://rivalsdata.com/player/{encoded_id}"
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
     }
+
     try:
         async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
-            target_url = f"https://rivalsdata.com/player/{clean_id}"
             resp = await client.get(target_url, headers=headers)
-
             if resp.status_code == 200:
+                # 1. Check redirected URL pattern: /player/(\d+)
                 url_match = re.search(r"/player/(\d+)", str(resp.url))
                 if url_match:
                     resolved_uid = url_match.group(1)
+                    UID_CACHE[lower_id] = resolved_uid
                     cache_resolved_identity(clean_id, resolved_uid)
+                    print(f"[RESOLVER SUCCESS] Resolved '{clean_id}' -> UID {resolved_uid} via URL redirect")
                     return resolved_uid
 
-                body_match = re.search(r'["\'](?:player_id|uid)["\']:\s*["\']?(\d+)["\']?', resp.text)
+                # 2. Check JSON/HTML body metadata
+                body_match = re.search(r'["\'](?:player_id|uid)["\']:\s*["\']?(\d{7,10})["\']?', resp.text)
                 if body_match:
                     resolved_uid = body_match.group(1)
+                    UID_CACHE[lower_id] = resolved_uid
                     cache_resolved_identity(clean_id, resolved_uid)
+                    print(f"[RESOLVER SUCCESS] Resolved '{clean_id}' -> UID {resolved_uid} via body metadata")
                     return resolved_uid
-    except Exception as err:
-        logger.warning(f"[resolver] Resolution failed for '{clean_id}': {err}")
+            else:
+                print(f"[RESOLVER WARNING] RivalsData returned HTTP {resp.status_code} for {target_url}")
+    except Exception as e:
+        print(f"[RESOLVER ERROR] Failed to resolve '{clean_id}': {e}")
 
     return clean_id
 

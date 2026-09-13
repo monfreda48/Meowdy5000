@@ -730,17 +730,7 @@ async def create_feature_suggestion(payload: FeatureSuggestionPayload):
 @app.get("/api/player/{uid}/mastery")
 async def get_player_mastery_endpoint(uid: str):
     records = get_hero_mastery_from_db(uid)
-    if not records:
-        records = [
-            {"player_uid": uid, "hero_name": "Magneto", "mastery_level": 18, "current_xp": 8450, "next_level_xp": 10000, "badge_url": None},
-            {"player_uid": uid, "hero_name": "Luna Snow", "mastery_level": 14, "current_xp": 5200, "next_level_xp": 8000, "badge_url": None},
-            {"player_uid": uid, "hero_name": "Hela", "mastery_level": 11, "current_xp": 2100, "next_level_xp": 6000, "badge_url": None},
-            {"player_uid": uid, "hero_name": "Venom", "mastery_level": 9, "current_xp": 1400, "next_level_xp": 5000, "badge_url": None},
-            {"player_uid": uid, "hero_name": "Doctor Strange", "mastery_level": 7, "current_xp": 800, "next_level_xp": 4000, "badge_url": None},
-        ]
-        for r in records:
-            upsert_hero_mastery(uid, r["hero_name"], r["mastery_level"], r["current_xp"], r["next_level_xp"])
-    return records
+    return records or []
 
 @app.get("/api/player/{uid}/conduct")
 async def get_player_conduct_endpoint(uid: str):

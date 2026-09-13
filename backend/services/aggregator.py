@@ -353,12 +353,14 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
             rt_data, rm_data, tgg_data = await asyncio.gather(rt_task, rm_task, tgg_task)
         else:
             # Username was provided: resolve UID from RivalsData redirect
-            resolved_uid = await resolve_canonical_uid(clean_id)
+            canonical_uid = await resolve_canonical_uid(clean_id)
+            resolved_uid = canonical_uid
+            print(f"[AGGREGATOR] Executing multi-source scrape with Canonical UID: {canonical_uid}")
 
             tgg_task = fetch_trackergg_profile(clean_id)
-            rd_task = fetch_rivalsdata_profile(resolved_uid)
-            rt_task = fetch_rivalstracker_profile(resolved_uid)
-            rm_task = fetch_rivalsmeta_profile(resolved_uid)
+            rd_task = fetch_rivalsdata_profile(canonical_uid)
+            rt_task = fetch_rivalstracker_profile(canonical_uid)
+            rm_task = fetch_rivalsmeta_profile(canonical_uid)
 
             tgg_data, data, rt_data, rm_data = await asyncio.gather(tgg_task, rd_task, rt_task, rm_task)
 

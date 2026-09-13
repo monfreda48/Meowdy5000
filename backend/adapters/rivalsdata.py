@@ -261,11 +261,7 @@ async def fetch_rivalsdata_profile(uid: str, platform: str = "pc") -> Dict[str, 
     avatar_url = scraped_data.get("avatar_url") if scraped_data else "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31029208.jpg"
     level = (scraped_data.get("level") if scraped_data else None) or parsed_dom.get("level") or 1
 
-    heroes = scraped_data.get("heroes", []) if scraped_data else [
-        {"hero_name": "Magneto", "mastery_level": 18, "current_xp": 8450, "next_level_xp": 10000},
-        {"hero_name": "Luna Snow", "mastery_level": 14, "current_xp": 5200, "next_level_xp": 8000},
-        {"hero_name": "Hela", "mastery_level": 11, "current_xp": 2100, "next_level_xp": 6000}
-    ]
+    heroes = scraped_data.get("heroes", []) if scraped_data else []
 
     telemetry = {
         "platform": detected_platform,
