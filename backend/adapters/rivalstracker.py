@@ -13,8 +13,8 @@ logger = logging.getLogger("rivalstracker_adapter")
 
 def parse_player_level(soup: BeautifulSoup) -> int:
     level_el = (
-        soup.select_one("p[data-v-cfd279cc]") or 
-        soup.select_one(".level, .player-level, [class*='level'], span.level, .lvl p")
+        soup.select_one(".left_info .lvl p, .lvl p, div.lvl p, p[data-v-cfd279cc]") or 
+        soup.select_one(".level, .player-level, [class*='level'], span.level")
     )
     if level_el:
         digits = re.sub(r"[^\d]", "", level_el.get_text(strip=True))

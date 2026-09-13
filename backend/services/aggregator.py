@@ -316,7 +316,9 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
     if not force_refresh:
         cached = get_cached_player_profile(resolved_uid)
         if cached and cached.get("current", {}).get("scraped_at"):
-            plat = cached.get("platform") or cached.get("current", {}).get("platform", "pc")
+            cached_lvl = safe_int(cached.get("level") or cached.get("current", {}).get("level") or cached.get("player_level"))
+            if cached_lvl > 1:
+                plat = cached.get("platform") or cached.get("current", {}).get("platform", "pc")
             reconciled = build_reconciled_stats(cached, cached.get("rivalstracker_stats"), cached.get("rivalsmeta_stats"), cached.get("trackergg_stats"))
             canonical = TelemetryTransformer.unify_player_payload(
                 resolved_uid,

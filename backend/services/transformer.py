@@ -17,6 +17,14 @@ def safe_float(val: Any, default: float = 0.0) -> float:
     match = re.search(r"(\d+(\.\d+)?)", str(val))
     return float(match.group(1)) if match else default
 
+def extract_true_level(*candidates) -> int:
+    valid = []
+    for c in candidates:
+        val = safe_int(c)
+        if val > 1:
+            valid.append(val)
+    return max(valid) if valid else 1
+
 class TelemetryTransformer:
     @classmethod
     def unify_player_payload(cls, uid: str, rd: Dict[str, Any], rt: Dict[str, Any], rm: Dict[str, Any], tgg: Dict[str, Any]) -> Dict[str, Any]:
@@ -45,14 +53,12 @@ class TelemetryTransformer:
         else:
             platform = "pc"
 
-        level = max(
-            safe_int(rm.get("overview", {}).get("level")),
-            safe_int(rm.get("level")),
-            safe_int(rt.get("level")),
-            safe_int(rd_curr.get("level")),
-            safe_int(rd.get("level")),
-            1
-        )
+        rt_lvl = rt.get("level")
+        rm_lvl = rm.get("overview", {}).get("level") or rm.get("level")
+        rd_lvl = rd_curr.get("level") or rd.get("level")
+        tgg_lvl = tgg.get("overview", {}).get("level") or tgg.get("level")
+
+        level = extract_true_level(rt_lvl, rm_lvl, rd_lvl, tgg_lvl)
 
         # 2. Competitive Rank & Points
         # Priority: Tracker.gg (freshest) -> RivalsTracker/Meta -> RivalsData
@@ -180,6 +186,8 @@ class TelemetryTransformer:
             "username": username,
             "platform": platform,
             "level": level,
+            "player_level": level,
+            "playerLevel": level,
             "rank": rank,
             "rank_tier": rank,
             "rankTier": rank,

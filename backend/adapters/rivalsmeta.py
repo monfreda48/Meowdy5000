@@ -493,8 +493,7 @@ def parse_rivalsmeta_heroes_tab(html_content: str) -> Dict[str, Any]:
 
 def parse_player_level(soup: BeautifulSoup) -> int:
     level_el = (
-        soup.select_one("p[data-v-cfd279cc]") or 
-        soup.select_one(".level, .player-level, [class*='level'], span.level")
+        soup.select_one(".level, span.level, .avatar .level, .player-level, [class*='level'], p[data-v-cfd279cc]")
     )
     if level_el:
         digits = re.sub(r"[^\d]", "", level_el.get_text(strip=True))

@@ -3758,9 +3758,9 @@ const DEFAULT_SEASON_NUM = 19;
                 {/* Profile Picture Avatar Container with Overlapping Player Level Badge */}
                 <div className="relative group cursor-pointer mt-2 shrink-0" onClick={() => { triggerHaptic('light'); setShowAvatarModal(true); }}>
                   {/* Overlapping Player Level Badge */}
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 px-2 py-0.5 rounded bg-[#0b0e1b] border-2 border-[#f6c344] shadow-md flex items-center justify-center min-w-[28px]">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 px-2 py-0.5 rounded bg-[#0b0e1b] border-2 border-[#f6c344] shadow-md flex items-center justify-center min-w-[32px]">
                     <span className="text-xs font-black text-white font-mono tracking-tight leading-none">
-                      {stats.current.level || stats.level || 1}
+                      {stats.current?.level ?? stats.current?.player_level ?? stats.current?.playerLevel ?? stats.level ?? 1}
                     </span>
                   </div>
 
