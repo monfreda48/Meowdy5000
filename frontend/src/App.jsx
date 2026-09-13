@@ -19,6 +19,9 @@ import MapBreakdownGrid from './components/MapBreakdownGrid';
 import BugReportModal from './components/BugReportModal';
 import FeatureSuggestionModal from './components/FeatureSuggestionModal';
 import { saveExportToCache, FileViewer } from './utils/exporter';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { initNotificationChannel } from './utils/notifications';
+import NotificationSettings from './components/NotificationSettings';
 
 const triggerHaptic = async (type = 'light') => {
   try {
@@ -279,6 +282,27 @@ export default function App() {
   useEffect(() => {
     try { localStorage.removeItem('installed_version_name'); } catch (e) { }
     fetchDynamicSeasons();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) {
+      initNotificationChannel();
+
+      const listener = LocalNotifications.addListener(
+        'localNotificationActionPerformed',
+        (notification) => {
+          const extra = notification?.notification?.extra;
+          if (extra?.route) {
+            console.log('Opened app from reminder notification');
+            showNativeToast('⚔️ Welcome back! Reviewing your match stats...');
+          }
+        }
+      );
+
+      return () => {
+        listener.then((sub) => sub.remove?.()).catch(() => {});
+      };
+    }
   }, []);
 
   // Recent Searches State & Helpers
@@ -5398,36 +5422,7 @@ const DEFAULT_SEASON_NUM = 19;
 
 
                 {/* Drawer Group 0.58: Daily Tracking Reminder */}
-                <div className="space-y-2.5 bg-[#131b2f] border border-slate-700/60 p-3.5 rounded-2xl text-left">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
-                      <span>🔔</span> Daily Tracking Reminder
-                    </span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${dailyNotificationEnabled ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'}`}>
-                      {dailyNotificationEnabled ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-3 bg-[#0b101e] border border-slate-700/60 p-3 rounded-xl">
-                    <div className="text-left">
-                      <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <span>🔔</span>
-                        <span>Daily Log In Reminder</span>
-                      </h4>
-                      <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
-                        Send a daily notification to log in, track stats, and update performance snapshots.
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={toggleDailyNotification}
-                      className={`w-12 h-6 rounded-full transition-colors p-1 cursor-pointer flex items-center shrink-0 border ${dailyNotificationEnabled ? 'bg-emerald-500 border-emerald-400 justify-end' : 'bg-slate-800 border-slate-700 justify-start'}`}
-                    >
-                      <div className="w-4 h-4 rounded-full bg-white shadow-md"></div>
-                    </button>
-                  </div>
-                </div>
+                <NotificationSettings showNativeToast={showNativeToast} />
 
                 {/* Drawer Group 0.6: App Color Scheme & Themes */}
                 <div className="space-y-2.5 bg-[#131b2f] border border-slate-700/60 p-3.5 rounded-2xl">
