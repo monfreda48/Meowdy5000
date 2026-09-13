@@ -219,6 +219,14 @@ def reconcile_metric(**sources):
         "has_divergence": has_divergence,
         "sources": clean_sources
     }
+def safe_float(val: Any, default: float = 0.0) -> float:
+    if val is None:
+        return default
+    try:
+        clean = re.sub(r'[^0-9.]', '', str(val))
+        return float(clean) if clean else default
+    except Exception:
+        return default
 
 def build_reconciled_stats(
     rd_data: Dict[str, Any],
