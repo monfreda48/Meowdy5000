@@ -5533,32 +5533,6 @@ const DEFAULT_SEASON_NUM = 19;
                 {/* Drawer Group 0.58: Daily Tracking Reminder */}
                 <NotificationSettings showNativeToast={showNativeToast} />
 
-                {/* Manual In-App Update Checker Button */}
-                <div className="bg-[#131b2f] border border-slate-700/60 p-3.5 rounded-2xl flex items-center justify-between">
-                  <div>
-                    <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <span>🚀</span> In-App Version Checker
-                    </h4>
-                    <p className="text-[10px] text-slate-400">v{pkg?.version || '1.0.32'} (Build 32)</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      showNativeToast('Checking for latest APK build...');
-                      const info = await checkForAppUpdate(getApiUrl());
-                      if (info && info.updateAvailable) {
-                        setApkUpdateInfo(info);
-                        setShowApkUpdateModal(true);
-                      } else {
-                        showNativeToast('You are on the latest version!');
-                      }
-                    }}
-                    className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold rounded-lg transition-colors cursor-pointer"
-                  >
-                    Check Update
-                  </button>
-                </div>
-
                 {/* Drawer Group 0.6: App Color Scheme & Themes */}
                 <div className="space-y-2.5 bg-[#131b2f] border border-slate-700/60 p-3.5 rounded-2xl">
                   <div className="flex items-center justify-between">
@@ -5592,70 +5566,6 @@ const DEFAULT_SEASON_NUM = 19;
                     ))}
                   </div>
                 </div>
-
-                {/* Drawer Group 1: App Updates */}
-                {window.Capacitor?.isNativePlatform() ? (
-                  <div className="space-y-2.5">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                      ⚡ App Updates & Maintenance
-                    </span>
-
-                    <button
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        triggerHaptic('light');
-                        handleOneClickUpdate();
-                      }}
-                      disabled={checkingUpdate || isApplyingUpdate}
-                      className="w-full bg-[#131b2f] hover:bg-emerald-500/10 border border-slate-700/80 hover:border-emerald-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer disabled:opacity-80"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0">
-                          {checkingUpdate ? (
-                            <div className="w-4 h-4 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin"></div>
-                          ) : (
-                            '⚡'
-                          )}
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
-                            {checkingUpdate ? 'Checking for updates...' : 'Check for update'}
-                          </h4>
-                          <p className="text-[10px] text-slate-400">
-                            {checkingUpdate ? 'Connecting to GitHub API...' : 'Check, download & install latest release'}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">
-                        {checkingUpdate ? '⏳' : '→'}
-                      </span>
-                    </button>
-
-                    <button
-                      onClick={() => { setIsMenuOpen(false); setShowAutoUpdateModal(true); }}
-                      className="w-full bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-sm">
-                          ⚙️
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-bold text-white group-hover:text-teal-400 transition-colors">
-                            Auto-Update Settings
-                          </h4>
-                          <p className="text-[10px] text-slate-400">
-                            Status: <span className="text-emerald-400 font-bold">{autoUpdatePref === 'enabled' ? 'Enabled' : autoUpdatePref === 'never_ask' ? 'Off' : 'Ask on startup'}</span>
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-xs text-slate-500 group-hover:text-teal-400 font-bold">→</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="text-xs text-slate-500 font-mono text-center py-2.5 bg-[#131b2f] rounded-xl border border-slate-800">
-                    Web Version: v{getAppVersionName()} (Managed by Server)
-                  </div>
-                )}
 
                 {/* Drawer Group 2: Storage & Data */}
                 <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
