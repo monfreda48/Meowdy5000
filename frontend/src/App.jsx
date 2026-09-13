@@ -1479,95 +1479,49 @@ export default function App() {
     setTimeout(() => setUpdateToast(null), 3500);
   };
 
-  // Color Scheme Themes System (Synchronized with Android APK Theme Presets)
+  // Color Scheme Themes System (Synchronized with 4 Semantic Palettes)
   const THEMES = [
     {
       id: 'default',
       name: 'Default',
-      accentColor: '#10b981',
-      secondaryColor: '#06b6d4',
-      bgGradient: 'from-emerald-400 to-teal-500',
-      textAccent: 'text-emerald-400',
-      borderAccent: 'border-emerald-500/40',
-      badgeBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-      swatchGradient: 'from-emerald-500 to-cyan-500'
+      bgHex: '#080b13',
+      accentColor: '#38bdf8',
+      badgeBg: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+      swatchGradient: 'from-sky-500 to-blue-600'
     },
     {
-      id: 'kinetic_purple',
-      name: 'Kinetic Purple',
-      accentColor: '#ff2a85',
-      secondaryColor: '#9d4edd',
-      bgGradient: 'from-pink-500 to-purple-600',
-      textAccent: 'text-pink-400',
-      borderAccent: 'border-pink-500/40',
+      id: 'cyberpunk',
+      name: 'Cyberpunk',
+      bgHex: '#0d0221',
+      accentColor: '#ff007f',
       badgeBg: 'bg-pink-500/20 text-pink-300 border-pink-500/40',
       swatchGradient: 'from-pink-500 to-purple-600'
     },
     {
-      id: 'gamma_green',
-      name: 'Gamma Green',
-      accentColor: '#22c55e',
-      secondaryColor: '#10b981',
-      bgGradient: 'from-green-400 to-emerald-600',
-      textAccent: 'text-green-400',
-      borderAccent: 'border-green-500/40',
-      badgeBg: 'bg-green-500/20 text-green-300 border-green-500/40',
-      swatchGradient: 'from-green-500 to-emerald-600'
+      id: 'midnight-stealth',
+      name: 'Midnight Stealth',
+      bgHex: '#000000',
+      accentColor: '#10b981',
+      badgeBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+      swatchGradient: 'from-emerald-500 to-teal-600'
     },
     {
-      id: 'jeangrey',
-      name: 'Jean Grey',
-      accentColor: '#d1d5db',
-      secondaryColor: '#9ca3af',
-      bgGradient: 'from-gray-300 to-slate-400',
-      textAccent: 'text-gray-300',
-      borderAccent: 'border-gray-400/50',
-      badgeBg: 'bg-gray-500/20 text-gray-200 border-gray-400/50',
-      swatchGradient: 'from-gray-300 to-slate-500'
-    },
-    {
-      id: 'oops_all_hallways',
-      name: 'Oops, All Hallways',
-      accentColor: '#e53935',
-      secondaryColor: '#ff5252',
-      bgGradient: 'from-red-500 to-rose-700',
-      textAccent: 'text-red-500',
-      borderAccent: 'border-red-500/50',
-      badgeBg: 'bg-red-500/20 text-red-300 border-red-500/50',
-      swatchGradient: 'from-red-600 to-rose-800'
-    },
-    {
-      id: 'sapphire',
-      name: 'Neon Sapphire',
-      accentColor: '#3b82f6',
-      secondaryColor: '#06b6d4',
-      bgGradient: 'from-blue-400 to-cyan-500',
-      textAccent: 'text-blue-400',
-      borderAccent: 'border-blue-500/40',
-      badgeBg: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
-      swatchGradient: 'from-blue-500 to-cyan-600'
-    },
-    {
-      id: 'gold',
-      name: 'Golden Sentinel',
-      accentColor: '#eab308',
-      secondaryColor: '#f59e0b',
-      bgGradient: 'from-amber-400 to-yellow-500',
-      textAccent: 'text-amber-400',
-      borderAccent: 'border-amber-500/40',
-      badgeBg: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-      swatchGradient: 'from-amber-500 to-yellow-600'
+      id: 'crimson-rival',
+      name: 'Crimson Rival',
+      bgHex: '#0f0505',
+      accentColor: '#f43f5e',
+      badgeBg: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+      swatchGradient: 'from-rose-500 to-red-700'
     }
   ];
 
   const [activeThemeId, setActiveThemeId] = useState(() => {
     try {
-      const saved = localStorage.getItem('app_color_theme') || localStorage.getItem('m5_color_scheme') || localStorage.getItem('app_theme_selection');
+      const saved = localStorage.getItem('m5_theme') || localStorage.getItem('app_color_theme') || localStorage.getItem('m5_color_scheme');
       if (saved === 'emerald' || saved === 'DEFAULT') return 'default';
-      if (saved === 'cyberpunk' || saved === 'KINETIC_PURPLE') return 'kinetic_purple';
-      if (saved === 'monochrome' || saved === 'JEAN_GREY') return 'jeangrey';
-      if (saved === 'crimson' || saved === 'OOPS_ALL_HALLWAYS') return 'oops_all_hallways';
-      if (saved === 'GAMMA_GREEN') return 'gamma_green';
+      if (saved === 'cyberpunk' || saved === 'kinetic_purple') return 'cyberpunk';
+      if (saved === 'stealth' || saved === 'midnight-stealth') return 'midnight-stealth';
+      if (saved === 'crimson' || saved === 'crimson-rival') return 'crimson-rival';
       return saved || 'default';
     } catch (e) {
       return 'default';
