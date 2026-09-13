@@ -3755,25 +3755,36 @@ const DEFAULT_SEASON_NUM = 19;
             <div className={`bg-[#131b2f] rounded-2xl border border-slate-700/50 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 ${isMobileView ? 'p-4 text-center' : 'p-6 md:p-8 text-left'
               }`}>
               <div className="flex items-center gap-4">
-                {/* Profile Picture Avatar Container with Change Picture Trigger Button */}
-                <div className="relative group cursor-pointer rounded-2xl overflow-hidden shrink-0" onClick={() => { triggerHaptic('light'); setShowAvatarModal(true); }}>
-                  {getDisplayAvatar(stats.current.username) ? (
-                    <img
-                      src={getDisplayAvatar(stats.current.username)}
-                      alt={stats.current.username}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-emerald-500/60 shadow-lg shadow-emerald-500/20 object-cover group-hover:opacity-80 transition-opacity"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = FALLBACK_IMAGE_SVG;
-                      }}
-                    />
-                  ) : (
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-white text-2xl shadow-lg shadow-emerald-500/20 group-hover:opacity-80 transition-opacity">
-                      {stats.current.username.charAt(0).toUpperCase()}
-                    </div>
-                  )}
+                {/* Profile Picture Avatar Container with Overlapping Player Level Badge */}
+                <div className="relative group cursor-pointer mt-2 shrink-0" onClick={() => { triggerHaptic('light'); setShowAvatarModal(true); }}>
+                  {/* Overlapping Player Level Badge */}
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 px-2 py-0.5 rounded bg-[#0b0e1b] border-2 border-[#f6c344] shadow-md flex items-center justify-center min-w-[28px]">
+                    <span className="text-xs font-black text-white font-mono tracking-tight leading-none">
+                      {stats.current.level || stats.level || 1}
+                    </span>
+                  </div>
+
+                  {/* Avatar Image Frame */}
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 border-[#f6c344] overflow-hidden bg-surface-3 shadow-lg flex items-center justify-center group-hover:opacity-80 transition-opacity relative">
+                    {getDisplayAvatar(stats.current.username) ? (
+                      <img
+                        src={getDisplayAvatar(stats.current.username)}
+                        alt={stats.current.username}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = FALLBACK_IMAGE_SVG;
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-white text-2xl">
+                        {stats.current.username.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+
                   {/* Change Profile Picture Hover Badge */}
-                  <div className="absolute -bottom-1 -right-1 bg-[#0b101e] border border-emerald-500/60 text-emerald-400 p-1.5 rounded-full text-xs font-bold shadow-lg group-hover:scale-110 transition-transform">
+                  <div className="absolute -bottom-1 -right-1 z-20 bg-[#0b101e] border border-[#f6c344] text-amber-400 p-1.5 rounded-full text-xs font-bold shadow-lg group-hover:scale-110 transition-transform">
                     📷
                   </div>
                 </div>

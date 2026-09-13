@@ -491,6 +491,17 @@ def parse_rivalsmeta_heroes_tab(html_content: str) -> Dict[str, Any]:
         "heroes": heroes
     }
 
+def parse_player_level(soup: BeautifulSoup) -> int:
+    level_el = (
+        soup.select_one("p[data-v-cfd279cc]") or 
+        soup.select_one(".level, .player-level, [class*='level'], span.level")
+    )
+    if level_el:
+        digits = re.sub(r"[^\d]", "", level_el.get_text(strip=True))
+        if digits:
+            return int(digits)
+    return 1
+
 def parse_rivalsmeta_tab(tab: str, html: str) -> Dict[str, Any]:
     if not html:
         return {}
@@ -498,9 +509,7 @@ def parse_rivalsmeta_tab(tab: str, html: str) -> Dict[str, Any]:
     out = {}
 
     if tab == "overview":
-        lvl_el = soup.select_one(".level, span.level")
-        clan_el = soup.select_one(".clan, span.clan")
-        out["level"] = int(re.sub(r"[^\d]", "", lvl_el.get_text())) if lvl_el else 1
+        out["level"] = parse_player_level(soup)
         out["clan"] = clan_el.get_text(strip=True) if clan_el else ""
 
         rank_card = soup.select_one(".rank")

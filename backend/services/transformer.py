@@ -45,7 +45,14 @@ class TelemetryTransformer:
         else:
             platform = "pc"
 
-        level = max(safe_int(rd_curr.get("level")), safe_int(rd.get("level")), safe_int(rt.get("level")), safe_int(rm.get("level")), 1)
+        level = max(
+            safe_int(rm.get("overview", {}).get("level")),
+            safe_int(rm.get("level")),
+            safe_int(rt.get("level")),
+            safe_int(rd_curr.get("level")),
+            safe_int(rd.get("level")),
+            1
+        )
 
         # 2. Competitive Rank & Points
         # Priority: Tracker.gg (freshest) -> RivalsTracker/Meta -> RivalsData

@@ -11,10 +11,22 @@ from backend.database import upsert_global_tier_list, get_global_tier_lists_from
 
 logger = logging.getLogger("rivalstracker_adapter")
 
+def parse_player_level(soup: BeautifulSoup) -> int:
+    level_el = (
+        soup.select_one("p[data-v-cfd279cc]") or 
+        soup.select_one(".level, .player-level, [class*='level'], span.level")
+    )
+    if level_el:
+        digits = re.sub(r"[^\d]", "", level_el.get_text(strip=True))
+        if digits:
+            return int(digits)
+    return 1
+
 def parse_rivalstracker_html(html_content: str) -> dict:
     if not html_content:
         return {
             "platform": "unknown",
+            "level": 1,
             "rank": "Unranked",
             "score": 0,
             "peak_rank": "Unranked",
@@ -28,6 +40,7 @@ def parse_rivalstracker_html(html_content: str) -> dict:
     soup = BeautifulSoup(html_content, "html.parser")
     data = {
         "platform": "unknown",
+        "level": parse_player_level(soup),
         "rank": "Unranked",
         "score": 0,
         "peak_rank": "Unranked",
