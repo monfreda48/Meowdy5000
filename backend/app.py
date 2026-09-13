@@ -198,6 +198,35 @@ def get_hero_leaderboards():
         "leaderboards": []
     })
 
+@app.route('/api/player/resolve', methods=['GET'])
+def resolve_player():
+    query = request.args.get('query', '')
+    if not query:
+        return jsonify({"error": "Query parameter is required"}), 400
+    try:
+        import asyncio
+        from backend.services.resolver import resolve_player_query
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        res = loop.run_until_complete(resolve_player_query(query))
+        return jsonify(res)
+    except Exception as e:
+        return jsonify({
+            "query": query,
+            "requires_disambiguation": False,
+            "candidates": [{
+                "uid": "",
+                "username": query,
+                "platform": "pc",
+                "level": None,
+                "avatar_url": None,
+                "rank": "Public Profile"
+            }]
+        })
+
 @app.route('/api/stats')
 def get_stats():
     query = request.args.get('query', '')

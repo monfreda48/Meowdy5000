@@ -543,6 +543,11 @@ export default function App() {
     }
   });
 
+  // Disambiguation & UID Resolution State
+  const [disambiguationCandidates, setDisambiguationCandidates] = useState([]);
+  const [showDisambiguationModal, setShowDisambiguationModal] = useState(false);
+  const [showUidGuideModal, setShowUidGuideModal] = useState(false);
+
   // 3-Site Profile Verification & Confirmation State
   const [searchConfirmationData, setSearchConfirmationData] = useState(null);
   const [show3SiteConfirmModal, setShow3SiteConfirmModal] = useState(false);
@@ -2928,7 +2933,32 @@ const DEFAULT_SEASON_NUM = 19;
     return normalized;
   };
 
-  const fetchStats = async (e, overrideQuery = null, overrideSeason = null, overrideUid = null) => {
+  const handleSearchSubmit = async (e, forcedQuery = null, selectedUid = null, selectedPlatform = null) => {
+    if (e) e.preventDefault();
+    const activeQuery = forcedQuery !== null ? forcedQuery : query;
+    if (!activeQuery || !activeQuery.trim()) return;
+
+    if (!selectedUid && !selectedPlatform) {
+      try {
+        const resolveRes = await fetch(getApiUrl(`/api/player/resolve?query=${encodeURIComponent(activeQuery.trim())}`));
+        if (resolveRes.ok) {
+          const resData = await resolveRes.json();
+          if (resData.requires_disambiguation && Array.isArray(resData.candidates) && resData.candidates.length > 1) {
+            setDisambiguationCandidates(resData.candidates);
+            setShowDisambiguationModal(true);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Resolution check failed, proceeding to direct search:', err);
+      }
+    }
+
+    setShowDisambiguationModal(false);
+    fetchStats(null, activeQuery, season, selectedUid, selectedPlatform);
+  };
+
+  const fetchStats = async (e, overrideQuery = null, overrideSeason = null, overrideUid = null, overridePlatform = null) => {
     if (e) e.preventDefault();
     const activeQuery = overrideQuery !== null ? overrideQuery : query;
     const activeSeason = overrideSeason !== null ? overrideSeason : season;
@@ -2985,7 +3015,9 @@ const DEFAULT_SEASON_NUM = 19;
         try {
           const backendController = new AbortController();
           const bTimeout = setTimeout(() => backendController.abort(), 20000);
-          const apiUrl = getApiUrl(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`);
+          let apiUrl = getApiUrl(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`);
+          if (overridePlatform) apiUrl += `&platform=${encodeURIComponent(overridePlatform)}`;
+          if (overrideUid) apiUrl += `&uid=${encodeURIComponent(overrideUid)}`;
           const response = await fetch(
             apiUrl,
             {
@@ -3391,31 +3423,51 @@ const DEFAULT_SEASON_NUM = 19;
 
           {/* Big Search Box (only shown when no profile is claimed) */}
           {!isClaimed && (
-            <form onSubmit={fetchStats} className={`w-full ${isMobileView ? 'mt-1' : 'max-w-3xl mt-3 sm:mt-8'}`}>
-              <div className={`flex bg-[#131b2f] p-2.5 sm:p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${isMobileView ? 'flex-col gap-2' : 'flex-row items-center gap-3'
-                }`}>
-                <div className="flex-1 relative w-full">
-                  <input
-                    type="text"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Enter Username..."
-                    className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white placeholder-slate-500 ${isMobileView ? 'py-2.5 text-sm' : 'py-3.5 sm:py-4 text-base sm:text-lg'
-                      }`}
-                    required
-                  />
-                </div>
+            <div className="w-full max-w-3xl flex flex-col items-center">
+              <form onSubmit={handleSearchSubmit} className={`w-full ${isMobileView ? 'mt-1' : 'mt-3 sm:mt-8'}`}>
+                <div className={`flex bg-[#131b2f] p-2.5 sm:p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${isMobileView ? 'flex-col gap-2' : 'flex-row items-center gap-3'
+                  }`}>
+                  <div className="flex-1 relative w-full">
+                    <input
+                      type="text"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Enter Username or Numeric UID..."
+                      className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white placeholder-slate-500 ${isMobileView ? 'py-2.5 text-sm' : 'py-3.5 sm:py-4 text-base sm:text-lg'
+                        }`}
+                      required
+                    />
+                  </div>
 
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(16,185,129,0.3)] uppercase tracking-wider text-xs sm:text-sm ${isMobileView ? 'py-2.5 px-4 w-full' : 'py-3.5 sm:py-4 px-6 sm:px-8'
+                      }`}
+                  >
+                    {loading ? 'Scanning...' : 'Search'}
+                  </button>
+                </div>
+              </form>
+
+              {/* Public Profile Disclaimer Banner */}
+              <div className="w-full mt-2.5 text-center text-xs text-amber-400 font-medium bg-amber-500/10 border border-amber-500/30 rounded-xl py-2 px-3 flex items-center justify-center gap-2">
+                <span>🔓</span>
+                <span>Your Marvel Rivals profile must be set to Public in-game for stats to be tracked.</span>
+              </div>
+
+              {/* Collapsible UID Search Fallback Link */}
+              <div className="w-full mt-2 flex items-center justify-between text-xs px-1 text-slate-400">
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className={`bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(16,185,129,0.3)] uppercase tracking-wider text-xs sm:text-sm ${isMobileView ? 'py-2.5 px-4 w-full' : 'py-3.5 sm:py-4 px-6 sm:px-8'
-                    }`}
+                  type="button"
+                  onClick={() => setShowUidGuideModal(true)}
+                  className="hover:text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer font-medium"
                 >
-                  {loading ? 'Scanning...' : 'Search'}
+                  <span>💡 Can't find your account? Enter your UID directly</span>
+                  <span className="w-4 h-4 rounded-full bg-slate-800 border border-slate-700 text-slate-300 flex items-center justify-center text-[10px] font-bold">?</span>
                 </button>
               </div>
-            </form>
+            </div>
           )}
 
           {/* Live Search Telemetry Progress Bar */}
@@ -6470,6 +6522,124 @@ const DEFAULT_SEASON_NUM = 19;
                   </>
                 );
               })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Disambiguation Modal */}
+      {showDisambiguationModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 text-left">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🎮</span>
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Select Account & Platform</h3>
+                  <p className="text-[11px] text-slate-400">Multiple matching profiles found for "{query}".</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDisambiguationModal(false)}
+                className="text-slate-400 hover:text-white text-lg font-bold p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
+              {disambiguationCandidates.map((cand, idx) => {
+                const platNorm = (cand.platform || 'pc').toLowerCase();
+                const badgeIcon = platNorm === 'psn' ? '🎮 PlayStation' : (platNorm === 'xbox' ? '🟢 Xbox' : '🖥️ PC');
+                const badgeBg = platNorm === 'psn' ? 'bg-blue-500/20 text-blue-400 border-blue-500/40' : (platNorm === 'xbox' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-purple-500/20 text-purple-400 border-purple-500/40');
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleSearchSubmit(null, cand.username || query, cand.uid, cand.platform)}
+                    className="w-full bg-[#0b101e] hover:bg-slate-800/90 border border-slate-700/80 hover:border-emerald-500/60 p-3 rounded-xl transition-all flex items-center justify-between gap-3 group text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={cand.avatar_url || "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31029208.jpg"}
+                        alt="Avatar"
+                        className="w-10 h-10 rounded-lg object-cover border border-slate-700 shrink-0"
+                      />
+                      <div>
+                        <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
+                          {cand.username || query}
+                        </h4>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeBg}`}>
+                            {badgeIcon}
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            {cand.uid ? `UID: ${cand.uid}` : (cand.rank || 'Public')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">Select →</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* How to Find Your UID Guide Modal */}
+      {showUidGuideModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 text-left">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">💡</span>
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">How to Find Your Marvel Rivals UID</h3>
+                  <p className="text-[11px] text-slate-400">Locate your numeric player ID in-game</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowUidGuideModal(false)}
+                className="text-slate-400 hover:text-white text-lg font-bold p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs text-slate-300">
+              <div className="bg-[#0b101e] border border-slate-800 p-3.5 rounded-xl space-y-1.5">
+                <div className="flex items-center gap-2 text-emerald-400 font-bold">
+                  <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px]">1</span>
+                  <span>Career Overview Screen</span>
+                </div>
+                <p className="text-[11px] text-slate-400 pl-7">
+                  Open the top-left player menu in Marvel Rivals. Your 8 to 12-digit numeric UID is displayed right below your display name banner (e.g. <code className="text-emerald-300">10023456</code>).
+                </p>
+              </div>
+
+              <div className="bg-[#0b101e] border border-slate-800 p-3.5 rounded-xl space-y-1.5">
+                <div className="flex items-center gap-2 text-blue-400 font-bold">
+                  <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px]">2</span>
+                  <span>In-Match HUD Watermark</span>
+                </div>
+                <p className="text-[11px] text-slate-400 pl-7">
+                  During any match, your numeric UID is printed in the bottom-left corner of your screen watermark.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-800 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowUidGuideModal(false)}
+                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-all cursor-pointer"
+              >
+                Got It
+              </button>
             </div>
           </div>
         </div>

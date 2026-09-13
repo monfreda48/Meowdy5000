@@ -22,10 +22,16 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+class ScrapeWorkerRequest(BaseModel):
+    username: str
+    platform: Optional[str] = "pc"
+    force_refresh: Optional[bool] = False
+
 
 from backend.database import init_db, get_db, User, TrackedPlayer
 from backend.scrapers.season_scraper import get_season_info
 from backend.scrapers.profile_scraper import scrape_player_profile
+from backend.services.resolver import resolve_player_query
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("rivals_tracker_main")
@@ -231,6 +237,32 @@ async def download_latest_apk():
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok", "service": "Meowdy 5000 Rivals Tracker API", "version": "2.0.0"}
+
+@app.get("/api/player/resolve")
+async def resolve_player(query: str = Query(..., description="Player display name or numeric UID")):
+    """
+    Automated Username-to-UID Resolution and Platform Normalization.
+    Returns candidates and indicates if multi-platform disambiguation is required.
+    """
+    if not query or not query.strip():
+        raise HTTPException(status_code=400, detail="Query parameter is required.")
+    return await resolve_player_query(query.strip())
+
+@app.post("/api/worker/tracker/scrape")
+async def scrape_tracker_worker_endpoint(req: ScrapeWorkerRequest):
+    """
+    Internal worker endpoint for containerized Tracker.gg Cloudflare TLS-bypass scraping.
+    """
+    if not req.username or not req.username.strip():
+        raise HTTPException(status_code=400, detail="Username is required.")
+    try:
+        from backend.workers.tracker_worker import TrackerScraperWorker
+        worker = TrackerScraperWorker()
+        data = await worker.scrape_player(req.username, force_refresh=req.force_refresh)
+        return data
+    except Exception as e:
+        logger.error(f"Tracker worker endpoint exception: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/season/current")
 async def get_current_season(refresh: bool = Query(False)):
