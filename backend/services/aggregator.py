@@ -264,6 +264,7 @@ def build_reconciled_stats(
 from backend.adapters.rivalstracker import fetch_rivalstracker_profile
 from backend.adapters.rivalsmeta import fetch_rivalsmeta_profile
 from backend.adapters.trackergg import fetch_trackergg_profile
+from backend.services.transformer import TelemetryTransformer
 
 async def get_player_profile(identifier: str, force_refresh: bool = False) -> Dict[str, Any]:
     ident = str(identifier).strip()
@@ -283,18 +284,22 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
         if cached and cached.get("current", {}).get("scraped_at"):
             plat = cached.get("platform") or cached.get("current", {}).get("platform", "pc")
             reconciled = build_reconciled_stats(cached, cached.get("rivalstracker_stats"), cached.get("rivalsmeta_stats"), cached.get("trackergg_stats"))
-            return {
-                "success": True,
-                "data": cached,
-                "reconciled_stats": reconciled,
-                "platform": plat,
-                "current": cached.get("current"),
-                "squad_synergy": cached.get("squad_synergy") or cached.get("current", {}).get("squad_synergy", []),
-                "source_attribution": "database_cache",
-                "is_fallback": True,
-                "is_stale": False,
-                "scraped_at": cached.get("current", {}).get("scraped_at")
-            }
+            canonical = TelemetryTransformer.unify_player_payload(
+                resolved_uid,
+                cached,
+                cached.get("rivalstracker_stats") or {},
+                cached.get("rivalsmeta_stats") or {},
+                cached.get("trackergg_stats") or {}
+            )
+            canonical["reconciled_stats"] = reconciled
+            canonical["success"] = True
+            canonical["data"] = cached
+            canonical["platform"] = plat
+            canonical["source_attribution"] = "database_cache"
+            canonical["is_fallback"] = True
+            canonical["is_stale"] = False
+            canonical["scraped_at"] = cached.get("current", {}).get("scraped_at")
+            return canonical
 
     # 3. Live telemetry scrape from RivalsData, RivalsTracker, RivalsMeta & Tracker.gg
     try:
@@ -308,7 +313,8 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
                 "rank": rt_data.get("rank", "Unranked"),
                 "score": rt_data.get("score", 0),
                 "peak_rank": rt_data.get("peak_rank", "Unranked"),
-                "peak_score": rt_data.get("peak_score", 0)
+                "peak_score": rt_data.get("peak_score", 0),
+                "teammates": rt_data.get("teammates", [])
             }
             if rt_data.get("teammates"):
                 data["squad_synergy"] = rt_data["teammates"]
@@ -356,18 +362,18 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
 
         upsert_player_profile(data)
         plat = data.get("platform") or data.get("current", {}).get("platform", "pc")
-        return {
-            "success": True,
-            "data": data,
-            "reconciled_stats": reconciled,
-            "platform": plat,
-            "current": data.get("current"),
-            "squad_synergy": data.get("squad_synergy", []),
-            "source_attribution": "rivalsdata",
-            "is_fallback": False,
-            "is_stale": False,
-            "scraped_at": data.get("scraped_at")
-        }
+
+        canonical = TelemetryTransformer.unify_player_payload(resolved_uid, data, rt_data or {}, rm_data or {}, tgg_data or {})
+        canonical["reconciled_stats"] = reconciled
+        canonical["success"] = True
+        canonical["data"] = data
+        canonical["platform"] = plat
+        canonical["source_attribution"] = "rivalsdata"
+        canonical["is_fallback"] = False
+        canonical["is_stale"] = False
+        canonical["scraped_at"] = data.get("scraped_at")
+
+        return canonical
     except PlayerNotFoundError as pnf:
         return {"success": False, "error": str(pnf), "error_code": "NOT_FOUND"}
     except ProfilePrivateError as ppe:
