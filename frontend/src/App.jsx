@@ -2438,8 +2438,6 @@ export default function App() {
           showNativeToast(`⚡ Update found (${latestSha})! Auto-installing...`);
           setUpdateToast({ type: 'update', message: `⚡ New update found (${latestSha})! Downloading & installing...` });
           await applyUpdateNow(latestSha);
-        } else {
-          setUpdateToast({ type: 'update', message: `⚡ New update (${latestSha}) available. Tap Menu to update.` });
         }
       } else {
         setUpdateInfo(prev => prev ? { ...prev, hasUpdate: false } : null);
@@ -3466,18 +3464,7 @@ const DEFAULT_SEASON_NUM = 19;
       <main className={`mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 transition-all duration-300 w-full ${isMobileView ? 'max-w-full sm:max-w-md py-2' : 'max-w-7xl'
         }`}>
 
-        {/* Update Feedback Toast Banner */}
-        {updateToast && (
-          <div className={`w-full p-3.5 rounded-2xl mb-4 text-xs sm:text-sm font-bold flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg ${updateToast.type === 'success'
-              ? 'bg-emerald-500/10 border border-emerald-500/40 text-emerald-400'
-              : updateToast.type === 'error'
-                ? 'bg-red-500/10 border border-red-500/40 text-red-400'
-                : 'bg-emerald-500/10 border border-emerald-500/40 text-emerald-400'
-            }`}>
-            <span>{updateToast.message}</span>
-            <button onClick={() => setUpdateToast(null)} className="text-slate-400 hover:text-white text-xs">✕</button>
-          </div>
-        )}
+
         {/* Mobile View Badge Indicator */}
         {isMobileView && (
           <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 px-3 py-2 rounded-xl text-xs text-emerald-400 font-medium">
