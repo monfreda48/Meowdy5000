@@ -509,6 +509,7 @@ def parse_rivalsmeta_tab(tab: str, html: str) -> Dict[str, Any]:
 
     if tab == "overview":
         out["level"] = parse_player_level(soup)
+        clan_el = soup.select_one(".clan, .player-clan, [class*='clan'], .team-tag")
         out["clan"] = clan_el.get_text(strip=True) if clan_el else ""
 
         rank_card = soup.select_one(".rank")
