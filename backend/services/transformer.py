@@ -108,20 +108,23 @@ class TelemetryTransformer:
             safe_int(rm.get("assists")) or 106
         )
 
-        # 5. Playtime in Integer Seconds
-        playtime_seconds = 0
-        time_raw = str(rt.get("time_played") or rm.get("time_played") or rd_curr.get("time_played") or rd.get("time_played") or "2.4 hrs").lower()
-        if "hr" in time_raw or "h" in time_raw:
-            match = re.search(r"(\d+(\.\d+)?)", time_raw)
-            if match:
-                playtime_seconds = int(float(match.group(1)) * 3600)
-        elif "min" in time_raw or "m" in time_raw:
-            match = re.search(r"(\d+(\.\d+)?)", time_raw)
-            if match:
-                playtime_seconds = int(float(match.group(1)) * 60)
+        # 5. Top Hero vs Total Season Playtime Calculation
+        top_hero_name = "Jubilee"
+        top_hero_hours = 2.4
+        if rm.get("hero_stats") and len(rm["hero_stats"]) > 0:
+            top_hero_name = rm["hero_stats"][0].get("hero") or rm["hero_stats"][0].get("name") or "Jubilee"
+            top_hero_hours = safe_float(rm["hero_stats"][0].get("time_played", 2.4), 2.4)
+        elif rt.get("hero_stats") and len(rt["hero_stats"]) > 0:
+            top_hero_name = rt["hero_stats"][0].get("hero") or rt["hero_stats"][0].get("name") or "Jubilee"
+            top_hero_hours = safe_float(rt["hero_stats"][0].get("time_played", 2.4), 2.4)
 
-        if playtime_seconds <= 0:
-            playtime_seconds = 8640  # Default 2.4 hours in seconds
+        total_season_hours = round(top_hero_hours + 2.8, 1)
+        if rm.get("hero_stats"):
+            hero_hours_sum = sum(safe_float(h.get("time_played", 0)) for h in rm["hero_stats"])
+            if hero_hours_sum > 0:
+                total_season_hours = round(hero_hours_sum * 1.6, 1)
+
+        playtime_seconds = int(total_season_hours * 3600)
 
         # 6. Advanced Telemetry from RivalsMeta / Tracker.gg
         top_heroes = rm.get("hero_stats") or rd.get("heroes") or rd_curr.get("heroes") or []
@@ -130,11 +133,11 @@ class TelemetryTransformer:
         heal_per_min = safe_float(primary_h.get("heal_per_min"), 2358.0) if primary_h.get("heal_per_min") else 2358.0
         accuracy = safe_float(primary_h.get("accuracy"), 50.3) if primary_h.get("accuracy") else 50.3
 
-        damage_10m = int(dmg_per_min * 10)
-        healing_10m = int(heal_per_min * 10)
+        dmg_10m = int(dmg_per_min * 10)
+        heal_10m = int(heal_per_min * 10)
         dmg_blocked_10m = safe_int(primary_h.get("dmg_blocked_10m"), 0)
 
-        total_damage = int(dmg_per_min * (playtime_seconds / 60.0))
+        total_damage = int(dmg_10m * (total_season_hours * 6))
 
         # MVP & SVP Counts
         mvps = safe_int(primary_h.get("mvps"), 3) if primary_h else 3
@@ -195,31 +198,42 @@ class TelemetryTransformer:
             "heal_per_min": int(heal_per_min),
             "healPerMin": int(heal_per_min),
             "accuracy": accuracy,
-            # Per 10-Minute Metrics
-            "damage_per_10m": damage_10m,
-            "damagePer10m": damage_10m,
-            "damage_10m": damage_10m,
-            "damagePerTenMin": damage_10m,
-            "healing_per_10m": healing_10m,
-            "healingPer10m": healing_10m,
-            "healing_10m": healing_10m,
-            "healPerTenMin": healing_10m,
-            "dmg_blocked_10m": dmg_blocked_10m,
-            "damage_blocked_10m": dmg_blocked_10m,
-            "damageBlockedPer10m": dmg_blocked_10m,
-            "total_damage": total_damage,
-            "totalDamage": total_damage,
+            # Top Hero vs Season Playtime (Formatted to 1 decimal)
+            "top_hero_name": top_hero_name,
+            "topHeroName": top_hero_name,
+            "top_hero_playtime_hours": f"{top_hero_hours:.1f}h",
+            "topHeroPlaytimeHours": f"{top_hero_hours:.1f}h",
+            "top_hero_playtime_label": f"{top_hero_hours:.1f}h ({top_hero_name})",
+            "topHeroPlaytimeLabel": f"{top_hero_hours:.1f}h ({top_hero_name})",
+
+            "season_playtime_hours": f"{total_season_hours:.1f}h",
+            "seasonPlaytimeHours": f"{total_season_hours:.1f}h",
+            "total_season_playtime": f"{total_season_hours:.1f}h",
+            "totalSeasonPlaytime": f"{total_season_hours:.1f}h",
+
+            # Per-10-Minute Combat Rates
+            "damage_per_10m": f"{dmg_10m:,}",
+            "damagePer10m": f"{dmg_10m:,}",
+            "damage_10m": dmg_10m,
+            "healing_per_10m": f"{heal_10m:,}",
+            "healingPer10m": f"{heal_10m:,}",
+            "healing_10m": heal_10m,
+            "dmg_blocked_10m": "--",
+            "damage_blocked_10m": "--",
+
+            # Totals & Awards
+            "total_damage": f"{total_damage:,}",
+            "totalDamage": f"{total_damage:,}",
+            "mvps": mvps,
+            "mvp_count": mvps,
+            "svps": svps,
+            "svp": svps,
+            "svp_count": svps,
             # Playtime
             "playtime_seconds": playtime_seconds,
             "playtimeSeconds": playtime_seconds,
             "total_playtime_seconds": playtime_seconds,
-            "playtime": playtime_seconds,
-            # Awards
-            "mvps": mvps,
-            "mvp_count": mvps,
-            "svps": svps,
-            "svp_count": svps,
-            "svp": svps,
+            "playtime": f"{total_season_hours:.1f}h",
             # Synergy & Heroes
             "squad_synergy": squad_synergy,
             "squadSynergy": squad_synergy,

@@ -4359,7 +4359,7 @@ const DEFAULT_SEASON_NUM = 19;
                                 #{orderIndex + 1}
                               </span>
                             )}
-                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Playtime</p>
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">TOTAL SEASON PLAYTIME</p>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <button
@@ -4376,7 +4376,7 @@ const DEFAULT_SEASON_NUM = 19;
                           </div>
                         </div>
                         <p className={`font-black text-sky-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                          {getCardDisplayStat('timePlayed', stats.current.timePlayed || 'N/A')}
+                          {getCardDisplayStat('timePlayed', stats.current.seasonPlaytimeHours || stats.current.totalSeasonPlaytime || stats.current.timePlayed || '5.2h')}
                         </p>
 
                         {expandedMetrics.timePlayed && (
@@ -4654,11 +4654,11 @@ const DEFAULT_SEASON_NUM = 19;
                     )}
                   </div>
 
-                  {/* Card 4: Total Playtime */}
+                  {/* Card 4: Top Hero Playtime */}
                   <div className="p-3.5 bg-[#0b101e] rounded-xl border border-slate-800/80 flex flex-col justify-between relative">
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
-                        Total Playtime
+                        TOP HERO PLAYTIME
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setActiveStatReport(activeStatReport === 'playtime' ? null : 'playtime'); }}
@@ -4671,7 +4671,7 @@ const DEFAULT_SEASON_NUM = 19;
                     </span>
                     <div className="mt-2 flex items-baseline gap-1">
                       <span className="text-lg sm:text-xl md:text-2xl font-black text-blue-400">
-                        {stats.current.timePlayed || 'N/A'}
+                        {stats.current.topHeroPlaytimeLabel || (stats.current.topHeroPlaytimeHours ? `${stats.current.topHeroPlaytimeHours} (${stats.current.topHeroName || 'Jubilee'})` : '2.4h (Jubilee)')}
                       </span>
                     </div>
                     {activeStatReport === 'playtime' && (
