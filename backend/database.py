@@ -477,8 +477,94 @@ def migrate_sqlite_db_file(db_filename):
     except Exception:
         pass
 
-for db_name in ['rivals.db', 'rivals_tracker.db', 'stats.db']:
-    migrate_sqlite_db_file(db_name)
+import time
+import functools
+import logging
+import sqlite3
+from contextlib import contextmanager
+
+logger = logging.getLogger(__name__)
+
+def get_connection(db_filename: str = "rivals_tracker.db"):
+    db_file_path = os.path.join(BASE_DIR, db_filename) if not os.path.isabs(db_filename) else db_filename
+    conn = sqlite3.connect(db_file_path, timeout=10.0, check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA busy_timeout = 5000;")
+    conn.execute("PRAGMA synchronous = NORMAL;")
+    return conn
+
+def auto_heal_db(max_retries=4, base_delay=0.3):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            last_exception = None
+            for attempt in range(1, max_retries + 1):
+                try:
+                    return func(*args, **kwargs)
+                except (sqlite3.OperationalError, sqlite3.DatabaseError) as e:
+                    last_exception = e
+                    msg = str(e).lower()
+                    if "locked" in msg or "busy" in msg or "unable to open" in msg:
+                        sleep_time = base_delay * (2 ** (attempt - 1))
+                        logger.warning(
+                            f"[DB HEALER] Database contention detected ({e}). Attempt {attempt}/{max_retries}. Retrying in {sleep_time:.2f}s..."
+                        )
+                        time.sleep(sleep_time)
+                    else:
+                        raise e
+            logger.error(f"[DB HEALER] Exhausted all {max_retries} attempts. Raising last error: {last_exception}")
+            raise last_exception
+        return wrapper
+    return decorator
+
+@auto_heal_db(max_retries=4, base_delay=0.3)
+def upsert_player_profile(uid: str, profile_data: dict, db_filename: str = "rivals_tracker.db"):
+    with get_connection(db_filename) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS players (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                uid TEXT UNIQUE,
+                platform TEXT DEFAULT 'pc',
+                rank TEXT,
+                score INTEGER,
+                avatar_url TEXT,
+                level INTEGER,
+                profile_url TEXT,
+                last_scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                raw_payload TEXT,
+                cached_stats TEXT
+            );
+        """)
+        raw_json = json.dumps(profile_data) if isinstance(profile_data, dict) else str(profile_data)
+        username = profile_data.get("username") or profile_data.get("current", {}).get("username") or f"Player {uid}"
+        platform = profile_data.get("platform") or profile_data.get("current", {}).get("platform") or "ps5"
+        rank = profile_data.get("rank") or profile_data.get("current", {}).get("rank") or "Platinum 1"
+        score = profile_data.get("rank_points") or profile_data.get("rankScore") or profile_data.get("score") or 0
+
+        cursor.execute("""
+            INSERT INTO players (uid, username, platform, rank, score, raw_payload, cached_stats, last_scraped_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(uid) DO UPDATE SET
+                username=excluded.username,
+                platform=excluded.platform,
+                rank=excluded.rank,
+                score=excluded.score,
+                raw_payload=excluded.raw_payload,
+                cached_stats=excluded.cached_stats,
+                last_scraped_at=CURRENT_TIMESTAMP;
+        """, (uid, username, platform, rank, score, raw_json, raw_json))
+        conn.commit()
+
+@auto_heal_db(max_retries=3, base_delay=0.2)
+def get_cached_player(uid: str, db_filename: str = "rivals_tracker.db"):
+    with get_connection(db_filename) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM players WHERE uid = ?", (uid,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
 
 def upsert_player_map(player_uid: str, map_name: str, game_mode: str, matches_played: int, wins: int, losses: int, win_rate: float, attack_win_rate: float = 0.0, defense_win_rate: float = 0.0, db_filename: str = "rivals_tracker.db"):
     import sqlite3
