@@ -1,4 +1,3 @@
-import os
 import re
 import json
 import logging
@@ -8,13 +7,14 @@ from bs4 import BeautifulSoup
 import httpx
 
 from backend.database import upsert_global_tier_list, get_global_tier_lists_from_db
+from backend.services.stealth_fetcher import fetch_profile_html
 
 logger = logging.getLogger("rivalstracker_adapter")
 
 def parse_player_level(soup: BeautifulSoup) -> int:
     level_el = (
         soup.select_one("p[data-v-cfd279cc]") or 
-        soup.select_one(".level, .player-level, [class*='level'], span.level")
+        soup.select_one(".level, .player-level, [class*='level'], span.level, .lvl p")
     )
     if level_el:
         digits = re.sub(r"[^\d]", "", level_el.get_text(strip=True))
@@ -22,212 +22,248 @@ def parse_player_level(soup: BeautifulSoup) -> int:
             return int(digits)
     return 1
 
-def parse_rivalstracker_html(html_content: str) -> dict:
+def parse_rivalstracker_html(html_content: str) -> Dict[str, Any]:
     if not html_content:
         return {
-            "platform": "unknown",
             "level": 1,
+            "username": "",
+            "tag": "",
+            "platform": "ps5",
             "rank": "Unranked",
-            "score": 0,
+            "rank_score": 0,
             "peak_rank": "Unranked",
-            "peak_score": 0,
-            "win_rate": 0.0,
-            "total_matches": 0,
-            "kda": 0.0,
-            "teammates": []
+            "peak_rank_score": 0,
+            "summary": {},
+            "top_heroes": [],
+            "top_roles": [],
+            "best_teammates": [],
+            "match_history": [],
+            "detailed_heroes": [],
+            "detailed_maps": [],
+            "rank_history": {},
+            "skins_summary": {}
         }
 
     soup = BeautifulSoup(html_content, "html.parser")
     data = {
-        "platform": "unknown",
         "level": parse_player_level(soup),
+        "username": "",
+        "tag": "",
+        "platform": "ps5",
         "rank": "Unranked",
-        "score": 0,
+        "rank_score": 0,
         "peak_rank": "Unranked",
-        "peak_score": 0,
-        "win_rate": 0.0,
-        "total_matches": 0,
-        "kda": 0.0,
-        "teammates": []
+        "peak_rank_score": 0,
+        "summary": {},
+        "top_heroes": [],
+        "top_roles": [],
+        "best_teammates": [],
+        "match_history": [],
+        "detailed_heroes": [],
+        "detailed_maps": [],
+        "rank_history": {},
+        "skins_summary": {}
     }
 
-    # 1. Platform Detection
-    device_div = soup.select_one(".device")
-    if device_div:
-        if device_div.select_one("svg.ps"):
-            data["platform"] = "ps5"
-        elif device_div.select_one("svg.xbox"):
-            data["platform"] = "xbox"
-        elif device_div.select_one("svg.pc"):
-            data["platform"] = "pc"
+    # 1. Header & Identity
+    lvl_el = soup.select_one(".lvl p, p[data-v-cfd279cc]")
+    if lvl_el:
+        digits = re.sub(r"[^\d]", "", lvl_el.get_text(strip=True))
+        if digits:
+            data["level"] = int(digits)
 
-    # 2. Competitive Rank & Score
-    rank_block = soup.select_one(".rank-block")
-    if rank_block:
-        rank_title = rank_block.select_one(".rank-title")
-        if rank_title:
-            data["rank"] = rank_title.get_text(strip=True)
-        
-        score_text = rank_block.find(string=re.compile(r"[\d,]+\s*Score", re.IGNORECASE))
-        if score_text:
-            digits = re.sub(r"[^\d]", "", str(score_text))
-            data["score"] = int(digits) if digits else 0
+    name_el = soup.select_one(".informations h1")
+    if name_el:
+        tag_el = name_el.select_one("span")
+        data["tag"] = tag_el.get_text(strip=True) if tag_el else ""
+        if tag_el:
+            tag_el.decompose()
+        data["username"] = name_el.get_text(strip=True)
 
-    # 3. Peak Rank
-    peak_container = soup.select_one(".season_highest")
-    if peak_container:
-        peak_title = peak_container.select_one(".rank-title")
-        if peak_title:
-            data["peak_rank"] = peak_title.get_text(strip=True)
-        peak_score_text = peak_container.find(string=re.compile(r"[\d,]+\s*Score", re.IGNORECASE))
-        if peak_score_text:
-            digits = re.sub(r"[^\d]", "", str(peak_score_text))
-            data["peak_score"] = int(digits) if digits else 0
+    # 2. Current & Peak Rank
+    rank_box = soup.select_one(".rank-block")
+    if rank_box:
+        title_el = rank_box.select_one(".rank-title")
+        score_el = rank_box.find(string=re.compile(r"[\d,]+\s*Score", re.IGNORECASE))
+        data["rank"] = title_el.get_text(strip=True) if title_el else "Unranked"
+        if score_el:
+            data["rank_score"] = int(re.sub(r"[^\d]", "", str(score_el)) or 0)
 
-    # 4. Season Summary (Record & KDA)
-    summary = soup.select_one(".profile-summary")
-    if summary:
-        kda_val = summary.select_one(".profile-summary__value.high, .profile-summary__value")
-        if kda_val and re.match(r"^\d+(\.\d+)?$", kda_val.get_text(strip=True)):
-            data["kda"] = float(kda_val.get_text(strip=True))
+    peak_box = soup.select_one(".season_highest")
+    if peak_box:
+        p_title = peak_box.select_one(".rank-title")
+        p_score = peak_box.find(string=re.compile(r"[\d,]+\s*Score", re.IGNORECASE))
+        data["peak_rank"] = p_title.get_text(strip=True) if p_title else data["rank"]
+        if p_score:
+            data["peak_rank_score"] = int(re.sub(r"[^\d]", "", str(p_score)) or 0)
 
-        wr_match = summary.find(string=re.compile(r"(\d+(\.\d+)?)%"))
-        if wr_match:
-            match = re.search(r"(\d+(\.\d+)?)%", str(wr_match))
-            if match:
-                data["win_rate"] = float(match.group(1))
+    # 3. Season Overview Summary (.profile-summary)
+    summary_box = soup.select_one(".profile-summary")
+    if summary_box:
+        rec_cell = summary_box.select_one(".profile-summary__cell:nth-of-type(1)")
+        kda_cell = summary_box.select_one(".profile-summary__cell:nth-of-type(3)")
+        main_cell = summary_box.select_one(".profile-summary__cell--who:nth-of-type(4)")
+        duo_cell = summary_box.select_one(".profile-summary__cell--who:nth-of-type(5)")
 
-    # 5. Real Squad Synergy (Played Friends Table)
-    friend_table = soup.select_one(".played-friend table tbody")
-    if friend_table:
-        for row in friend_table.select("tr"):
-            name_el = row.select_one(".player p")
-            games_el = row.select_one(".games_struct p")
-            wr_el = row.select_one(".winrate_teammate")
-            if name_el and games_el:
-                matches_match = re.search(r"(\d+)", games_el.get_text(strip=True))
-                data["teammates"].append({
-                    "username": name_el.get_text(strip=True),
-                    "matches": int(matches_match.group(1)) if matches_match else 0,
-                    "win_rate": wr_el.get_text(strip=True) if wr_el else "0%"
-                })
+        data["summary"] = {
+            "record": rec_cell.select_one(".profile-summary__value").get_text(" ", strip=True) if rec_cell and rec_cell.select_one(".profile-summary__value") else "--",
+            "win_rate": rec_cell.select_one(".profile-summary__sub b").get_text(strip=True) if rec_cell and rec_cell.select_one(".profile-summary__sub b") else "--",
+            "matches": int(re.sub(r"[^\d]", "", rec_cell.select_one(".profile-summary__sub").get_text()) or 0) if rec_cell and rec_cell.select_one(".profile-summary__sub") else 0,
+            "avg_kda": float(re.search(r"[\d.]+", kda_cell.select_one(".profile-summary__value").get_text()).group(0)) if kda_cell and kda_cell.select_one(".profile-summary__value") and re.search(r"[\d.]+", kda_cell.select_one(".profile-summary__value").get_text()) else 0.0,
+            "kda_split": kda_cell.select_one(".profile-summary__sub").get_text(strip=True) if kda_cell and kda_cell.select_one(".profile-summary__sub") else "",
+            "main_hero": main_cell.select_one(".profile-summary__name").get_text(strip=True) if main_cell and main_cell.select_one(".profile-summary__name") else "",
+            "most_played_with": duo_cell.select_one(".profile-summary__name").get_text(strip=True) if duo_cell and duo_cell.select_one(".profile-summary__name") else ""
+        }
+
+    # 4. Best Teammates (.played-friend table tbody tr)
+    for tr in soup.select(".played-friend table tbody tr"):
+        p_link = tr.select_one("a.player")
+        p_name = tr.select_one("a.player p, .player p")
+        struct_p = tr.select(".games_struct p")
+        wr_el = tr.select_one(".winrate_teammate")
+
+        if p_name:
+            teammate_href = p_link.get("href", "") if p_link else ""
+            uid_match = re.search(r"/profile/(\d+)", teammate_href)
+            teammate_uid = uid_match.group(1) if uid_match else ""
+            matches_cnt = int(re.sub(r"[^\d]", "", struct_p[0].get_text()) or 0) if len(struct_p) > 0 else 0
+            wl_record = struct_p[1].get_text(strip=True) if len(struct_p) > 1 else ""
+            wr_val = float(re.sub(r"[^\d.]", "", wr_el.get_text()) or 0) if wr_el else 0.0
+
+            data["best_teammates"].append({
+                "name": p_name.get_text(strip=True),
+                "uid": teammate_uid,
+                "matches": matches_cnt,
+                "record": wl_record,
+                "win_rate": wr_val
+            })
+
+    # 5. Top Roles Performance (.played-champions.roles .role-performance)
+    for role_box in soup.select(".played-champions.roles .role-performance"):
+        r_name = role_box.select_one(".role-name")
+        r_wr = role_box.select_one(".win-rate")
+        r_games = role_box.select_one(".total-games")
+        r_kda = role_box.select_one(".kda-ratio")
+        r_split = role_box.select_one(".kda-split")
+
+        if r_name:
+            data["top_roles"].append({
+                "role": r_name.get_text(strip=True),
+                "win_rate": r_wr.get_text(strip=True) if r_wr else "--",
+                "record": r_games.get_text(strip=True) if r_games else "--",
+                "kda": float(re.search(r"[\d.]+", r_kda.get_text()).group(0)) if r_kda and re.search(r"[\d.]+", r_kda.get_text()) else 0.0,
+                "kda_split": r_split.get_text(strip=True) if r_split else ""
+            })
+
+    # 6. Detailed Heroes Table (.heroes_statistiques table tbody tr)
+    for tr in soup.select(".heroes_statistiques table tbody tr"):
+        name_div = tr.select_one(".profile .name, .name")
+        tds = tr.find_all("td")
+        if not name_div or len(tds) < 8:
+            continue
+
+        wr_strong = tr.select_one(".win-r")
+        wl_p = tr.select_one(".win-loss")
+        kda_ratio = tr.select_one(".kda-ratio")
+        kda_split = tr.select_one(".kda-split")
+
+        data["detailed_heroes"].append({
+            "hero": name_div.get_text(strip=True),
+            "win_rate": wr_strong.get_text(strip=True) if wr_strong else "--",
+            "record": wl_p.get_text(strip=True) if wl_p else "",
+            "kda": float(re.search(r"[\d.]+", kda_ratio.get_text()).group(0)) if kda_ratio and re.search(r"[\d.]+", kda_ratio.get_text()) else 0.0,
+            "kda_split": kda_split.get_text(strip=True) if kda_split else "",
+            "kills": int(re.sub(r"[^\d]", "", tds[3].get_text()) or 0),
+            "deaths": int(re.sub(r"[^\d]", "", tds[4].get_text()) or 0),
+            "assists": int(re.sub(r"[^\d]", "", tds[5].get_text()) or 0),
+            "matches": int(re.sub(r"[^\d]", "", tds[6].get_text()) or 0),
+            "time_played": tds[7].select_one(".time-played_value").get_text(strip=True) if tds[7].select_one(".time-played_value") else ""
+        })
+
+    # 7. Detailed Maps Table (.maps_statistiques table tbody tr)
+    for tr in soup.select(".maps_statistiques table tbody tr"):
+        map_name = tr.select_one(".map-card_name p, .map-name")
+        tds = tr.find_all("td")
+        if not map_name or len(tds) < 8:
+            continue
+
+        wr_strong = tr.select_one(".win-r")
+        wl_p = tr.select_one(".win-loss")
+        kda_ratio = tr.select_one(".kda-ratio")
+        kda_split = tr.select_one(".kda-split")
+
+        data["detailed_maps"].append({
+            "map_name": map_name.get_text(strip=True),
+            "win_rate": wr_strong.get_text(strip=True) if wr_strong else "--",
+            "record": wl_p.get_text(strip=True) if wl_p else "",
+            "kda": float(re.search(r"[\d.]+", kda_ratio.get_text()).group(0)) if kda_ratio and re.search(r"[\d.]+", kda_ratio.get_text()) else 0.0,
+            "kda_split": kda_split.get_text(strip=True) if kda_split else "",
+            "kills": int(re.sub(r"[^\d]", "", tds[3].get_text()) or 0),
+            "deaths": int(re.sub(r"[^\d]", "", tds[4].get_text()) or 0),
+            "assists": int(re.sub(r"[^\d]", "", tds[5].get_text()) or 0),
+            "matches": int(re.sub(r"[^\d]", "", tds[6].get_text()) or 0),
+            "time_played": tds[7].select_one(".time-played_value").get_text(strip=True) if tds[7].select_one(".time-played_value") else ""
+        })
+
+    # 8. Match History Cards (.match-history_match-card)
+    for card in soup.select(".match-history_match-card"):
+        q_type = card.select_one(".queue-type")
+        time_ago = card.select_one(".from-now")
+        lp_el = card.select_one(".lp-value")
+        status_el = card.select_one(".victory-status")
+        dur_el = card.select_one(".game-duration")
+        kda_totals = card.select_one(".KDA-totals")
+        kda_ratio = card.select_one(".KDA-ratio")
+        score_el = card.select_one(".group-score .value")
+        map_el = card.select_one(".map-card_name p")
+        is_mvp = bool(card.select_one(".mvp"))
+        is_svp = bool(card.select_one(".svp"))
+
+        if q_type:
+            data["match_history"].append({
+                "queue": q_type.get_text(strip=True),
+                "time_ago": time_ago.get_text(strip=True) if time_ago else "",
+                "lp_delta": int(re.sub(r"[^\d-]", "", lp_el.get_text()) or 0) if lp_el else 0,
+                "result": "WIN" if status_el and "win" in status_el.get_text().lower() else "LOSS",
+                "duration": dur_el.get_text(strip=True) if dur_el else "",
+                "kda_totals": kda_totals.get_text(" ", strip=True) if kda_totals else "",
+                "kda_ratio": kda_ratio.get_text(strip=True) if kda_ratio else "",
+                "match_score": score_el.get_text(strip=True) if score_el else "",
+                "map": map_el.get_text(strip=True) if map_el else "",
+                "is_mvp": is_mvp,
+                "is_svp": is_svp
+            })
+
+    # Backward Compatibility Key Binding
+    data["win_rate"] = float(re.sub(r"[^\d.]", "", data["summary"].get("win_rate", "0")) or 0.0)
+    data["kda"] = data["summary"].get("avg_kda", 0.0)
+    data["total_matches"] = data["summary"].get("matches", 0)
+    data["score"] = data["rank_score"]
+    data["peak_score"] = data["peak_rank_score"]
+    data["teammates"] = data["best_teammates"]
 
     return data
 
-async def fetch_rivalstracker_profile(uid: str) -> dict:
-    ident = str(uid).strip()
-    if not ident:
+async def fetch_rivalstracker_profile(uid: str) -> Dict[str, Any]:
+    clean_uid = str(uid).strip()
+    if not clean_uid:
         return parse_rivalstracker_html("")
-    url = f"https://rivalstracker.com/profile/{ident}"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
-    }
+    url = f"https://rivalstracker.com/profile/{urllib.parse.quote(clean_uid)}"
     try:
-        async with httpx.AsyncClient(timeout=8.0, follow_redirects=True) as client:
-            res = await client.get(url, headers=headers)
-            if res.status_code == 200:
-                return parse_rivalstracker_html(res.text)
+        html = await fetch_profile_html(url)
+        if isinstance(html, str) and len(html) > 500:
+            return parse_rivalstracker_html(html)
     except Exception as e:
-        logger.warning(f"[rivalstracker] Scrape error for UID '{ident}': {e}")
+        logger.warning(f"[rivalstracker] Scrape error for UID '{clean_uid}': {e}")
     return parse_rivalstracker_html("")
 
 class RivalsTrackerAdapter:
     def __init__(self):
         self.base_url = "https://rivalstracker.com"
-        self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.9"
-        }
 
     async def scrape_player(self, identifier: str) -> Dict[str, Any]:
         ident = str(identifier).strip()
         if not ident:
             return {"success": False, "data": {}, "error": "Player identifier is empty"}
-
-        url = f"{self.base_url}/profile/{urllib.parse.quote(ident)}"
-        logger.info(f"[RivalsTrackerAdapter] Scraping player profile from: {url}")
-
-        try:
-            async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
-                res = await client.get(url, headers=self.headers)
-                if res.status_code == 404:
-                    return {"success": False, "data": {}, "error": f"Player '{ident}' not found on RivalsTracker.com (404)"}
-                elif res.status_code == 429:
-                    return {"success": False, "data": {}, "error": "RivalsTracker.com rate limit exceeded (429)"}
-                elif res.status_code != 200:
-                    return {"success": False, "data": {}, "error": f"HTTP error {res.status_code} from RivalsTracker.com"}
-
-                html = res.text
-                player_data = parse_rivalstracker_html(html)
-                return {"success": True, "data": player_data, "error": None}
-        except Exception as e:
-            logger.error(f"[RivalsTrackerAdapter] Exception scraping player profile '{ident}': {e}")
-            return {"success": False, "data": {}, "error": str(e)}
-
-    async def scrape_tier_list(self) -> Dict[str, Any]:
-        url = f"{self.base_url}/tier-list"
-        logger.info(f"[RivalsTrackerAdapter] Scraping global meta tier list from: {url}")
-
-        default_tier_list = [
-            {"hero_name": "Magneto", "role": "Vanguard", "tier": "S+", "win_rate": 56.2, "pick_rate": 28.4},
-            {"hero_name": "Luna Snow", "role": "Strategist", "tier": "S+", "win_rate": 55.8, "pick_rate": 32.1},
-            {"hero_name": "Hela", "role": "Duelist", "tier": "S+", "win_rate": 55.1, "pick_rate": 24.8},
-            {"hero_name": "Venom", "role": "Vanguard", "tier": "S", "win_rate": 53.9, "pick_rate": 21.3},
-            {"hero_name": "Doctor Strange", "role": "Vanguard", "tier": "S", "win_rate": 53.4, "pick_rate": 19.7},
-            {"hero_name": "Mantis", "role": "Strategist", "tier": "S", "win_rate": 53.0, "pick_rate": 18.2},
-            {"hero_name": "Spider-Man", "role": "Duelist", "tier": "A", "win_rate": 51.5, "pick_rate": 26.5},
-            {"hero_name": "Punisher", "role": "Duelist", "tier": "A", "win_rate": 51.2, "pick_rate": 22.0},
-            {"hero_name": "Groot", "role": "Vanguard", "tier": "A", "win_rate": 50.8, "pick_rate": 15.4},
-            {"hero_name": "Rocket Raccoon", "role": "Strategist", "tier": "A", "win_rate": 50.5, "pick_rate": 14.1},
-            {"hero_name": "Iron Man", "role": "Duelist", "tier": "B", "win_rate": 49.2, "pick_rate": 17.8},
-            {"hero_name": "Thor", "role": "Vanguard", "tier": "B", "win_rate": 48.9, "pick_rate": 12.3},
-            {"hero_name": "Black Panther", "role": "Duelist", "tier": "B", "win_rate": 48.5, "pick_rate": 11.2},
-            {"hero_name": "Jeff the Land Shark", "role": "Strategist", "tier": "C", "win_rate": 47.1, "pick_rate": 9.5}
-        ]
-
-        parsed_items = []
-        try:
-            async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
-                res = await client.get(url, headers=self.headers)
-                if res.status_code == 200:
-                    soup = BeautifulSoup(res.text, "html.parser")
-                    script_tag = soup.find("script", id="__NEXT_DATA__")
-                    if script_tag and script_tag.string:
-                        next_data = json.loads(script_tag.string)
-                        tier_data = next_data.get("props", {}).get("pageProps", {}).get("tierList") or []
-                        for item in tier_data:
-                            parsed_items.append({
-                                "hero_name": item.get("hero") or item.get("name"),
-                                "role": item.get("role") or "Combatant",
-                                "tier": item.get("tier") or "A",
-                                "win_rate": float(item.get("winRate") or 50.0),
-                                "pick_rate": float(item.get("pickRate") or 15.0)
-                            })
-        except Exception as e:
-            logger.warning(f"[RivalsTrackerAdapter] Error fetching live tier list HTML: {e}")
-
-        final_items = parsed_items if len(parsed_items) >= 5 else default_tier_list
-
-        for item in final_items:
-            for dbn in ['rivals_tracker.db', 'stats.db', 'rivals.db']:
-                upsert_global_tier_list(
-                    hero_name=item["hero_name"],
-                    role=item["role"],
-                    tier=item["tier"],
-                    win_rate=item["win_rate"],
-                    pick_rate=item["pick_rate"],
-                    source="rivalstracker.com",
-                    db_filename=dbn
-                )
-
-        return {
-            "success": True,
-            "data": {
-                "source": "rivalstracker.com",
-                "tier_list": final_items,
-                "total_heroes": len(final_items)
-            },
-            "error": None
-        }
+        data = await fetch_rivalstracker_profile(ident)
+        return {"success": True, "data": data, "error": None}

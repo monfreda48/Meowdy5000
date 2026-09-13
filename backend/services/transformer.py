@@ -68,9 +68,10 @@ class TelemetryTransformer:
         )
 
         # 3. Core Win Rates & Records
+        rt_wr = safe_float(rt.get("summary", {}).get("win_rate")) or safe_float(rt.get("win_rate"))
         win_rates = [
             safe_float(tgg.get("win_rate")),
-            safe_float(rt.get("win_rate")),
+            rt_wr,
             safe_float(rm.get("win_rate")),
             safe_float(rd_curr.get("win_rate")),
             safe_float(rd.get("win_rate"))
@@ -79,17 +80,19 @@ class TelemetryTransformer:
 
         total_matches = (
             safe_int(rt.get("total_matches")) or
+            safe_int(rt.get("summary", {}).get("matches")) or
             safe_int(rd_curr.get("total_matches")) or
             safe_int(rd.get("total_matches")) or
-            safe_int(tgg.get("total_matches")) or 48
+            safe_int(tgg.get("matches_played")) or 0
         )
-        wins = safe_int(rt.get("wins")) or safe_int(rd_curr.get("wins")) or safe_int(rd.get("wins")) or safe_int(tgg.get("wins")) or int(round(total_matches * (win_rate / 100.0)))
+        wins = safe_int(rd_curr.get("wins")) or safe_int(rd.get("wins")) or safe_int(tgg.get("wins")) or int(total_matches * (win_rate / 100))
         losses = safe_int(rt.get("losses")) or safe_int(rd_curr.get("losses")) or safe_int(rd.get("losses")) or safe_int(tgg.get("losses")) or max(0, total_matches - wins)
 
         # 4. Combat Telemetry (KDA, Kills, Deaths, Assists)
+        rt_kda = safe_float(rt.get("summary", {}).get("avg_kda")) or safe_float(rt.get("kda"))
         kdas = [
             safe_float(tgg.get("kda")),
-            safe_float(rt.get("kda")),
+            rt_kda,
             safe_float(rm.get("kda")),
             safe_float(rd_curr.get("kda")),
             safe_float(rd.get("kda"))

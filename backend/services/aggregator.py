@@ -361,17 +361,25 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
             tgg_data, data, rt_data, rm_data = await asyncio.gather(tgg_task, rd_task, rt_task, rm_task)
 
         if rt_data:
+            try:
+                from backend.database import save_rivalstracker_telemetry
+                save_rivalstracker_telemetry(resolved_uid, rt_data)
+            except Exception as err:
+                logger.warning(f"[aggregator] Failed to save RivalsTracker telemetry for {resolved_uid}: {err}")
+
             data["rivalstracker_stats"] = {
                 "rank": rt_data.get("rank", "Unranked"),
-                "score": rt_data.get("score", 0),
+                "score": rt_data.get("rank_score") or rt_data.get("score", 0),
                 "peak_rank": rt_data.get("peak_rank", "Unranked"),
-                "peak_score": rt_data.get("peak_score", 0),
-                "teammates": rt_data.get("teammates", [])
+                "peak_score": rt_data.get("peak_rank_score") or rt_data.get("peak_score", 0),
+                "teammates": rt_data.get("best_teammates") or rt_data.get("teammates", []),
+                "summary": rt_data.get("summary", {}),
+                "match_history": rt_data.get("match_history", [])
             }
-            if rt_data.get("teammates"):
-                data["squad_synergy"] = rt_data["teammates"]
+            if rt_data.get("best_teammates") or rt_data.get("teammates"):
+                data["squad_synergy"] = rt_data.get("best_teammates") or rt_data["teammates"]
                 if "current" in data:
-                    data["current"]["squad_synergy"] = rt_data["teammates"]
+                    data["current"]["squad_synergy"] = rt_data.get("best_teammates") or rt_data["teammates"]
 
             if rt_data.get("platform") and rt_data["platform"] != "unknown":
                 data["platform"] = rt_data["platform"]

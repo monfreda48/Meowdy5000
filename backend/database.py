@@ -977,6 +977,133 @@ def get_user_goals_state(player_uid: str, db_filename: str = "rivals_tracker.db"
         print(f"[DB Error] get_user_goals_state failed for {player_uid}: {e}")
     return results
 
+def init_rivalstracker_tables(db_filename: str = "rivals_tracker.db"):
+    import sqlite3
+    db_path = os.path.join(BASE_DIR, db_filename)
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS rivalstracker_profiles (
+            player_uid TEXT PRIMARY KEY,
+            level INTEGER DEFAULT 1,
+            rank TEXT,
+            rank_score INTEGER DEFAULT 0,
+            peak_rank TEXT,
+            peak_score INTEGER DEFAULT 0,
+            summary_json TEXT DEFAULT '{}',
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS rivalstracker_matches (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            player_uid TEXT NOT NULL,
+            queue TEXT,
+            time_ago TEXT,
+            lp_delta INTEGER DEFAULT 0,
+            result TEXT,
+            duration TEXT,
+            kda_totals TEXT,
+            kda_ratio TEXT,
+            match_score TEXT,
+            map_name TEXT,
+            is_mvp INTEGER DEFAULT 0,
+            is_svp INTEGER DEFAULT 0,
+            UNIQUE(player_uid, time_ago, map_name, duration)
+        );
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS rivalstracker_teammates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            player_uid TEXT NOT NULL,
+            teammate_uid TEXT,
+            teammate_name TEXT NOT NULL,
+            matches INTEGER DEFAULT 0,
+            record TEXT,
+            win_rate REAL DEFAULT 0.0,
+            UNIQUE(player_uid, teammate_name)
+        );
+    """)
+    conn.commit()
+    conn.close()
+
+def save_rivalstracker_telemetry(player_uid: str, rt_data: Dict[str, Any], db_filename: str = "rivals_tracker.db"):
+    import sqlite3
+    if not rt_data:
+        return
+    db_path = os.path.join(BASE_DIR, db_filename)
+    try:
+        init_rivalstracker_tables(db_filename)
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+
+        # 1. Profile Summary
+        cur.execute("""
+            INSERT INTO rivalstracker_profiles (player_uid, level, rank, rank_score, peak_rank, peak_score, summary_json, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(player_uid) DO UPDATE SET
+                level=excluded.level,
+                rank=excluded.rank,
+                rank_score=excluded.rank_score,
+                peak_rank=excluded.peak_rank,
+                peak_score=excluded.peak_score,
+                summary_json=excluded.summary_json,
+                updated_at=CURRENT_TIMESTAMP;
+        """, (
+            str(player_uid),
+            rt_data.get("level", 1),
+            rt_data.get("rank", "Unranked"),
+            rt_data.get("rank_score", 0),
+            rt_data.get("peak_rank", "Unranked"),
+            rt_data.get("peak_rank_score", 0),
+            json.dumps(rt_data.get("summary", {}))
+        ))
+
+        # 2. Best Teammates
+        for tm in rt_data.get("best_teammates", []):
+            cur.execute("""
+                INSERT INTO rivalstracker_teammates (player_uid, teammate_uid, teammate_name, matches, record, win_rate)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(player_uid, teammate_name) DO UPDATE SET
+                    teammate_uid=excluded.teammate_uid,
+                    matches=excluded.matches,
+                    record=excluded.record,
+                    win_rate=excluded.win_rate;
+            """, (
+                str(player_uid),
+                tm.get("uid", ""),
+                tm.get("name", ""),
+                tm.get("matches", 0),
+                tm.get("record", ""),
+                tm.get("win_rate", 0.0)
+            ))
+
+        # 3. Match History
+        for m in rt_data.get("match_history", []):
+            cur.execute("""
+                INSERT OR IGNORE INTO rivalstracker_matches 
+                (player_uid, queue, time_ago, lp_delta, result, duration, kda_totals, kda_ratio, match_score, map_name, is_mvp, is_svp)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            """, (
+                str(player_uid),
+                m.get("queue", ""),
+                m.get("time_ago", ""),
+                m.get("lp_delta", 0),
+                m.get("result", ""),
+                m.get("duration", ""),
+                m.get("kda_totals", ""),
+                m.get("kda_ratio", ""),
+                m.get("match_score", ""),
+                m.get("map", ""),
+                1 if m.get("is_mvp") else 0,
+                1 if m.get("is_svp") else 0
+            ))
+
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[DB Error] save_rivalstracker_telemetry failed for {player_uid}: {e}")
+
 
 
 
