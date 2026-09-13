@@ -197,26 +197,27 @@ class TrackerScraperWorker:
             }
 
         url = self.build_profile_url(username)
-        html = None
 
-        # Exponential Backoff Attempts (2s, 5s, 10s)
-        backoffs = [0, 2, 5]
-        for delay in backoffs:
-            if delay > 0:
-                logger.info(f"Retrying request after {delay}s backoff...")
-                await asyncio.sleep(delay)
+        # 1. Primary Route (95%+ of requests): Lightweight TLS-impersonated HTTP request via curl_cffi
+        html = await self.scrape_with_curl_cffi(url)
+        if html:
+            CONSECUTIVE_CLOUDFLARE_BLOCKS = 0
+            parsed = self.parse_hydration_json(html, username)
+            if not parsed:
+                parsed = self.parse_dom_fallback(html, username)
+            parsed["is_stale"] = False
+            return parsed
 
-            # 1. Primary Engine: curl_cffi TLS impersonation
-            html = await self.scrape_with_curl_cffi(url)
-            if html:
-                CONSECUTIVE_CLOUDFLARE_BLOCKS = 0
-                break
-
-            # 2. Fallback Engine: Playwright Stealth
-            html = await self.scrape_with_playwright_stealth(url)
-            if html:
-                CONSECUTIVE_CLOUDFLARE_BLOCKS = 0
-                break
+        # 2. Fallback Route: Playwright stealth headless browser (only when Cloudflare Turnstile blocks curl_cffi)
+        logger.info(f"[TrackerScraperWorker] curl_cffi encountered Cloudflare challenge for '{username}'. Spawning Playwright browser fallback...")
+        html = await self.scrape_with_playwright_stealth(url)
+        if html:
+            CONSECUTIVE_CLOUDFLARE_BLOCKS = 0
+            parsed = self.parse_hydration_json(html, username)
+            if not parsed:
+                parsed = self.parse_dom_fallback(html, username)
+            parsed["is_stale"] = False
+            return parsed
 
         if not html:
             CONSECUTIVE_CLOUDFLARE_BLOCKS += 1
