@@ -76,9 +76,16 @@ export default function SeasonHeader({ getApiUrl }) {
             {loading ? (
               <span className="inline-block w-10 h-4 bg-slate-700/50 rounded-full animate-pulse" />
             ) : seasonMeta?.season_name ? (
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                LIVE
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                  LIVE
+                </span>
+                {seasonMeta.is_half_season && (
+                  <span className="text-[10px] font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    MID-SEASON
+                  </span>
+                )}
+              </div>
             ) : (
               <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
                 UNCONFIRMED
