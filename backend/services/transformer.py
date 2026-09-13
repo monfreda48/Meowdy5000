@@ -126,44 +126,26 @@ class TelemetryTransformer:
 
         playtime_seconds = int(total_season_hours * 3600)
 
-        top_heroes = rm.get("hero_stats") or rd.get("heroes") or rd_curr.get("heroes") or [
-            {"hero": "Jubilee", "matches": 11, "win_rate": "45.5%", "kda": 8.28, "time_played": "2.4 hrs", "role": "Strategist"},
-            {"hero": "Doctor Strange", "matches": 1, "win_rate": "0.0%", "kda": 4.20, "time_played": "15 mins", "role": "Vanguard"},
-            {"hero": "Cloak & Dagger", "matches": 1, "win_rate": "0.0%", "kda": 1.89, "time_played": "16 mins", "role": "Strategist"},
-            {"hero": "Emma Frost", "matches": 1, "win_rate": "0.0%", "kda": 2.20, "time_played": "10 mins", "role": "Vanguard"}
-        ]
+        all_heroes = tgg.get("heroes") or (rm.get("heroes", {}).get("heroes") if isinstance(rm.get("heroes"), dict) else rm.get("hero_stats")) or rd.get("heroes") or rd_curr.get("heroes") or []
+        top_hero_1 = all_heroes[0] if len(all_heroes) > 0 and isinstance(all_heroes[0], dict) else {}
+
+        top_hero_name = top_hero_1.get("hero") or top_hero_1.get("hero_name") or "--"
+        top_hero_time = top_hero_1.get("time_played") or (f"{top_hero_1.get('matches')} matches" if top_hero_1.get("matches") else "--")
+
         tgg_ov = tgg.get("overview", {}) if isinstance(tgg, dict) else {}
-        primary_h = top_heroes[0] if top_heroes and isinstance(top_heroes[0], dict) else {}
-        dmg_per_min = (
-            safe_float(tgg_ov.get("damage_per_min") or tgg.get("damage_per_min")) or
-            safe_float(primary_h.get("damage_per_min")) or
-            875.0
-        )
-        heal_per_min = (
-            safe_float(tgg_ov.get("heal_per_min") or tgg.get("heal_per_min")) or
-            safe_float(primary_h.get("heal_per_min")) or
-            2358.0
-        )
-        accuracy = safe_float(primary_h.get("accuracy"), 50.3) if primary_h.get("accuracy") else 50.3
+        d_min = safe_float(tgg_ov.get("damage_per_min") or tgg.get("damage_per_min")) or safe_float(top_hero_1.get("damage_per_min"))
+        h_min = safe_float(tgg_ov.get("heal_per_min") or tgg.get("heal_per_min")) or safe_float(top_hero_1.get("heal_per_min"))
 
-        dmg_10m = int(dmg_per_min * 10)
-        heal_10m = int(heal_per_min * 10)
-        dmg_blocked_10m = safe_int(primary_h.get("dmg_blocked_10m"), 0)
+        damage_10m = int(d_min * 10) if d_min > 0 else None
+        healing_10m = int(h_min * 10) if h_min > 0 else None
+        accuracy = safe_float(top_hero_1.get("accuracy"))
 
-        total_damage = int(dmg_10m * (total_season_hours * 6))
+        total_damage = int(damage_10m * (total_season_hours * 6)) if damage_10m else None
 
-        # MVP & SVP Counts
-        mvps = safe_int(primary_h.get("mvps"), 3) if primary_h else 3
-        svps = safe_int(primary_h.get("svps"), 1) if primary_h else 1
+        mvps = safe_int(top_hero_1.get("mvps"), 0)
+        svps = safe_int(top_hero_1.get("svps"), 0)
 
-        # Normalize Squad Synergy Array with Dual Keys
-        raw_teammates = rt.get("teammates") or rm.get("teammates") or rd.get("squad_synergy") or rd_curr.get("squad_synergy") or [
-            {"name": "Wild-Fox_09", "games": 30, "matches": 30, "win_rate": "60%", "winRate": "60%"},
-            {"name": "SleeepylifeTTV", "games": 21, "matches": 21, "win_rate": "66.7%", "winRate": "66.7%"},
-            {"name": "Demonfoxgod", "games": 16, "matches": 16, "win_rate": "31.3%", "winRate": "31.3%"},
-            {"name": "Slackknight485", "games": 13, "matches": 13, "win_rate": "61.5%", "winRate": "61.5%"},
-            {"name": "CuddleCow", "games": 12, "matches": 12, "win_rate": "58.3%", "winRate": "58.3%"}
-        ]
+        raw_teammates = rt.get("teammates") or rm.get("teammates") or rd.get("squad_synergy") or rd_curr.get("squad_synergy") or []
         squad_synergy = []
         for t in raw_teammates:
             m_count = safe_int(t.get("matches") or t.get("games") or t.get("matches_together"))
@@ -251,15 +233,20 @@ class TelemetryTransformer:
             "squad_synergy": squad_synergy,
             "squadSynergy": squad_synergy,
             "teammates": squad_synergy,
-            "top_heroes": top_heroes,
-            "topHeroes": top_heroes,
-            "heroes": top_heroes,
+            "top_heroes": all_heroes,
+            "topHeroes": all_heroes,
+            "heroes": all_heroes,
+            "top_hero_name": top_hero_name,
+            "top_hero_playtime": f"{top_hero_time} ({top_hero_name})" if top_hero_time != "--" else "--",
+            "season_playtime": tgg_ov.get("playtime_hours") or rm.get("all_time", {}).get("time_played") or "--",
+            "damage_10m": damage_10m,
+            "damage_per_10m": f"{damage_10m:,}" if damage_10m else "--",
+            "damagePer10m": f"{damage_10m:,}" if damage_10m else "--",
+            "healing_10m": healing_10m,
+            "healing_per_10m": f"{healing_10m:,}" if healing_10m else "--",
+            "healingPer10m": f"{healing_10m:,}" if healing_10m else "--",
             "punishments": rm.get("tabs", {}).get("punishments", {}).get("punishments") or rm.get("punishments") or [],
-            "all_time": rm.get("tabs", {}).get("all-time", {}).get("all_time") or rm.get("all_time") or {
-                "total_games": 4111,
-                "time_played": "701h 7m",
-                "accolades": {"MVPs": 275, "SVPs": 336}
-            },
+            "all_time": rm.get("tabs", {}).get("all-time", {}).get("all_time") or rm.get("all_time") or {},
             "tabs": rm.get("tabs") or {},
             "sources_synced": {
                 "RivalsData": bool(rd),

@@ -4058,21 +4058,13 @@ const DEFAULT_SEASON_NUM = 19;
                           </div>
                         </div>
                         <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                          {getCardDisplayStat('heroDamage', stats.current.damagePer10m || stats.current.damage_10m || (typeof stats.current.heroDamage === 'number' ? stats.current.heroDamage.toLocaleString() : stats.current.heroDamage) || '8,750')}
+                          {getCardDisplayStat('heroDamage', stats.current.damagePer10m || stats.current.damage_10m || (typeof stats.current.heroDamage === 'number' ? stats.current.heroDamage.toLocaleString() : stats.current.heroDamage) || '--')}
                         </p>
 
                         {expandedMetrics.heroDamage && (
-                          <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
-                            <div className="flex justify-between text-slate-300 font-medium">
-                              <span>Total Damage Output:</span>
-                              <span className="font-bold text-emerald-400">{(stats.current.totalHeroDamageRaw || 0).toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between text-slate-300 font-medium">
-                              <span>Avg Damage / Match:</span>
-                              <span className="font-bold text-white">
-                                {stats.current.matchesPlayed ? Math.round(stats.current.totalHeroDamageRaw / stats.current.matchesPlayed).toLocaleString() : 0}
-                              </span>
-                            </div>
+                          <div className="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
+                            <span>Scraped Target:</span>
+                            <span className="text-white font-bold">{stats.current.heroDamage || '--'}</span>
                           </div>
                         )}
                         {render3SiteBreakdown('heroDamage')}
@@ -4083,7 +4075,7 @@ const DEFAULT_SEASON_NUM = 19;
                       <div
                         key="healing"
                         onClick={() => toggleExpandMetric('healing')}
-                        className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
+                        className={`bg-[#0d111d] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-800 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
                           }`}
                       >
                         <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -4115,7 +4107,7 @@ const DEFAULT_SEASON_NUM = 19;
                           </div>
                         </div>
                         <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                          {getCardDisplayStat('healing', stats.current.healing || 'N/A')}
+                          {getCardDisplayStat('healing', stats.current.healingPer10m || stats.current.healing_10m || (typeof stats.current.healing === 'number' ? stats.current.healing.toLocaleString() : stats.current.healing) || '--')}
                         </p>
 
                         {expandedMetrics.healing && (

@@ -192,42 +192,39 @@ def parse_trackergg_heroes(soup: BeautifulSoup) -> List[Dict[str, Any]]:
     for tr in soup.select("table tbody tr, .heroes-table tbody tr"):
         tds = tr.find_all("td")
         name_el = tr.select_one(".hero-name, td:first-child span")
-        if not name_el or len(tds) < 8:
+        if not name_el or len(tds) < 7:
             continue
 
-        split_el = tds[8].select_one("small, .text-secondary") if len(tds) > 8 else None
+        hero_name = name_el.get_text(strip=True)
+        matches_raw = re.sub(r"[^\d.]", "", tds[1].get_text())
+        wr_raw = re.search(r"[\d.]+", tds[2].get_text())
+        kda_el = tds[8].select_one("span, b") if len(tds) > 8 else tds[-1]
+        kda_raw = re.search(r"[\d.]+", kda_el.get_text()) if kda_el else None
+
         heroes.append({
-            "hero": name_el.get_text(strip=True),
-            "matches": float(re.sub(r"[^\d.]", "", tds[1].get_text()) or 0),
-            "win_rate": float(re.sub(r"[^\d.]", "", tds[2].get_text()) or 0),
-            "mvps": int(re.sub(r"[^\d]", "", tds[3].get_text()) or 0),
-            "svps": int(re.sub(r"[^\d]", "", tds[4].get_text()) or 0),
-            "damage_per_min": float(re.sub(r"[^\d.]", "", tds[5].get_text()) or 0),
-            "heal_per_min": float(re.sub(r"[^\d.]", "", tds[6].get_text()) or 0),
-            "kd": float(re.sub(r"[^\d.]", "", tds[7].get_text()) or 0),
-            "kda": float(re.search(r"[\d.]+", tds[8].get_text()).group(0) if len(tds) > 8 and re.search(r"[\d.]+", tds[8].get_text()) else 0),
-            "kda_split": split_el.get_text(strip=True) if split_el else ""
+            "hero": hero_name,
+            "matches": float(matches_raw) if matches_raw else 0.0,
+            "win_rate": f"{wr_raw.group(0)}%" if wr_raw else "--",
+            "kda": float(kda_raw.group(0)) if kda_raw else 0.0,
+            "damage_per_min": float(re.sub(r"[^\d.]", "", tds[5].get_text()) or 0.0) if len(tds) > 5 else 0.0,
+            "heal_per_min": float(re.sub(r"[^\d.]", "", tds[6].get_text()) or 0.0) if len(tds) > 6 else 0.0
         })
-    return heroes
+
+    return sorted(heroes, key=lambda x: x["matches"], reverse=True)
 
 def parse_trackergg_roles(soup: BeautifulSoup) -> List[Dict[str, Any]]:
     roles = []
     for tr in soup.select("table tbody tr, .roles-table tbody tr"):
         tds = tr.find_all("td")
         role_el = tr.select_one(".role-name, td:first-child span")
-        if not role_el or len(tds) < 8:
+        if not role_el or len(tds) < 7:
             continue
 
         roles.append({
             "role": role_el.get_text(strip=True),
-            "matches": float(re.sub(r"[^\d.]", "", tds[1].get_text()) or 0),
-            "win_rate": float(re.sub(r"[^\d.]", "", tds[2].get_text()) or 0),
-            "mvps": int(re.sub(r"[^\d]", "", tds[3].get_text()) or 0),
-            "svps": int(re.sub(r"[^\d]", "", tds[4].get_text()) or 0),
-            "damage_per_min": float(re.sub(r"[^\d.]", "", tds[5].get_text()) or 0),
-            "heal_per_min": float(re.sub(r"[^\d.]", "", tds[6].get_text()) or 0),
-            "kd": float(re.sub(r"[^\d.]", "", tds[7].get_text()) or 0),
-            "kda": float(re.search(r"[\d.]+", tds[8].get_text()).group(0) if len(tds) > 8 and re.search(r"[\d.]+", tds[8].get_text()) else 0)
+            "matches": float(re.sub(r"[^\d.]", "", tds[1].get_text()) or 0.0),
+            "win_rate": f"{tds[2].get_text(strip=True)}" if len(tds) > 2 else "--",
+            "kda": float(re.search(r"[\d.]+", tds[-1].get_text()).group(0)) if re.search(r"[\d.]+", tds[-1].get_text()) else 0.0
         })
     return roles
 
@@ -236,17 +233,13 @@ def parse_trackergg_encounters(soup: BeautifulSoup) -> List[Dict[str, Any]]:
     for tr in soup.select("table tbody tr, .encounters-table tbody tr"):
         tds = tr.find_all("td")
         name_el = tr.select_one(".player-name, td:first-child span")
-        if not name_el or len(tds) < 6:
+        if not name_el or len(tds) < 3:
             continue
 
         encounters.append({
             "player_name": name_el.get_text(strip=True),
-            "played_with_count": int(re.sub(r"[^\d]", "", tds[1].get_text()) or 0),
-            "player_rank": tds[2].get_text(strip=True),
-            "player_win_rate": float(re.sub(r"[^\d.]", "", tds[3].get_text()) or 0.0) if "%" in tds[3].get_text() else None,
-            "player_kd": float(re.sub(r"[^\d.]", "", tds[4].get_text()) or 0.0) if "." in tds[4].get_text() else None,
-            "matches_together": int(re.sub(r"[^\d]", "", tds[5].get_text()) or 0) if tds[5].get_text().strip().isdigit() else None,
-            "last_encounter": tds[6].get_text(strip=True) if len(tds) > 6 else ""
+            "played_with_count": int(re.sub(r"[^\d]", "", tds[1].get_text()) or 0) if len(tds) > 1 else 0,
+            "last_encounter": tds[-1].get_text(strip=True) if len(tds) > 2 else ""
         })
     return encounters
 
@@ -277,7 +270,7 @@ def parse_trackergg_html(html_content: str) -> dict:
         "losses": max(0, ov.get("matches_played", 0) - ov.get("wins", 0)),
         "total_matches": ov.get("matches_played", 0),
         "kda": ov.get("kda_ratio"),
-        "top_hero": "Jubilee",
+        "top_hero": None,
         "recent_matches": [],
         "overview": ov
     }
@@ -307,71 +300,8 @@ async def fetch_all_trackergg_tabs(username: str) -> Dict[str, Any]:
                 data["roles"] = parse_trackergg_roles(soup)
             elif tab == "encounters":
                 data["encounters"] = parse_trackergg_encounters(soup)
-
-    if not data.get("overview") or data["overview"].get("matches_played", 0) == 0:
-        data["overview"] = {
-            "matches_played": 3966,
-            "playtime_hours": "544h",
-            "rank": "Platinum I",
-            "rank_score": 4196,
-            "season_best_rank": "Grandmaster I",
-            "season_best_score": 4510,
-            "all_time_best_rank": "Grandmaster I",
-            "all_time_best_score": 4510,
-            "kda_ratio": 4.21,
-            "win_rate": 54.6,
-            "wins": 2164,
-            "mvp_pct": 18.4,
-            "kd_ratio": 3.10,
-            "kills": 58287,
-            "deaths": 18802,
-            "assists": 20886,
-            "last_kills": 41200,
-            "svp_pct": 8.2,
-            "damage": 33844755,
-            "healing": 54654145,
-            "damage_blocked": 29366667,
-            "max_kill_streak": 32,
-            "mvps": 730,
-            "svps": 325
-        }
-
-    if not data.get("roles"):
-        data["roles"] = [
-            {"role": "Strategist", "matches": 2821.2, "win_rate": 55.4, "mvps": 520, "svps": 210, "damage_per_min": 680.0, "heal_per_min": 2150.0, "kd": 2.85, "kda": 5.46},
-            {"role": "Duelist", "matches": 894.2, "win_rate": 48.2, "mvps": 180, "svps": 95, "damage_per_min": 1120.0, "heal_per_min": 0.0, "kd": 2.45, "kda": 3.33},
-            {"role": "Vanguard", "matches": 211.7, "win_rate": 42.1, "mvps": 30, "svps": 20, "damage_per_min": 890.0, "heal_per_min": 0.0, "kd": 1.95, "kda": 2.82}
-        ]
-
-    if not data.get("heroes"):
-        data["heroes"] = [
-            {"hero": "Gambit", "matches": 784.5, "win_rate": 48.6, "mvps": 140, "svps": 65, "damage_per_min": 1024.0, "heal_per_min": 0.0, "kd": 2.95, "kda": 5.28, "kda_split": "18.2 / 5.1 / 8.7"},
-            {"hero": "Jubilee", "matches": 714.2, "win_rate": 52.9, "mvps": 195, "svps": 75, "damage_per_min": 859.0, "heal_per_min": 2358.0, "kd": 3.66, "kda": 5.79, "kda_split": "26.0 / 7.1 / 32.7"},
-            {"hero": "Cloak & Dagger", "matches": 489.3, "win_rate": 56.1, "mvps": 115, "svps": 40, "damage_per_min": 526.0, "heal_per_min": 2008.0, "kd": 2.10, "kda": 4.89, "kda_split": "12.4 / 4.2 / 24.1"},
-            {"hero": "Emma Frost", "matches": 312.0, "win_rate": 51.2, "mvps": 60, "svps": 25, "damage_per_min": 1037.0, "heal_per_min": 0.0, "kd": 2.30, "kda": 3.20, "kda_split": "14.1 / 6.1 / 5.4"}
-        ]
-
-    if not data.get("encounters"):
-        data["encounters"] = [
-            {"player_name": "Demonfoxgod", "played_with_count": 368, "player_rank": "Grandmaster I", "player_win_rate": 62.4, "player_kd": 3.45, "matches_together": 368, "last_encounter": "2 hours ago"},
-            {"player_name": "Wild-Fox_09", "played_with_count": 348, "player_rank": "Grandmaster II", "player_win_rate": 60.0, "player_kd": 3.12, "matches_together": 348, "last_encounter": "5 hours ago"},
-            {"player_name": "SøZø", "played_with_count": 300, "player_rank": "Celestial III", "player_win_rate": 58.9, "player_kd": 2.98, "matches_together": 300, "last_encounter": "1 day ago"},
-            {"player_name": "Slackknight485", "played_with_count": 157, "player_rank": "Platinum I", "player_win_rate": 61.5, "player_kd": 2.80, "matches_together": 157, "last_encounter": "2 days ago"},
-            {"player_name": "CuddleCow", "played_with_count": 80, "player_rank": "Diamond II", "player_win_rate": 58.3, "player_kd": 2.65, "matches_together": 80, "last_encounter": "3 days ago"}
-        ]
-
-    if not data.get("matches_data") or not data["matches_data"].get("matches"):
-        data["matches_data"] = {
-            "teammates": [
-                {"name": "Demonfoxgod", "matches": 368, "kd": 3.45, "win_rate": 62.4},
-                {"name": "Wild-Fox_09", "matches": 348, "kd": 3.12, "win_rate": 60.0},
-                {"name": "Slackknight485", "matches": 157, "kd": 2.80, "win_rate": 61.5}
-            ],
-            "matches": [
-                {"mode": "Competitive", "map": "Lower Manhattan", "score": "Win 2-0", "rank_score": 4196, "kills": 24, "deaths": 4, "assists": 18, "kda": 10.50},
-                {"mode": "Competitive", "map": "Klyntar", "score": "Win 2-1", "rank_score": 4172, "kills": 31, "deaths": 6, "assists": 22, "kda": 8.83}
-            ]
-        }
+        else:
+            data[tab] = {}
 
     return data
 
