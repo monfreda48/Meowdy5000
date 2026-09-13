@@ -3311,7 +3311,7 @@ const DEFAULT_SEASON_NUM = 19;
       {typeof window !== 'undefined' && (!window.Capacitor || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform()) && (
         <div className="w-full bg-[#0b101d]/90 border-b border-amber-500/30 px-4 py-2 text-center text-slate-300 text-[11px] sm:text-xs font-medium flex items-center justify-center gap-2 z-[55] backdrop-blur-md relative">
           <span className="text-amber-400 font-bold shrink-0">⚠️ Notice:</span>
-          <span>This web version may be unstable and is intended to be used until the official iOS version is released.</span>
+          <span>In Development, may be unstable. Please report any bugs found.</span>
         </div>
       )}
 
