@@ -24,8 +24,11 @@ import { initNotificationChannel } from './utils/notifications';
 import NotificationSettings from './components/NotificationSettings';
 import PlatformIcon from './components/PlatformIcon';
 import HeroMasteryPanel from './components/HeroMasteryPanel';
-import AccountHealthPanel from './components/AccountHealthPanel';
 import HeroProgression from './components/HeroProgression';
+import ViewSwitcher from './components/ViewSwitcher';
+import MatchupMatrixView from './components/views/MatchupMatrixView';
+import MapIntelligenceView from './components/views/MapIntelligenceView';
+import FairPlayAndHistoryView from './components/views/FairPlayAndHistoryView';
 import GoalRecommendationsCard from './components/GoalRecommendationsCard';
 import { checkForAppUpdate } from './utils/updater';
 import UpdateModal from './components/UpdateModal';
@@ -341,6 +344,8 @@ export default function App() {
     }
   });
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [activeViewTab, setActiveViewTab] = useState('heroes');
+  const [telemetryMode, setTelemetryMode] = useState('all');
 
   const addRecentSearch = (searchQuery) => {
     if (!searchQuery || !searchQuery.trim()) return;
@@ -4727,15 +4732,51 @@ const DEFAULT_SEASON_NUM = 19;
                     uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
                     API_BASE_URL={getApiUrl()}
                   />
-                  <HeroProgression
-                    heroes={stats?.top_heroes || stats?.current?.top_heroes || stats?.heroes || []}
-                    roles={stats?.role_breakdown || []}
-                  />
-                  <AccountHealthPanel
-                    punishments={stats?.current?.punishments || stats?.punishments || []}
-                    uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
-                    API_BASE_URL={getApiUrl()}
-                  />
+
+                  {/* Mode Selector HUD & Analytical View Switcher */}
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-6">
+                    <h3 className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
+                      <span>⚡</span>
+                      <span>TELEMETRY COMMAND CENTER</span>
+                    </h3>
+                    <div className="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800 select-none">
+                      {['all', 'competitive', 'quickplay'].map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setTelemetryMode(m)}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
+                            telemetryMode === m
+                              ? 'bg-emerald-500 text-slate-950 shadow-md font-black'
+                              : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          {m === 'all' ? 'All Modes' : m}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <ViewSwitcher activeTab={activeViewTab} onTabChange={setActiveViewTab} />
+
+                  <div className="w-full">
+                    {activeViewTab === 'heroes' && (
+                      <HeroProgression
+                        heroes={stats?.top_heroes || stats?.current?.top_heroes || stats?.heroes || []}
+                        roles={stats?.role_breakdown || []}
+                        mode={telemetryMode}
+                      />
+                    )}
+                    {activeViewTab === 'matchups' && (
+                      <MatchupMatrixView matchups={stats?.matchups || stats?.tabs?.matchups?.matchups || []} />
+                    )}
+                    {activeViewTab === 'maps' && (
+                      <MapIntelligenceView maps={stats?.maps || stats?.tabs?.maps?.maps || []} />
+                    )}
+                    {activeViewTab === 'standing' && (
+                      <FairPlayAndHistoryView player={stats} />
+                    )}
+                  </div>
                 </div>
               </div>
             )}
