@@ -30,6 +30,7 @@ import { checkForAppUpdate } from './utils/updater';
 import UpdateModal from './components/UpdateModal';
 import PrivateProfileBanner from './components/PrivateProfileBanner';
 import PlayerProfile from './pages/PlayerProfile';
+import ReconciledStatCard from './components/ReconciledStatCard';
 
 
 const triggerHaptic = async (type = 'light') => {
@@ -3848,6 +3849,33 @@ const DEFAULT_SEASON_NUM = 19;
 
 
 
+
+                {/* Multi-Source Reconciled Telemetry Cards */}
+                {(stats?.reconciled_stats || stats?.data?.reconciled_stats) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <ReconciledStatCard
+                      label="Win Rate"
+                      iconEmoji="📈"
+                      unit="%"
+                      statObj={stats?.reconciled_stats?.win_rate || stats?.data?.reconciled_stats?.win_rate}
+                    />
+                    <ReconciledStatCard
+                      label="Rank Tier"
+                      iconEmoji="💎"
+                      statObj={stats?.reconciled_stats?.rank || stats?.data?.reconciled_stats?.rank}
+                    />
+                    <ReconciledStatCard
+                      label="Total Matches"
+                      iconEmoji="🎮"
+                      statObj={stats?.reconciled_stats?.total_matches || stats?.data?.reconciled_stats?.total_matches}
+                    />
+                    <ReconciledStatCard
+                      label="Rank Points (RS)"
+                      iconEmoji="🏆"
+                      statObj={stats?.reconciled_stats?.rank_points || stats?.data?.reconciled_stats?.rank_points}
+                    />
+                  </div>
+                )}
 
                 {/* Primary Tracked Metrics Grid */}
                 <div className={`grid gap-4 mb-6 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
