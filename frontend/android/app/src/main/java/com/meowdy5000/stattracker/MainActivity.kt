@@ -19,6 +19,7 @@ class MainActivity : BridgeActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         registerPlugin(ApkInstallerPlugin::class.java)
         registerPlugin(SafStoragePlugin::class.java)
+        registerPlugin(FileViewerPlugin::class.java)
         super.onCreate(savedInstanceState)
 
         val webView = this.bridge?.webView

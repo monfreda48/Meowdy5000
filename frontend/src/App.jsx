@@ -18,6 +18,7 @@ import SquadSynergyCard from './components/SquadSynergyCard';
 import MapBreakdownGrid from './components/MapBreakdownGrid';
 import BugReportModal from './components/BugReportModal';
 import FeatureSuggestionModal from './components/FeatureSuggestionModal';
+import { saveExportToCache, FileViewer } from './utils/exporter';
 
 const triggerHaptic = async (type = 'light') => {
   try {
@@ -1636,23 +1637,10 @@ export default function App() {
 
       const jsonStr = JSON.stringify(backupData, null, 2);
 
-      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-        await Filesystem.writeFile({
-          path: 'tracker.json',
-          data: jsonStr,
-          directory: Directory.Documents
-        });
-        setUpdateToast({ type: 'success', message: '✅ Backup file exported to Documents/tracker.json!' });
+      const uri = await saveExportToCache(backupData);
+      if (uri) {
+        setUpdateToast({ type: 'success', message: '✅ Backup file exported to cache (tracker.json)!' });
       } else {
-        const blob = new Blob([jsonStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'tracker.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
         setUpdateToast({ type: 'success', message: '✅ Data set exported as tracker.json!' });
       }
       setTimeout(() => setUpdateToast(null), 4000);
@@ -5618,6 +5606,41 @@ const DEFAULT_SEASON_NUM = 19;
                           </div>
                         </div>
                         <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">→</span>
+                      </button>
+
+                      {/* View Files in Folder Button */}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setIsMenuOpen(false);
+                          if (typeof window !== 'undefined' && window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) {
+                            try {
+                              await FileViewer.openCacheFolder();
+                            } catch (err) {
+                              showNativeToast(`⚠️ Could not open folder: ${err?.message || err}`);
+                            }
+                          } else {
+                            setUpdateToast({
+                              type: 'update',
+                              message: '📁 Exports are saved directly to your browser\'s default Downloads folder.'
+                            });
+                            setTimeout(() => setUpdateToast(null), 4000);
+                          }
+                        }}
+                        className="w-full bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer mt-2"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-sm">
+                            📁
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-white group-hover:text-blue-400 transition-colors">
+                              View Files in Folder
+                            </h4>
+                            <p className="text-[10px] text-slate-400">Open system file chooser to inspect exported cache</p>
+                          </div>
+                        </div>
+                        <span className="text-xs text-slate-500 group-hover:text-blue-400 font-bold">→</span>
                       </button>
                     </div>
                   </div>
