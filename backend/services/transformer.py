@@ -135,12 +135,16 @@ class TelemetryTransformer:
         tgg_ov = tgg.get("overview", {}) if isinstance(tgg, dict) else {}
         d_min = safe_float(tgg_ov.get("damage_per_min") or tgg.get("damage_per_min")) or safe_float(top_hero_1.get("damage_per_min"))
         h_min = safe_float(tgg_ov.get("heal_per_min") or tgg.get("heal_per_min")) or safe_float(top_hero_1.get("heal_per_min"))
+        dmg_per_min = d_min
+        heal_per_min = h_min
 
         damage_10m = int(d_min * 10) if d_min > 0 else None
         healing_10m = int(h_min * 10) if h_min > 0 else None
+        dmg_10m = damage_10m or 0
+        heal_10m = healing_10m or 0
         accuracy = safe_float(top_hero_1.get("accuracy"))
 
-        total_damage = int(damage_10m * (total_season_hours * 6)) if damage_10m else None
+        total_damage = int(damage_10m * (total_season_hours * 6)) if damage_10m else 0
 
         mvps = safe_int(top_hero_1.get("mvps"), 0)
         svps = safe_int(top_hero_1.get("svps"), 0)
