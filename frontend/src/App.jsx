@@ -1479,7 +1479,7 @@ export default function App() {
     setTimeout(() => setUpdateToast(null), 3500);
   };
 
-  // Color Scheme Themes System (Synchronized with 4 Semantic Palettes)
+  // Color Scheme Themes System (Synchronized with 5 Hero-Themed Palettes)
   const THEMES = [
     {
       id: 'default',
@@ -1490,28 +1490,36 @@ export default function App() {
       swatchGradient: 'from-sky-500 to-blue-600'
     },
     {
-      id: 'cyberpunk',
-      name: 'Cyberpunk',
-      bgHex: '#0d0221',
-      accentColor: '#ff007f',
-      badgeBg: 'bg-pink-500/20 text-pink-300 border-pink-500/40',
-      swatchGradient: 'from-pink-500 to-purple-600'
+      id: 'kinetic-purple',
+      name: 'Kinetic Purple',
+      bgHex: '#0a0512',
+      accentColor: '#d946ef',
+      badgeBg: 'bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40',
+      swatchGradient: 'from-fuchsia-500 to-purple-700'
     },
     {
-      id: 'midnight-stealth',
-      name: 'Midnight Stealth',
-      bgHex: '#000000',
-      accentColor: '#10b981',
-      badgeBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-      swatchGradient: 'from-emerald-500 to-teal-600'
+      id: 'gamma-green',
+      name: 'Gamma Green',
+      bgHex: '#040d06',
+      accentColor: '#22c55e',
+      badgeBg: 'bg-green-500/20 text-green-300 border-green-500/40',
+      swatchGradient: 'from-green-500 to-emerald-700'
     },
     {
-      id: 'crimson-rival',
-      name: 'Crimson Rival',
-      bgHex: '#0f0505',
-      accentColor: '#f43f5e',
-      badgeBg: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
-      swatchGradient: 'from-rose-500 to-red-700'
+      id: 'jean-grey',
+      name: 'Jean Grey',
+      bgHex: '#09090b',
+      accentColor: '#f4f4f5',
+      badgeBg: 'bg-zinc-500/20 text-zinc-200 border-zinc-500/40',
+      swatchGradient: 'from-zinc-300 to-slate-500'
+    },
+    {
+      id: 'oops-all-hallways',
+      name: 'Oops, All Hallways',
+      bgHex: '#0a0303',
+      accentColor: '#ef4444',
+      badgeBg: 'bg-red-500/20 text-red-300 border-red-500/40',
+      swatchGradient: 'from-red-600 to-rose-800'
     }
   ];
 
@@ -1519,9 +1527,10 @@ export default function App() {
     try {
       const saved = localStorage.getItem('m5_theme') || localStorage.getItem('app_color_theme') || localStorage.getItem('m5_color_scheme');
       if (saved === 'emerald' || saved === 'DEFAULT') return 'default';
-      if (saved === 'cyberpunk' || saved === 'kinetic_purple') return 'cyberpunk';
-      if (saved === 'stealth' || saved === 'midnight-stealth') return 'midnight-stealth';
-      if (saved === 'crimson' || saved === 'crimson-rival') return 'crimson-rival';
+      if (saved === 'cyberpunk' || saved === 'kinetic_purple' || saved === 'kinetic-purple') return 'kinetic-purple';
+      if (saved === 'gamma_green' || saved === 'gamma-green') return 'gamma-green';
+      if (saved === 'stealth' || saved === 'midnight-stealth' || saved === 'jeangrey' || saved === 'jean-grey') return 'jean-grey';
+      if (saved === 'crimson' || saved === 'crimson-rival' || saved === 'oops_all_hallways' || saved === 'oops-all-hallways') return 'oops-all-hallways';
       return saved || 'default';
     } catch (e) {
       return 'default';
@@ -5457,16 +5466,28 @@ const DEFAULT_SEASON_NUM = 19;
                 <div className="space-y-2.5 bg-[#131b2f] border border-slate-700/60 p-3.5 rounded-2xl">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
-                      <span>🎨</span> App Color Scheme
+                      <span>🎨</span> APP COLOR SCHEME
                     </span>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${activeTheme.badgeBg}`}>
                       {activeTheme.name}
                     </span>
                   </div>
 
-                  <p className="text-[10px] text-slate-400 text-left">Select your favorite accent color palette:</p>
+                  <p className="text-[10px] text-slate-400 text-left">Select your dynamic accent color palette:</p>
 
-                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 pt-1">
+                  <select
+                    value={activeThemeId}
+                    onChange={(e) => handleSelectTheme(e.target.value)}
+                    className="w-full bg-[#0b101e] border border-slate-700/80 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
+                  >
+                    {THEMES.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="grid grid-cols-5 gap-1.5 pt-1">
                     {THEMES.map((t) => (
                       <button
                         key={t.id}
@@ -5477,6 +5498,7 @@ const DEFAULT_SEASON_NUM = 19;
                             ? 'bg-[#0b101e] border-white scale-105 shadow-lg'
                             : 'bg-[#0b101e]/60 border-slate-700/60 hover:border-slate-500 opacity-70 hover:opacity-100'
                         }`}
+                        title={t.name}
                       >
                         <div className={`w-7 h-7 rounded-full bg-gradient-to-tr ${t.swatchGradient} shadow-md flex items-center justify-center text-white text-[10px] font-black`}>
                           {activeThemeId === t.id ? '✓' : ''}

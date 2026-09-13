@@ -13,6 +13,7 @@
   --color-content-muted: var(--text-muted);
 }
 
+/* 1. Default (Midnight Blue & Cyan) */
 :root, [data-theme="default"] {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -22,52 +23,70 @@
   --border-card: #1e293b;
   --border-subtle: #151f30;
   --accent-primary: #38bdf8;
-  --accent-glow: rgba(56, 189, 248, 0.15);
+  --accent-glow: rgba(56, 189, 248, 0.22);
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
   --accent-color: var(--accent-primary);
 }
 
-[data-theme="cyberpunk"], [data-theme="kinetic_purple"], [data-theme="purple"] {
-  --bg-app: #0d0221;
-  --bg-card: #150836;
-  --bg-card-subtle: #1e0b4d;
-  --border-card: #3b1478;
-  --border-subtle: #280b54;
-  --accent-primary: #ff007f;
-  --accent-glow: rgba(255, 0, 127, 0.25);
+/* 2. Kinetic Purple (Gambit - Charged Bio-Kinetic Magenta / Deep Trenchcoat) */
+[data-theme="kinetic-purple"], [data-theme="kinetic_purple"], [data-theme="cyberpunk"] {
+  --bg-app: #0a0512;
+  --bg-card: #140b24;
+  --bg-card-subtle: #1f1136;
+  --border-card: #3b1859;
+  --border-subtle: #29103e;
+  --accent-primary: #d946ef;
+  --accent-glow: rgba(217, 70, 239, 0.28);
+  --text-primary: #fdf4ff;
+  --text-secondary: #e879f9;
+  --text-muted: #a21caf;
+  --accent-color: var(--accent-primary);
+}
+
+/* 3. Gamma Green (Hulk - Radioactive Gamma Surge / Dark Mutation) */
+[data-theme="gamma-green"], [data-theme="gamma_green"] {
+  --bg-app: #040d06;
+  --bg-card: #09170c;
+  --bg-card-subtle: #0f2414;
+  --border-card: #184222;
+  --border-subtle: #113019;
+  --accent-primary: #22c55e;
+  --accent-glow: rgba(34, 197, 94, 0.28);
+  --text-primary: #f0fdf4;
+  --text-secondary: #86efac;
+  --text-muted: #15803d;
+  --accent-color: var(--accent-primary);
+}
+
+/* 4. Jean Grey (Black & White / Monochrome Greyscale Pun) */
+[data-theme="jean-grey"], [data-theme="jeangrey"], [data-theme="monochrome"], [data-theme="midnight-stealth"], [data-theme="stealth"] {
+  --bg-app: #09090b;
+  --bg-card: #141416;
+  --bg-card-subtle: #1f1f23;
+  --border-card: #2e2e33;
+  --border-subtle: #202024;
+  --accent-primary: #f4f4f5;
+  --accent-glow: rgba(244, 244, 245, 0.20);
   --text-primary: #ffffff;
-  --text-secondary: #c084fc;
-  --text-muted: #8655b3;
-  --accent-color: var(--accent-primary);
-}
-
-[data-theme="midnight-stealth"], [data-theme="stealth"] {
-  --bg-app: #000000;
-  --bg-card: #09090b;
-  --bg-card-subtle: #121215;
-  --border-card: #27272a;
-  --border-subtle: #18181b;
-  --accent-primary: #10b981;
-  --accent-glow: rgba(16, 185, 129, 0.18);
-  --text-primary: #fafafa;
   --text-secondary: #a1a1aa;
-  --text-muted: #52525b;
+  --text-muted: #71717a;
   --accent-color: var(--accent-primary);
 }
 
-[data-theme="crimson-rival"], [data-theme="crimson"], [data-theme="red"], [data-theme="oops_all_hallways"] {
-  --bg-app: #0f0505;
-  --bg-card: #1a0a0a;
-  --bg-card-subtle: #260f0f;
-  --border-card: #451a1a;
-  --border-subtle: #2d1212;
-  --accent-primary: #f43f5e;
-  --accent-glow: rgba(244, 63, 94, 0.22);
+/* 5. Oops, All Hallways (Daredevil - Gritty Hell's Kitchen Charcoal & Bloody Crimson) */
+[data-theme="oops-all-hallways"], [data-theme="oops_all_hallways"], [data-theme="crimson-rival"], [data-theme="crimson"] {
+  --bg-app: #0a0303;
+  --bg-card: #140707;
+  --bg-card-subtle: #220b0b;
+  --border-card: #451212;
+  --border-subtle: #2d0b0b;
+  --accent-primary: #ef4444;
+  --accent-glow: rgba(239, 68, 68, 0.32);
   --text-primary: #fff1f2;
-  --text-secondary: #fda4af;
-  --text-muted: #9f1239;
+  --text-secondary: #fca5a5;
+  --text-muted: #991b1b;
   --accent-color: var(--accent-primary);
 }
 
@@ -78,6 +97,7 @@ body {
   color: var(--text-primary);
   overflow-x: hidden;
   transition: background-color 0.2s ease, color 0.2s ease;
+  min-height: 100vh;
 }
 
 /* Safe area inset wrapper for mobile taskbars */

@@ -4,9 +4,10 @@ const ThemeContext = createContext();
 
 export const THEME_PALETTES = [
   { id: 'default', name: 'Default', bg: '#080b13', accent: '#38bdf8', badgeBg: 'bg-sky-500/20 text-sky-300 border-sky-500/40', swatchGradient: 'from-sky-500 to-blue-600' },
-  { id: 'cyberpunk', name: 'Cyberpunk', bg: '#0d0221', accent: '#ff007f', badgeBg: 'bg-pink-500/20 text-pink-300 border-pink-500/40', swatchGradient: 'from-pink-500 to-purple-600' },
-  { id: 'midnight-stealth', name: 'Midnight Stealth', bg: '#000000', accent: '#10b981', badgeBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40', swatchGradient: 'from-emerald-500 to-teal-600' },
-  { id: 'crimson-rival', name: 'Crimson Rival', bg: '#0f0505', accent: '#f43f5e', badgeBg: 'bg-rose-500/20 text-rose-300 border-rose-500/40', swatchGradient: 'from-rose-500 to-red-700' }
+  { id: 'kinetic-purple', name: 'Kinetic Purple', bg: '#0a0512', accent: '#d946ef', badgeBg: 'bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40', swatchGradient: 'from-fuchsia-500 to-purple-700' },
+  { id: 'gamma-green', name: 'Gamma Green', bg: '#040d06', accent: '#22c55e', badgeBg: 'bg-green-500/20 text-green-300 border-green-500/40', swatchGradient: 'from-green-500 to-emerald-700' },
+  { id: 'jean-grey', name: 'Jean Grey', bg: '#09090b', accent: '#f4f4f5', badgeBg: 'bg-zinc-500/20 text-zinc-200 border-zinc-500/40', swatchGradient: 'from-zinc-300 to-slate-500' },
+  { id: 'oops-all-hallways', name: 'Oops, All Hallways', bg: '#0a0303', accent: '#ef4444', badgeBg: 'bg-red-500/20 text-red-300 border-red-500/40', swatchGradient: 'from-red-600 to-rose-800' }
 ];
 
 export const ThemeProvider = ({ children }) => {
