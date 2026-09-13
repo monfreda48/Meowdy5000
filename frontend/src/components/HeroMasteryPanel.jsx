@@ -1,5 +1,18 @@
 import React, { useState, useEffect } from 'react';
 
+const resolveAssetUrl = (url) => {
+  if (!url) return '';
+  const str = String(url).trim();
+  if (str.startsWith('http://') || str.startsWith('https://') || str.startsWith('data:')) {
+    return str;
+  }
+  const host = (typeof window !== 'undefined' && window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) 
+    ? 'https://meowdy5000.synology.me' 
+    : '';
+  const cleanPath = str.startsWith('/') ? str : `/${str}`;
+  return `${host}${cleanPath}`;
+};
+
 const HERO_ROLES = {
   'Magneto': { role: 'Vanguard', icon: '🛡️', bg: 'from-amber-500/20 to-amber-900/10', border: 'border-amber-500/30' },
   'Venom': { role: 'Vanguard', icon: '🛡️', bg: 'from-purple-500/20 to-purple-900/10', border: 'border-purple-500/30' },
@@ -124,7 +137,7 @@ export default function HeroMasteryPanel({ uid, API_BASE_URL = '' }) {
                   <div className="relative shrink-0">
                     <div className="w-12 h-12 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-2xl font-bold shadow-md overflow-hidden">
                       {hero.badge_url ? (
-                        <img src={hero.badge_url} alt={hName} className="w-full h-full object-cover" />
+                        <img src={resolveAssetUrl(hero.badge_url)} alt={hName} className="w-full h-full object-cover" />
                       ) : (
                         <span>{roleInfo.icon}</span>
                       )}

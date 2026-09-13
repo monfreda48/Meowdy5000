@@ -164,20 +164,35 @@ const DEFAULT_SEASONS = [
   { id: '1', name: 'Season 0 (Launch)', status: 'past' }
 ];
 
-const getApiUrl = (path) => {
+export const API_BASE_URL = (typeof window !== 'undefined' && window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform())
+  ? 'https://meowdy5000.synology.me'
+  : '';
+
+export const resolveAssetUrl = (url) => {
+  if (!url) return '/assets/placeholder-hero.svg';
+  const str = String(url).trim();
+  if (!str) return '/assets/placeholder-hero.svg';
+  if (str.startsWith('http://') || str.startsWith('https://') || str.startsWith('data:')) {
+    return str;
+  }
+  const cleanPath = str.startsWith('/') ? str : `/${str}`;
+  return `${API_BASE_URL}${cleanPath}`;
+};
+
+const getApiUrl = (path = '') => {
   try {
     const customUrl = localStorage.getItem('backend_base_url') || localStorage.getItem('backend_server_url');
     if (customUrl) {
       const base = customUrl.replace(/\/+$/, '');
-      return `${base}${path.startsWith('/') ? path : '/' + path}`;
+      return path ? `${base}${path.startsWith('/') ? path : '/' + path}` : base;
     }
   } catch (e) { }
-  if (typeof window !== 'undefined') {
-    if (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) {
-      return `https://meowdy5000.synology.me${path.startsWith('/') ? path : '/' + path}`;
-    }
+  if (!path) return API_BASE_URL;
+  if (typeof path === 'string' && (path.startsWith('http://') || path.startsWith('https://'))) {
+    return path;
   }
-  return path.startsWith('/') ? path : '/' + path;
+  const cleanPath = path.startsWith('/') ? path : '/' + path;
+  return `${API_BASE_URL}${cleanPath}`;
 };
 
 const formatPercent = (val) => {
@@ -1028,22 +1043,26 @@ export default function App() {
       { key: 'rivalsTracker', name: 'RivalsTracker', icon: '🎯', val: formatStatDisplayValue(metricKey, bd.rivalsTracker || 'N/A'), color: 'border-amber-500/40 text-amber-400 bg-amber-500/10' }
     ];
 
+    const metricLabelUpper = (METRIC_LABELS[metricKey] || metricKey).toUpperCase();
+
     return (
-      <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300 select-none" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1">
-            <span>🌐 Live 3-Site Stats Comparison</span>
+      <div className="mt-4 pt-3 border-t border-slate-800 space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300 select-none" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between flex-wrap gap-1">
+          <span className="text-[10px] font-black uppercase tracking-wider text-cyan-400 flex items-center gap-1">
+            <span>🌐 LIVE 3-SITE STATS COMPARISON</span>
           </span>
-          <span className="text-[9px] text-emerald-400 font-mono font-bold">Tap site to set favorite ⭐</span>
+          <span className="text-[9px] text-amber-400 font-mono font-bold flex items-center gap-1">
+            <span>⭐ Tap site to set favorite</span>
+          </span>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {sites.map((s) => (
             <div
               key={s.key}
               onClick={(e) => { e.stopPropagation(); handleSetFavoriteSite(s.key); }}
               className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
-                favoriteSite === s.key ? `${s.color} ring-1 ring-emerald-400 shadow-md scale-105` : 'bg-[#0f1526] border-slate-800 text-slate-300 hover:border-slate-700'
+                favoriteSite === s.key ? `${s.color} ring-1 ring-amber-400 shadow-md` : 'bg-[#0b101e] border-slate-800 text-slate-300 hover:border-slate-700'
               }`}
               title={`Tap to set ${s.name} as favorite site when minimized`}
             >
@@ -1059,10 +1078,9 @@ export default function App() {
         <button
           type="button"
           onClick={(e) => handleOpenReportModal(metricKey, e)}
-          className="w-full mt-2 py-1.5 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 hover:border-red-500/50"
+          className="w-full mt-2.5 py-2 px-3 rounded-full bg-red-500/10 hover:bg-red-500/20 active:bg-red-500/30 border border-red-500/30 text-red-400 font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 hover:border-red-500/50"
         >
-          <span>⚠️</span>
-          <span>Report Inaccurate Stat ({METRIC_LABELS[metricKey] || metricKey})</span>
+          <span>▲ REPORT INACCURATE STAT ({metricLabelUpper})</span>
         </button>
       </div>
     );
@@ -3852,7 +3870,7 @@ const DEFAULT_SEASON_NUM = 19;
                       <div
                         key="winRate"
                         onClick={() => toggleExpandMetric('winRate')}
-                        className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
+                        className={`bg-[#0d111d] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-800 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
                           }`}
                       >
                         <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -3883,7 +3901,7 @@ const DEFAULT_SEASON_NUM = 19;
                             </span>
                           </div>
                         </div>
-                        <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
+                        <p className="font-black text-white text-5xl md:text-6xl">
                           {getCardDisplayStat('winRate', stats.current.winRate)}
                         </p>
 
@@ -3915,7 +3933,7 @@ const DEFAULT_SEASON_NUM = 19;
                       <div
                         key="kdRatio"
                         onClick={() => toggleExpandMetric('kdRatio')}
-                        className={`bg-[#131b2f] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-700/50 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
+                        className={`bg-[#0d111d] p-5 rounded-2xl border relative overflow-hidden group cursor-pointer transition-all duration-300 ${isEditOrderMode ? 'border-amber-500/50 shadow-lg shadow-amber-500/10' : 'border-slate-800 hover:border-emerald-500/60 hover:shadow-lg hover:shadow-emerald-500/10'
                           }`}
                       >
                         <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -3946,27 +3964,27 @@ const DEFAULT_SEASON_NUM = 19;
                             </span>
                           </div>
                         </div>
-                        <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
+                        <p className="font-black text-white text-5xl md:text-6xl">
                           {getCardDisplayStat('kdRatio', stats.current.kdRatio)}
                         </p>
 
                         {expandedMetrics.kdRatio && (
-                          <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
+                          <div className="mt-4 pt-3 border-t border-slate-800 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Eliminations (Kills):</span>
                               <span className="font-bold text-emerald-400">{(stats.current.kills || 0).toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Assists:</span>
-                              <span className="font-bold text-blue-400">{(stats.current.assists || 0).toLocaleString()}</span>
+                              <span className="font-bold text-cyan-400">{(stats.current.assists || 0).toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Deaths:</span>
-                              <span className="font-bold text-red-400">{(stats.current.deaths || 0).toLocaleString()}</span>
+                              <span className="font-bold text-rose-500">{(stats.current.deaths || 0).toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between text-slate-400 pt-1 border-t border-slate-800">
+                            <div className="flex justify-between text-slate-400 pt-1 border-t border-slate-800 font-medium">
                               <span>Pure K/D Ratio:</span>
-                              <span className="font-bold text-white">{((stats.current.kills || 0) / (stats.current.deaths || 1)).toFixed(2)}</span>
+                              <span className="font-medium text-slate-300">{((stats.current.kills || 0) / (stats.current.deaths || 1)).toFixed(2)}</span>
                             </div>
                           </div>
                         )}
