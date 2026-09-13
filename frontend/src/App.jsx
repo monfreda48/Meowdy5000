@@ -1056,7 +1056,7 @@ export default function App() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full mt-4">
           {sites.map((s) => (
             <div
               key={s.key}
@@ -3501,7 +3501,7 @@ const DEFAULT_SEASON_NUM = 19;
       </nav>
 
       {/* Main Layout Container */}
-      <main className={`mx-auto px-2.5 sm:px-6 py-3 sm:py-10 transition-all duration-300 w-full ${isMobileView ? 'max-w-full sm:max-w-md py-2' : 'max-w-6xl'
+      <main className={`mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 transition-all duration-300 w-full ${isMobileView ? 'max-w-full sm:max-w-md py-2' : 'max-w-7xl'
         }`}>
 
         {/* Update Feedback Toast Banner */}
@@ -3949,7 +3949,7 @@ const DEFAULT_SEASON_NUM = 19;
                 </div>
 
                 {/* Primary Tracked Metrics Grid */}
-                <div className={`grid gap-4 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:gap-6'
+                <div className={`grid gap-4 mb-6 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
                   }`}>
                   {selectedMetrics.map((metricId, orderIndex) => {
                     if (metricId === 'winRate') return (

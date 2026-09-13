@@ -57,7 +57,7 @@ export default function SeasonHeader({ getApiUrl }) {
   }, [seasonMeta?.end_timestamp]);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#131b2f]/90 border border-slate-700/60 p-3.5 sm:p-4 rounded-2xl shadow-xl w-full max-w-3xl mb-4 backdrop-blur-md">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-[#131b2f]/90 border border-slate-700/60 p-3.5 sm:p-4 rounded-2xl shadow-xl w-full max-w-7xl mb-4 backdrop-blur-md">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center font-bold text-lg shadow-sm">
           ⚔️

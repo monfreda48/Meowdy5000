@@ -118,7 +118,7 @@ export default function HeroMasteryPanel({ uid, API_BASE_URL = '' }) {
           No hero mastery progression data available yet. Play matches to unlock hero levels!
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {sortedHeroes.map((hero, idx) => {
             const hName = hero.hero_name || 'Unknown Hero';
             const roleInfo = HERO_ROLES[hName] || { role: 'Combatant', icon: '⚡', bg: 'from-slate-700/20 to-slate-900/10', border: 'border-slate-700/30' };
