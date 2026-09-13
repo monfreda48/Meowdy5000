@@ -61,18 +61,41 @@
 }
 
 /* 4. Jean Grey (Black & White / Monochrome Greyscale Pun) */
+html[data-theme="jean-grey"], html[data-theme="jeangrey"], html[data-theme="monochrome"], html[data-theme="midnight-stealth"], html[data-theme="stealth"],
 [data-theme="jean-grey"], [data-theme="jeangrey"], [data-theme="monochrome"], [data-theme="midnight-stealth"], [data-theme="stealth"] {
-  --bg-app: #09090b;
-  --bg-card: #141416;
-  --bg-card-subtle: #1f1f23;
-  --border-card: #2e2e33;
-  --border-subtle: #202024;
-  --accent-primary: #f4f4f5;
-  --accent-glow: rgba(244, 244, 245, 0.20);
+  --bg-app: #000000;
+  --bg-card: #0a0a0c;
+  --bg-card-subtle: #141417;
+  --border-card: #27272a;
+  --border-subtle: #18181b;
+  --accent-primary: #ffffff;
+  --accent-glow: rgba(255, 255, 255, 0.25);
   --text-primary: #ffffff;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
+  --text-secondary: #e4e4e7;
+  --text-muted: #a1a1aa;
   --accent-color: var(--accent-primary);
+  filter: grayscale(100%) !important;
+}
+
+[data-theme="jean-grey"] body,
+[data-theme="jeangrey"] body,
+[data-theme="monochrome"] body,
+[data-theme="midnight-stealth"] body,
+[data-theme="stealth"] body {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  filter: grayscale(100%) !important;
+}
+
+[data-theme="jean-grey"] img,
+[data-theme="jeangrey"] img,
+[data-theme="jean-grey"] svg,
+[data-theme="jeangrey"] svg,
+[data-theme="jean-grey"] video,
+[data-theme="jeangrey"] video,
+[data-theme="jean-grey"] canvas,
+[data-theme="jeangrey"] canvas {
+  filter: grayscale(100%) contrast(110%) !important;
 }
 
 /* 5. Oops, All Hallways (Daredevil - Gritty Hell's Kitchen Charcoal & Bloody Crimson) */
