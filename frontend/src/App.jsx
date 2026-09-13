@@ -12,6 +12,8 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { Clipboard } from '@capacitor/clipboard';
 import { ScreenOrientation } from '@capacitor/screen-orientation';
 import pkg from '../package.json';
+import SeasonHeader from './components/SeasonHeader';
+import FindUIDModal from './components/FindUIDModal';
 
 const triggerHaptic = async (type = 'light') => {
   try {
@@ -3407,11 +3409,8 @@ const DEFAULT_SEASON_NUM = 19;
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">M5 STAT TRACKER</span>
           </h1>
 
-          {/* Active Season & Upcoming Season 10 Status Pill */}
-          <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full text-xs sm:text-sm font-bold text-emerald-400 shadow-md">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>{currentSeasonName} Current</span>
-          </div>
+          {/* Real-time Season Header with UTC Countdown & Teaser */}
+          <SeasonHeader getApiUrl={getApiUrl} />
 
           {/* Claim Your Username Helper Subtitle (only shown when no profile is claimed) */}
           {!isClaimed && (
@@ -6590,60 +6589,11 @@ const DEFAULT_SEASON_NUM = 19;
       )}
 
       {/* How to Find Your UID Guide Modal */}
-      {showUidGuideModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 text-left">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">💡</span>
-                <div>
-                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">How to Find Your Marvel Rivals UID</h3>
-                  <p className="text-[11px] text-slate-400">Locate your numeric player ID in-game</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowUidGuideModal(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold p-1 cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-3.5 text-xs text-slate-300">
-              <div className="bg-[#0b101e] border border-slate-800 p-3.5 rounded-xl space-y-1.5">
-                <div className="flex items-center gap-2 text-emerald-400 font-bold">
-                  <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px]">1</span>
-                  <span>Career Overview Screen</span>
-                </div>
-                <p className="text-[11px] text-slate-400 pl-7">
-                  Open the top-left player menu in Marvel Rivals. Your 8 to 12-digit numeric UID is displayed right below your display name banner (e.g. <code className="text-emerald-300">10023456</code>).
-                </p>
-              </div>
-
-              <div className="bg-[#0b101e] border border-slate-800 p-3.5 rounded-xl space-y-1.5">
-                <div className="flex items-center gap-2 text-blue-400 font-bold">
-                  <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px]">2</span>
-                  <span>In-Match HUD Watermark</span>
-                </div>
-                <p className="text-[11px] text-slate-400 pl-7">
-                  During any match, your numeric UID is printed in the bottom-left corner of your screen watermark.
-                </p>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-slate-800 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setShowUidGuideModal(false)}
-                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-all cursor-pointer"
-              >
-                Got It
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <FindUIDModal
+        isOpen={showUidGuideModal}
+        onClose={() => setShowUidGuideModal(false)}
+        onSelectUid={(u) => setQuery(u)}
+      />
 
       </main>
     </div>

@@ -198,6 +198,29 @@ def get_hero_leaderboards():
         "leaderboards": []
     })
 
+@app.route('/api/meta/season', methods=['GET'])
+def get_meta_season():
+    refresh = request.args.get('refresh', 'false').lower() == 'true'
+    try:
+        import asyncio
+        from backend.adapters.rivalsmeta import fetch_rivalsmeta_season
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        data = loop.run_until_complete(fetch_rivalsmeta_season(force_refresh=refresh))
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({
+            "season_name": "Season 1",
+            "end_timestamp": "2026-10-15T00:00:00Z",
+            "days_remaining": 32,
+            "upcoming_hero": "Hawkeye",
+            "source": "rivalsmeta.com",
+            "error": str(e)
+        })
+
 @app.route('/api/player/resolve', methods=['GET'])
 def resolve_player():
     query = request.args.get('query', '')

@@ -234,6 +234,15 @@ async def download_latest_apk():
 
 # API Endpoints
 
+@app.get("/api/meta/season")
+async def get_rivalsmeta_season_endpoint(refresh: bool = Query(False)):
+    """
+    Returns current Marvel Rivals season metadata, end timestamp, days remaining,
+    and upcoming hero teaser fetched & cached from rivalsmeta.com (12h TTL).
+    """
+    from backend.adapters.rivalsmeta import fetch_rivalsmeta_season
+    return await fetch_rivalsmeta_season(force_refresh=refresh)
+
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok", "service": "Meowdy 5000 Rivals Tracker API", "version": "2.0.0"}
