@@ -582,7 +582,7 @@ export default function App() {
   // Claimed Profile & Tracking Source Selection State
   const [claimedProfile, setClaimedProfile] = useState(() => {
     try {
-      const saved = localStorage.getItem('claimed_profile');
+      const saved = localStorage.getItem('m5_claimed_player') || localStorage.getItem('claimed_profile');
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   });
@@ -1668,21 +1668,28 @@ export default function App() {
 
   const handleExportBackup = async () => {
     try {
-      const now = new Date().toLocaleString();
+      const nowIso = new Date().toISOString();
+      const nowFormatted = new Date().toLocaleString();
+      const snapId = `snap_${Date.now()}`;
       try {
-        localStorage.setItem('m5_last_export_timestamp', now);
+        localStorage.setItem('m5_last_export_timestamp', nowFormatted);
       } catch (e) { }
-      setLastExportTime(now);
+      setLastExportTime(nowFormatted);
 
       const activeProfile = stats?.current || claimedProfile || {};
       const heroesArr = Array.isArray(stats?.heroes)
         ? stats.heroes
         : (Array.isArray(stats?.heroesList) ? stats.heroesList : []);
 
+      const uid = activeProfile.uid || activeProfile.player_id || activeProfile.id || claimedProfile?.uid || 'N/A';
+      const username = activeProfile.username || activeProfile.name || activeProfile.player_name || claimedProfile?.username || 'Unknown Player';
+
       const backupData = {
+        snapshot_id: snapId,
+        exported_at: nowIso,
         player_info: {
-          name: activeProfile.username || activeProfile.name || activeProfile.player_name || claimedProfile?.username || 'Unknown Player',
-          uid: activeProfile.uid || activeProfile.player_id || activeProfile.id || claimedProfile?.uid || 'N/A',
+          uid: uid,
+          username: username,
           platform: activeProfile.platform || claimedProfile?.platform || 'pc',
           rank: activeProfile.rank || activeProfile.rank_name || activeProfile.rankName || 'Unranked',
           season: activeProfile.season || activeProfile.seasonName || season || 'Active Season'
@@ -1694,23 +1701,10 @@ export default function App() {
           time_played: activeProfile.time_played || activeProfile.timePlayed || activeProfile.playtime || '0h'
         },
         heroes: heroesArr,
-        exported_at: new Date().toISOString(),
         app: "M5 Stat Tracker",
-        exportedAt: new Date().toISOString(),
         trackedPlayers: trackedPlayers || {},
-        selectedMetrics: selectedMetrics || [],
-        playerDataFiles: {}
+        selectedMetrics: selectedMetrics || []
       };
-
-      Object.keys(trackedPlayers || {}).forEach(username => {
-        const key = `player_file_data_${username.toLowerCase()}`;
-        try {
-          const raw = localStorage.getItem(key);
-          if (raw) backupData.playerDataFiles[username] = JSON.parse(raw);
-        } catch (e) { }
-      });
-
-      const jsonStr = JSON.stringify(backupData, null, 2);
 
       const uri = await saveExportToCache(backupData);
       if (uri) {
@@ -1723,6 +1717,60 @@ export default function App() {
       console.error('Export backup error:', err);
       setUpdateToast({ type: 'error', message: '⚠️ Failed to export backup file.' });
     }
+  };
+
+  const handleImportSessionData = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const json = JSON.parse(e.target.result);
+        const snapId = json.snapshot_id || json.exported_at || json.exportedAt;
+        const uid = json.player_info?.uid || json.player_info?.username || json.username || 'unknown';
+        const exportedAt = json.exported_at || json.exportedAt || new Date().toISOString();
+
+        if (!snapId || !json.stats) {
+          setUpdateToast({ type: 'error', message: '⚠️ Invalid snapshot file: missing snapshot ID or stats payload.' });
+          setTimeout(() => setUpdateToast(null), 4000);
+          return;
+        }
+
+        const dateStr = new Date(exportedAt).toLocaleDateString();
+
+        const existingKey = `m5_snapshots_${uid.toLowerCase()}`;
+        let snapshots = [];
+        try {
+          snapshots = JSON.parse(localStorage.getItem(existingKey) || '[]');
+        } catch (err) { snapshots = []; }
+
+        const isDuplicate = snapshots.some(s => s.snapshot_id === snapId || s.exported_at === exportedAt);
+        if (isDuplicate) {
+          setUpdateToast({
+            type: 'error',
+            message: `⚠️ Data set already imported: A snapshot from ${dateStr} already exists in your history. Skipping import.`
+          });
+          setTimeout(() => setUpdateToast(null), 5000);
+          return;
+        }
+
+        snapshots.push(json);
+        snapshots.sort((a, b) => new Date(a.exported_at || a.exportedAt) - new Date(b.exported_at || b.exportedAt));
+        try {
+          localStorage.setItem(existingKey, JSON.stringify(snapshots));
+        } catch (err) { }
+
+        setUpdateToast({
+          type: 'success',
+          message: `✅ Data set imported: Rolled snapshot from ${dateStr} into current session.`
+        });
+        setTimeout(() => setUpdateToast(null), 4000);
+      } catch (err) {
+        console.error('Import session error:', err);
+        setUpdateToast({ type: 'error', message: '⚠️ Invalid JSON snapshot file format.' });
+        setTimeout(() => setUpdateToast(null), 4000);
+      }
+    };
+    reader.readAsText(file);
   };
 
   const openExternalUrl = async (url) => {
@@ -3587,26 +3635,48 @@ const DEFAULT_SEASON_NUM = 19;
             </div>
           )}
 
-          {/* Error Message with Prominent Report Button */}
+          {/* Profile Unavailable & Failure Recovery View */}
           {error && (
-            <div className="w-full max-w-3xl bg-red-500/15 border-2 border-red-500/60 text-red-400 p-3.5 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm shadow-2xl animate-in fade-in slide-in-from-top-2">
-              <div className="flex items-center gap-2.5">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <span className="font-bold">{error}</span>
+            <div className="w-full max-w-3xl bg-red-500/10 border-2 border-red-500/50 p-5 rounded-2xl flex flex-col items-center text-center space-y-3.5 shadow-2xl animate-in fade-in slide-in-from-top-2">
+              <div className="w-12 h-12 rounded-2xl bg-red-500/20 text-red-400 border border-red-500/40 flex items-center justify-center font-black text-2xl shadow-md">
+                ⚠️
+              </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-wider">Profile Unavailable</h3>
+                <p className="text-xs text-slate-300 mt-1 max-w-md">
+                  Could not retrieve live data for UID/username <strong className="text-white font-mono">{query || 'target'}</strong>. Check privacy settings or retry.
+                </p>
+                <p className="text-[11px] text-red-400 font-medium mt-1">{error}</p>
               </div>
 
-              <button
-                onClick={() => {
-                  setReportNotes(`Error encountered: ${error}`);
-                  setShowReportModal(true);
-                }}
-                className="shrink-0 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/60 text-amber-300 hover:text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md hover:scale-105 active:scale-95"
-              >
-                <span>⚠️</span>
-                <span>Report Error to Developers</span>
-              </button>
+              <div className="flex items-center gap-2.5 flex-wrap justify-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => fetchStats(null, query, season, null, null, true)}
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                >
+                  🔄 Retry Sync
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError(null);
+                    setStats(null);
+                  }}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl uppercase tracking-wider transition-all cursor-pointer border border-slate-700"
+                >
+                  🔍 Return to Search
+                </button>
+                {claimedProfile && (
+                  <button
+                    type="button"
+                    onClick={handleUnclaimProfile}
+                    className="px-4 py-2 bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 font-bold text-xs rounded-xl uppercase tracking-wider transition-all cursor-pointer border border-rose-500/30"
+                  >
+                    Unclaim Profile
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
@@ -5615,6 +5685,40 @@ const DEFAULT_SEASON_NUM = 19;
                         </div>
                         <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">→</span>
                       </button>
+
+                      {/* Import & Roll Data Into Session Button */}
+                      <div>
+                        <input
+                          type="file"
+                          accept=".json"
+                          id="import-session-file-input"
+                          className="hidden"
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              setIsMenuOpen(false);
+                              handleImportSessionData(e.target.files[0]);
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => document.getElementById('import-session-file-input')?.click()}
+                          className="w-full bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer mt-2"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-sm">
+                              📤
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-bold text-white group-hover:text-teal-400 transition-colors">
+                                Import & Roll Data Into Session
+                              </h4>
+                              <p className="text-[10px] text-slate-400">Roll external JSON snapshot into current profile session</p>
+                            </div>
+                          </div>
+                          <span className="text-xs text-slate-500 group-hover:text-teal-400 font-bold">→</span>
+                        </button>
+                      </div>
 
                       {/* View Files in Folder Button */}
                       <button

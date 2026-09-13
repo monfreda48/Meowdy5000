@@ -64,6 +64,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def add_anti_cache_headers(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
 DEFAULT_IMAGE_SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 21v-2a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v2"/></svg>"""
 
 # Image Proxy Endpoints (supports /api/image-proxy, /api/proxy/portrait, and /api/proxy/avatar)
@@ -305,14 +314,16 @@ async def get_meta_tier_list_endpoint(source: str = Query("rivalstracker", descr
         "tier_list": records
     }
 
+@app.get("/api/player/{uid}")
 @app.get("/api/player/{uid}/stats")
-async def get_player_stats_endpoint(uid: str, platform: Optional[str] = Query("pc")):
+async def get_player_stats_endpoint(uid: str, platform: Optional[str] = Query("pc"), force: bool = Query(False)):
     """
     Returns player stats using the 3-tier fallback pipeline (Tracker.gg -> RivalsTracker.com -> SQLite cache).
-    Includes source_attribution in response payload.
+    Includes source_attribution and scraped_at timestamp in response payload.
+    Supports force=true parameter to bypass cache and trigger live scrape.
     """
     from backend.services.ingestion import get_player_rank_with_fallback
-    return await get_player_rank_with_fallback(uid, platform)
+    return await get_player_rank_with_fallback(uid, platform, force=force)
 
 @app.get("/api/player/{uid}/maps")
 async def get_player_maps_endpoint(uid: str):

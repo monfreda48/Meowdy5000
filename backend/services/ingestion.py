@@ -2,6 +2,7 @@ import os
 import sqlite3
 import json
 import logging
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
 from backend.workers.tracker_worker import TrackerScraperWorker
@@ -45,7 +46,7 @@ def get_cached_player(player_ident: str) -> Optional[Dict[str, Any]]:
                 logger.debug(f"[ingestion] DB cache read error for {db_name}: {e}")
     return None
 
-async def get_player_rank_with_fallback(player_ident: str, platform: Optional[str] = "pc") -> Dict[str, Any]:
+async def get_player_rank_with_fallback(player_ident: str, platform: Optional[str] = "pc", force: bool = False) -> Dict[str, Any]:
     ident = str(player_ident).strip()
     if not ident:
         return {
@@ -54,6 +55,22 @@ async def get_player_rank_with_fallback(player_ident: str, platform: Optional[st
             "source_attribution": "none",
             "error": "Empty player identifier"
         }
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    # If force is False, check cached profile in DB first
+    if not force:
+        cached_profile = get_cached_player(ident)
+        if cached_profile and cached_profile.get("last_scraped_at"):
+            logger.info(f"[Ingestion Pipeline] Returning cached DB profile for '{ident}'.")
+            return {
+                "success": True,
+                "data": cached_profile,
+                "source_attribution": "database_cache",
+                "is_fallback": True,
+                "is_stale": False,
+                "scraped_at": cached_profile.get("last_scraped_at")
+            }
 
     # Step 1: Attempt Primary Scraper (Tracker.gg stealth worker)
     try:
@@ -68,12 +85,14 @@ async def get_player_rank_with_fallback(player_ident: str, platform: Optional[st
             tracker_data = worker.parse_hydration_json(html, ident)
             if tracker_data and tracker_data.get("current", {}).get("rank"):
                 logger.info(f"[Ingestion Pipeline] Step 1 SUCCESS: Tracker.gg returned rank '{tracker_data['current']['rank']}'.")
+                tracker_data["scraped_at"] = now_iso
                 return {
                     "success": True,
                     "data": tracker_data,
                     "source_attribution": "tracker.gg",
                     "is_fallback": False,
-                    "is_stale": False
+                    "is_stale": False,
+                    "scraped_at": now_iso
                 }
     except Exception as e:
         logger.warning(f"[Ingestion Pipeline] Step 1 FAILED (Tracker.gg): {e}. Initiating failover to RivalsTracker.com.")
@@ -85,13 +104,15 @@ async def get_player_rank_with_fallback(player_ident: str, platform: Optional[st
         res = await rt_adapter.scrape_player(ident)
         if res.get("success") and res.get("data", {}).get("rank"):
             rt_data = res["data"]
+            rt_data["scraped_at"] = now_iso
             logger.info(f"[Ingestion Pipeline] Step 2 SUCCESS: RivalsTracker returned rank '{rt_data['rank']}'.")
             return {
                 "success": True,
                 "data": rt_data,
                 "source_attribution": "rivalstracker.com",
                 "is_fallback": True,
-                "is_stale": False
+                "is_stale": False,
+                "scraped_at": now_iso
             }
     except Exception as e:
         logger.error(f"[Ingestion Pipeline] Step 2 FAILED (RivalsTracker.com): {e}")
@@ -106,7 +127,8 @@ async def get_player_rank_with_fallback(player_ident: str, platform: Optional[st
             "data": cached_profile,
             "source_attribution": "database_cache",
             "is_fallback": True,
-            "is_stale": True
+            "is_stale": True,
+            "scraped_at": cached_profile.get("last_scraped_at") or now_iso
         }
 
     logger.warning(f"[Ingestion Pipeline] All 3 ingestion steps failed for '{ident}'.")
@@ -122,5 +144,6 @@ async def get_player_rank_with_fallback(player_ident: str, platform: Optional[st
         "source_attribution": "database_cache",
         "is_fallback": True,
         "is_stale": True,
+        "scraped_at": now_iso,
         "error": "All live ingestion pipelines failed; returned default profile."
     }
