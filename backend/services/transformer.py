@@ -263,12 +263,31 @@ class TelemetryTransformer:
             "kda_ratio": kda,
             "total_matches": total_matches,
             "matchesPlayed": total_matches,
-            "squad_synergy": squad_synergy
+            "squad_synergy": squad_synergy,
+            "heroDamage": dmg_10m,
+            "damagePer10m": f"{dmg_10m:,}",
+            "healing": heal_10m,
+            "healingPer10m": f"{heal_10m:,}",
+            "damageBlocked": "--",
+            "accuracy": f"{accuracy}%",
+            "mvp": str(mvps),
+            "svp": str(svps),
+            "timePlayed": f"{total_season_hours:.1f}h",
+            "seasonPlaytimeHours": f"{total_season_hours:.1f}h",
+            "totalSeasonPlaytime": f"{total_season_hours:.1f}h",
+            "topHeroPlaytimeHours": f"{top_hero_hours:.1f}h",
+            "topHeroPlaytimeLabel": f"{top_hero_hours:.1f}h ({top_hero_name})",
+            "topHeroName": top_hero_name,
+            "totalDamage": f"{total_damage:,}",
+            "total_damage": f"{total_damage:,}"
         }
         canonical["stats"] = {
             "winRate": f"{win_rate}%",
             "kda": kda,
-            "matches": total_matches
+            "matches": total_matches,
+            "heroDamage": dmg_10m,
+            "healing": heal_10m,
+            "totalDamage": f"{total_damage:,}"
         }
 
         return canonical
