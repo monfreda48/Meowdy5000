@@ -1584,6 +1584,7 @@ export default function App() {
       document.documentElement.style.setProperty('--accent-glow', `${selected.accentColor}66`);
     }
     try {
+      localStorage.setItem('m5_theme', selected.id);
       localStorage.setItem('app_color_theme', selected.id);
       localStorage.setItem('m5_color_scheme', selected.id);
     } catch (e) {}
@@ -1592,6 +1593,7 @@ export default function App() {
   const handleSelectTheme = (themeId) => {
     setActiveThemeId(themeId);
     try {
+      localStorage.setItem('m5_theme', themeId);
       localStorage.setItem('app_color_theme', themeId);
       localStorage.setItem('m5_color_scheme', themeId);
     } catch (e) { }
