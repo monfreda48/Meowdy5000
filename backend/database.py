@@ -300,6 +300,62 @@ async def init_db():
                 UNIQUE(player_uid, goal_id)
             );
         """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS player_heroes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_uid TEXT NOT NULL,
+                hero_name TEXT NOT NULL,
+                matches INTEGER DEFAULT 0,
+                win_rate REAL DEFAULT 0.0,
+                kda REAL DEFAULT 0.0,
+                kda_split TEXT,
+                damage_per_min REAL DEFAULT 0.0,
+                heal_per_min REAL DEFAULT 0.0,
+                accuracy_pct REAL DEFAULT 0.0,
+                mvps INTEGER DEFAULT 0,
+                svps INTEGER DEFAULT 0,
+                time_played TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(player_uid, hero_name)
+            );
+        """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS player_matchups (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_uid TEXT NOT NULL,
+                role_category TEXT NOT NULL,
+                enemy_hero TEXT NOT NULL,
+                wins INTEGER DEFAULT 0,
+                losses INTEGER DEFAULT 0,
+                total_games INTEGER DEFAULT 0,
+                enemy_win_rate REAL DEFAULT 0.0,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(player_uid, enemy_hero)
+            );
+        """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS player_rank_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_uid TEXT NOT NULL,
+                timestamp TEXT NOT NULL,
+                tier_name TEXT NOT NULL,
+                rank_score INTEGER NOT NULL,
+                delta INTEGER DEFAULT 0,
+                UNIQUE(player_uid, timestamp, rank_score)
+            );
+        """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS player_meta_records (
+                player_uid TEXT PRIMARY KEY,
+                total_career_games INTEGER DEFAULT 0,
+                total_career_time TEXT,
+                accolades_json TEXT DEFAULT '{}',
+                skins_summary_json TEXT DEFAULT '{}',
+                name_history_json TEXT DEFAULT '[]',
+                punishments_json TEXT DEFAULT '[]',
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """))
 
         for tbl in ['players', 'tracked_players']:
             try:

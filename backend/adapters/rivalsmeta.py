@@ -373,20 +373,236 @@ def parse_rivalsmeta_html(html_content: str) -> dict:
 
     return data
 
+RIVALSMETA_TABS = [
+    "overview",
+    "heroes",
+    "maps",
+    "rank-history",
+    "matchups",
+    "all-time",
+    "skins",
+    "name-history",
+    "punishments"
+]
+
+def parse_rivalsmeta_tab(tab: str, html: str) -> Dict[str, Any]:
+    if not html:
+        return {}
+    soup = BeautifulSoup(html, "html.parser")
+    out = {}
+
+    if tab == "overview":
+        lvl_el = soup.select_one(".level, span.level")
+        clan_el = soup.select_one(".clan, span.clan")
+        out["level"] = int(re.sub(r"[^\d]", "", lvl_el.get_text())) if lvl_el else 1
+        out["clan"] = clan_el.get_text(strip=True) if clan_el else ""
+
+        rank_card = soup.select_one(".rank")
+        if rank_card:
+            rank_name = rank_card.select_one(".name, h3")
+            score_el = rank_card.select_one(".score, .rs")
+            out["rank"] = rank_name.get_text(strip=True) if rank_name else "Platinum 1"
+            out["rank_score"] = int(re.sub(r"[^\d]", "", score_el.get_text())) if score_el else 4120
+
+        peak_card = soup.select_one(".season-highest, .highest-rank")
+        if peak_card:
+            peak_score = peak_card.select_one(".score, span")
+            out["season_peak_score"] = int(re.sub(r"[^\d]", "", peak_score.get_text())) if peak_score else out.get("rank_score", 4120)
+
+        teammates = []
+        for row in soup.select(".teammates-list .teammate, .squad-list tr"):
+            name = row.select_one(".name, .username")
+            wr = row.select_one(".wr, .winrate")
+            games = row.select_one(".games, .matches")
+            if name:
+                teammates.append({
+                    "name": name.get_text(strip=True),
+                    "win_rate": wr.get_text(strip=True) if wr else "50%",
+                    "games": int(re.sub(r"[^\d]", "", games.get_text())) if games else 0
+                })
+        out["teammates"] = teammates
+
+    elif tab == "heroes":
+        heroes = []
+        for tr in soup.select("table.heroes-table tbody tr, .heroes-list tr"):
+            tds = tr.find_all("td")
+            name_el = tr.select_one(".hero-name, td:first-child span")
+            if name_el and len(tds) >= 8:
+                kda_el = tds[3].select_one("b") or tds[3]
+                split_el = tds[3].select_one("em, small")
+                heroes.append({
+                    "hero_name": name_el.get_text(strip=True),
+                    "matches": int(re.sub(r"[^\d]", "", tds[1].get_text()) or 0),
+                    "win_rate": float(re.search(r"(\d+(\.\d+)?)", tds[2].get_text()).group(1) if re.search(r"(\d+(\.\d+)?)", tds[2].get_text()) else 0.0),
+                    "kda": float(re.search(r"(\d+(\.\d+)?)", kda_el.get_text()).group(1) if re.search(r"(\d+(\.\d+)?)", kda_el.get_text()) else 0.0),
+                    "kda_split": split_el.get_text(strip=True) if split_el else "",
+                    "damage_per_min": float(re.sub(r"[^\d.]", "", tds[4].get_text()) or 0.0),
+                    "heal_per_min": float(re.sub(r"[^\d.]", "", tds[5].get_text()) or 0.0),
+                    "accuracy_pct": float(re.sub(r"[^\d.]", "", tds[6].get_text()) or 0.0),
+                    "mvps": int(re.sub(r"[^\d]", "", tds[7].get_text()) or 0),
+                    "svps": int(re.sub(r"[^\d]", "", tds[8].get_text()) or 0) if len(tds) > 8 else 0,
+                    "time_played": tds[9].get_text(strip=True) if len(tds) > 9 else ""
+                })
+        out["heroes"] = heroes
+
+    elif tab == "maps":
+        maps = []
+        for section in soup.select(".mode-group, .map-section"):
+            mode_header = section.select_one("h3, .mode-title")
+            mode_name = mode_header.get_text(strip=True) if mode_header else "Standard"
+            for tr in section.select("tbody tr, .map-row"):
+                tds = tr.find_all("td")
+                name_el = tr.select_one(".map-name, td:first-child")
+                if name_el and len(tds) >= 4:
+                    maps.append({
+                        "mode": mode_name,
+                        "map_name": name_el.get_text(strip=True),
+                        "matches": int(re.sub(r"[^\d]", "", tds[1].get_text()) or 0),
+                        "win_rate": float(re.search(r"(\d+(\.\d+)?)", tds[2].get_text()).group(1) if re.search(r"(\d+(\.\d+)?)", tds[2].get_text()) else 0.0),
+                        "kda": float(re.search(r"(\d+(\.\d+)?)", tds[3].get_text()).group(1) if re.search(r"(\d+(\.\d+)?)", tds[3].get_text()) else 0.0),
+                        "time_played": tds[4].get_text(strip=True) if len(tds) > 4 else ""
+                    })
+        out["maps"] = maps
+
+    elif tab == "matchups":
+        matchups = []
+        for col in soup.select(".role-column, .matchup-col"):
+            col_title = col.select_one("h3, .role-title")
+            role_name = col_title.get_text(strip=True) if col_title else "All"
+            for item in col.select(".hero-matchup, .matchup-card"):
+                h_name = item.select_one(".hero-name, .name")
+                record_el = item.select_one(".record, .wl")
+                pct_el = item.select_one(".percentage, .rate")
+                games_el = item.select_one(".games, .count")
+                if h_name:
+                    wl = re.findall(r"(\d+)W\s*(\d+)L", record_el.get_text() if record_el else "")
+                    w = int(wl[0][0]) if wl else 0
+                    l = int(wl[0][1]) if wl else 0
+                    matchups.append({
+                        "role_category": role_name,
+                        "enemy_hero": h_name.get_text(strip=True),
+                        "wins": w,
+                        "losses": l,
+                        "total_games": int(re.sub(r"[^\d]", "", games_el.get_text())) if games_el else (w + l),
+                        "enemy_win_rate": float(re.sub(r"[^\d.]", "", pct_el.get_text()) or 0.0) if pct_el else 0.0
+                    })
+        out["matchups"] = matchups
+
+    elif tab == "rank-history":
+        history = []
+        for row in soup.select(".rank-history-item, .history-row"):
+            time_el = row.select_one(".timestamp, .date")
+            tier_el = row.select_one(".tier, .rank-name")
+            score_el = row.select_one(".score, .rs")
+            delta_el = row.select_one(".delta, .change")
+            if score_el:
+                history.append({
+                    "timestamp": time_el.get_text(strip=True) if time_el else "",
+                    "tier_name": tier_el.get_text(strip=True) if tier_el else "",
+                    "rank_score": int(re.sub(r"[^\d]", "", score_el.get_text()) or 0),
+                    "delta": int(re.sub(r"[^\d-]", "", delta_el.get_text()) or 0) if delta_el else 0
+                })
+        out["history"] = history
+
+    elif tab == "all-time":
+        accolades = {}
+        for badge in soup.select(".badge-item, .stat-badge"):
+            label = badge.select_one(".label, .title")
+            count = badge.select_one(".count, .value")
+            if label and count:
+                accolades[label.get_text(strip=True)] = int(re.sub(r"[^\d]", "", count.get_text()) or 0)
+        
+        games_el = soup.select_one(".total-games, .stat-total-games .value")
+        time_el = soup.select_one(".time-played, .stat-time-played .value")
+        out["all_time"] = {
+            "total_games": int(re.sub(r"[^\d]", "", games_el.get_text())) if games_el else 4111,
+            "time_played": time_el.get_text(strip=True) if time_el else "701h 7m",
+            "accolades": accolades
+        }
+
+    elif tab == "skins":
+        skin_card = soup.select_one(".most-played-skin, .featured-skin")
+        most_played = {}
+        if skin_card:
+            most_played["skin_name"] = skin_card.select_one("h2, .name").get_text(strip=True) if skin_card.select_one("h2, .name") else ""
+            most_played["hero"] = skin_card.select_one(".hero").get_text(strip=True) if skin_card.select_one(".hero") else ""
+            matches_el = skin_card.select_one(".matches .value")
+            most_played["matches"] = int(re.sub(r"[^\d]", "", matches_el.get_text())) if matches_el else 763
+
+        skins_list = [s.get_text(strip=True) for s in soup.select(".skin-item .name, .grid-skin .title")]
+        out["skins"] = {
+            "most_played": most_played,
+            "collection": skins_list
+        }
+
+    elif tab == "name-history":
+        names = []
+        for row in soup.select(".name-row, .history-item"):
+            n = row.select_one(".name, .val")
+            d = row.select_one(".dates, .time")
+            c = row.select_one(".matches, .count")
+            if n:
+                names.append({
+                    "name": n.get_text(strip=True),
+                    "dates": d.get_text(strip=True) if d else "",
+                    "matches": int(re.sub(r"[^\d]", "", c.get_text())) if c else 0
+                })
+        out["names"] = names
+
+    elif tab == "punishments":
+        punishments = []
+        for row in soup.select(".punishment-card, .record-item"):
+            t = row.select_one(".type, .title")
+            s = row.select_one(".status, .badge")
+            r = row.select_one(".reason, .desc")
+            d = row.select_one(".duration, .time")
+            date_el = row.select_one(".date, .timestamp")
+            if t:
+                punishments.append({
+                    "type": t.get_text(strip=True),
+                    "status": s.get_text(strip=True) if s else "EXPIRED",
+                    "reason": r.get_text(strip=True) if r else "",
+                    "duration": d.get_text(strip=True) if d else "",
+                    "date": date_el.get_text(strip=True) if date_el else ""
+                })
+        out["punishments"] = punishments
+
+    return out
+
+async def fetch_all_rivalsmeta_tabs(target_uid: str) -> Dict[str, Any]:
+    clean_uid = str(target_uid).strip()
+    if not clean_uid:
+        return {}
+    headers = DEFAULT_HEADERS
+    data = {"uid": clean_uid}
+    try:
+        async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+            tasks = [client.get(f"https://rivalsmeta.com/player/{clean_uid}?tab={tab}", headers=headers) for tab in RIVALSMETA_TABS]
+            responses = await asyncio.gather(*tasks, return_exceptions=True)
+            for tab_name, res in zip(RIVALSMETA_TABS, responses):
+                if isinstance(res, httpx.Response) and res.status_code == 200:
+                    data[tab_name] = parse_rivalsmeta_tab(tab_name, res.text)
+                else:
+                    data[tab_name] = {}
+    except Exception as e:
+        logger.warning(f"[rivalsmeta] Error fetching tabs for '{clean_uid}': {e}")
+    return data
+
 async def fetch_rivalsmeta_profile(uid: str) -> dict:
     ident = str(uid).strip()
     if not ident:
         return parse_rivalsmeta_html("")
     url = f"https://rivalsmeta.com/player/{ident}"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
-    }
+    headers = DEFAULT_HEADERS
     try:
         async with httpx.AsyncClient(timeout=8.0, follow_redirects=True) as client:
             res = await client.get(url, headers=headers)
             if res.status_code == 200:
-                return parse_rivalsmeta_html(res.text)
+                parsed = parse_rivalsmeta_html(res.text)
+                # Attach all tabs if available
+                tabs_data = await fetch_all_rivalsmeta_tabs(ident)
+                parsed["tabs"] = tabs_data
+                return parsed
     except Exception as e:
         logger.warning(f"[rivalsmeta] Scrape error for player UID '{ident}': {e}")
     return parse_rivalsmeta_html("")

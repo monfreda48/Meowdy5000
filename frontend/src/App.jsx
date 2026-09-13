@@ -4735,6 +4735,7 @@ const DEFAULT_SEASON_NUM = 19;
                     API_BASE_URL={getApiUrl()}
                   />
                   <AccountHealthPanel
+                    punishments={stats?.current?.punishments || stats?.punishments || []}
                     uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
                     API_BASE_URL={getApiUrl()}
                   />

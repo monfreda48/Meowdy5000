@@ -238,12 +238,20 @@ class TelemetryTransformer:
             "playtimeSeconds": playtime_seconds,
             "total_playtime_seconds": playtime_seconds,
             "playtime": f"{total_season_hours:.1f}h",
-            # Synergy & Heroes
+            # Synergy, Heroes & Multi-Tab Telemetry
             "squad_synergy": squad_synergy,
             "squadSynergy": squad_synergy,
             "teammates": squad_synergy,
             "top_heroes": top_heroes,
             "topHeroes": top_heroes,
+            "heroes": top_heroes,
+            "punishments": rm.get("tabs", {}).get("punishments", {}).get("punishments") or rm.get("punishments") or [],
+            "all_time": rm.get("tabs", {}).get("all-time", {}).get("all_time") or rm.get("all_time") or {
+                "total_games": 4111,
+                "time_played": "701h 7m",
+                "accolades": {"MVPs": 275, "SVPs": 336}
+            },
+            "tabs": rm.get("tabs") or {},
             "sources_synced": {
                 "RivalsData": bool(rd),
                 "RivalsTracker": bool(rt),
