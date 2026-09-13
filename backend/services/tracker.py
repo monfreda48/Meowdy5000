@@ -1,4 +1,19 @@
 from typing import Dict, Any, Optional
+from datetime import datetime, timedelta
+
+def should_refresh_profile(last_scraped_at: Optional[str], interval_hours: int = 12) -> bool:
+    """
+    Checks if last_scraped_at timestamp exceeds interval_hours throttling threshold.
+    """
+    if not last_scraped_at:
+        return True
+    try:
+        clean_ts = str(last_scraped_at).replace('Z', '+00:00')
+        last_scrape = datetime.fromisoformat(clean_ts)
+        now = datetime.now(last_scrape.tzinfo)
+        return (now - last_scrape) >= timedelta(hours=interval_hours)
+    except Exception:
+        return True
 
 def normalize_private_profile_response(
     player_uid: Optional[str] = "",

@@ -1994,6 +1994,23 @@ export default function App() {
     }
   });
 
+  const [syncInterval, setSyncInterval] = useState(() => {
+    try {
+      return localStorage.getItem('m5_sync_interval') || '12';
+    } catch (e) {
+      return '12';
+    }
+  });
+
+  const handleUpdateSyncInterval = (val) => {
+    setSyncInterval(val);
+    try {
+      localStorage.setItem('m5_sync_interval', val);
+      triggerHaptic('success');
+      showNativeToast(`Sync frequency set to ${val === 'manual' ? 'Manual Only' : `${val} Hours`}`);
+    } catch (e) { }
+  };
+
   const handleUpdateDefaultTrackingPref = (pref) => {
     setDefaultTrackingPref(pref);
     try {
@@ -4908,6 +4925,32 @@ const DEFAULT_SEASON_NUM = 19;
                     <span className="text-[10px] text-slate-400 font-normal">Standard search without dataset downloads</span>
                   </button>
                 </div>
+              </div>
+
+              {/* Background Tracking Frequency Setting Card */}
+              <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                    <span>⏱️</span>
+                    <span>Background Tracking Frequency</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-bold">Throttling Gate</span>
+                </div>
+
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Select rate-gating interval before background stat snapshot updates run:
+                </p>
+
+                <select
+                  value={syncInterval}
+                  onChange={(e) => handleUpdateSyncInterval(e.target.value)}
+                  className="w-full bg-[#0b101e] border border-slate-700/80 rounded-xl p-3 text-xs font-bold text-white focus:outline-none focus:border-cyan-500 cursor-pointer"
+                >
+                  <option value="6">6 Hours (Frequent Sync)</option>
+                  <option value="12">12 Hours (Default)</option>
+                  <option value="24">24 Hours (Daily Sync)</option>
+                  <option value="manual">Manual Refresh Only</option>
+                </select>
               </div>
 
               {/* Backend Server Connection URL Card */}
