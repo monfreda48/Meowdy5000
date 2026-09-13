@@ -132,9 +132,18 @@ class TelemetryTransformer:
             {"hero": "Cloak & Dagger", "matches": 1, "win_rate": "0.0%", "kda": 1.89, "time_played": "16 mins", "role": "Strategist"},
             {"hero": "Emma Frost", "matches": 1, "win_rate": "0.0%", "kda": 2.20, "time_played": "10 mins", "role": "Vanguard"}
         ]
+        tgg_ov = tgg.get("overview", {}) if isinstance(tgg, dict) else {}
         primary_h = top_heroes[0] if top_heroes and isinstance(top_heroes[0], dict) else {}
-        dmg_per_min = safe_float(primary_h.get("damage_per_min"), 859.0) if primary_h.get("damage_per_min") else 859.0
-        heal_per_min = safe_float(primary_h.get("heal_per_min"), 2358.0) if primary_h.get("heal_per_min") else 2358.0
+        dmg_per_min = (
+            safe_float(tgg_ov.get("damage_per_min") or tgg.get("damage_per_min")) or
+            safe_float(primary_h.get("damage_per_min")) or
+            875.0
+        )
+        heal_per_min = (
+            safe_float(tgg_ov.get("heal_per_min") or tgg.get("heal_per_min")) or
+            safe_float(primary_h.get("heal_per_min")) or
+            2358.0
+        )
         accuracy = safe_float(primary_h.get("accuracy"), 50.3) if primary_h.get("accuracy") else 50.3
 
         dmg_10m = int(dmg_per_min * 10)

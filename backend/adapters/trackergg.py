@@ -108,6 +108,37 @@ def parse_trackergg_overview(soup: BeautifulSoup) -> Dict[str, Any]:
             data["healing"] = int(re.sub(r"[^\d]", "", v_text) or 0)
         elif "damage blocked" in l_text:
             data["damage_blocked"] = int(re.sub(r"[^\d]", "", v_text) or 0)
+
+    for stat_row in soup.select(".stat.flex, div[class*='stat flex flex-row']"):
+        label_el = stat_row.select_one(".font-normal, div[class*='font-normal']")
+        val_el = stat_row.select_one(".font-medium, div[class*='font-medium']")
+        
+        if not label_el or not val_el:
+            continue
+            
+        label_text = label_el.get_text(strip=True).lower()
+        val_text = val_el.get_text(strip=True).replace(",", "").strip()
+
+        if "damage/min" in label_text or "damage / min" in label_text:
+            match = re.search(r"(\d+(\.\d+)?)", val_text)
+            if match:
+                dmg_min = float(match.group(1))
+                data["damage_per_min"] = dmg_min
+                data["damage_10m"] = int(dmg_min * 10)
+                data["damage_per_10m"] = int(dmg_min * 10)
+
+        elif "healing/min" in label_text or "healing / min" in label_text:
+            match = re.search(r"(\d+(\.\d+)?)", val_text)
+            if match:
+                heal_min = float(match.group(1))
+                data["heal_per_min"] = heal_min
+                data["healing_10m"] = int(heal_min * 10)
+                data["healing_per_10m"] = int(heal_min * 10)
+
+        elif "accuracy" in label_text:
+            match = re.search(r"(\d+(\.\d+)?)", val_text)
+            if match:
+                data["accuracy"] = float(match.group(1))
         elif "kill streak" in l_text:
             data["max_kill_streak"] = int(re.sub(r"[^\d]", "", v_text) or 0)
         elif l_text == "mvps":

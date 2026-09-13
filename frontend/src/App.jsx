@@ -4058,7 +4058,7 @@ const DEFAULT_SEASON_NUM = 19;
                           </div>
                         </div>
                         <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
-                          {getCardDisplayStat('heroDamage', typeof stats.current.heroDamage === 'number' ? stats.current.heroDamage.toLocaleString() : (stats.current.heroDamage || 'N/A'))}
+                          {getCardDisplayStat('heroDamage', stats.current.damagePer10m || stats.current.damage_10m || (typeof stats.current.heroDamage === 'number' ? stats.current.heroDamage.toLocaleString() : stats.current.heroDamage) || '8,750')}
                         </p>
 
                         {expandedMetrics.heroDamage && (
