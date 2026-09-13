@@ -21,6 +21,12 @@ class IdentityManager:
                     UNIQUE(uid)
                 );
             """)
+            columns = [info[1] for info in cursor.execute("PRAGMA table_info(identity_cache)").fetchall()]
+            if "platform" not in columns:
+                try:
+                    cursor.execute("ALTER TABLE identity_cache ADD COLUMN platform TEXT DEFAULT 'psn';")
+                except Exception:
+                    pass
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_ident_user ON identity_cache(username COLLATE NOCASE);")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_ident_uid ON identity_cache(uid);")
             
