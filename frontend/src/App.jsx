@@ -6655,9 +6655,6 @@ const DEFAULT_SEASON_NUM = 19;
 
             <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
               {disambiguationCandidates.map((cand, idx) => {
-                const platNorm = (cand.platform || 'pc').toLowerCase();
-                const badgeIcon = platNorm === 'psn' ? '🎮 PlayStation' : (platNorm === 'xbox' ? '🟢 Xbox' : '🖥️ PC');
-                const badgeBg = platNorm === 'psn' ? 'bg-blue-500/20 text-blue-400 border-blue-500/40' : (platNorm === 'xbox' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-purple-500/20 text-purple-400 border-purple-500/40');
                 return (
                   <button
                     key={idx}
@@ -6672,14 +6669,14 @@ const DEFAULT_SEASON_NUM = 19;
                         className="w-10 h-10 rounded-lg object-cover border border-slate-700 shrink-0"
                       />
                       <div>
-                        <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
-                          {cand.username || query}
-                        </h4>
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
+                            {cand.username || query}
+                          </h4>
+                          <PlatformIcon platform={cand.platform} size={14} />
+                        </div>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeBg}`}>
-                            {badgeIcon}
-                          </span>
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-slate-400 font-mono">
                             {cand.uid ? `UID: ${cand.uid}` : (cand.rank || 'Public')}
                           </span>
                         </div>

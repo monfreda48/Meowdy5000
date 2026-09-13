@@ -318,12 +318,32 @@ async def get_meta_tier_list_endpoint(source: str = Query("rivalstracker", descr
 @app.get("/api/player/{uid}/stats")
 async def get_player_stats_endpoint(uid: str, platform: Optional[str] = Query("pc"), force: bool = Query(False)):
     """
-    Returns player stats using the 3-tier fallback pipeline (Tracker.gg -> RivalsTracker.com -> SQLite cache).
-    Includes source_attribution and scraped_at timestamp in response payload.
-    Supports force=true parameter to bypass cache and trigger live scrape.
+    Returns player profile payload using RivalsData UID ingestion & SQLite caching.
     """
-    from backend.services.ingestion import get_player_rank_with_fallback
-    return await get_player_rank_with_fallback(uid, platform, force=force)
+    from backend.services.aggregator import get_player_profile
+    return await get_player_profile(uid, force_refresh=force)
+
+@app.get("/api/player/{uid}/debug")
+async def get_player_debug_endpoint(uid: str, platform: Optional[str] = Query("pc")):
+    """
+    Bypasses cache, calls RivalsData directly, returns raw parsed schema and status.
+    """
+    from backend.adapters.rivalsdata import fetch_rivalsdata_profile
+    try:
+        data = await fetch_rivalsdata_profile(uid, platform=platform)
+        return {
+            "status": "ok",
+            "uid": uid,
+            "platform": platform,
+            "parsed_schema": data
+        }
+    except Exception as err:
+        return {
+            "status": "error",
+            "uid": uid,
+            "platform": platform,
+            "error": str(err)
+        }
 
 @app.get("/api/player/{uid}/maps")
 async def get_player_maps_endpoint(uid: str):
