@@ -1996,9 +1996,9 @@ export default function App() {
 
   const [syncInterval, setSyncInterval] = useState(() => {
     try {
-      return localStorage.getItem('m5_sync_interval') || '12';
+      return localStorage.getItem('m5_sync_interval') || '12 hrs';
     } catch (e) {
-      return '12';
+      return '12 hrs';
     }
   });
 
@@ -2007,7 +2007,7 @@ export default function App() {
     try {
       localStorage.setItem('m5_sync_interval', val);
       triggerHaptic('success');
-      showNativeToast(`Sync frequency set to ${val === 'manual' ? 'Manual Only' : `${val} Hours`}`);
+      showNativeToast(`Tracking frequency set to ${val}`);
     } catch (e) { }
   };
 
@@ -3447,9 +3447,6 @@ const DEFAULT_SEASON_NUM = 19;
               <span className="hidden sm:inline text-xs font-bold text-slate-300 group-hover:text-white uppercase tracking-wider">
                 Menu
               </span>
-              {updateInfo?.hasUpdate && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
-              )}
             </button>
           </div>
         </div>
@@ -5368,13 +5365,8 @@ const DEFAULT_SEASON_NUM = 19;
                         </div>
                       )}
                       <div className="overflow-hidden">
-                        <div className="flex items-center gap-1.5">
-                          <h3 className="text-sm font-black text-white uppercase tracking-wider truncate">{claimedProfile.username}</h3>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0">
-                            👑 Primary
-                          </span>
-                        </div>
-                        <p className="text-[10px] text-slate-400 font-medium truncate">Auto-loads on launch</p>
+                        <h3 className="text-sm font-black text-white uppercase tracking-wider truncate">{claimedProfile.username}</h3>
+                        <p className="text-[10px] text-slate-400 font-mono truncate">{claimedProfile.uid || claimedProfile.platform || 'pc'}</p>
                       </div>
                     </div>
                   ) : (
@@ -5397,125 +5389,52 @@ const DEFAULT_SEASON_NUM = 19;
                   </button>
                 </div>
 
-                {/* Drawer Group 0.4: My Claimed Profile Card & Unclaim Button */}
+                {/* Standalone Unclaim Profile Action */}
                 {hasClaimedProfile && (
-                  <div className="space-y-2 bg-gradient-to-br from-[#131b2f] to-[#0d1424] border-2 border-amber-500/60 p-3.5 rounded-2xl shadow-xl text-left relative overflow-hidden">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
-                        <span>👑</span> Claimed Profile (Fast Loaded)
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-3 pt-1">
-                      <div className="overflow-hidden">
-                        <h4 className="text-base font-black text-white truncate">{claimedProfile.username || claimedProfile.name}</h4>
-                        <p className="text-[10px] text-slate-400 font-mono truncate max-w-[180px]">
-                          Direct URL: {claimedProfile.savedUrl}
-                        </p>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          const userToFetch = claimedProfile.username || claimedProfile.name;
-                          setQuery(userToFetch);
-                          fetchStats(null, userToFetch, season);
-                        }}
-                        className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl transition-all shadow-md uppercase tracking-wider shrink-0 cursor-pointer"
-                      >
-                        ⚡ Fast Load
-                      </button>
-                    </div>
-
-                    <div className="pt-2 border-t border-slate-800">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (window.confirm("Are you sure you want to unclaim this profile?")) {
-                            setIsMenuOpen(false);
-                            handleUnclaimProfile();
-                          }
-                        }}
-                        className="w-full py-2.5 px-3 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/40 text-red-400 hover:text-red-300 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
-                      >
-                        <span>👑</span>
-                        <span>Unclaim Profile</span>
-                      </button>
-                    </div>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm("Are you sure you want to unclaim this profile?")) {
+                        setIsMenuOpen(false);
+                        handleUnclaimProfile();
+                      }
+                    }}
+                    className="w-full mt-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-lg transition cursor-pointer"
+                  >
+                    Unclaim Profile
+                  </button>
                 )}
 
-                {/* Drawer Group 0.45: Search Another Player when profile is claimed */}
-                {hasClaimedProfile && (
-                  <div className="space-y-2 bg-[#131b2f] border border-slate-700/60 p-3.5 rounded-2xl text-left">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
-                      <span>🔍</span> Search Another Player
-                    </span>
-                    <form onSubmit={(e) => {
-                      e.preventDefault();
-                      if (!lookupQuery.trim()) return;
-                      setIsMenuOpen(false);
-                      setQuery(lookupQuery.trim());
-                      fetchStats(e, lookupQuery.trim(), season);
-                    }} className="flex gap-2 pt-1">
-                      <input
-                        type="text"
-                        value={lookupQuery}
-                        onChange={(e) => setLookupQuery(e.target.value)}
-                        placeholder="Enter player IGN..."
-                        className="w-full bg-[#0b101e] border border-slate-700/70 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500"
-                      />
-                      <button
-                        type="submit"
-                        className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-3 py-1.5 rounded-xl uppercase tracking-wider transition-all cursor-pointer shadow"
-                      >
-                        Search
-                      </button>
-                    </form>
-                  </div>
-                )}
-
-                {/* Drawer Group 0.5: Automatic Snapshot Tracking Mode Toggle */}
-                <div className="space-y-2.5 bg-[#131b2f] border border-emerald-500/40 p-3.5 rounded-2xl text-left">
+                {/* Drawer Group: Tracking Frequency Selector */}
+                <div className="space-y-2.5 bg-[#131b2f] border border-slate-700/60 p-3.5 rounded-2xl text-left">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
-                      <span>⚡</span> Snapshot Tracking Mode
+                      <span>⏱️</span> Tracking Frequency
                     </span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${isTrackingMode ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'}`}>
-                      {isTrackingMode ? 'ON' : 'OFF'}
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono">
+                      {syncInterval}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between gap-3 bg-[#0b101e] border border-slate-700/60 p-3 rounded-xl">
-                    <div className="text-left">
-                      <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <span>{isTrackingMode ? '📥' : '🚫'}</span>
-                        <span>Auto Snapshot Tracking</span>
-                      </h4>
-                      <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
-                        Automatically record daily stat snapshots when searching or loading profiles.
-                      </p>
-                    </div>
+                  <p className="text-[10px] text-slate-400 leading-relaxed">
+                    Select how frequently match snapshots are recorded for your claimed profile.
+                  </p>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newVal = !isTrackingMode;
-                        setIsTrackingMode(newVal);
-                        try { localStorage.setItem('tracking_mode_enabled', newVal ? 'true' : 'false'); } catch (err) { }
-                        triggerHaptic('light');
-                        showNativeToast(`Snapshot Tracking ${newVal ? '📥 ON' : '🚫 OFF'}`);
-                        setUpdateToast({
-                          type: newVal ? 'success' : 'update',
-                          message: newVal ? '📥 Automatic Snapshot Tracking ON' : '🚫 Automatic Snapshot Tracking OFF'
-                        });
-                        setTimeout(() => setUpdateToast(null), 3000);
-                      }}
-                      className={`w-12 h-6 rounded-full transition-colors p-1 cursor-pointer flex items-center shrink-0 border ${isTrackingMode ? 'bg-emerald-500 border-emerald-400 justify-end' : 'bg-slate-800 border-slate-700 justify-start'}`}
-                    >
-                      <div className="w-4 h-4 rounded-full bg-white shadow-md"></div>
-                    </button>
+                  <div className="grid grid-cols-4 gap-1.5 pt-1">
+                    {['12 hrs', '24 hrs', '1 week', 'Off'].map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => handleUpdateSyncInterval(opt)}
+                        className={`py-2 px-1 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all cursor-pointer border ${
+                          syncInterval === opt
+                            ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20 scale-105'
+                            : 'bg-[#0b101e] hover:bg-slate-800 text-slate-300 border-slate-700/80 hover:border-slate-600'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -5675,58 +5594,6 @@ const DEFAULT_SEASON_NUM = 19;
                   </span>
 
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => { setIsMenuOpen(false); grantStoragePermission(); }}
-                        className="flex-1 bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-sm">
-                            💾
-                          </div>
-                          <div>
-                            <h4 className="text-xs font-bold text-white group-hover:text-blue-400 transition-colors">
-                              Storage Write Permission
-                            </h4>
-                            <p className="text-[10px] text-slate-400">
-                              Status: <span className={hasStoragePermission ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>{hasStoragePermission ? 'Granted' : 'Action Needed'}</span>
-                            </p>
-                          </div>
-                        </div>
-                        <span className="text-xs text-slate-500 group-hover:text-blue-400 font-bold">→</span>
-                      </button>
-
-                      <button
-                        onClick={() => setShowWhyPermission(!showWhyPermission)}
-                        className={`px-3 py-3 rounded-xl border font-black text-xs transition-all flex items-center justify-center cursor-pointer shrink-0 shadow-sm ${showWhyPermission
-                            ? 'bg-blue-500/30 border-blue-400 text-white shadow-md scale-105'
-                            : 'bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/40 text-blue-400 hover:text-white'
-                          }`}
-                        title="Why is storage write permission required?"
-                      >
-                        <span>Why?</span>
-                      </button>
-                    </div>
-
-                    {/* Expandable Permission Explanation Box */}
-                    {showWhyPermission && (
-                      <div className="bg-[#131b2f] border border-blue-500/40 p-3.5 rounded-xl space-y-2 text-xs animate-in fade-in slide-in-from-top-2">
-                        <div className="flex items-center gap-1.5 text-blue-400 font-bold text-xs uppercase tracking-wider">
-                          <span>💡</span>
-                          <span>Why Permission is Required:</span>
-                        </div>
-                        <ul className="space-y-1.5 text-slate-300 text-[11px] leading-relaxed">
-                          <li className="flex items-start gap-1.5">
-                            <span className="text-emerald-400 font-bold">1.</span>
-                            <span><strong className="text-white">Download & Install Updates:</strong> Saves release APK packages to your device so you can update in 1 click.</span>
-                          </li>
-                          <li className="flex items-start gap-1.5">
-                            <span className="text-emerald-400 font-bold">2.</span>
-                            <span><strong className="text-white">Local Tracking Data Files:</strong> Creates local data snapshot files to track daily Win Rate and KDA history over time.</span>
-                          </li>
-                        </ul>
-                      </div>
-                    )}
 
                     {/* Export Data Backup Section */}
                     <div>
@@ -5792,31 +5659,6 @@ const DEFAULT_SEASON_NUM = 19;
                   <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
                     🛠️ Developer Tools & Issue Reporting
                   </span>
-
-                  {/* Donate Support */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      triggerHaptic('success');
-                      const paypalUrl = 'https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=meowdy5000@gmail.com&item_name=M5+Stat+Tracker+Support&currency_code=USD';
-                      openExternalUrl(paypalUrl);
-                    }}
-                    className="w-full bg-[#131b2f] hover:bg-amber-500/10 border border-slate-700/80 hover:border-amber-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
-                        ☕
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">
-                          Support M5 Stat Tracker (Donate)
-                        </h4>
-                        <p className="text-[10px] text-slate-400">Contribute via PayPal to support server infrastructure</p>
-                      </div>
-                    </div>
-                    <span className="text-xs text-slate-500 group-hover:text-amber-400 font-bold">↗</span>
-                  </button>
 
                   {/* Bug Report */}
                   <button
@@ -6015,40 +5857,6 @@ const DEFAULT_SEASON_NUM = 19;
                       </div>
                     </div>
                     <span className="text-xs text-slate-500 group-hover:text-cyan-400 font-bold">↗</span>
-                  </button>
-                </div>
-
-                {/* Support Development / Donate via PayPal (Placed at very bottom of menu) */}
-                <div className="space-y-2.5 bg-gradient-to-br from-[#131b2f] via-[#0f172a] to-[#17233d] border-2 border-amber-500/50 p-4 rounded-2xl shadow-xl mt-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
-                      <span>🍕</span> Support Development
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                      PayPal
-                    </span>
-                  </div>
-
-                  <div className="text-left space-y-1">
-                    <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                      <span>💙</span> Enjoying M5 Stat Tracker?
-                    </h4>
-                    <p className="text-[10px] text-slate-300 leading-relaxed">
-                      Help support server hosting, scraper maintenance & future feature updates!
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic('success');
-                      setIsMenuOpen(false);
-                      setShowPayPalModal(true);
-                    }}
-                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 cursor-pointer flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-98"
-                  >
-                    <span className="text-base">💳</span>
-                    <span>Donate with PayPal</span>
                   </button>
                 </div>
               </div>
