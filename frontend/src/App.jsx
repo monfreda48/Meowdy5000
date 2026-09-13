@@ -3529,7 +3529,7 @@ const DEFAULT_SEASON_NUM = 19;
               <div className="w-full mt-2 flex items-center justify-between text-xs px-1 text-slate-400">
                 <button
                   type="button"
-                  onClick={() => setShowUidGuideModal(true)}
+                  onClick={() => setShowFindUIDModal(true)}
                   className="hover:text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer font-medium"
                 >
                   <span>💡 Can't find your account? Enter your UID directly</span>
