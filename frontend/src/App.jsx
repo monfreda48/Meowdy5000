@@ -351,6 +351,14 @@ export default function App() {
     showNativeToast('📁 Collapsed all stat cards!');
   };
 
+  const [lastExportTime, setLastExportTime] = useState(() => {
+    try {
+      return localStorage.getItem('m5_last_export_timestamp') || '';
+    } catch (e) {
+      return '';
+    }
+  });
+
   // Pinned Home Profile State & Helpers
   const [pinnedHomeProfile, setPinnedHomeProfile] = useState(() => {
     try {
@@ -717,7 +725,6 @@ export default function App() {
     if (targetStats) {
       togglePinHomeProfile(targetStats);
       saveTrackedStatSnapshot({ current: targetStats });
-      if (isTrackingMode) downloadUserDataset({ current: targetStats });
       try { localStorage.setItem(`last_auto_snapshot_time_${targetUser.toLowerCase()}`, String(Date.now())); } catch (e) { }
     }
 
@@ -1572,15 +1579,41 @@ export default function App() {
 
   const handleExportBackup = async () => {
     try {
+      const now = new Date().toLocaleString();
+      try {
+        localStorage.setItem('m5_last_export_timestamp', now);
+      } catch (e) { }
+      setLastExportTime(now);
+
+      const activeProfile = stats?.current || claimedProfile || {};
+      const heroesArr = Array.isArray(stats?.heroes)
+        ? stats.heroes
+        : (Array.isArray(stats?.heroesList) ? stats.heroesList : []);
+
       const backupData = {
+        player_info: {
+          name: activeProfile.username || activeProfile.name || activeProfile.player_name || claimedProfile?.username || 'Unknown Player',
+          uid: activeProfile.uid || activeProfile.player_id || activeProfile.id || claimedProfile?.uid || 'N/A',
+          platform: activeProfile.platform || claimedProfile?.platform || 'pc',
+          rank: activeProfile.rank || activeProfile.rank_name || activeProfile.rankName || 'Unranked',
+          season: activeProfile.season || activeProfile.seasonName || season || 'Season 1'
+        },
+        stats: {
+          kda: activeProfile.kda || activeProfile.kda_ratio || activeProfile.kd || '0.00',
+          win_rate: activeProfile.win_rate || activeProfile.winRate || activeProfile.winrate || '0%',
+          total_matches: activeProfile.total_matches ?? activeProfile.matches_played ?? activeProfile.totalMatches ?? activeProfile.matches ?? 0,
+          time_played: activeProfile.time_played || activeProfile.timePlayed || activeProfile.playtime || '0h'
+        },
+        heroes: heroesArr,
+        exported_at: new Date().toISOString(),
         app: "M5 Stat Tracker",
         exportedAt: new Date().toISOString(),
-        trackedPlayers: trackedPlayers,
-        selectedMetrics: selectedMetrics,
+        trackedPlayers: trackedPlayers || {},
+        selectedMetrics: selectedMetrics || [],
         playerDataFiles: {}
       };
 
-      Object.keys(trackedPlayers).forEach(username => {
+      Object.keys(trackedPlayers || {}).forEach(username => {
         const key = `player_file_data_${username.toLowerCase()}`;
         try {
           const raw = localStorage.getItem(key);
@@ -1592,20 +1625,22 @@ export default function App() {
 
       if (window.Capacitor && window.Capacitor.isNativePlatform()) {
         await Filesystem.writeFile({
-          path: 'M5StatTracker_Backup.json',
+          path: 'tracker.json',
           data: jsonStr,
           directory: Directory.Documents
         });
-        setUpdateToast({ type: 'success', message: '✅ Backup file exported to Documents/M5StatTracker_Backup.json!' });
+        setUpdateToast({ type: 'success', message: '✅ Backup file exported to Documents/tracker.json!' });
       } else {
         const blob = new Blob([jsonStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `M5StatTracker_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = 'tracker.json';
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        setUpdateToast({ type: 'success', message: '✅ Backup downloaded as JSON file!' });
+        setUpdateToast({ type: 'success', message: '✅ Data set exported as tracker.json!' });
       }
       setTimeout(() => setUpdateToast(null), 4000);
     } catch (err) {
@@ -2213,7 +2248,7 @@ export default function App() {
     return (import.meta.env.VITE_APP_COMMIT_SHA || '').slice(0, 7);
   };
 
-  const getAppVersionName = () => nativeAppVersion || pkg.version || '1.0.31';
+  const getAppVersionName = () => nativeAppVersion || pkg.version || '1.0.32';
 
   const checkForUpdates = async (isSilent = true) => {
     if (!isSilent) {
@@ -2608,7 +2643,7 @@ ${payload.stack || 'No stack trace available.'}
 
   useEffect(() => {
     try {
-      const currentVer = pkg.version || '1.0.31';
+      const currentVer = pkg.version || '1.0.32';
       const savedVer = localStorage.getItem('installed_app_version');
       if (savedVer !== currentVer) {
         localStorage.setItem('installed_app_version', currentVer);
@@ -3026,7 +3061,6 @@ const DEFAULT_SEASON_NUM = 19;
 
           if (!lastSaveTime || (now - Number(lastSaveTime)) >= TWELVE_HOURS_MS) {
             saveTrackedStatSnapshot(data);
-            if (isTrackingMode) downloadUserDataset(data);
             try { localStorage.setItem(lastSaveKey, String(now)); } catch (e) { }
             console.log(`[AutoSnapshot] 12-Hour window elapsed. Auto-saved snapshot for claimed profile: ${uKey}`);
             setUpdateToast({
@@ -3040,7 +3074,6 @@ const DEFAULT_SEASON_NUM = 19;
           }
         } else if (trackedPlayers[uKey]) {
           saveTrackedStatSnapshot(data);
-          if (isTrackingMode) downloadUserDataset(data);
         }
       }
     } catch (err) {
@@ -3094,7 +3127,7 @@ const DEFAULT_SEASON_NUM = 19;
               🐱
             </div>
             <div className="absolute -bottom-2 -right-2 bg-slate-900 border border-emerald-400/60 text-emerald-400 p-1.5 rounded-full text-[10px] font-black shadow-lg uppercase tracking-wider">
-              v1.0.31
+              v1.0.32
             </div>
           </div>
 
@@ -4553,7 +4586,7 @@ const DEFAULT_SEASON_NUM = 19;
               <div className="bg-[#131b2f] border border-slate-700/60 p-3 rounded-xl text-left text-xs space-y-1">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Target Commit:</span>
-                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.31 (${getAppLocalSha()})`}</span>
+                  <span className="font-mono text-emerald-400 font-bold">{readyToInstallUpdate.latestVersion || `v1.0.32 (${getAppLocalSha()})`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Status:</span>
@@ -4845,13 +4878,13 @@ const DEFAULT_SEASON_NUM = 19;
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Installed Version:</span>
                   <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
-                    {upToDateDetails?.currentSha || `v1.0.31 (${getAppLocalSha()})`}
+                    {upToDateDetails?.currentSha || `v1.0.32 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold">Latest Release SHA:</span>
                   <span className="font-mono text-teal-300 font-bold">
-                    {upToDateDetails?.latestSha || `v1.0.31 (${getAppLocalSha()})`}
+                    {upToDateDetails?.latestSha || `v1.0.32 (${getAppLocalSha()})`}
                   </span>
                 </div>
                 {upToDateDetails?.commitMsg && (
@@ -5497,24 +5530,27 @@ const DEFAULT_SEASON_NUM = 19;
                       </div>
                     )}
 
-                    {/* Export Data Backup Button */}
-                    <button
-                      onClick={() => { setIsMenuOpen(false); handleExportBackup(); }}
-                      className="w-full bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
-                          📥
+                    {/* Export Data Backup Section */}
+                    <div>
+                      <div className="text-xs text-slate-400 mb-1">Last export: {lastExportTime || 'Never'}</div>
+                      <button
+                        onClick={() => { setIsMenuOpen(false); handleExportBackup(); }}
+                        className="w-full bg-[#131b2f] hover:bg-slate-800/80 border border-slate-700/80 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
+                            📥
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
+                              Force data set export
+                            </h4>
+                            <p className="text-[10px] text-slate-400">Save tracked stats & configs to JSON file</p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
-                            Export Data Backup File
-                          </h4>
-                          <p className="text-[10px] text-slate-400">Save tracked stats & configs to JSON file</p>
-                        </div>
-                      </div>
-                      <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">→</span>
-                    </button>
+                        <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">→</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
