@@ -23,6 +23,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { initNotificationChannel } from './utils/notifications';
 import NotificationSettings from './components/NotificationSettings';
 import PlatformIcon from './components/PlatformIcon';
+import ProfileIdentityBanner from './components/ProfileIdentityBanner';
 import HeroMasteryPanel from './components/HeroMasteryPanel';
 import HeroProgression from './components/HeroProgression';
 import ViewSwitcher from './components/ViewSwitcher';
@@ -3789,9 +3790,14 @@ const DEFAULT_SEASON_NUM = 19;
                   </div>
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5 flex-wrap">
                     <h2 className={`font-black text-white ${isMobileView ? 'text-2xl' : 'text-3xl'}`}>{stats.current.username}</h2>
                     <PlatformIcon platform={stats.current.platform} size={22} className="w-5.5 h-5.5 text-slate-300" />
+                    {(stats.uid || stats.current?.uid) && (stats.uid || stats.current?.uid) !== stats.current.username && (
+                      <span className="text-[11px] font-mono px-2.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300 font-bold tracking-wider select-all">
+                        UID: {stats.uid || stats.current?.uid}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <span className="bg-gradient-to-r from-blue-600/30 to-indigo-600/30 text-blue-300 border border-blue-500/50 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-blue-500/10">
