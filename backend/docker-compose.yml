@@ -1,11 +1,29 @@
 services:
-  marvel-rivals:
-    build: .
+  marvel-rivals-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: marvel-rivals-backend
+    restart: unless-stopped
     ports:
       - "8000:8000"
-    shm_size: '1gb'
-    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+      - ./dist:/app/dist
+      - ./cache:/app/cache
+    shm_size: "1gb"
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+        reservations:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   tunnel:
     image: cloudflare/cloudflared:latest

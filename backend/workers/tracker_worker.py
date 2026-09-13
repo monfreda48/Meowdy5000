@@ -64,30 +64,36 @@ class TrackerScraperWorker:
 
             logger.info("[playwright_stealth] Triggering fallback Playwright browser session...")
             async with async_playwright() as p:
-                browser = await p.chromium.launch(
-                    headless=True,
-                    args=["--disable-blink-features=AutomationControlled", "--no-sandbox", "--disable-setuid-sandbox"]
-                )
-                context = await browser.new_context(
-                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-                    viewport={"width": 1920, "height": 1080}
-                )
-                page = await context.new_page()
-                if stealth_async:
-                    await stealth_async(page)
-                else:
-                    await page.add_init_script("Object.defineProperty(navigator, 'webdriver', { get: () => undefined });")
+                browser = None
+                try:
+                    browser = await p.chromium.launch(
+                        headless=True,
+                        args=["--disable-blink-features=AutomationControlled", "--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+                    )
+                    context = await browser.new_context(
+                        user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                        viewport={"width": 1920, "height": 1080}
+                    )
+                    page = await context.new_page()
+                    if stealth_async:
+                        await stealth_async(page)
+                    else:
+                        await page.add_init_script("Object.defineProperty(navigator, 'webdriver', { get: () => undefined });")
 
-                await page.goto(url, wait_until="domcontentloaded", timeout=20000)
-                await page.wait_for_timeout(3000)
-                content = await page.content()
-                await browser.close()
+                    await page.goto(url, wait_until="domcontentloaded", timeout=20000)
+                    await page.wait_for_timeout(3000)
+                    content = await page.content()
 
-                if "Just a moment..." not in content and "challenge-running" not in content:
-                    logger.info("[playwright_stealth] Stealth session successfully bypassed Cloudflare!")
-                    return content
-                else:
-                    logger.warning("[playwright_stealth] Cloudflare challenge persisted.")
+                    if "Just a moment..." not in content and "challenge-running" not in content:
+                        logger.info("[playwright_stealth] Stealth session successfully bypassed Cloudflare!")
+                        return content
+                    else:
+                        logger.warning("[playwright_stealth] Cloudflare challenge persisted.")
+                        return content
+                finally:
+                    if browser:
+                        await browser.close()
+                        logger.info("[playwright_stealth] Closed browser instance to release memory to DSM.")
         except Exception as e:
             logger.error(f"[playwright_stealth] Playwright execution error: {e}")
         return None
