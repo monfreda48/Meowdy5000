@@ -1542,6 +1542,7 @@ export default function App() {
   useEffect(() => {
     const selected = THEMES.find(t => t.id === activeThemeId) || THEMES[0];
     document.documentElement.setAttribute('data-theme', selected.id);
+    document.body.setAttribute('data-theme', selected.id);
     if (selected.accentColor) {
       document.documentElement.style.setProperty('--accent-color', selected.accentColor);
       document.documentElement.style.setProperty('--accent-glow', `${selected.accentColor}66`);
@@ -1562,6 +1563,7 @@ export default function App() {
     } catch (e) { }
     const selected = THEMES.find(t => t.id === themeId) || THEMES[0];
     document.documentElement.setAttribute('data-theme', selected.id);
+    document.body.setAttribute('data-theme', selected.id);
     if (selected.accentColor) {
       document.documentElement.style.setProperty('--accent-color', selected.accentColor);
       document.documentElement.style.setProperty('--accent-glow', `${selected.accentColor}66`);
@@ -5460,27 +5462,6 @@ const DEFAULT_SEASON_NUM = 19;
                       </option>
                     ))}
                   </select>
-
-                  <div className="grid grid-cols-5 gap-1.5 pt-1">
-                    {THEMES.map((t) => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => handleSelectTheme(t.id)}
-                        className={`flex flex-col items-center gap-1 p-2 rounded-xl border transition-all cursor-pointer ${
-                          activeThemeId === t.id
-                            ? 'bg-[#0b101e] border-white scale-105 shadow-lg'
-                            : 'bg-[#0b101e]/60 border-slate-700/60 hover:border-slate-500 opacity-70 hover:opacity-100'
-                        }`}
-                        title={t.name}
-                      >
-                        <div className={`w-7 h-7 rounded-full bg-gradient-to-tr ${t.swatchGradient} shadow-md flex items-center justify-center text-white text-[10px] font-black`}>
-                          {activeThemeId === t.id ? '✓' : ''}
-                        </div>
-                        <span className="text-[8px] font-bold text-slate-300 truncate w-full text-center">{t.name.split(' ')[0]}</span>
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
                 {/* Drawer Group 2: Storage & Data */}

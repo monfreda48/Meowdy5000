@@ -90,6 +90,49 @@
   --accent-color: var(--accent-primary);
 }
 
+/* Enforce dynamic theme variables on common container classes */
+[data-theme] .bg-slate-900,
+[data-theme] .bg-slate-950,
+[data-theme] [class*="bg-[#0d111d]"],
+[data-theme] [class*="bg-[#080b13]"],
+[data-theme] [class*="bg-[#131b2f]"],
+[data-theme] [class*="bg-[#0f172a]"],
+[data-theme] [class*="bg-[#0b101e]"],
+[data-theme] [class*="bg-[#070a13]"] {
+  background-color: var(--bg-card) !important;
+}
+
+[data-theme] .border-slate-800,
+[data-theme] .border-slate-700,
+[data-theme] [class*="border-[#1e293b]"],
+[data-theme] [class*="border-slate-700"],
+[data-theme] [class*="border-slate-800"] {
+  border-color: var(--border-card) !important;
+}
+
+[data-theme] body, body[data-theme] {
+  background-color: var(--bg-app) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Primary Accent Highlights Overrides */
+[data-theme] .text-emerald-400 {
+  color: var(--accent-primary) !important;
+}
+
+[data-theme] .border-emerald-500\/40,
+[data-theme] .border-emerald-500\/50,
+[data-theme] .border-emerald-500\/60,
+[data-theme] .border-emerald-500 {
+  border-color: var(--accent-primary) !important;
+}
+
+[data-theme] .bg-indigo-600,
+[data-theme] .bg-blue-600,
+[data-theme] .bg-emerald-500 {
+  background-color: var(--accent-primary) !important;
+}
+
 body {
   margin: 0;
   padding: 0;

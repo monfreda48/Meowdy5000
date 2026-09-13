@@ -144,14 +144,8 @@ export default function SquadSynergyCard({ uid, getApiUrl }) {
           {error}
         </div>
       ) : sortedSynergy.length === 0 ? (
-        <div className="p-6 bg-[#070a13] border border-slate-800/60 rounded-xl text-center space-y-2">
-          <div className="text-2xl">🤝</div>
-          <p className="text-xs font-medium text-slate-300">
-            No frequent squad data found. Play more matches with teammates to build synergy stats.
-          </p>
-          <p className="text-[11px] text-slate-500">
-            Teammates are automatically tracked after playing 2 or more matches together.
-          </p>
+        <div className="py-8 text-center text-slate-400 text-sm font-medium">
+          No duo/trio squad telemetry recorded for this season.
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

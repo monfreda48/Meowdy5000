@@ -26,12 +26,7 @@ DEFAULT_MAPS = [
     {"map_name": "Klyntar", "game_mode": "Competitive", "matches_played": 15, "wins": 9, "losses": 6, "attack_win_rate": 60.0, "defense_win_rate": 60.0}
 ]
 
-DEFAULT_TEAMMATES = [
-    {"teammate_name": "Necros", "teammate_uid": "20019283", "matches_together": 18, "wins": 13, "losses": 5, "kills": 240, "assists": 180, "deaths": 90},
-    {"teammate_name": "Bogur", "teammate_uid": "20048192", "matches_together": 12, "wins": 8, "losses": 4, "kills": 150, "assists": 210, "deaths": 65},
-    {"teammate_name": "Shroud", "teammate_uid": "20091823", "matches_together": 7, "wins": 5, "losses": 2, "kills": 95, "assists": 60, "deaths": 30},
-    {"teammate_name": "SoloQueuePlayer", "teammate_uid": "99999999", "matches_together": 1, "wins": 0, "losses": 1, "kills": 5, "assists": 2, "deaths": 8}
-]
+DEFAULT_TEAMMATES: List[Dict[str, Any]] = []
 
 async def scrape_player_maps(player_uid: str) -> List[Dict[str, Any]]:
     clean_uid = str(player_uid).strip()
@@ -104,7 +99,7 @@ async def scrape_player_synergy(player_uid: str) -> List[Dict[str, Any]]:
     synergy_records: List[Dict[str, Any]] = []
 
     # Attempt fetching live recent match history from API if available
-    raw_teammates = list(DEFAULT_TEAMMATES)
+    raw_teammates = []
     try:
         api_url = f"https://rivalsdata.com/api/player/{clean_uid}/matches"
         headers = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
