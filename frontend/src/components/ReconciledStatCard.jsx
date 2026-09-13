@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
 
+const getSourceValue = (sources, targetKey) => {
+  if (!sources) return 'N/A';
+  const matchKey = Object.keys(sources).find(
+    k => k.toLowerCase().replace(/[^a-z]/g, '') === targetKey.toLowerCase().replace(/[^a-z]/g, '')
+  );
+  return (matchKey && sources[matchKey] !== null && sources[matchKey] !== undefined) ? sources[matchKey] : 'N/A';
+};
+
 export default function ReconciledStatCard({ label, statObj, icon: Icon, iconEmoji, unit = '' }) {
   if (!statObj) return null;
 
@@ -8,7 +16,7 @@ export default function ReconciledStatCard({ label, statObj, icon: Icon, iconEmo
   const [selectedSource, setSelectedSource] = useState(sourceKeys[0] || 'RivalsData');
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const currentValue = sources[selectedSource] ?? statObj.value ?? '--';
+  const currentValue = sources[selectedSource] ?? getSourceValue(sources, selectedSource) ?? statObj.value ?? '--';
 
   return (
     <div 
@@ -54,7 +62,7 @@ export default function ReconciledStatCard({ label, statObj, icon: Icon, iconEmo
                 }`}
               >
                 <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{src}</div>
-                <div className="font-extrabold text-white text-xs">{sources[src]}{unit}</div>
+                <div className="font-extrabold text-white text-xs">{getSourceValue(sources, src)}{unit}</div>
               </button>
             ))}
           </div>

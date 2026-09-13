@@ -323,6 +323,33 @@ async def get_player_stats_endpoint(uid: str, platform: Optional[str] = Query("p
     from backend.services.aggregator import get_player_profile
     return await get_player_profile(uid, force_refresh=force)
 
+@app.get("/api/player/{uid}/debug-raw")
+async def debug_raw_payloads(uid: str):
+    """Dumps raw scraper outputs directly to the browser for auditing."""
+    from backend.services.resolver import resolve_canonical_uid
+    from backend.adapters.rivalsdata import fetch_rivalsdata_profile
+    from backend.adapters.rivalstracker import fetch_rivalstracker_profile
+    from backend.adapters.rivalsmeta import fetch_all_rivalsmeta_tabs
+    from backend.adapters.trackergg import fetch_all_trackergg_tabs
+
+    canonical_uid = await resolve_canonical_uid(uid)
+    rd = await fetch_rivalsdata_profile(canonical_uid)
+    rt = await fetch_rivalstracker_profile(canonical_uid)
+    rm = await fetch_all_rivalsmeta_tabs(canonical_uid)
+    tgg = await fetch_all_trackergg_tabs(uid)
+
+    return {
+        "resolved_uid": canonical_uid,
+        "adapters_status": {
+            "RivalsData_keys": list(rd.keys()) if isinstance(rd, dict) else "FAILED",
+            "RivalsTracker_keys": list(rt.keys()) if isinstance(rt, dict) else "FAILED",
+            "RivalsMeta_tabs_present": [k for k, v in rm.items() if v] if isinstance(rm, dict) else "FAILED",
+            "TrackerGG_tabs_present": [k for k, v in tgg.items() if v] if isinstance(tgg, dict) else "FAILED",
+        },
+        "raw_rivalsmeta_heroes_sample": rm.get("heroes", {}).get("heroes", [])[:2] if isinstance(rm.get("heroes"), dict) else [],
+        "raw_trackergg_overview_sample": tgg.get("overview", {}) if isinstance(tgg, dict) else {}
+    }
+
 @app.get("/api/player/{uid}/debug")
 async def get_player_debug_endpoint(uid: str, platform: Optional[str] = Query("pc")):
     """
