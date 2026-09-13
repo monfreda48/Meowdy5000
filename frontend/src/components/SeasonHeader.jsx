@@ -92,9 +92,6 @@ export default function SeasonHeader({ getApiUrl }) {
               </span>
             )}
           </div>
-          <p className="text-[11px] text-slate-400 font-medium">
-            Official Marvel Rivals Competitive Period
-          </p>
         </div>
       </div>
 
