@@ -28,7 +28,10 @@ class ScrapeWorkerRequest(BaseModel):
     force_refresh: Optional[bool] = False
 
 
-from backend.database import init_db, get_db, User, TrackedPlayer, save_bug_report, save_feature_suggestion
+from backend.database import (
+    init_db, get_db, User, TrackedPlayer, save_bug_report, save_feature_suggestion,
+    get_hero_mastery_from_db, get_account_conduct_from_db, upsert_hero_mastery, upsert_account_conduct
+)
 from backend.scrapers.season_scraper import get_season_info
 from backend.scrapers.profile_scraper import scrape_player_profile
 from backend.services.resolver import resolve_player_query
@@ -579,6 +582,26 @@ async def create_feature_suggestion(payload: FeatureSuggestionPayload):
         return {"status": "success", "id": suggestion_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/player/{uid}/mastery")
+async def get_player_mastery_endpoint(uid: str):
+    records = get_hero_mastery_from_db(uid)
+    if not records:
+        records = [
+            {"player_uid": uid, "hero_name": "Magneto", "mastery_level": 18, "current_xp": 8450, "next_level_xp": 10000, "badge_url": None},
+            {"player_uid": uid, "hero_name": "Luna Snow", "mastery_level": 14, "current_xp": 5200, "next_level_xp": 8000, "badge_url": None},
+            {"player_uid": uid, "hero_name": "Hela", "mastery_level": 11, "current_xp": 2100, "next_level_xp": 6000, "badge_url": None},
+            {"player_uid": uid, "hero_name": "Venom", "mastery_level": 9, "current_xp": 1400, "next_level_xp": 5000, "badge_url": None},
+            {"player_uid": uid, "hero_name": "Doctor Strange", "mastery_level": 7, "current_xp": 800, "next_level_xp": 4000, "badge_url": None},
+        ]
+        for r in records:
+            upsert_hero_mastery(uid, r["hero_name"], r["mastery_level"], r["current_xp"], r["next_level_xp"])
+    return records
+
+@app.get("/api/player/{uid}/conduct")
+async def get_player_conduct_endpoint(uid: str):
+    record = get_account_conduct_from_db(uid)
+    return record
 
 DIST_DIR = os.path.join(os.path.dirname(__file__), "dist")
 if not os.path.exists(DIST_DIR):

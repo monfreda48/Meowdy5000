@@ -113,6 +113,30 @@ class FeatureSuggestion(Base):
     app_version = Column(String(50), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+class HeroMastery(Base):
+    __tablename__ = 'hero_mastery'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    player_uid = Column(String(50), index=True, nullable=False)
+    hero_name = Column(String(100), nullable=False)
+    mastery_level = Column(Integer, default=1)
+    current_xp = Column(Integer, default=0)
+    next_level_xp = Column(Integer, default=1000)
+    badge_url = Column(String(500), nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class AccountConduct(Base):
+    __tablename__ = 'account_conduct'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    player_uid = Column(String(50), unique=True, nullable=False)
+    conduct_rating = Column(Integer, default=100)
+    status_standing = Column(String(100), default='Good Standing')
+    active_penalties_json = Column(Text, default='[]')
+    warning_count = Column(Integer, default=0)
+    last_incident_date = Column(String(50), nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -196,6 +220,31 @@ async def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS hero_mastery (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_uid TEXT NOT NULL,
+                hero_name TEXT NOT NULL,
+                mastery_level INTEGER DEFAULT 1,
+                current_xp INTEGER DEFAULT 0,
+                next_level_xp INTEGER DEFAULT 1000,
+                badge_url TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(player_uid, hero_name)
+            );
+        """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS account_conduct (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_uid TEXT UNIQUE NOT NULL,
+                conduct_rating INTEGER DEFAULT 100,
+                status_standing TEXT DEFAULT 'Good Standing',
+                active_penalties_json TEXT DEFAULT '[]',
+                warning_count INTEGER DEFAULT 0,
+                last_incident_date TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """))
 
         for tbl in ['players', 'tracked_players']:
             try:
@@ -218,6 +267,7 @@ async def init_db():
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_tracked_uid ON tracked_players(uid);"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_maps_uid ON player_maps(player_uid);"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_synergy_uid ON player_synergy(player_uid);"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_mastery_uid ON hero_mastery(player_uid);"))
 
 def migrate_sqlite_db_file(db_filename):
     import sqlite3
@@ -291,6 +341,31 @@ def migrate_sqlite_db_file(db_filename):
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS hero_mastery (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_uid TEXT NOT NULL,
+                hero_name TEXT NOT NULL,
+                mastery_level INTEGER DEFAULT 1,
+                current_xp INTEGER DEFAULT 0,
+                next_level_xp INTEGER DEFAULT 1000,
+                badge_url TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(player_uid, hero_name)
+            );
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS account_conduct (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_uid TEXT UNIQUE NOT NULL,
+                conduct_rating INTEGER DEFAULT 100,
+                status_standing TEXT DEFAULT 'Good Standing',
+                active_penalties_json TEXT DEFAULT '[]',
+                warning_count INTEGER DEFAULT 0,
+                last_incident_date TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
         for tbl in ['players', 'tracked_players']:
             try:
                 cur.execute(f"PRAGMA table_info({tbl});")
@@ -309,6 +384,7 @@ def migrate_sqlite_db_file(db_filename):
         cur.execute("CREATE INDEX IF NOT EXISTS idx_player_uid ON players(uid);")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_maps_uid ON player_maps(player_uid);")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_synergy_uid ON player_synergy(player_uid);")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_mastery_uid ON hero_mastery(player_uid);")
         conn.commit()
         conn.close()
     except Exception:
@@ -415,4 +491,107 @@ def save_feature_suggestion(title: str, description: str, category: str = "Gener
 async def get_db():
     async with AsyncSessionLocal() as session:
         yield session
+
+def upsert_hero_mastery(player_uid: str, hero_name: str, mastery_level: int = 1, current_xp: int = 0, next_level_xp: int = 1000, badge_url: Optional[str] = None, db_filename: str = "rivals_tracker.db"):
+    import sqlite3
+    db_path = os.path.join(BASE_DIR, db_filename)
+    try:
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO hero_mastery (player_uid, hero_name, mastery_level, current_xp, next_level_xp, badge_url, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(player_uid, hero_name) DO UPDATE SET
+                mastery_level=excluded.mastery_level,
+                current_xp=excluded.current_xp,
+                next_level_xp=excluded.next_level_xp,
+                badge_url=excluded.badge_url,
+                updated_at=CURRENT_TIMESTAMP;
+        """, (player_uid, hero_name, mastery_level, current_xp, next_level_xp, badge_url or ""))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[DB Error] upsert_hero_mastery failed for {player_uid} - {hero_name}: {e}")
+
+def get_hero_mastery_from_db(player_uid: str, db_filename: str = "rivals_tracker.db") -> List[Dict[str, Any]]:
+    import sqlite3
+    db_path = os.path.join(BASE_DIR, db_filename)
+    results = []
+    if not os.path.exists(db_path):
+        return results
+    try:
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT player_uid, hero_name, mastery_level, current_xp, next_level_xp, badge_url, updated_at
+            FROM hero_mastery
+            WHERE player_uid = ?
+            ORDER BY mastery_level DESC, current_xp DESC;
+        """, (player_uid,))
+        rows = cur.fetchall()
+        for r in rows:
+            results.append(dict(r))
+        conn.close()
+    except Exception as e:
+        print(f"[DB Error] get_hero_mastery_from_db failed for {player_uid}: {e}")
+    return results
+
+def upsert_account_conduct(player_uid: str, conduct_rating: int = 100, status_standing: str = "Good Standing", active_penalties_json: str = "[]", warning_count: int = 0, last_incident_date: Optional[str] = None, db_filename: str = "rivals_tracker.db"):
+    import sqlite3
+    db_path = os.path.join(BASE_DIR, db_filename)
+    try:
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO account_conduct (player_uid, conduct_rating, status_standing, active_penalties_json, warning_count, last_incident_date, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(player_uid) DO UPDATE SET
+                conduct_rating=excluded.conduct_rating,
+                status_standing=excluded.status_standing,
+                active_penalties_json=excluded.active_penalties_json,
+                warning_count=excluded.warning_count,
+                last_incident_date=excluded.last_incident_date,
+                updated_at=CURRENT_TIMESTAMP;
+        """, (player_uid, conduct_rating, status_standing, active_penalties_json, warning_count, last_incident_date or ""))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[DB Error] upsert_account_conduct failed for {player_uid}: {e}")
+
+def get_account_conduct_from_db(player_uid: str, db_filename: str = "rivals_tracker.db") -> Dict[str, Any]:
+    import sqlite3
+    db_path = os.path.join(BASE_DIR, db_filename)
+    default_record = {
+        "player_uid": player_uid,
+        "conduct_rating": 100,
+        "status_standing": "Good Standing",
+        "active_penalties": [],
+        "warning_count": 0,
+        "last_incident_date": None
+    }
+    if not os.path.exists(db_path):
+        return default_record
+    try:
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT player_uid, conduct_rating, status_standing, active_penalties_json, warning_count, last_incident_date, updated_at
+            FROM account_conduct
+            WHERE player_uid = ?;
+        """, (player_uid,))
+        row = cur.fetchone()
+        conn.close()
+        if row:
+            data = dict(row)
+            try:
+                data["active_penalties"] = json.loads(data.get("active_penalties_json") or "[]")
+            except Exception:
+                data["active_penalties"] = []
+            return data
+    except Exception as e:
+        print(f"[DB Error] get_account_conduct_from_db failed for {player_uid}: {e}")
+    return default_record
+
 

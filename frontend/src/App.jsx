@@ -22,6 +22,9 @@ import { saveExportToCache, FileViewer } from './utils/exporter';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { initNotificationChannel } from './utils/notifications';
 import NotificationSettings from './components/NotificationSettings';
+import PlatformIcon from './components/PlatformIcon';
+import HeroMasteryPanel from './components/HeroMasteryPanel';
+import AccountHealthPanel from './components/AccountHealthPanel';
 
 const triggerHaptic = async (type = 'light') => {
   try {
@@ -3693,7 +3696,10 @@ const DEFAULT_SEASON_NUM = 19;
                   </div>
                 </div>
                 <div>
-                  <h2 className={`font-black text-white ${isMobileView ? 'text-2xl' : 'text-3xl'}`}>{stats.current.username}</h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className={`font-black text-white ${isMobileView ? 'text-2xl' : 'text-3xl'}`}>{stats.current.username}</h2>
+                    <PlatformIcon platform={stats.current.platform} size={22} className="w-5.5 h-5.5 text-slate-300" />
+                  </div>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <span className="bg-gradient-to-r from-blue-600/30 to-indigo-600/30 text-blue-300 border border-blue-500/50 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-blue-500/10">
                       <span>💎</span>
@@ -4618,7 +4624,7 @@ const DEFAULT_SEASON_NUM = 19;
                   </div>
                 </div>
 
-                {/* Squad Synergy & Map Performance Analytical Panels */}
+                {/* Squad Synergy, Map Performance, Hero Mastery & Account Health Panels */}
                 <div className="mt-4 space-y-4">
                   <SquadSynergyCard
                     uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
@@ -4627,6 +4633,14 @@ const DEFAULT_SEASON_NUM = 19;
                   <MapBreakdownGrid
                     uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
                     getApiUrl={getApiUrl}
+                  />
+                  <HeroMasteryPanel
+                    uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
+                    API_BASE_URL={getApiUrl()}
+                  />
+                  <AccountHealthPanel
+                    uid={stats?.current?.uid || claimedProfile?.uid || userUidInput || query}
+                    API_BASE_URL={getApiUrl()}
                   />
                 </div>
               </div>
@@ -5763,6 +5777,26 @@ const DEFAULT_SEASON_NUM = 19;
                       </div>
                     </div>
                     <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold">↗</span>
+                  </button>
+
+                  {/* Resource 1.5: RivalsData.com */}
+                  <button
+                    type="button"
+                    onClick={() => { setIsMenuOpen(false); openExternalUrl('https://rivalsdata.com'); }}
+                    className="w-full bg-[#131b2f] hover:bg-teal-500/10 border border-slate-700/80 hover:border-teal-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between gap-3 group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-sm">
+                        📊
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white group-hover:text-teal-400 transition-colors">
+                          RivalsData.com
+                        </h4>
+                        <p className="text-[10px] text-slate-400 font-medium">Match telemetry, hero stats & combat breakdown</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 group-hover:text-teal-400 font-bold">↗</span>
                   </button>
 
                   {/* Resource 2: RivalsTracker.com */}

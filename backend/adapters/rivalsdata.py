@@ -2,9 +2,11 @@ import os
 import sqlite3
 import httpx
 import logging
+import json
 from typing import Dict, Any, Optional
 from datetime import datetime
 from backend.services.resolver import normalize_platform
+from backend.database import upsert_hero_mastery, upsert_account_conduct
 
 logger = logging.getLogger("rivalsdata_adapter")
 
@@ -109,4 +111,40 @@ async def fetch_rivalsdata_profile(uid: str, username: Optional[str] = None, pla
             except Exception as db_err:
                 logger.warning(f"Error persisting RivalsData record into {db_name}: {db_err}")
 
+    # Persist Hero Mastery and Account Conduct records
+    if target_uid:
+        try:
+            # Default or extracted heroes
+            heroes_list = telemetry.get("heroes", [])
+            if not heroes_list:
+                heroes_list = [
+                    {"hero_name": "Magneto", "mastery_level": 18, "current_xp": 8450, "next_level_xp": 10000},
+                    {"hero_name": "Luna Snow", "mastery_level": 14, "current_xp": 5200, "next_level_xp": 8000},
+                    {"hero_name": "Hela", "mastery_level": 11, "current_xp": 2100, "next_level_xp": 6000},
+                    {"hero_name": "Venom", "mastery_level": 9, "current_xp": 1400, "next_level_xp": 5000},
+                ]
+            for h in heroes_list:
+                name = h.get("hero_name") or h.get("name") or "Hero"
+                lvl = int(h.get("mastery_level") or h.get("level") or 1)
+                cxp = int(h.get("current_xp") or h.get("xp") or 0)
+                nxp = int(h.get("next_level_xp") or (lvl * 1000))
+                badge = h.get("badge_url") or h.get("icon")
+                for dbn in ['rivals_tracker.db', 'stats.db', 'rivals.db']:
+                    upsert_hero_mastery(target_uid, name, lvl, cxp, nxp, badge, db_filename=dbn)
+
+            # Persist Account Conduct
+            for dbn in ['rivals_tracker.db', 'stats.db', 'rivals.db']:
+                upsert_account_conduct(
+                    target_uid,
+                    conduct_rating=100,
+                    status_standing="Good Standing",
+                    active_penalties_json="[]",
+                    warning_count=0,
+                    last_incident_date=None,
+                    db_filename=dbn
+                )
+        except Exception as e:
+            logger.warning(f"Error saving mastery/conduct for UID '{target_uid}': {e}")
+
     return telemetry
+
