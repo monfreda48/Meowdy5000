@@ -356,6 +356,59 @@ async def init_db():
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS trackergg_overview (
+                player_username TEXT PRIMARY KEY,
+                matches_played INTEGER DEFAULT 0,
+                playtime_hours TEXT,
+                rank TEXT,
+                rank_score INTEGER DEFAULT 0,
+                kills INTEGER DEFAULT 0,
+                deaths INTEGER DEFAULT 0,
+                assists INTEGER DEFAULT 0,
+                damage INTEGER DEFAULT 0,
+                healing INTEGER DEFAULT 0,
+                damage_blocked INTEGER DEFAULT 0,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS trackergg_heroes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_username TEXT NOT NULL,
+                hero_name TEXT NOT NULL,
+                matches REAL DEFAULT 0.0,
+                win_rate REAL DEFAULT 0.0,
+                kda REAL DEFAULT 0.0,
+                damage_per_min REAL DEFAULT 0.0,
+                heal_per_min REAL DEFAULT 0.0,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(player_username, hero_name)
+            );
+        """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS trackergg_roles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_username TEXT NOT NULL,
+                role_name TEXT NOT NULL,
+                matches REAL DEFAULT 0.0,
+                win_rate REAL DEFAULT 0.0,
+                kda REAL DEFAULT 0.0,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(player_username, role_name)
+            );
+        """))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS trackergg_encounters (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_username TEXT NOT NULL,
+                teammate_name TEXT NOT NULL,
+                played_with_count INTEGER DEFAULT 0,
+                last_encounter TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(player_username, teammate_name)
+            );
+        """))
 
         for tbl in ['players', 'tracked_players']:
             try:
