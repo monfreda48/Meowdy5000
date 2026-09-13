@@ -15,13 +15,23 @@ from backend.adapters.rivalsdata import (
 logger = logging.getLogger("ingestion_aggregator")
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+def get_possible_db_paths():
+    paths = []
+    for db_name in ['rivals.db', 'rivals_tracker.db', 'stats.db']:
+        p1 = os.path.join(BASE_DIR, db_name)
+        p2 = os.path.join(os.path.dirname(BASE_DIR), db_name)
+        if p1 not in paths:
+            paths.append(p1)
+        if p2 not in paths:
+            paths.append(p2)
+    return paths
+
 def get_cached_player_profile(uid: str) -> Optional[Dict[str, Any]]:
     target_uid = str(uid).strip()
     if not target_uid:
         return None
 
-    for db_name in ['rivals.db', 'rivals_tracker.db', 'stats.db']:
-        db_path = os.path.join(BASE_DIR, db_name)
+    for db_path in get_possible_db_paths():
         if os.path.exists(db_path):
             try:
                 conn = sqlite3.connect(db_path)
@@ -42,14 +52,21 @@ def get_cached_player_profile(uid: str) -> Optional[Dict[str, Any]]:
                     if raw_payload:
                         try:
                             parsed_payload = json.loads(raw_payload)
-                            return parsed_payload
+                            if isinstance(parsed_payload, dict):
+                                plat = normalize_platform_code(data.get("platform") or parsed_payload.get("platform"))
+                                parsed_payload["platform"] = plat
+                                if "current" in parsed_payload and isinstance(parsed_payload["current"], dict):
+                                    parsed_payload["current"]["platform"] = plat
+                                return parsed_payload
                         except Exception:
                             pass
+                    plat = normalize_platform_code(data.get("platform"))
                     return {
+                        "platform": plat,
                         "current": {
                             "uid": data.get("uid"),
                             "username": data.get("username"),
-                            "platform": normalize_platform_code(data.get("platform")),
+                            "platform": plat,
                             "avatarUrl": data.get("avatar_url"),
                             "level": data.get("level") or 1,
                             "rank": data.get("rank") or "Unranked",
@@ -70,14 +87,14 @@ def get_cached_player_profile(uid: str) -> Optional[Dict[str, Any]]:
                         "scraped_at": data.get("last_scraped_at")
                     }
             except Exception as e:
-                logger.debug(f"[aggregator] DB cache read error in {db_name}: {e}")
+                logger.debug(f"[aggregator] DB cache read error in {db_path}: {e}")
     return None
 
 def upsert_player_profile(data: Dict[str, Any]) -> None:
     current = data.get("current") or {}
     target_uid = str(current.get("uid") or "").strip()
     username = current.get("username") or f"Player {target_uid}"
-    platform = normalize_platform_code(current.get("platform"))
+    platform = normalize_platform_code(data.get("platform") or current.get("platform"))
     avatar_url = current.get("avatarUrl") or current.get("avatar_url")
     level = current.get("level") or 1
     rank = current.get("rank") or "Unranked"
@@ -92,8 +109,7 @@ def upsert_player_profile(data: Dict[str, Any]) -> None:
     if not target_uid:
         return
 
-    for db_name in ['rivals.db', 'rivals_tracker.db', 'stats.db']:
-        db_path = os.path.join(BASE_DIR, db_name)
+    for db_path in get_possible_db_paths():
         try:
             conn = sqlite3.connect(db_path)
             cur = conn.cursor()
@@ -152,7 +168,27 @@ def upsert_player_profile(data: Dict[str, Any]) -> None:
             conn.commit()
             conn.close()
         except Exception as err:
-            logger.debug(f"[aggregator] SQLite upsert error in {db_name}: {err}")
+            logger.debug(f"[aggregator] SQLite upsert error in {db_path}: {err}")
+
+def update_player_platform(uid: str, platform_input: str) -> bool:
+    clean_uid = str(uid).strip()
+    norm_plat = normalize_platform_code(platform_input)
+    if not clean_uid:
+        return False
+    updated_any = False
+    for db_path in get_possible_db_paths():
+        if os.path.exists(db_path):
+            try:
+                conn = sqlite3.connect(db_path)
+                cur = conn.cursor()
+                cur.execute("UPDATE players SET platform = ? WHERE uid = ?;", (norm_plat, clean_uid))
+                conn.commit()
+                if cur.rowcount > 0:
+                    updated_any = True
+                conn.close()
+            except Exception as e:
+                logger.debug(f"[aggregator] Platform update error in {db_path}: {e}")
+    return updated_any
 
 async def get_player_profile(identifier: str, force_refresh: bool = False) -> Dict[str, Any]:
     ident = str(identifier).strip()
@@ -170,9 +206,12 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
     if not force_refresh:
         cached = get_cached_player_profile(resolved_uid)
         if cached and cached.get("current", {}).get("scraped_at"):
+            plat = cached.get("platform") or cached.get("current", {}).get("platform", "pc")
             return {
                 "success": True,
                 "data": cached,
+                "platform": plat,
+                "current": cached.get("current"),
                 "source_attribution": "database_cache",
                 "is_fallback": True,
                 "is_stale": False,
@@ -183,9 +222,12 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
     try:
         data = await fetch_rivalsdata_profile(resolved_uid)
         upsert_player_profile(data)
+        plat = data.get("platform") or data.get("current", {}).get("platform", "pc")
         return {
             "success": True,
             "data": data,
+            "platform": plat,
+            "current": data.get("current"),
             "source_attribution": "rivalsdata",
             "is_fallback": False,
             "is_stale": False,
@@ -199,9 +241,12 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
         logger.error(f"[aggregator] Scrape error for UID '{resolved_uid}': {err}")
         cached = get_cached_player_profile(resolved_uid)
         if cached:
+            plat = cached.get("platform") or cached.get("current", {}).get("platform", "pc")
             return {
                 "success": True,
                 "data": cached,
+                "platform": plat,
+                "current": cached.get("current"),
                 "source_attribution": "database_cache",
                 "is_fallback": True,
                 "is_stale": True

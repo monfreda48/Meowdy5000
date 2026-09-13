@@ -368,6 +368,18 @@ async def get_player_synergy_endpoint(uid: str, min_matches: int = Query(2)):
         records = await scrape_player_synergy(uid)
     return records
 
+class PlatformOverrideRequest(BaseModel):
+    platform: str = "pc"
+
+@app.post("/api/player/{uid}/platform")
+async def update_player_platform_endpoint(uid: str, payload: PlatformOverrideRequest):
+    """
+    Accepts {"platform": "ps5" | "xbox" | "pc"} to manually update/persist platform.
+    """
+    from backend.services.aggregator import update_player_platform
+    success = update_player_platform(uid, payload.platform)
+    return {"success": success, "uid": uid, "platform": payload.platform}
+
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok", "service": "Meowdy 5000 Rivals Tracker API", "version": "2.0.0"}

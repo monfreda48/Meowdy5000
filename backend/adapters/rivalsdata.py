@@ -147,42 +147,58 @@ async def fetch_rivalsdata_profile(uid: str, platform: str = "pc") -> Dict[str, 
     }
 
     scraped_data: Dict[str, Any] = None
+    html_content = ""
+    detected_platform = None
 
     try:
         async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
             res = await client.get(api_url, headers=headers)
-            if res.status_code == 404:
-                raise PlayerNotFoundError(f"Player with UID {target_uid} not found on RivalsData.")
-            elif res.status_code == 403:
-                raise ProfilePrivateError(f"Profile for UID {target_uid} is set to Private.")
-            elif res.status_code == 200:
+            if res.status_code == 200:
                 try:
                     scraped_data = res.json()
+                    if scraped_data:
+                        raw_p = scraped_data.get("platform") or scraped_data.get("platformSlug") or scraped_data.get("platform_name")
+                        if raw_p:
+                            detected_platform = normalize_platform_code(raw_p)
                 except Exception:
                     pass
 
-            if not scraped_data:
-                res_page = await client.get(page_url, headers=headers)
-                if res_page.status_code == 404:
-                    raise PlayerNotFoundError(f"Player page for UID {target_uid} returned 404.")
-                html = res_page.text
+            res_page = await client.get(page_url, headers=headers)
+            if res_page.status_code == 200:
+                html_content = res_page.text
+                if not scraped_data:
+                    match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html_content, re.DOTALL)
+                    if match:
+                        try:
+                            next_json = json.loads(match.group(1))
+                            scraped_data = next_json.get("props", {}).get("pageProps", {}).get("playerData") or next_json.get("props", {}).get("pageProps", {})
+                        except Exception as parse_err:
+                            logger.debug(f"Hydration JSON parse error: {parse_err}")
 
-                if "Private Profile" in html or "privacy" in html.lower() and "enabled" in html.lower():
-                    raise ProfilePrivateError(f"Profile for UID {target_uid} is Private.")
-
-                # Try parsing __NEXT_DATA__ hydration JSON
-                match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html, re.DOTALL)
-                if match:
-                    try:
-                        next_json = json.loads(match.group(1))
-                        scraped_data = next_json.get("props", {}).get("pageProps", {}).get("playerData") or next_json.get("props", {}).get("pageProps", {})
-                    except Exception as parse_err:
-                        logger.debug(f"Hydration JSON parse error: {parse_err}")
-
-    except (PlayerNotFoundError, ProfilePrivateError):
-        raise
     except Exception as err:
         logger.warning(f"Live RivalsData scrape error for UID '{target_uid}': {err}")
+
+    # Search BeautifulSoup HTML for platform image (/assets/platforms/)
+    if not detected_platform and html_content:
+        try:
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(html_content, "html.parser")
+            platform_img = soup.find("img", src=lambda s: s and "/assets/platforms/" in s)
+            if platform_img:
+                alt_text = (platform_img.get("alt") or "").lower()
+                src_text = (platform_img.get("src") or "").lower()
+
+                if "playstation" in alt_text or "playstation" in src_text or "psn" in src_text or "ps5" in src_text or "ps4" in src_text:
+                    detected_platform = "ps5"
+                elif "xbox" in alt_text or "xbox" in src_text or "xbl" in src_text:
+                    detected_platform = "xbox"
+                elif any(p in alt_text or p in src_text for p in ["pc", "steam", "windows", "desktop"]):
+                    detected_platform = "pc"
+        except Exception as soup_err:
+            logger.debug(f"BeautifulSoup platform parse error: {soup_err}")
+
+    if not detected_platform:
+        detected_platform = norm_platform
 
     # Build standardized telemetry dictionary
     username = scraped_data.get("username") or scraped_data.get("name") if scraped_data else f"Player {target_uid}"
@@ -200,10 +216,11 @@ async def fetch_rivalsdata_profile(uid: str, platform: str = "pc") -> Dict[str, 
     ]
 
     telemetry = {
+        "platform": detected_platform,
         "current": {
             "uid": target_uid,
             "username": username,
-            "platform": norm_platform,
+            "platform": detected_platform,
             "avatarUrl": avatar_url,
             "level": scraped_data.get("level", 1) if scraped_data else 1,
             "rank": rank,
