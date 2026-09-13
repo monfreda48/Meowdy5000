@@ -3520,10 +3520,6 @@ const DEFAULT_SEASON_NUM = 19;
 
         {/* Header & Search Section */}
         <div className={`flex flex-col items-center text-center ${isMobileView ? 'space-y-2' : 'space-y-3 sm:space-y-6'}`}>
-          <h1 className={`font-black tracking-tight text-white uppercase w-full ${isMobileView ? 'text-xl sm:text-3xl' : 'text-2xl sm:text-5xl md:text-6xl lg:text-7xl'
-            }`}>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">M5 STAT TRACKER</span>
-          </h1>
 
           {/* Real-time Season Header with UTC Countdown & Teaser */}
           <SeasonHeader getApiUrl={getApiUrl} />
