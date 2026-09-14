@@ -1148,7 +1148,7 @@ const calculateConsensusAverage = (sources, metricKey = '') => {
 
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
-  const { theme: currentTheme, changeTheme } = useTheme();
+  const { theme, currentTheme, changeTheme } = useTheme();
   const [isSimplifiedView, setIsSimplifiedView] = useState(() => {
     return localStorage.getItem('m5_simplified_view') === 'true';
   });

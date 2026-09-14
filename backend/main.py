@@ -214,6 +214,7 @@ async def get_latest_app_version(request: Request):
         "changelog": "Initial release."
     }
 
+@app.get("/api/check-update")
 @app.get("/api/app/version")
 @app.get("/api/version")
 async def get_app_version_info(request: Request):
@@ -751,6 +752,28 @@ async def create_feature_suggestion(payload: FeatureSuggestionPayload):
         return {"status": "success", "id": suggestion_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.api_route("/api/report-error", methods=["GET", "POST"])
+async def report_error_endpoint(request: Request):
+    if request.method == "POST":
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        title = body.get("title") or body.get("error") or "Client Error Report"
+        desc = body.get("description") or body.get("stack") or json.dumps(body)
+        try:
+            report_id = save_bug_report(
+                title=str(title)[:255],
+                description=str(desc),
+                player_uid=body.get("player_uid") or body.get("uid"),
+                app_version=body.get("app_version"),
+                platform=body.get("platform", "web")
+            )
+            return {"status": "success", "id": report_id, "message": "Error report saved"}
+        except Exception as e:
+            return {"status": "success", "message": f"Error logged: {e}"}
+    return {"status": "ok", "message": "Error reporting endpoint active"}
 
 @app.get("/api/player/{uid}/mastery")
 async def get_player_mastery_endpoint(uid: str):
