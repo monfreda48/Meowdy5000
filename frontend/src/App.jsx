@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTheme, THEME_PALETTES } from './context/ThemeContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Browser } from '@capacitor/browser';
@@ -1336,6 +1337,7 @@ const calculateConsensusAverage = (sources, metricKey = '') => {
 
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { theme: currentTheme, changeTheme } = useTheme();
   const [isSimplifiedView, setIsSimplifiedView] = useState(() => {
     return localStorage.getItem('m5_simplified_view') === 'true';
   });
@@ -5819,27 +5821,43 @@ const DEFAULT_SEASON_NUM = 19;
                 {/* Drawer Group 0.6: App Color Scheme & Themes */}
                 <div className="space-y-2.5 bg-[#131b2f] border border-slate-700/60 p-3.5 rounded-2xl">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--theme-accent-text)] flex items-center gap-1.5">
                       <span>🎨</span> APP COLOR SCHEME
-                    </span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${activeTheme.badgeBg}`}>
-                      {activeTheme.name}
                     </span>
                   </div>
 
                   <p className="text-[10px] text-slate-400 text-left">Select your dynamic accent color palette:</p>
 
-                  <select
-                    value={activeThemeId}
-                    onChange={(e) => handleSelectTheme(e.target.value)}
-                    className="w-full bg-[#0b101e] border border-slate-700/80 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
-                  >
-                    {THEMES.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+                    {THEME_PALETTES.map((palette) => {
+                      const isActive = currentTheme === palette.id;
+                      return (
+                        <button
+                          key={palette.id}
+                          type="button"
+                          onClick={() => changeTheme(palette.id)}
+                          className={`flex items-center justify-between p-3 rounded-xl border transition-all text-left cursor-pointer ${
+                            isActive
+                              ? 'border-[var(--theme-accent)] bg-[var(--theme-accent)]/15 text-white ring-1 ring-[var(--theme-accent)]'
+                              : 'border-[var(--theme-border)] bg-[var(--theme-surface-2)] text-[var(--text-secondary)] hover:border-[var(--theme-border-hover)]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className="w-4 h-4 rounded-full border border-white/20 shadow-sm shrink-0"
+                              style={{ backgroundColor: palette.accent }}
+                            />
+                            <span className="text-xs font-bold tracking-wide">{palette.name}</span>
+                          </div>
+                          {isActive && (
+                            <span className="text-[10px] font-black uppercase text-[var(--theme-accent-text)]">
+                              Active
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Drawer Group 2: Storage & Data */}
