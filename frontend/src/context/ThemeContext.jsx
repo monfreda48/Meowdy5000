@@ -59,4 +59,14 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
-export const useTheme = () => useContext(ThemeContext);
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    return {
+      currentTheme: 'default',
+      theme: 'default',
+      changeTheme: () => {}
+    };
+  }
+  return context;
+};
