@@ -219,22 +219,34 @@ def reconcile_metric(**sources):
         "has_divergence": has_divergence,
         "sources": clean_sources
     }
-def safe_float(val: Any, default: float = 0.0) -> float:
-    if val is None:
-        return default
+def safe_int(val, default: int = 0) -> int:
     try:
-        clean = re.sub(r'[^0-9.]', '', str(val))
-        return float(clean) if clean else default
-    except Exception:
+        if val is None or val == "" or val == "--":
+            return default
+        cleaned = str(val).replace(",", "").replace("%", "").strip()
+        return int(float(cleaned))
+    except (ValueError, TypeError):
         return default
 
-def build_reconciled_stats(
-    rd_data: Dict[str, Any],
-    rt_data: Optional[Dict[str, Any]] = None,
-    rm_data: Optional[Dict[str, Any]] = None,
-    tgg_data: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
-    curr = rd_data.get("current") or {}
+def safe_float(val, default: float = 0.0) -> float:
+    try:
+        if val is None or val == "" or val == "--":
+            return default
+        cleaned = str(val).replace(",", "").replace("%", "").strip()
+        return float(cleaned)
+    except (ValueError, TypeError):
+        return default
+    valid_sources = {k: v for k, v in sources.items() if v is not None and v != "" and v != "N/A"}
+    if not valid_sources:
+        return {"value": "N/A", "sources": sources}
+    chosen_val = list(valid_sources.values())[0]
+    return {
+        "value": chosen_val,
+        "sources": sources
+    }
+
+def build_reconciled_stats(rd_data: Dict[str, Any], rt_data: Dict[str, Any], rm_data: Dict[str, Any], tgg_data: Dict[str, Any]) -> Dict[str, Any]:
+    curr = rd_data.get("current") if isinstance(rd_data.get("current"), dict) else (rd_data or {})
     rt = rt_data or {}
     rm = rm_data or {}
     tgg = tgg_data or {}
@@ -286,14 +298,14 @@ def build_reconciled_stats(
             "RivalsMeta": rm.get("rank_score") or 4135
         }),
         "damage_10m": reconcile_metric(**{
-            "Tracker.gg": f"{int(safe_float(tgg_ov.get('damage_10m'), 8750)):,}",
-            "RivalsMeta": f"{int(safe_float(rm_dmg_10m), 7930):,}",
-            "RivalsTracker": f"{int(safe_float(rt.get('damage_10m'), 8590)):,}"
+            "Tracker.gg": f"{safe_int(tgg_ov.get('damage_10m'), 8750):,}",
+            "RivalsMeta": f"{safe_int(rm_dmg_10m, 7930):,}",
+            "RivalsTracker": f"{safe_int(rt.get('damage_10m'), 8590):,}"
         }),
         "healing_10m": reconcile_metric(**{
-            "Tracker.gg": f"{int(safe_float(tgg_ov.get('healing_10m'), 23580)):,}",
-            "RivalsMeta": f"{int(safe_float(rm_heal_10m), 21590):,}",
-            "RivalsTracker": f"{int(safe_float(rt.get('healing_10m'), 23580)):,}"
+            "Tracker.gg": f"{safe_int(tgg_ov.get('healing_10m'), 23580):,}",
+            "RivalsMeta": f"{safe_int(rm_heal_10m, 21590):,}",
+            "RivalsTracker": f"{safe_int(rt.get('healing_10m'), 23580):,}"
         })
     }
 
@@ -304,10 +316,12 @@ from backend.adapters.rivalsmeta import fetch_all_rivalsmeta_tabs, fetch_rivalsm
 from backend.adapters.trackergg import fetch_all_trackergg_tabs, fetch_trackergg_profile
 from backend.services.transformer import TelemetryTransformer
 
-async def get_player_profile(identifier: str, force_refresh: bool = False) -> Dict[str, Any]:
+async def get_player_profile(identifier: str, force: bool = False, force_refresh: bool = False) -> Dict[str, Any]:
     ident = str(identifier).strip()
     if not ident:
         return {"success": False, "error": "Empty player identifier"}
+
+    is_force = force or force_refresh
 
     # 1. Resolve Bidirectional Identity
     identity = await IdentityManager.resolve_identity(ident)
@@ -319,7 +333,7 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
     print(f"  • Handle Target      (Tracker.gg)                            : {target_user}")
 
     # 2. Check local database cache
-    if not force_refresh:
+    if not is_force:
         cached = get_cached_player_profile(target_uid)
         if cached and cached.get("current", {}).get("scraped_at"):
             cached_lvl = safe_int(cached.get("level") or cached.get("current", {}).get("level") or cached.get("player_level"))
@@ -384,8 +398,9 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
     except ProfilePrivateError as ppe:
         return {"success": False, "error": str(ppe), "error_code": "PROFILE_PRIVATE"}
     except Exception as err:
-        logger.error(f"[aggregator] Scrape error for UID '{resolved_uid}': {err}")
-        cached = get_cached_player_profile(resolved_uid)
+        active_id = target_uid if 'target_uid' in locals() else (ident if 'ident' in locals() else identifier)
+        logger.error(f"[aggregator] Scrape error for UID '{active_id}': {err}", exc_info=True)
+        cached = get_cached_player_profile(active_id)
         if cached:
             plat = cached.get("platform") or cached.get("current", {}).get("platform", "pc")
             return {
@@ -397,4 +412,4 @@ async def get_player_profile(identifier: str, force_refresh: bool = False) -> Di
                 "is_fallback": True,
                 "is_stale": True
             }
-        return {"success": False, "error": f"Failed to fetch profile: {err}"}
+        return {"success": False, "error": f"Failed to fetch profile: {err}", "uid": active_id}
