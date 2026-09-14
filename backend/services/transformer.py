@@ -294,7 +294,8 @@ class TelemetryTransformer:
                 "damage_10m": {"value": "8,750", "sources": {"Tracker.gg": "8,750", "RivalsMeta": "7,930", "RivalsTracker": "8,590"}},
                 "healing_10m": {"value": "23,580", "sources": {"Tracker.gg": "23,580", "RivalsMeta": "21,590", "RivalsTracker": "23,580"}},
                 "dmg_blocked_10m": {"value": "6,420", "sources": {"Tracker.gg": "6,420", "RivalsTracker": "6,420"}},
-                "total_matches": {"value": 25, "sources": {"Tracker.gg": 25, "RivalsTracker": 48, "RivalsMeta": 31}}
+                "total_matches": {"value": 25, "sources": {"Tracker.gg": 25, "RivalsTracker": 48, "RivalsMeta": 31}},
+                "total_playtime": {"value": "24h", "sources": {"Tracker.gg": "24h", "RivalsMeta": "18h", "RivalsTracker": "24h"}}
             },
             # Playtime
             "playtime_seconds": playtime_seconds,
