@@ -1,17 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTheme, THEME_PALETTES } from './context/ThemeContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-import { Browser } from '@capacitor/browser';
-import { App as CapApp } from '@capacitor/app';
-import { Network } from '@capacitor/network';
-import { Device } from '@capacitor/device';
-import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
-import { Toast } from '@capacitor/toast';
-import { StatusBar, Style } from '@capacitor/status-bar';
-import { SplashScreen } from '@capacitor/splash-screen';
-import { Clipboard } from '@capacitor/clipboard';
-import { ScreenOrientation } from '@capacitor/screen-orientation';
 import pkg from '../package.json';
 import SeasonHeader from './components/SeasonHeader';
 import FindUIDModal from './components/FindUIDModal';
@@ -20,7 +9,6 @@ import MapBreakdownGrid from './components/MapBreakdownGrid';
 import BugReportModal from './components/BugReportModal';
 import FeatureSuggestionModal from './components/FeatureSuggestionModal';
 import { saveExportToCache, FileViewer, openExportCacheFolder } from './utils/exporter';
-import { LocalNotifications } from '@capacitor/local-notifications';
 import { initNotificationChannel } from './utils/notifications';
 import NotificationSettings from './components/NotificationSettings';
 import PlatformIcon from './components/PlatformIcon';
@@ -39,31 +27,19 @@ import PlayerProfile from './pages/PlayerProfile';
 import ReconciledStatCard from './components/ReconciledStatCard';
 
 
-const triggerHaptic = async (type = 'light') => {
+const triggerHaptic = (type = 'light') => {
   try {
-    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-      if (type === 'success') {
-        await Haptics.notification({ type: NotificationType.Success });
-      } else if (type === 'warning' || type === 'error') {
-        await Haptics.notification({ type: NotificationType.Warning });
-      } else if (type === 'heavy') {
-        await Haptics.impact({ style: ImpactStyle.Heavy });
-      } else {
-        await Haptics.impact({ style: ImpactStyle.Light });
-      }
+    if (typeof window !== 'undefined' && window.navigator && typeof window.navigator.vibrate === 'function') {
+      if (type === 'heavy') window.navigator.vibrate([15, 30, 15]);
+      else if (type === 'warning' || type === 'error') window.navigator.vibrate(20);
+      else window.navigator.vibrate(10);
     }
   } catch (e) { }
 };
 
-const showNativeToast = async (text) => {
+const showNativeToast = (text) => {
   try {
-    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-      await Toast.show({
-        text,
-        duration: 'short',
-        position: 'bottom'
-      });
-    }
+    console.log('[WebToast]', text);
   } catch (e) { }
 };
 
@@ -2946,97 +2922,35 @@ ${payload.stack || 'No stack trace available.'}
   const [showSplash, setShowSplash] = useState(false);
   const [splashFading, setSplashFading] = useState(true);
 
-  // 1. Monitor Network Connectivity (@capacitor/network)
+  // 1. Monitor Network Connectivity (Standard Web APIs)
   useEffect(() => {
-    let isMounted = true;
-    let listener;
-
-    const setupNetwork = async () => {
-      try {
-        const status = await Network.getStatus();
-        if (isMounted) setNetworkStatus(status);
-
-        listener = await Network.addListener('networkStatusChange', (newStatus) => {
-          setNetworkStatus((prevStatus) => {
-            // Only trigger toast & updates if connectivity state actually transitioned!
-            if (prevStatus && prevStatus.connected !== newStatus.connected) {
-              if (!newStatus.connected) {
-                triggerHaptic('warning');
-                showNativeToast('⚠️ Offline Mode — Network connection lost');
-              } else {
-                triggerHaptic('success');
-                showNativeToast('⚡ Network Reconnected');
-              }
-            }
-            return newStatus;
-          });
-        });
-      } catch (e) { }
+    const handleOnline = () => {
+      setNetworkStatus({ connected: true });
+      triggerHaptic('success');
+      showNativeToast('⚡ Network Reconnected');
+    };
+    const handleOffline = () => {
+      setNetworkStatus({ connected: false });
+      triggerHaptic('warning');
+      showNativeToast('⚠️ Offline Mode — Network connection lost');
     };
 
-    setupNetwork();
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    setNetworkStatus({ connected: typeof navigator !== 'undefined' ? navigator.onLine : true });
 
     return () => {
-      isMounted = false;
-      if (listener) listener.remove();
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
   }, []);
 
-  // 2. Monitor App Lifecycle Events (@capacitor/app)
+  // 2. Web App Info & Environment Setup
   useEffect(() => {
-    let appStateListener;
-    let backButtonListener;
-
-    const setupCapApp = async () => {
-      try {
-        const info = await CapApp.getInfo();
-        setAppInfo(info);
-
-        appStateListener = await CapApp.addListener('appStateChange', ({ isActive }) => {
-          if (isActive) {
-            console.log('[CapApp] App returned to foreground.');
-          }
-        });
-
-        backButtonListener = await CapApp.addListener('backButton', ({ canGoBack }) => {
-          if (canGoBack) {
-            window.history.back();
-          } else {
-            CapApp.minimizeApp();
-          }
-        });
-      } catch (e) { }
-    };
-
-    setupCapApp();
-
-    return () => {
-      if (appStateListener) appStateListener.remove();
-      if (backButtonListener) backButtonListener.remove();
-    };
-  }, []);
-
-  // 3. Fetch Hardware Specs & Configure Native UI (@capacitor/device, @capacitor/status-bar, @capacitor/splash-screen)
-  useEffect(() => {
-    const fetchDeviceInfo = async () => {
-      try {
-        const info = await Device.getInfo();
-        setDeviceInfo(info);
-      } catch (e) { }
-    };
-    const setupNativeUi = async () => {
-      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-        try {
-          await StatusBar.setStyle({ style: Style.Dark });
-          await StatusBar.setBackgroundColor({ color: '#0b101e' });
-        } catch (e) { }
-        try {
-          await SplashScreen.hide();
-        } catch (e) { }
-      }
-    };
-    fetchDeviceInfo();
-    setupNativeUi();
+    setAppInfo({ name: 'M5 Stat Tracker', version: pkg.version || '1.0.33' });
+    if (typeof navigator !== 'undefined') {
+      setDeviceInfo({ platform: 'web', userAgent: navigator.userAgent });
+    }
   }, []);
 
   useEffect(() => {
@@ -5414,7 +5328,7 @@ const DEFAULT_SEASON_NUM = 19;
                 </button>
               </div>
 
-              {/* System & Device Diagnostics Card (Powered by @capacitor/device & @capacitor/app) */}
+              {/* System & Device Diagnostics Card */}
               {deviceInfo && (
                 <div className="bg-[#131b2f] border border-slate-700/80 rounded-2xl p-4 space-y-2 text-xs">
                   <span className="text-[10px] font-black uppercase tracking-widest text-teal-400 block border-b border-slate-800 pb-1.5">

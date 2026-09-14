@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Browser } from '@capacitor/browser';
 
 export default function UpdateModal({ updateInfo, onClose, showNativeToast = () => {} }) {
   const [downloading, setDownloading] = useState(false);
@@ -8,18 +7,14 @@ export default function UpdateModal({ updateInfo, onClose, showNativeToast = () 
 
   const handleDownload = async () => {
     setDownloading(true);
-    const targetUrl = updateInfo.downloadUrl || 'https://meowdy5000.synology.me/download/m5-tracker-latest.apk';
+    const targetUrl = updateInfo.downloadUrl || 'https://meowdy5000.synology.me';
     
-    showNativeToast('Starting APK download from Synology NAS...');
+    showNativeToast('Redirecting to latest release...');
 
     try {
-      if (window.Capacitor?.isNativePlatform?.()) {
-        await Browser.open({ url: targetUrl });
-      } else {
-        window.open(targetUrl, '_blank', 'noopener,noreferrer');
-      }
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
     } catch (err) {
-      console.warn('Error launching APK download URL:', err);
+      console.warn('Error launching URL:', err);
       window.open(targetUrl, '_blank');
     } finally {
       setTimeout(() => setDownloading(false), 2000);

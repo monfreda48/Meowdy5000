@@ -1,15 +1,7 @@
-import { App } from '@capacitor/app';
-
 export const checkForAppUpdate = async (baseUrl = '') => {
   try {
-    let localVersion = '1.0.32';
-    let localBuild = 32;
-
-    if (window.Capacitor?.isNativePlatform?.()) {
-      const info = await App.getInfo();
-      localVersion = info.version || localVersion;
-      localBuild = parseInt(info.build, 10) || localBuild;
-    }
+    let localVersion = '1.0.33';
+    let localBuild = 33;
 
     const apiUrl = `${baseUrl}/api/app/version`.replace(/([^:]\/)\/+/g, '$1');
     const res = await fetch(apiUrl, { cache: 'no-store' });
@@ -19,12 +11,11 @@ export const checkForAppUpdate = async (baseUrl = '') => {
     }
 
     const data = await res.json();
-    const serverVersion = data.version_name || '1.0.32';
-    const serverBuild = parseInt(data.version_code, 10) || 32;
-    const downloadUrl = data.download_url || 'https://meowdy5000.synology.me/download/m5-tracker-latest.apk';
+    const serverVersion = data.version_name || '1.0.33';
+    const serverBuild = parseInt(data.version_code, 10) || 33;
+    const downloadUrl = data.download_url || 'https://meowdy5000.synology.me';
     const releaseNotes = Array.isArray(data.release_notes) ? data.release_notes : [data.changelog || 'Performance improvements and bug fixes.'];
 
-    // Check build number or semver string
     const updateAvailable = serverBuild > localBuild || compareSemver(serverVersion, localVersion) > 0;
 
     return {
@@ -38,7 +29,7 @@ export const checkForAppUpdate = async (baseUrl = '') => {
     };
   } catch (err) {
     console.warn('[Updater] Error checking for app update:', err);
-    return { updateAvailable: false, error: str(err) };
+    return { updateAvailable: false, error: String(err) };
   }
 };
 
