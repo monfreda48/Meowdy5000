@@ -27,6 +27,7 @@ import PlayerProfile from './pages/PlayerProfile';
 import ReconciledStatCard from './components/ReconciledStatCard';
 import StatCardsGrid from './components/StatCardsGrid';
 import RawTelemetryInspector from './components/RawTelemetryInspector';
+import { formatPlayerName } from './utils/formatters';
 
 
 const triggerHaptic = (type = 'light') => {
@@ -325,7 +326,7 @@ export default function App() {
 
   const addRecentSearch = (searchQuery) => {
     if (!searchQuery || !searchQuery.trim()) return;
-    const cleanQuery = searchQuery.trim();
+    const cleanQuery = formatPlayerName(searchQuery.trim());
     setRecentSearches(prev => {
       const filtered = prev.filter(q => q.toLowerCase() !== cleanQuery.toLowerCase());
       const updated = [cleanQuery, ...filtered].slice(0, 3);
@@ -3184,6 +3185,7 @@ ${payload.stack || 'No stack trace available.'}
       setSearchProgress(100);
       setSearchProgressMsg('💥 Avengers Assembled! Stats Ready.');
       setStats(data);
+      addRecentSearch(data?.player_identity?.display_name || data?.display_name || data?.current?.username || activeQuery);
 
       if (data?.current?.upgradedSeason && claimedProfile) {
         const nextSeason = data.current.upgradedSeason;
@@ -3686,7 +3688,9 @@ ${payload.stack || 'No stack trace available.'}
                 </div>
                 <div>
                   <div className="flex items-center gap-2.5 flex-wrap">
-                    <h2 className={`font-black text-white ${isMobileView ? 'text-2xl' : 'text-3xl'}`}>{stats.current.username}</h2>
+                    <h2 className={`font-black text-white ${isMobileView ? 'text-2xl' : 'text-3xl'}`}>
+                      {stats.player_identity?.display_name || stats.display_name || stats.current.username || formatPlayerName(query)}
+                    </h2>
                     <PlatformIcon platform={stats.current.platform} size={22} className="w-5.5 h-5.5 text-slate-300" />
                     {(stats.uid || stats.current?.uid) && (stats.uid || stats.current?.uid) !== stats.current.username && (
                       <span className="text-[11px] font-mono px-2.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300 font-bold tracking-wider select-all">

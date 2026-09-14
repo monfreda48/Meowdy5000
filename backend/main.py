@@ -355,6 +355,13 @@ async def get_player_stats_endpoint(identifier: str, platform: Optional[str] = Q
             profile["raw_telemetry"] = brain_data.get("raw_telemetry", {})
             profile["top_squadmates"] = brain_data.get("top_squadmates", [])
             profile["hero_matchups"] = brain_data.get("hero_matchups", [])
+            profile["player_identity"] = brain_data.get("player_identity", {})
+            canonical_display = brain_data.get("player_identity", {}).get("display_name")
+            if canonical_display:
+                profile["display_name"] = canonical_display
+                profile["username"] = canonical_display
+                if isinstance(profile.get("current"), dict):
+                    profile["current"]["username"] = canonical_display
     except Exception as e:
         logger.warning(f"MetricBrain enrichment warning for {identifier}: {e}")
     return profile

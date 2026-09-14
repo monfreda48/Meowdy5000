@@ -141,13 +141,27 @@ class MetricBrain:
         if r_data.get("record"):
             extended_metrics["season_record"] = {"label": "Season Record", "value": str(r_data["record"]), "source": "RivalsData"}
 
-        # Structured Teammates & Hero Matchups
-        top_squadmates = r_meta.get("teammates") or r_tr.get("teammates") or []
-        hero_matchups = r_meta.get("matchups") or r_tr.get("matchups") or []
+        # Authoritative Upstream Name Resolution
+        canonical_name = (
+            r_meta.get("player", {}).get("info", {}).get("name")
+            or r_meta.get("name")
+            or t_gg.get("data", {}).get("platformInfo", {}).get("platformUserHandle")
+            or t_gg.get("platformInfo", {}).get("platformUserHandle")
+            or r_tr.get("username")
+            or r_data.get("name")
+            or (uid.title() if uid and not uid.isdigit() else f"Player {uid}")
+        )
 
         return {
             "uid": uid,
+            "player_identity": {
+                "display_name": canonical_name,
+                "username": canonical_name,
+                "uid": uid
+            },
             "canonical": {
+                "display_name": canonical_name,
+                "username": canonical_name,
                 "total_matches": total_matches,
                 "win_rate": str(win_rate),
                 "kda": kda,
