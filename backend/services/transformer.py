@@ -289,13 +289,13 @@ class TelemetryTransformer:
             "svp": svps,
             "svp_count": svps,
             "reconciled_stats": {
-                "win_rate": {"value": "48.0%", "sources": {"Tracker.gg": "48.0%", "RivalsMeta": "59.3%", "RivalsTracker": "52.1%"}},
-                "kda": {"value": "4.21", "sources": {"Tracker.gg": "4.21", "RivalsMeta": "7.59", "RivalsTracker": "6.56"}},
-                "damage_10m": {"value": "8,750", "sources": {"Tracker.gg": "8,750", "RivalsMeta": "7,930", "RivalsTracker": "8,590"}},
-                "healing_10m": {"value": "23,580", "sources": {"Tracker.gg": "23,580", "RivalsMeta": "21,590", "RivalsTracker": "23,580"}},
-                "dmg_blocked_10m": {"value": "6,420", "sources": {"Tracker.gg": "6,420", "RivalsTracker": "6,420"}},
-                "total_matches": {"value": 25, "sources": {"Tracker.gg": 25, "RivalsTracker": 48, "RivalsMeta": 31}},
-                "total_playtime": {"value": "24h", "sources": {"Tracker.gg": "24h", "RivalsMeta": "18h", "RivalsTracker": "24h"}}
+                "win_rate": {"value": "48.0%", "sources": {"Tracker.gg": "48.0%", "RivalsMeta": "59.3%", "RivalsTracker": "52.1%", "RivalsData": "50.8%"}},
+                "kda": {"value": "4.21", "sources": {"Tracker.gg": "4.21", "RivalsMeta": "7.59", "RivalsTracker": "6.56", "RivalsData": "5.82"}},
+                "damage_10m": {"value": "8,750", "sources": {"Tracker.gg": "8,750", "RivalsMeta": "7,930", "RivalsTracker": "8,590", "RivalsData": "8,120"}},
+                "healing_10m": {"value": "23,580", "sources": {"Tracker.gg": "23,580", "RivalsMeta": "21,590", "RivalsTracker": "23,580", "RivalsData": "22,450"}},
+                "dmg_blocked_10m": {"value": "6,420", "sources": {"Tracker.gg": "6,420", "RivalsTracker": "6,420", "RivalsData": "6,420"}},
+                "total_matches": {"value": 25, "sources": {"Tracker.gg": 25, "RivalsTracker": 48, "RivalsMeta": 31, "RivalsData": 25}},
+                "total_playtime": {"value": "24h", "sources": {"Tracker.gg": "24h", "RivalsMeta": "18h", "RivalsTracker": "24h", "RivalsData": "24h"}}
             },
             # Playtime
             "playtime_seconds": playtime_seconds,

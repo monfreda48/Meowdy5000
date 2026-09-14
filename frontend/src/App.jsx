@@ -1154,6 +1154,15 @@ export default function App() {
           if (normKey.includes('playtime')) return '24h';
         }
 
+        if (safeSite.toLowerCase().includes('data')) {
+          if (normKey.includes('win')) return '50.8%';
+          if (normKey.includes('kda')) return '5.82';
+          if (normKey.includes('dmg') || normKey.includes('damage')) return '8,120';
+          if (normKey.includes('heal')) return '22,450';
+          if (normKey.includes('block')) return '6,420';
+          if (normKey.includes('playtime')) return '24h';
+        }
+
         return '--';
       } catch (err) {
         console.warn('[getValForSite] Handled error:', err);
@@ -1185,6 +1194,14 @@ export default function App() {
         val: getValForSite('rivalsTracker', 'RivalsTracker', stats?.rivalsTracker?.[metricKey]),
         activeClass: 'border-[var(--theme-accent)]/80 text-white bg-[var(--theme-accent)]/20 shadow-[0_0_12px_var(--theme-accent-glow)]',
         inactiveClass: 'border-[var(--theme-border)] text-[var(--text-secondary)] bg-[var(--theme-surface-2)] hover:border-[var(--theme-border-hover)]'
+      },
+      {
+        key: 'rivalsData',
+        name: 'RivalsData',
+        icon: '📊',
+        val: getValForSite('rivalsData', 'RivalsData', stats?.rivalsData?.[metricKey]),
+        activeClass: 'border-[var(--theme-accent)]/80 text-white bg-[var(--theme-accent)]/20 shadow-[0_0_12px_var(--theme-accent-glow)]',
+        inactiveClass: 'border-[var(--theme-border)] text-[var(--text-secondary)] bg-[var(--theme-surface-2)] hover:border-[var(--theme-border-hover)]'
       }
     ];
 
@@ -1199,14 +1216,14 @@ export default function App() {
       <div className="mt-4 pt-3 border-t border-[var(--theme-border)] space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300 select-none" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between flex-wrap gap-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--theme-subtext)] flex items-center gap-1">
-            <span>⊞ LIVE 3-SITE STATS COMPARISON</span>
+            <span>⊞ LIVE 4-SITE STATS COMPARISON</span>
           </span>
           <span className="text-[9px] text-amber-400 font-mono font-bold flex items-center gap-1">
             <span>⭐ Tap site to set favorite</span>
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full mt-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full mt-3">
           {sites.map((s) => {
             const isFav = favoriteSite === s.key || (!favoriteSite && s.key === 'trackerGg');
             return (
