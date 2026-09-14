@@ -101,7 +101,7 @@ HERO_MAP = {
     "1054": "Phoenix", "1055": "Angela", "1056": "Daredevil", "1057": "Deadpool",
     "1058": "Gambit", "1059": "Elsa Bloodstone", "1060": "White Fox",
     "1061": "Black Cat", "1062": "Devil Dinosaur", "1063": "Cyclops",
-    "1064": "Jubilee", "1065": "Rogue", "1066": "The Hood"
+    "1064": "Jubilee", "1065": "Rogue", "1066": "The Hood", "1067": "Gorr The God Butcher"
 }
 
 def calc_per_10m(stat_dict, per10_keys, total_keys, time_sec):
