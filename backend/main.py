@@ -343,7 +343,31 @@ async def get_player_stats_endpoint(identifier: str, platform: Optional[str] = Q
     Returns player profile payload using bidirectional IdentityManager & multi-source telemetry.
     """
     from backend.services.aggregator import get_player_profile
-    return await get_player_profile(identifier, force_refresh=force)
+    profile = await get_player_profile(identifier, force_refresh=force)
+    try:
+        from backend.services.multi_source_fetcher import MultiSourceTrackerFetcher
+        from backend.services.metric_brain import MetricBrain
+        fetcher = MultiSourceTrackerFetcher(uid=identifier, ign=identifier)
+        raw_telemetry = await fetcher.fetch_all()
+        brain_data = MetricBrain.process(raw_telemetry, uid=identifier)
+        if isinstance(profile, dict):
+            profile["extended_metrics"] = brain_data.get("extended_metrics", {})
+            profile["raw_telemetry"] = brain_data.get("raw_telemetry", {})
+            profile["top_squadmates"] = brain_data.get("top_squadmates", [])
+            profile["hero_matchups"] = brain_data.get("hero_matchups", [])
+    except Exception as e:
+        logger.warning(f"MetricBrain enrichment warning for {identifier}: {e}")
+    return profile
+
+@app.get("/api/player/{identifier}/multi-fetch")
+@app.get("/api/player/{identifier}/raw-telemetry")
+async def get_multi_source_telemetry(identifier: str):
+    from backend.services.multi_source_fetcher import MultiSourceTrackerFetcher
+    from backend.services.metric_brain import MetricBrain
+    fetcher = MultiSourceTrackerFetcher(uid=identifier, ign=identifier)
+    raw = await fetcher.fetch_all()
+    brain_result = MetricBrain.process(raw, uid=identifier)
+    return brain_result
 
 @app.get("/api/player/{identifier}/debug-raw")
 async def debug_raw_payloads(identifier: str):

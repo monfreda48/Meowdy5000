@@ -25,6 +25,8 @@ import UpdateModal from './components/UpdateModal';
 import PrivateProfileBanner from './components/PrivateProfileBanner';
 import PlayerProfile from './pages/PlayerProfile';
 import ReconciledStatCard from './components/ReconciledStatCard';
+import StatCardsGrid from './components/StatCardsGrid';
+import RawTelemetryInspector from './components/RawTelemetryInspector';
 
 
 const triggerHaptic = (type = 'light') => {
@@ -1230,6 +1232,7 @@ const calculateConsensusAverage = (sources, metricKey = '') => {
 
   const [isMobileView, setIsMobileView] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [updateInfo, setUpdateInfo] = useState(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false);
@@ -3470,6 +3473,16 @@ ${payload.stack || 'No stack trace available.'}
 
           {/* Right Nav Menu Button */}
           <div className="flex items-center gap-2">
+            {Boolean(stats) && (
+              <button
+                onClick={() => setIsInspectorOpen(true)}
+                className="flex items-center gap-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                title="Open Raw Telemetry Inspector"
+              >
+                <span>🔬</span>
+                <span className="hidden md:inline">Raw Inspector</span>
+              </button>
+            )}
 
             <button
               onClick={() => setIsMenuOpen(true)}
@@ -3776,6 +3789,14 @@ ${payload.stack || 'No stack trace available.'}
               />
             ) : (
               <div className="space-y-6 animate-in fade-in duration-300">
+                {/* 4-Site Reconciled Canonical & Extended Stat Cards Grid */}
+                <StatCardsGrid
+                  stats={stats.current}
+                  extendedMetrics={stats.extended_metrics || stats.current?.extended_metrics || {}}
+                  squadmates={stats.top_squadmates || stats.current?.top_squadmates || []}
+                  matchups={stats.hero_matchups || stats.current?.hero_matchups || []}
+                />
+
                 {/* Active Metrics Bar & Expand/Collapse Controls */}
                 <div className="flex items-center justify-between gap-3 mb-4 flex-wrap bg-[var(--theme-surface-1)] p-3.5 rounded-2xl border border-[var(--theme-border)]">
                   <div className="flex items-center gap-2">
@@ -6666,6 +6687,13 @@ ${payload.stack || 'No stack trace available.'}
           showNativeToast={showNativeToast}
         />
       )}
+
+      {/* Raw Telemetry Inspector Slide-Out Drawer */}
+      <RawTelemetryInspector
+        isOpen={isInspectorOpen}
+        onClose={() => setIsInspectorOpen(false)}
+        rawTelemetry={stats?.raw_telemetry || stats?.current?.raw_telemetry || {}}
+      />
 
       </main>
     </div>
