@@ -1178,6 +1178,13 @@ export default function App() {
       }
     ];
 
+    const safeMetricKey = typeof metricKey === 'string' ? metricKey : '';
+    const metricLabelUpper = (
+      (typeof METRIC_LABELS !== 'undefined' && METRIC_LABELS[safeMetricKey]) ||
+      safeMetricKey ||
+      'STAT'
+    ).toUpperCase();
+
     return (
       <div className="mt-4 pt-3 border-t border-[var(--theme-border)] space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300 select-none" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between flex-wrap gap-1">
@@ -1224,7 +1231,7 @@ export default function App() {
           onClick={(e) => handleOpenReportModal(metricKey, e)}
           className="w-full mt-2.5 py-2 px-3 rounded-full bg-red-500/10 hover:bg-red-500/20 active:bg-red-500/30 border border-red-500/30 text-red-400 font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 hover:border-red-500/50"
         >
-          <span>▲ REPORT INACCURATE STAT ({metricLabelUpper})</span>
+          <span>▲ REPORT INACCURATE STAT ({metricLabelUpper || 'METRIC'})</span>
         </button>
       </div>
     );
