@@ -3485,31 +3485,33 @@ const DEFAULT_SEASON_NUM = 19;
             </span>
           </div>
 
-          {/* Top Bar Quick Profile Lookup Search Bar */}
-          <form onSubmit={handleProfileLookup} className="flex-1 max-w-[200px] xs:max-w-xs sm:max-w-md mx-2">
-            <div className="relative flex items-center">
-              <input
-                type="text"
-                value={lookupQuery}
-                onChange={(e) => setLookupQuery(e.target.value)}
-                placeholder="Search UID or IGN..."
-                className="w-full bg-[var(--theme-surface-2)] border border-[var(--theme-border)] hover:border-[var(--theme-accent)]/50 focus:border-[var(--theme-accent)] rounded-xl py-1.5 pl-8 pr-12 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[var(--theme-accent)] transition-all shadow-inner"
-              />
-              <span className="absolute left-2.5 text-slate-400 text-xs pointer-events-none">🔍</span>
-              {lookupQuery.trim() ? (
-                <button
-                  type="submit"
-                  className="absolute right-1 px-2 py-0.5 bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-slate-950 font-black text-[10px] rounded-lg uppercase tracking-wider transition-all cursor-pointer shadow"
-                >
-                  Search
-                </button>
-              ) : (
-                <span className="absolute right-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline select-none">
-                  Search
-                </span>
-              )}
-            </div>
-          </form>
+          {/* Top Bar Quick Profile Lookup Search Bar (only shown when viewing stats) */}
+          {Boolean(stats) && (
+            <form onSubmit={handleProfileLookup} className="flex-1 max-w-[200px] xs:max-w-xs sm:max-w-md mx-2">
+              <div className="relative flex items-center">
+                <input
+                  type="text"
+                  value={lookupQuery}
+                  onChange={(e) => setLookupQuery(e.target.value)}
+                  placeholder="Search UID or IGN..."
+                  className="w-full bg-[var(--theme-surface-2)] border border-[var(--theme-border)] hover:border-[var(--theme-accent)]/50 focus:border-[var(--theme-accent)] rounded-xl py-1.5 pl-8 pr-12 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[var(--theme-accent)] transition-all shadow-inner"
+                />
+                <span className="absolute left-2.5 text-slate-400 text-xs pointer-events-none">🔍</span>
+                {lookupQuery.trim() ? (
+                  <button
+                    type="submit"
+                    className="absolute right-1 px-2 py-0.5 bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-slate-950 font-black text-[10px] rounded-lg uppercase tracking-wider transition-all cursor-pointer shadow"
+                  >
+                    Search
+                  </button>
+                ) : (
+                  <span className="absolute right-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline select-none">
+                    Search
+                  </span>
+                )}
+              </div>
+            </form>
+          )}
 
           {/* Right Nav Menu Button */}
           <div className="flex items-center gap-2">
@@ -3558,62 +3560,7 @@ const DEFAULT_SEASON_NUM = 19;
           {/* Real-time Season Header with UTC Countdown & Teaser */}
           <SeasonHeader getApiUrl={getApiUrl} />
 
-          {/* Claim Your Username Helper Subtitle (only shown when no profile is claimed) */}
-          {!isClaimed && (
-            <p className="text-xs sm:text-sm font-bold text-slate-300 tracking-wider uppercase flex items-center justify-center gap-1.5 pt-1">
-              <span>👑</span>
-              <span>Claim your username to start tracking</span>
-            </p>
-          )}
 
-          {/* Big Search Box (only shown when no profile is claimed) */}
-          {!isClaimed && (
-            <div className="w-full max-w-3xl flex flex-col items-center">
-              <form onSubmit={handleSearchSubmit} className={`w-full ${isMobileView ? 'mt-1' : 'mt-3 sm:mt-8'}`}>
-                <div className={`flex bg-[#131b2f] p-2.5 sm:p-3 rounded-2xl border border-slate-700/50 shadow-2xl ${isMobileView ? 'flex-col gap-2' : 'flex-row items-center gap-3'
-                  }`}>
-                  <div className="flex-1 relative w-full">
-                    <input
-                      type="text"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Enter Username or Numeric UID..."
-                      className={`w-full bg-[#0b101e] border border-slate-700/50 rounded-xl px-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-white placeholder-slate-500 ${isMobileView ? 'py-2.5 text-sm' : 'py-3.5 sm:py-4 text-base sm:text-lg'
-                        }`}
-                      required
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={`bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(16,185,129,0.3)] uppercase tracking-wider text-xs sm:text-sm ${isMobileView ? 'py-2.5 px-4 w-full' : 'py-3.5 sm:py-4 px-6 sm:px-8'
-                      }`}
-                  >
-                    {loading ? 'Scanning...' : 'Search'}
-                  </button>
-                </div>
-              </form>
-
-              {/* Public Profile Disclaimer Banner */}
-              <div className="w-full mt-2.5 text-center text-xs text-amber-400 font-medium bg-amber-500/10 border border-amber-500/30 rounded-xl py-2 px-3 flex items-center justify-center gap-2">
-                <span>🔓</span>
-                <span>Your Marvel Rivals profile must be set to Public in-game for stats to be tracked.</span>
-              </div>
-
-              {/* Collapsible UID Search Fallback Link */}
-              <div className="w-full mt-2 flex items-center justify-between text-xs px-1 text-slate-400">
-                <button
-                  type="button"
-                  onClick={() => setShowFindUIDModal(true)}
-                  className="hover:text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer font-medium"
-                >
-                  <span>💡 Can't find your account? Enter your UID directly</span>
-                  <span className="w-4 h-4 rounded-full bg-slate-800 border border-slate-700 text-slate-300 flex items-center justify-center text-[10px] font-bold">?</span>
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Live Search Telemetry Progress Bar */}
           {loading && (
@@ -3699,38 +3646,35 @@ const DEFAULT_SEASON_NUM = 19;
 
         </div>
 
-        {/* Search Hero Container when no profile is loaded */}
+        {/* Single Clean Search Hero Container when no profile is loaded */}
         {!stats && !loading && (
-          <div className="w-full max-w-3xl mx-auto my-12 p-8 bg-[var(--theme-surface-1)] border border-[var(--theme-border)] rounded-3xl shadow-2xl text-center space-y-6 animate-in fade-in duration-300">
-            <div className="w-20 h-20 mx-auto rounded-2xl bg-[var(--theme-accent)]/15 border border-[var(--theme-accent)]/40 flex items-center justify-center text-4xl shadow-inner">
-              🔍
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-wider">
-                WELCOME TO M5 STAT TRACKER
+          <div className="flex flex-col items-center justify-center min-h-[70vh] px-4">
+            <div className="w-full max-w-xl bg-[var(--theme-surface-1)] border border-[var(--theme-border)] rounded-2xl p-8 flex flex-col items-center text-center shadow-xl">
+              <div className="w-14 h-14 rounded-2xl bg-[var(--theme-surface-2)] border border-[var(--theme-border)] flex items-center justify-center text-2xl mb-5 shadow-[0_0_15px_var(--theme-accent-glow)]">
+                🔍
+              </div>
+              <h2 className="text-2xl font-black uppercase tracking-tight text-white mb-2">
+                Welcome to M5 Stat Tracker
               </h2>
-              <p className="text-xs sm:text-sm text-[var(--theme-subtext)] max-w-md mx-auto">
+              <p className="text-xs text-[var(--text-secondary)] max-w-md mb-6 leading-relaxed">
                 Enter your Marvel Rivals Player UID or IGN below to view live 4-site stats, combat metrics, and telemetry.
               </p>
-            </div>
-            <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row items-center gap-3 max-w-xl mx-auto">
-              <div className="relative flex-1 w-full">
+              <form onSubmit={handleSearchSubmit} className="w-full flex flex-col sm:flex-row gap-2.5">
                 <input
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Enter Player UID or IGN..."
-                  className="w-full bg-[var(--theme-surface-2)] border border-[var(--theme-border)] focus:border-[var(--theme-accent)] rounded-xl px-4 py-3 pl-10 text-sm text-white placeholder-slate-400 focus:outline-none transition-all"
+                  className="flex-1 bg-[var(--theme-surface-2)] border border-[var(--theme-border)] focus:border-[var(--theme-accent)] text-white px-4 py-3 rounded-xl text-xs font-semibold outline-none transition-all placeholder-[var(--text-muted)]"
                 />
-                <span className="absolute left-3.5 top-3.5 text-slate-400 text-sm">🔍</span>
-              </div>
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-6 py-3 bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg hover:scale-105 active:scale-95"
-              >
-                Search Stats
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  className="bg-white hover:bg-slate-200 text-black font-black uppercase text-xs tracking-wider px-6 py-3 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+                >
+                  Search Stats
+                </button>
+              </form>
+            </div>
           </div>
         )}
 
