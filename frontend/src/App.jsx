@@ -265,7 +265,7 @@ export default function App() {
   const [season, setSeason] = useState('19');
   const [timeframe, setTimeframe] = useState('all');
   const [expandedMetrics, setExpandedMetrics] = useState({});
-  const [allCollapsed, setAllCollapsed] = useState(false);
+  const [allCollapsed, setAllCollapsed] = useState(true);
 
   const toggleCollapseAll = () => {
     const nextState = !allCollapsed;
@@ -3743,7 +3743,7 @@ const DEFAULT_SEASON_NUM = 19;
               }`}>
               <div className="flex items-center gap-4">
                 {/* Profile Picture Avatar Container with Overlapping Player Level Badge */}
-                <div className="relative group cursor-pointer mt-2 shrink-0" onClick={() => { triggerHaptic('light'); setShowAvatarModal(true); }}>
+                <div className="relative mt-2 shrink-0 select-none">
                   {/* Overlapping Player Level Badge */}
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 px-2 py-0.5 rounded bg-[var(--theme-surface-1)] border-2 border-[var(--theme-accent)] shadow-md flex items-center justify-center min-w-[32px]">
                     <span className="text-xs font-black text-white font-mono leading-none">
@@ -3752,27 +3752,16 @@ const DEFAULT_SEASON_NUM = 19;
                   </div>
 
                   {/* Avatar Image Frame */}
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 border-[#f6c344] overflow-hidden bg-surface-3 shadow-lg flex items-center justify-center group-hover:opacity-80 transition-opacity relative">
-                    {getDisplayAvatar(stats.current.username) ? (
-                      <img
-                        src={getDisplayAvatar(stats.current.username)}
-                        alt={stats.current.username}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = FALLBACK_IMAGE_SVG;
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-white text-2xl">
-                        {stats.current.username.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Change Profile Picture Hover Badge */}
-                  <div className="absolute -bottom-1 -right-1 z-20 bg-[#0b101e] border border-[#f6c344] text-amber-400 p-1.5 rounded-full text-xs font-bold shadow-lg group-hover:scale-110 transition-transform">
-                    📷
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 border-[#f6c344] overflow-hidden bg-surface-3 shadow-lg flex items-center justify-center relative">
+                    <img
+                      src={stats.current.avatarUrl || stats.current.avatar_url || FALLBACK_IMAGE_SVG}
+                      alt={stats.current.username}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = FALLBACK_IMAGE_SVG;
+                      }}
+                    />
                   </div>
                 </div>
                 <div>
@@ -3907,13 +3896,6 @@ const DEFAULT_SEASON_NUM = 19;
                       className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer"
                     >
                       <span>{allCollapsed ? '▼ Expand All' : '▲ Collapse All'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowMoreStatsModal(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30 transition-colors cursor-pointer"
-                    >
-                      ⚙ Customise Display
                     </button>
                   </div>
                 </div>
@@ -6016,258 +5998,7 @@ const DEFAULT_SEASON_NUM = 19;
           </div>
         )}
 
-        {/* Community & Esports Meta Resources Footer Bar */}
-        <div className="mt-12 pt-6 border-t border-slate-800/80 space-y-4 text-left">
-          <div className="flex items-center justify-between">
-            <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <span>🌐</span> Community & Esports Meta Section
-            </h4>
-            <span className="text-[10px] text-slate-500 font-bold">Official Web Resources</span>
-          </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            <button
-              onClick={() => openExternalUrl('https://rivalsmeta.com')}
-              className="bg-[#131b2f] hover:bg-emerald-500/15 border border-slate-700/60 hover:border-emerald-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer shadow-sm"
-            >
-              <div className="flex items-center gap-2 truncate">
-                <span className="text-sm">⚔️</span>
-                <div className="truncate">
-                  <span className="text-xs font-bold text-white group-hover:text-emerald-400 block truncate">Rivals Meta</span>
-                  <span className="text-[9px] text-slate-400 block font-mono">rivalsmeta.com</span>
-                </div>
-              </div>
-              <span className="text-xs text-slate-500 group-hover:text-emerald-400 font-bold shrink-0">↗</span>
-            </button>
-
-            <button
-              onClick={() => openExternalUrl('https://rivalstracker.com')}
-              className="bg-[#131b2f] hover:bg-amber-500/15 border border-slate-700/60 hover:border-amber-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer shadow-sm"
-            >
-              <div className="flex items-center gap-2 truncate">
-                <span className="text-sm">🎯</span>
-                <div className="truncate">
-                  <span className="text-xs font-bold text-white group-hover:text-amber-400 block truncate">RivalsTracker</span>
-                  <span className="text-[9px] text-slate-400 block font-mono">rivalstracker.com</span>
-                </div>
-              </div>
-              <span className="text-xs text-slate-500 group-hover:text-amber-400 font-bold shrink-0">↗</span>
-            </button>
-
-            <button
-              onClick={() => openExternalUrl('https://tracker.gg/marvel-rivals')}
-              className="bg-[#131b2f] hover:bg-purple-500/15 border border-slate-700/60 hover:border-purple-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer shadow-sm"
-            >
-              <div className="flex items-center gap-2 truncate">
-                <span className="text-sm">🌐</span>
-                <div className="truncate">
-                  <span className="text-xs font-bold text-white group-hover:text-purple-400 block truncate">Tracker.gg</span>
-                  <span className="text-[9px] text-slate-400 block font-mono">tracker.gg</span>
-                </div>
-              </div>
-              <span className="text-xs text-slate-500 group-hover:text-purple-400 font-bold shrink-0">↗</span>
-            </button>
-
-            <button
-              onClick={() => openExternalUrl('https://liquipedia.net/marvelrivals/Hero_ID')}
-              className="bg-[#131b2f] hover:bg-cyan-500/15 border border-slate-700/60 hover:border-cyan-500/50 p-3 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer shadow-sm"
-            >
-              <div className="flex items-center gap-2 truncate">
-                <span className="text-sm">📖</span>
-                <div className="truncate">
-                  <span className="text-xs font-bold text-white group-hover:text-cyan-400 block truncate">Liquipedia Wiki</span>
-                  <span className="text-[9px] text-slate-400 block font-mono">liquipedia.net</span>
-                </div>
-              </div>
-              <span className="text-xs text-slate-500 group-hover:text-cyan-400 font-bold shrink-0">↗</span>
-            </button>
-          </div>
-        </div>
-
-        {/* App Footer & Legal Disclaimer */}
-        <footer className="mt-6 pt-4 border-t border-slate-800/80 space-y-3 text-center">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center font-black text-[#00ff88] text-[9px] border border-[#00ff88] shadow-[0_0_10px_#00ff88]">
-                M5
-              </div>
-              <span className="font-bold text-slate-400">M5 Stat Tracker</span>
-            </div>
-            <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500">
-              <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
-                v{getAppVersionName()} ({getAppLocalSha()})
-              </span>
-              <span>•</span>
-              <a
-                href="https://github.com/monfreda48/Meowdy5000"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-emerald-400 transition-colors"
-              >
-                GitHub Repository
-              </a>
-            </div>
-          </div>
-
-          {/* Mandatory Legal Disclaimer Banner */}
-          <div className="pt-2 border-t border-slate-800/50 text-[10px] text-slate-400 font-medium leading-relaxed max-w-2xl mx-auto">
-            <span><strong>Disclaimer:</strong> Not endorsed or affiliated with Marvel, Marvel Entertainment, or NetEase Games. All game assets, trademarks, and character names belong to their respective owners.</span>
-          </div>
-        </footer>
-
-      {/* Customize Profile Picture / Avatar Modal */}
-      {showAvatarModal && stats?.current && (
-        <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-gradient-to-br from-[#131b2f] via-[#0f172a] to-[#0b101e] border-2 border-emerald-500/60 rounded-3xl p-5 sm:p-7 max-w-lg w-full shadow-2xl space-y-5 text-left relative max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center font-bold text-xl">
-                  🖼️
-                </div>
-                <div>
-                  <h3 className="text-base font-black text-white uppercase tracking-wider">
-                    Change Profile Picture
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    Custom picture for <strong className="text-emerald-400">{stats.current.username}</strong>
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowAvatarModal(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold p-1 rounded-lg hover:bg-slate-800"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Current Active Avatar Preview */}
-            <div className="flex items-center gap-4 bg-[#0b101e] border border-slate-700/60 p-3.5 rounded-2xl">
-              {getDisplayAvatar(stats.current.username) ? (
-                <img
-                  src={getDisplayAvatar(stats.current.username)}
-                  alt={stats.current.username}
-                  className="w-16 h-16 rounded-2xl border-2 border-emerald-500 shadow-md object-cover overflow-hidden shrink-0"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = FALLBACK_IMAGE_SVG;
-                  }}
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-white text-2xl shadow-md">
-                  {stats.current.username.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400">Active Profile Picture</span>
-                <h4 className="text-xs font-bold text-white mt-0.5">{stats.current.username}</h4>
-                <p className="text-[10px] text-slate-400 mt-0.5">Custom avatars persist in local storage across sessions.</p>
-              </div>
-            </div>
-
-            {/* Option 1: Choose Marvel Hero Preset Avatar */}
-            <div className="space-y-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                <span>🦸</span> Option 1: Pick Marvel Hero Icon
-              </span>
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                {HERO_AVATAR_PRESETS.map((hero, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleSaveCustomAvatar(stats.current.username, hero.url)}
-                    className="flex flex-col items-center bg-[#0b101e] hover:bg-emerald-500/20 border border-slate-700/80 hover:border-emerald-500 p-2 rounded-xl transition-all cursor-pointer group"
-                  >
-                    <img
-                      src={hero.url}
-                      alt={hero.name}
-                      className="w-10 h-10 rounded-xl object-cover border border-slate-700 group-hover:border-emerald-400 group-hover:scale-105 transition-all"
-                    />
-                    <span className="text-[9px] font-bold text-slate-300 group-hover:text-emerald-300 mt-1 truncate w-full text-center">
-                      {hero.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Option 2: Upload Custom Image from Device */}
-            <div className="space-y-2 pt-2 border-t border-slate-800">
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                <span>📁</span> Option 2: Upload Image File from Device
-              </span>
-              <label className="flex items-center justify-between bg-[#0b101e] hover:bg-emerald-500/10 border border-dashed border-slate-700 hover:border-emerald-500/80 p-3.5 rounded-xl cursor-pointer transition-all">
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">📤</span>
-                  <div>
-                    <h4 className="text-xs font-bold text-white">Choose Local Photo / File</h4>
-                    <p className="text-[10px] text-slate-400">PNG, JPG, WEBP (Max 5MB)</p>
-                  </div>
-                </div>
-                <span className="text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-3 py-1.5 rounded-lg">Browse File</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleFileUploadAvatar(e, stats.current.username)}
-                  className="hidden"
-                />
-              </label>
-            </div>
-
-            {/* Option 3: Custom Web Image URL */}
-            <div className="space-y-2 pt-2 border-t border-slate-800">
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                <span>🔗</span> Option 3: Paste Direct Image URL
-              </span>
-              <div className="flex gap-2">
-                <input
-                  type="url"
-                  placeholder="https://example.com/avatar.png"
-                  value={avatarUrlInput}
-                  onChange={(e) => setAvatarUrlInput(e.target.value)}
-                  className="flex-1 bg-[#0b101e] border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (avatarUrlInput.trim()) {
-                      handleSaveCustomAvatar(stats.current.username, avatarUrlInput.trim());
-                      setAvatarUrlInput('');
-                    }
-                  }}
-                  disabled={!avatarUrlInput.trim()}
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider cursor-pointer disabled:opacity-50"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
-              {customAvatars[stats.current.username?.toLowerCase()] ? (
-                <button
-                  type="button"
-                  onClick={() => handleRemoveCustomAvatar(stats.current.username)}
-                  className="text-xs font-bold text-red-400 hover:text-red-300 flex items-center gap-1 cursor-pointer"
-                >
-                  <span>🗑️</span> Reset to Default
-                </button>
-              ) : (
-                <span className="text-[10px] text-slate-500 font-medium">Default scraped avatar active</span>
-              )}
-
-              <button
-                type="button"
-                onClick={() => setShowAvatarModal(false)}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold uppercase tracking-wider cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modal: Report Inaccurate Stat */}
       {reportModalOpen && reportMetric && stats?.current && (

@@ -1,111 +1,88 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
-export default function SeasonHeader({ getApiUrl }) {
-  const [seasonMeta, setSeasonMeta] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const calculateTimeLeft = (endTimestamp) => {
-    if (!endTimestamp) return { days: 0, hours: 0, minutes: 0 };
-    const difference = new Date(endTimestamp).getTime() - new Date().getTime();
-    if (difference <= 0) return { days: 0, hours: 0, minutes: 0 };
-    return {
-      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-      minutes: Math.floor((difference / (1000 * 60)) % 60),
-    };
-  };
-
+function useSeasonCountdown(endEpochMs) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
 
   useEffect(() => {
+    if (!endEpochMs) return;
+    const calculate = () => {
+      const diff = Math.max(0, endEpochMs - Date.now());
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      setTimeLeft({ days, hours, minutes });
+    };
+    calculate();
+    const timer = setInterval(calculate, 60000);
+    return () => clearInterval(timer);
+  }, [endEpochMs]);
+
+  return timeLeft;
+}
+
+export default function SeasonHeader({ getApiUrl, seasonMeta: propSeasonMeta }) {
+  const [fetchedMeta, setFetchedMeta] = useState(null);
+
+  useEffect(() => {
+    if (propSeasonMeta) return;
     let isMounted = true;
     const fetchSeasonMeta = async () => {
       try {
-        setLoading(true);
         const url = getApiUrl ? getApiUrl('/api/meta/season') : '/api/meta/season';
         const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
           if (isMounted && data && data.season_name && !data.error) {
-            setSeasonMeta(data);
-            setTimeLeft(calculateTimeLeft(data.end_timestamp));
-            setLoading(false);
-            return;
+            setFetchedMeta(data);
           }
-        }
-        if (isMounted) {
-          setLoading(false);
         }
       } catch (err) {
         console.warn('Could not fetch season meta from backend:', err);
-        if (isMounted) {
-          setLoading(false);
-        }
       }
     };
 
     fetchSeasonMeta();
     return () => { isMounted = false; };
-  }, [getApiUrl]);
+  }, [getApiUrl, propSeasonMeta]);
 
-  useEffect(() => {
-    if (!seasonMeta?.end_timestamp) return;
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft(seasonMeta.end_timestamp));
-    }, 60000);
-    return () => clearInterval(timer);
-  }, [seasonMeta?.end_timestamp]);
+  const meta = propSeasonMeta || fetchedMeta;
+  const endEpochMs = meta?.end_epoch_ms || (meta?.end_timestamp ? new Date(meta.end_timestamp).getTime() : null);
+  const timeLeft = useSeasonCountdown(endEpochMs);
+
+  if (!meta || !meta.season_name) {
+    return null;
+  }
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-[#131b2f]/90 border border-slate-700/60 p-3.5 sm:p-4 rounded-2xl shadow-xl w-full max-w-7xl mb-4 backdrop-blur-md">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-[var(--theme-surface-1)] border border-[var(--theme-border)] p-3.5 sm:p-4 rounded-2xl shadow-xl w-full max-w-7xl mb-4 text-left">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center font-bold text-lg shadow-sm">
+        <div className="w-10 h-10 rounded-xl bg-[var(--theme-accent)]/15 border border-[var(--theme-accent)]/40 text-[var(--theme-accent-text)] flex items-center justify-center font-bold text-lg shadow-sm">
           ⚔️
         </div>
-        <div className="text-left">
+        <div>
           <div className="flex items-center gap-2">
             <h2 className="text-sm sm:text-base font-black text-white uppercase tracking-wider">
-              {loading ? (
-                <span className="inline-block w-28 h-5 bg-slate-700/50 rounded animate-pulse" />
-              ) : seasonMeta?.season_name ? (
-                seasonMeta.season_name
-              ) : (
-                <span className="text-amber-400">Season Unconfirmed</span>
-              )}
+              {meta.season_name}
             </h2>
-            {loading ? (
-              <span className="inline-block w-10 h-4 bg-slate-700/50 rounded-full animate-pulse" />
-            ) : seasonMeta?.season_name ? (
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                  LIVE
-                </span>
-                {seasonMeta.is_half_season && (
-                  <span className="text-[10px] font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                    MID-SEASON
-                  </span>
-                )}
-              </div>
-            ) : (
-              <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
-                UNCONFIRMED
+            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full uppercase tracking-wider">
+              LIVE
+            </span>
+            {meta.featured_hero && (
+              <span className="text-[10px] font-bold text-[var(--theme-accent-text)] bg-[var(--theme-accent)]/10 border border-[var(--theme-accent)]/30 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                {meta.featured_hero}
               </span>
             )}
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2.5 flex-wrap justify-end">
-        {/* Real-time UTC Countdown Badge */}
-        {!loading && seasonMeta?.end_timestamp && (
-          <div className="bg-[#0b101e] border border-slate-700/80 px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-mono font-bold text-slate-200 shadow-inner">
-            <span className="text-emerald-400 animate-pulse">⏳</span>
-            <span>
-              {timeLeft.days}d {String(timeLeft.hours).padStart(2, '0')}h {String(timeLeft.minutes).padStart(2, '0')}m remaining
-            </span>
+      {endEpochMs && (
+        <div className="flex items-center gap-2.5 flex-wrap justify-end">
+          <div className="bg-[var(--theme-surface-2)] border border-[var(--theme-border)] px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-mono font-bold text-slate-200 shadow-inner">
+            <span>⏳ {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m remaining</span>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
