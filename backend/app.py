@@ -757,9 +757,17 @@ def get_stat_reports():
         }
         for row in cursor.fetchall()
     ]
-    conn.close()
-    return jsonify(reports)
-
+@app.route('/api/heroes', methods=['GET'])
+def get_hero_roster():
+    heroes_path = os.path.join(os.path.dirname(__file__), 'data', 'heroes.json')
+    if os.path.exists(heroes_path):
+        try:
+            with open(heroes_path, 'r', encoding='utf-8') as f:
+                heroes_data = json.load(f)
+                return jsonify({"success": True, "heroes": heroes_data, "total": len(heroes_data)})
+        except Exception as e:
+            return jsonify({"error": f"Failed to load heroes: {str(e)}"}), 500
+    return jsonify({"success": True, "heroes": HERO_MAP, "total": len(HERO_MAP)})
 
 
 @app.route('/app-debug.apk', methods=['GET', 'HEAD'])
