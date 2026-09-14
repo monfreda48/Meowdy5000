@@ -261,6 +261,11 @@ export default function App() {
     }
   });
   const [searchedUid, setSearchedUid] = useState(null);
+
+  // Safe fallback for legacy components expecting an object or boolean
+  const claimedProfile = (claimedUid && (stats?.current?.uid === claimedUid || stats?.current?.player_id === claimedUid || stats?.current?.username?.toLowerCase() === claimedUid.toLowerCase())) 
+    ? stats.current 
+    : (claimedUid ? { uid: claimedUid, username: claimedUid } : null);
   const [query, setQuery] = useState('');
   const [season, setSeason] = useState('19');
   const [timeframe, setTimeframe] = useState('all');
