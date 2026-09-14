@@ -5884,37 +5884,20 @@ const DEFAULT_SEASON_NUM = 19;
                 </div>
 
                 {/* Drawer Group 0.6: App Color Scheme & Themes */}
-                <div className="space-y-2.5 bg-[#131b2f] border border-slate-700/60 p-3.5 rounded-2xl">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--theme-accent-text)] flex items-center gap-1.5">
-                      <span>🎨</span> APP COLOR SCHEME
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 mt-2">
-                    <label className="text-[11px] text-[var(--theme-subtext)] block text-left">
-                      Select your dynamic accent color palette:
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={currentTheme}
-                        onChange={(e) => changeTheme(e.target.value)}
-                        className="w-full bg-[var(--theme-surface-2)] border border-[var(--theme-border)] text-white text-xs font-semibold rounded-xl px-3.5 py-2.5 appearance-none focus:outline-none focus:border-[var(--theme-accent)] transition-all cursor-pointer pr-8"
-                      >
-                        {THEME_PALETTES.map((palette) => (
-                          <option 
-                            key={palette.id} 
-                            value={palette.id} 
-                            className="bg-[#121212] text-white py-1"
-                          >
-                            {palette.name}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[var(--theme-subtext)] text-[10px]">
-                        ▼
-                      </div>
-                    </div>
+                <div className="space-y-2.5 bg-[var(--theme-surface-1)] border border-[var(--theme-border)] p-3.5 rounded-2xl text-left">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-[var(--theme-subtext)]">Color Theme</label>
+                    <select
+                      value={currentTheme}
+                      onChange={(e) => changeTheme(e.target.value)}
+                      className="bg-[var(--theme-surface-2)] text-[var(--theme-accent-text)] border border-[var(--theme-border)] rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wider focus:outline-none focus:border-[var(--theme-accent)] cursor-pointer"
+                    >
+                      <option value="default">Default Cobalt</option>
+                      <option value="kinetic-purple">Kinetic Purple</option>
+                      <option value="gamma-green">Gamma Green</option>
+                      <option value="jean-grey">Jean Grey (Crimson)</option>
+                      <option value="oops-all-hallways">Oops All Hallways (Slate)</option>
+                    </select>
                   </div>
                 </div>
 

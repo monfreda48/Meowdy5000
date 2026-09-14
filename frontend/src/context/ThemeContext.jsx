@@ -19,7 +19,7 @@ export const ThemeProvider = ({ children }) => {
     setTheme(newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
     document.documentElement.className = `theme-${newTheme}`;
-    document.body.className = `theme-${newTheme} bg-[var(--theme-bg)] text-[var(--text-primary)]`;
+    document.body.className = `theme-${newTheme} bg-[var(--theme-bg)] text-[var(--text-primary)] min-h-screen`;
     try {
       localStorage.setItem('m5_theme', newTheme);
       localStorage.setItem('app_color_theme', newTheme);
@@ -30,7 +30,7 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     document.documentElement.className = `theme-${theme}`;
-    document.body.className = `theme-${theme} bg-[var(--theme-bg)] text-[var(--text-primary)]`;
+    document.body.className = `theme-${theme} bg-[var(--theme-bg)] text-[var(--text-primary)] min-h-screen`;
   }, [theme]);
 
   return (
