@@ -177,6 +177,10 @@ class MetricBrain:
 
         top_hero_slug = str(top_hero_slug).lower().strip().replace(" ", "-").replace("&", "and")
 
+        # Structured Teammates & Hero Matchups
+        top_squadmates = r_meta.get("teammates") or r_tr.get("teammates") or []
+        hero_matchups = r_meta.get("matchups") or r_tr.get("matchups") or []
+
         return {
             "uid": uid,
             "platform": canonical_platform,
