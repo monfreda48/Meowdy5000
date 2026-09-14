@@ -1670,16 +1670,25 @@ const calculateConsensusAverage = (sources, metricKey = '') => {
   const [isSubmittingStatReport, setIsSubmittingStatReport] = useState(false);
 
   const METRIC_LABELS = {
-    winRate: 'Win Rate',
-    kdRatio: 'KDA Ratio',
-    heroDamage: 'Damage / 10m',
-    healing: 'Healing / 10m',
-    damageBlocked: 'Damage Blocked / 10m',
-    accuracy: 'Accuracy',
-    mvp: 'MVPs',
-    svp: 'SVPs',
-    timePlayed: 'Total Playtime',
-    matchesPlayed: 'Matches Played'
+    winRate: 'Season Win Rate',
+    win_rate: 'Season Win Rate',
+    kdRatio: 'Season KDA Ratio',
+    kda: 'Season KDA Ratio',
+    heroDamage: 'Season Damage / 10M',
+    damage_10m: 'Season Damage / 10M',
+    healing: 'Season Healing / 10M',
+    healing_10m: 'Season Healing / 10M',
+    damageBlocked: 'Season Blocked / 10M',
+    dmg_blocked_10m: 'Season Blocked / 10M',
+    accuracy: 'Season Weapon Accuracy',
+    mvp: 'Season MVPs',
+    svp: 'Season SVPs',
+    timePlayed: 'Total Season Playtime',
+    total_playtime: 'Total Season Playtime',
+    matchesPlayed: 'Total Season Matches',
+    matches_played: 'Total Season Matches',
+    all_time_playtime: 'All-Time Playtime',
+    all_time_matches: 'All-Time Matches'
   };
 
   const handleOpenReportModal = (metricKey, e = null) => {
@@ -4182,15 +4191,15 @@ const DEFAULT_SEASON_NUM = 19;
                         {!isSimplifiedView && expandedMetrics.winRate && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
-                              <span>Total Matches:</span>
+                              <span>Season Matches:</span>
                               <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
                             </div>
                             <div className="flex justify-between text-emerald-400 font-medium">
-                              <span>Victories (Wins):</span>
+                              <span>Season Wins:</span>
                               <span className="font-bold">{stats.current.matchesWon}</span>
                             </div>
                             <div className="flex justify-between text-red-400 font-medium">
-                              <span>Defeats (Losses):</span>
+                              <span>Season Losses:</span>
                               <span className="font-bold">{stats.current.matchesPlayed - stats.current.matchesWon}</span>
                             </div>
                             <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden flex mt-2">
@@ -4322,11 +4331,11 @@ const DEFAULT_SEASON_NUM = 19;
                         {!isSimplifiedView && expandedMetrics.heroDamage && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
-                              <span>Total Damage Output:</span>
+                              <span>Season Total Damage:</span>
                               <span className="font-bold text-white">{stats.current.total_damage ? Number(stats.current.total_damage).toLocaleString() : '218,750'}</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
-                              <span>Avg Damage / Match:</span>
+                              <span>Season Avg / Match:</span>
                               <span className="font-bold text-white">
                                 {stats.current.avg_damage_per_match || '5,833'}
                               </span>
@@ -4386,11 +4395,11 @@ const DEFAULT_SEASON_NUM = 19;
                         {!isSimplifiedView && expandedMetrics.healing && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
-                              <span>Total Healing Output:</span>
+                              <span>Season Total Healing:</span>
                               <span className="font-bold text-white">{stats.current.total_healing ? Number(stats.current.total_healing).toLocaleString() : '589,500'}</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
-                              <span>Avg Healing / Match:</span>
+                              <span>Season Avg / Match:</span>
                               <span className="font-bold text-white">
                                 {stats.current.avg_healing_per_match || '15,720'}
                               </span>
@@ -4450,11 +4459,11 @@ const DEFAULT_SEASON_NUM = 19;
                         {!isSimplifiedView && expandedMetrics.damageBlocked && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
-                              <span>Total Damage Blocked:</span>
+                              <span>Season Total Blocked:</span>
                               <span className="font-bold text-white">160,500</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
-                              <span>Avg Blocked / Match:</span>
+                              <span>Season Avg / Match:</span>
                               <span className="font-bold text-white">4,280</span>
                             </div>
                           </div>
@@ -4513,15 +4522,15 @@ const DEFAULT_SEASON_NUM = 19;
                         {!isSimplifiedView && expandedMetrics.accuracy && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
-                              <span>Primary Attack Hits:</span>
+                              <span>Season Shots Hit:</span>
                               <span className="font-bold text-[var(--text-secondary)]">{(stats.current.mainAttackHits || 0).toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
-                              <span>Total Shots Fired:</span>
+                              <span>Season Shots Fired:</span>
                               <span className="font-bold text-[var(--text-secondary)]">{(stats.current.mainAttacks || 0).toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between text-slate-400 font-medium">
-                              <span>Missed Shots:</span>
+                              <span>Season Missed Shots:</span>
                               <span className="font-bold text-[var(--text-secondary)]">
                                 {((stats.current.mainAttacks || 0) - (stats.current.mainAttackHits || 0)).toLocaleString()}
                               </span>
@@ -4578,11 +4587,11 @@ const DEFAULT_SEASON_NUM = 19;
                         {!isSimplifiedView && expandedMetrics.mvp && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
-                              <span>MVP Performance Trophies:</span>
+                              <span>Season MVP Trophies:</span>
                               <span className="font-bold text-white">{stats.current.mvp}</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
-                              <span>Total Matches Played:</span>
+                              <span>Season Matches Played:</span>
                               <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
                             </div>
                           </div>
@@ -4637,11 +4646,11 @@ const DEFAULT_SEASON_NUM = 19;
                         {!isSimplifiedView && expandedMetrics.svp && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
-                              <span>SVP Team Honors:</span>
+                              <span>Season SVP Honors:</span>
                               <span className="font-bold text-white">{stats.current.svp}</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
-                              <span>Total Matches Played:</span>
+                              <span>Season Matches Played:</span>
                               <span className="font-bold text-white">{stats.current.matchesPlayed}</span>
                             </div>
                           </div>
@@ -4699,11 +4708,11 @@ const DEFAULT_SEASON_NUM = 19;
                         {!isSimplifiedView && expandedMetrics.timePlayed && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
-                              <span>Total Recorded Hours:</span>
+                              <span>Season Hours Recorded:</span>
                               <span className="font-bold text-white">{stats.current.total_season_playtime || stats.current.season_playtime || stats.current.total_playtime || '24h'}</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
-                              <span>Matches Tracked:</span>
+                              <span>Season Matches Tracked:</span>
                               <span className="font-bold text-white">{stats.current.matchesPlayed || stats.current.total_matches || 25}</span>
                             </div>
                           </div>
