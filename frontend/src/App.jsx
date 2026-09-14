@@ -5622,8 +5622,8 @@ ${payload.stack || 'No stack trace available.'}
                       <option value="default">Default Cobalt</option>
                       <option value="kinetic-purple">Kinetic Purple</option>
                       <option value="gamma-green">Gamma Green</option>
-                      <option value="jean-grey">Jean Grey (Black & White)</option>
-                      <option value="oops-all-hallways">Oops, All Hallways (Daredevil Red)</option>
+                      <option value="jean-grey">Jean Grey</option>
+                      <option value="oops-all-hallways">Oops, All Hallways</option>
                     </select>
                   </div>
                 </div>

@@ -12,8 +12,8 @@ export const THEME_PALETTES = [
   { id: 'default', name: 'Default Cobalt' },
   { id: 'kinetic-purple', name: 'Kinetic Purple' },
   { id: 'gamma-green', name: 'Gamma Green' },
-  { id: 'jean-grey', name: 'Jean Grey (Black & White)' },
-  { id: 'oops-all-hallways', name: 'Oops, All Hallways (Daredevil Red)' }
+  { id: 'jean-grey', name: 'Jean Grey' },
+  { id: 'oops-all-hallways', name: 'Oops, All Hallways' }
 ];
 
 const ThemeContext = createContext();
