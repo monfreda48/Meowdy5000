@@ -5852,37 +5852,30 @@ const DEFAULT_SEASON_NUM = 19;
                     </span>
                   </div>
 
-                  <p className="text-[10px] text-slate-400 text-left">Select your dynamic accent color palette:</p>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
-                    {THEME_PALETTES.map((palette) => {
-                      const isActive = currentTheme === palette.id;
-                      return (
-                        <button
-                          key={palette.id}
-                          type="button"
-                          onClick={() => changeTheme(palette.id)}
-                          className={`flex items-center justify-between p-3 rounded-xl border transition-all text-left cursor-pointer ${
-                            isActive
-                              ? 'border-[var(--theme-accent)] bg-[var(--theme-accent)]/15 text-white ring-1 ring-[var(--theme-accent)]'
-                              : 'border-[var(--theme-border)] bg-[var(--theme-surface-2)] text-[var(--text-secondary)] hover:border-[var(--theme-border-hover)]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <span
-                              className="w-4 h-4 rounded-full border border-white/20 shadow-sm shrink-0"
-                              style={{ backgroundColor: palette.accent }}
-                            />
-                            <span className="text-xs font-bold tracking-wide">{palette.name}</span>
-                          </div>
-                          {isActive && (
-                            <span className="text-[10px] font-black uppercase text-[var(--theme-accent-text)]">
-                              Active
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
+                  <div className="space-y-2 mt-2">
+                    <label className="text-[11px] text-[var(--theme-subtext)] block text-left">
+                      Select your dynamic accent color palette:
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={currentTheme}
+                        onChange={(e) => changeTheme(e.target.value)}
+                        className="w-full bg-[var(--theme-surface-2)] border border-[var(--theme-border)] text-white text-xs font-semibold rounded-xl px-3.5 py-2.5 appearance-none focus:outline-none focus:border-[var(--theme-accent)] transition-all cursor-pointer pr-8"
+                      >
+                        {THEME_PALETTES.map((palette) => (
+                          <option 
+                            key={palette.id} 
+                            value={palette.id} 
+                            className="bg-[#121212] text-white py-1"
+                          >
+                            {palette.name}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[var(--theme-subtext)] text-[10px]">
+                        ▼
+                      </div>
+                    </div>
                   </div>
                 </div>
 

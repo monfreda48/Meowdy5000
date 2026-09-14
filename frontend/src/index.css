@@ -13,7 +13,7 @@
   --color-content-muted: var(--text-muted);
 }
 
-/* 1. Default (Sky Blue / Cyber Slate) */
+/* 1. Default (Sky Blue / Slate) */
 :root, [data-theme="default"], .theme-default {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -42,7 +42,7 @@
   --accent-color: var(--theme-accent);
 }
 
-/* 2. Kinetic Purple */
+/* 2. Kinetic Purple (Fuchsia / Violet) */
 [data-theme="kinetic-purple"], .theme-kinetic-purple {
   --theme-bg: #0a0512;
   --theme-surface-1: #130a21;
@@ -69,8 +69,8 @@
   --accent-color: var(--theme-accent);
 }
 
-/* 3. Gamma Green */
-[data-theme="gamma-green"], .theme-gamma-green, [data-theme="gamma_green"] {
+/* 3. Gamma Green (Emerald / Toxic Green) */
+[data-theme="gamma-green"], .theme-gamma-green {
   --theme-bg: #040d06;
   --theme-surface-1: #08170c;
   --theme-surface-2: #0e2413;
@@ -96,8 +96,8 @@
   --accent-color: var(--theme-accent);
 }
 
-/* 4. Jean Grey */
-[data-theme="jean-grey"], .theme-jean-grey, [data-theme="jeangrey"] {
+/* 4. Jean Grey (Phoenix Monochrome / Silver) */
+[data-theme="jean-grey"], .theme-jean-grey {
   --theme-bg: #050505;
   --theme-surface-1: #111111;
   --theme-surface-2: #1a1a1a;
@@ -121,43 +121,33 @@
   --accent-primary: var(--theme-accent);
   --accent-glow: var(--theme-accent-glow);
   --accent-color: var(--theme-accent);
-  filter: grayscale(100%) !important;
 }
 
-[data-theme="jean-grey"] body,
-[data-theme="jeangrey"] body,
-[data-theme="monochrome"] body,
-[data-theme="midnight-stealth"] body,
-[data-theme="stealth"] body {
-  background-color: #000000 !important;
-  color: #ffffff !important;
-  filter: grayscale(100%) !important;
-}
+/* 5. Oops, All Hallways (Crimson / Deep Scarlet) */
+[data-theme="oops-all-hallways"], .theme-oops-all-hallways {
+  --theme-bg: #0a0303;
+  --theme-surface-1: #140707;
+  --theme-surface-2: #1f0b0b;
+  --theme-surface-3: #2d1010;
+  --theme-border: #4a1919;
+  --theme-border-hover: #732637;
+  --theme-accent: #ef4444;
+  --theme-accent-hover: #f87171;
+  --theme-accent-glow: rgba(239, 68, 68, 0.25);
+  --theme-accent-text: #fca5a5;
+  --theme-subtext: #995c5c;
+  --text-primary: #ffffff;
+  --text-secondary: #fecaca;
+  --text-muted: #6b3d3d;
 
-[data-theme="jean-grey"] img,
-[data-theme="jeangrey"] img,
-[data-theme="jean-grey"] svg,
-[data-theme="jeangrey"] svg,
-[data-theme="jean-grey"] video,
-[data-theme="jeangrey"] video,
-[data-theme="jean-grey"] canvas,
-[data-theme="jeangrey"] canvas {
-  filter: grayscale(100%) contrast(110%) !important;
-}
-
-/* 5. Oops, All Hallways (Daredevil - Gritty Hell's Kitchen Charcoal & Bloody Crimson) */
-[data-theme="oops-all-hallways"], [data-theme="oops_all_hallways"], [data-theme="crimson-rival"], [data-theme="crimson"] {
-  --bg-app: #0a0303;
-  --bg-card: #140707;
-  --bg-card-subtle: #220b0b;
-  --border-card: #451212;
-  --border-subtle: #2d0b0b;
-  --accent-primary: #ef4444;
-  --accent-glow: rgba(239, 68, 68, 0.32);
-  --text-primary: #fff1f2;
-  --text-secondary: #fca5a5;
-  --text-muted: #991b1b;
-  --accent-color: var(--accent-primary);
+  --bg-app: var(--theme-bg);
+  --bg-card: var(--theme-surface-1);
+  --bg-card-subtle: var(--theme-surface-2);
+  --border-card: var(--theme-border);
+  --border-subtle: var(--theme-border-hover);
+  --accent-primary: var(--theme-accent);
+  --accent-glow: var(--theme-accent-glow);
+  --accent-color: var(--theme-accent);
 }
 
 /* Enforce dynamic theme variables on common container classes */
