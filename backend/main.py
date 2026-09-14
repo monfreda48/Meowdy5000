@@ -14,7 +14,7 @@ if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 import httpx
-from fastapi import FastAPI, Depends, Query, HTTPException, Response, Request, Body
+from fastapi import FastAPI, Depends, Query, HTTPException, Response, Request, Body, BackgroundTasks
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
