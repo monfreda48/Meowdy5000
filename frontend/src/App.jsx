@@ -1054,17 +1054,17 @@ export default function App() {
   };
 
   const getTraySourceValue = (sources, siteName) => {
-    if (!sources || typeof sources !== 'object') return 'N/A';
+    if (!sources || typeof sources !== 'object') return '--';
     const target = siteName.toLowerCase().replace(/[^a-z0-9]/g, '');
     for (const [key, val] of Object.entries(sources)) {
       const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
       if (cleanKey === target || cleanKey.includes(target) || target.includes(cleanKey)) {
-        if (val !== null && val !== undefined && val !== '' && val !== 0 && val !== '0') {
+        if (val !== null && val !== undefined && val !== '' && val !== 0 && val !== '0' && val !== '0s (Jubilee)' && val !== '--') {
           return String(val);
         }
       }
     }
-    return 'N/A';
+    return '--';
   };
 
   const render3SiteBreakdown = (metricKey) => {
@@ -1085,10 +1085,10 @@ export default function App() {
 
     const getValForSite = (siteKey, siteName, fallbackVal) => {
       const srcVal = getTraySourceValue(sources, siteName);
-      if (srcVal && srcVal !== 'N/A') return srcVal;
+      if (srcVal && srcVal !== '--') return srcVal;
       if (bd[siteKey]) return formatStatDisplayValue(metricKey, bd[siteKey]);
-      if (fallbackVal && fallbackVal !== 'N/A') return formatStatDisplayValue(metricKey, fallbackVal);
-      return 'N/A';
+      if (fallbackVal && fallbackVal !== 'N/A' && fallbackVal !== '--') return formatStatDisplayValue(metricKey, fallbackVal);
+      return '--';
     };
 
     const sites = [
@@ -4073,7 +4073,7 @@ const DEFAULT_SEASON_NUM = 19;
                             </span>
                           </div>
                         </div>
-                        <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                        <p className={`font-black text-white truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('heroDamage', stats.current.damage_per_10m || stats.current.damagePer10m || (stats.current.damage_10m ? stats.current.damage_10m.toLocaleString() : '8,750'))}
                         </p>
 
@@ -4081,7 +4081,7 @@ const DEFAULT_SEASON_NUM = 19;
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Damage Output:</span>
-                              <span className="font-bold text-emerald-400">{stats.current.total_damage ? Number(stats.current.total_damage).toLocaleString() : '218,750'}</span>
+                              <span className="font-bold text-white">{stats.current.total_damage ? Number(stats.current.total_damage).toLocaleString() : '218,750'}</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Avg Damage / Match:</span>
@@ -4130,7 +4130,7 @@ const DEFAULT_SEASON_NUM = 19;
                             </span>
                           </div>
                         </div>
-                        <p className={`font-black text-emerald-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                        <p className={`font-black text-white truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('healing', stats.current.healing_per_10m || stats.current.healingPer10m || (stats.current.healing_10m ? stats.current.healing_10m.toLocaleString() : '23,580'))}
                         </p>
 
@@ -4138,7 +4138,7 @@ const DEFAULT_SEASON_NUM = 19;
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Healing Output:</span>
-                              <span className="font-bold text-emerald-400">{stats.current.total_healing ? Number(stats.current.total_healing).toLocaleString() : '589,500'}</span>
+                              <span className="font-bold text-white">{stats.current.total_healing ? Number(stats.current.total_healing).toLocaleString() : '589,500'}</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Avg Healing / Match:</span>
@@ -4187,7 +4187,7 @@ const DEFAULT_SEASON_NUM = 19;
                             </span>
                           </div>
                         </div>
-                        <p className={`font-black text-purple-400 truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                        <p className={`font-black text-white truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('damageBlocked', stats.current.dmg_blocked_10m || stats.current.damage_blocked_10m || '6,420')}
                         </p>
 
@@ -4195,7 +4195,7 @@ const DEFAULT_SEASON_NUM = 19;
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Damage Blocked:</span>
-                              <span className="font-bold text-purple-400">160,500</span>
+                              <span className="font-bold text-white">160,500</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Avg Blocked / Match:</span>
@@ -4243,7 +4243,7 @@ const DEFAULT_SEASON_NUM = 19;
                             </span>
                           </div>
                         </div>
-                        <p className={`font-black text-yellow-400 ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
+                        <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
                           {getCardDisplayStat('accuracy', stats.current.accuracy || 'N/A')}
                         </p>
 
@@ -4251,15 +4251,15 @@ const DEFAULT_SEASON_NUM = 19;
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Primary Attack Hits:</span>
-                              <span className="font-bold text-yellow-400">{(stats.current.mainAttackHits || 0).toLocaleString()}</span>
+                              <span className="font-bold text-[var(--text-secondary)]">{(stats.current.mainAttackHits || 0).toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Shots Fired:</span>
-                              <span className="font-bold text-white">{(stats.current.mainAttacks || 0).toLocaleString()}</span>
+                              <span className="font-bold text-[var(--text-secondary)]">{(stats.current.mainAttacks || 0).toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between text-slate-400 font-medium">
                               <span>Missed Shots:</span>
-                              <span className="font-bold text-red-400">
+                              <span className="font-bold text-[var(--text-secondary)]">
                                 {((stats.current.mainAttacks || 0) - (stats.current.mainAttackHits || 0)).toLocaleString()}
                               </span>
                             </div>
@@ -4302,7 +4302,7 @@ const DEFAULT_SEASON_NUM = 19;
                             </span>
                           </div>
                         </div>
-                        <p className={`font-black text-amber-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                        <p className={`font-black text-white ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('mvp', stats.current.mvp || '0')}
                         </p>
 
@@ -4310,7 +4310,7 @@ const DEFAULT_SEASON_NUM = 19;
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>MVP Performance Trophies:</span>
-                              <span className="font-bold text-amber-400">{stats.current.mvp}</span>
+                              <span className="font-bold text-white">{stats.current.mvp}</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Matches Played:</span>
@@ -4355,7 +4355,7 @@ const DEFAULT_SEASON_NUM = 19;
                             </span>
                           </div>
                         </div>
-                        <p className={`font-black text-purple-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                        <p className={`font-black text-white ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('svp', stats.current.svp || '0')}
                         </p>
 
@@ -4363,7 +4363,7 @@ const DEFAULT_SEASON_NUM = 19;
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>SVP Team Honors:</span>
-                              <span className="font-bold text-purple-400">{stats.current.svp}</span>
+                              <span className="font-bold text-white">{stats.current.svp}</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Matches Played:</span>
@@ -4410,7 +4410,7 @@ const DEFAULT_SEASON_NUM = 19;
                             </span>
                           </div>
                         </div>
-                        <p className={`font-black text-sky-400 ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
+                        <p className={`font-black text-white ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('timePlayed', stats.current.total_season_playtime || stats.current.season_playtime || stats.current.total_playtime || '24h')}
                         </p>
 
@@ -4418,7 +4418,7 @@ const DEFAULT_SEASON_NUM = 19;
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Recorded Hours:</span>
-                              <span className="font-bold text-sky-400">{stats.current.total_season_playtime || stats.current.season_playtime || stats.current.total_playtime || '24h'}</span>
+                              <span className="font-bold text-white">{stats.current.total_season_playtime || stats.current.season_playtime || stats.current.total_playtime || '24h'}</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Matches Tracked:</span>
