@@ -25,6 +25,14 @@ def extract_true_level(*candidates) -> int:
             valid.append(val)
     return max(valid) if valid else 1
 
+def format_username(name: str) -> str:
+    if not name or not isinstance(name, str):
+        return ""
+    clean = name.strip()
+    if not clean:
+        return ""
+    return " ".join(word[0].upper() + word[1:] if word else "" for word in clean.split(" "))
+
 class TelemetryTransformer:
     @classmethod
     def unify_player_payload(cls, uid: str, rd: Dict[str, Any], rt: Dict[str, Any], rm: Dict[str, Any], tgg: Dict[str, Any]) -> Dict[str, Any]:
@@ -39,10 +47,10 @@ class TelemetryTransformer:
         tgg = tgg or {}
 
         # 1. Identity & Platform
-        username = (
+        raw_name = (
             rd_curr.get("username") or rd.get("username") or rt.get("username") or rm.get("username") or tgg.get("username") or f"Player {uid}"
         )
-        username = username.split("#")[0].strip()
+        username = format_username(str(raw_name).split("#")[0].strip())
 
         # 1. Force Verified Platform
         platform_candidates = [rd.get("platform"), rd_curr.get("platform"), rt.get("platform"), rm.get("platform"), tgg.get("platform")]

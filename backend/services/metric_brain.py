@@ -22,6 +22,14 @@ def safe_int(val: Any, default: int = 0) -> int:
     except Exception:
         return default
 
+def format_username(name: str) -> str:
+    if not name or not isinstance(name, str):
+        return ""
+    clean = name.strip()
+    if not clean:
+        return ""
+    return " ".join(word[0].upper() + word[1:] if word else "" for word in clean.split(" "))
+
 class MetricBrain:
     """
     Reconciles raw multi-provider telemetry into canonical core metrics
@@ -142,15 +150,16 @@ class MetricBrain:
             extended_metrics["season_record"] = {"label": "Season Record", "value": str(r_data["record"]), "source": "RivalsData"}
 
         # Authoritative Upstream Name Resolution
-        canonical_name = (
+        raw_name = (
             r_meta.get("player", {}).get("info", {}).get("name")
             or r_meta.get("name")
             or t_gg.get("data", {}).get("platformInfo", {}).get("platformUserHandle")
             or t_gg.get("platformInfo", {}).get("platformUserHandle")
             or r_tr.get("username")
             or r_data.get("name")
-            or (uid.title() if uid and not uid.isdigit() else f"Player {uid}")
+            or (uid if uid and not uid.isdigit() else f"Player {uid}")
         )
+        canonical_name = format_username(str(raw_name))
 
         return {
             "uid": uid,

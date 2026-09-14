@@ -3689,7 +3689,7 @@ ${payload.stack || 'No stack trace available.'}
                 <div>
                   <div className="flex items-center gap-2.5 flex-wrap">
                     <h2 className={`font-black text-white ${isMobileView ? 'text-2xl' : 'text-3xl'}`}>
-                      {stats.player_identity?.display_name || stats.display_name || stats.current.username || formatPlayerName(query)}
+                      {formatPlayerName(stats.player_identity?.display_name || stats.display_name || stats.current?.username || query)}
                     </h2>
                     <PlatformIcon platform={stats.current.platform} size={22} className="w-5.5 h-5.5 text-slate-300" />
                     {(stats.uid || stats.current?.uid) && (stats.uid || stats.current?.uid) !== stats.current.username && (
