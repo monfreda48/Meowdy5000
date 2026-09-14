@@ -3317,7 +3317,7 @@ const DEFAULT_SEASON_NUM = 19;
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      className="min-h-[100dvh] mobile-safe-area bg-[#0b101e] text-slate-200 font-sans selection:bg-emerald-500/30 transition-all duration-300 relative"
+      className="min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)] font-sans transition-colors duration-200 relative"
     >
       {/* Animated Startup Splash Screen Overlay */}
       {showSplashOverlay && (
