@@ -3569,14 +3569,14 @@ const DEFAULT_SEASON_NUM = 19;
       )}
 
       {/* Top Navigation Bar */}
-      <nav className="border-b border-slate-800 bg-[#0f1526]/90 backdrop-blur-md sticky top-0 z-50 overflow-x-hidden nav-safe-area">
+      <nav className="border-b border-[var(--theme-border)] bg-[var(--theme-bg)]/90 backdrop-blur-md sticky top-0 z-50 overflow-x-hidden nav-safe-area">
         <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10 2xl:px-16 py-2 sm:py-3.5 flex items-center justify-between gap-1.5 sm:gap-3">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black flex items-center justify-center font-black text-emerald-400 text-xs sm:text-sm tracking-tighter shadow-[0_0_18px_rgba(16,185,129,0.6)] border border-emerald-500/70 shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)] relative overflow-hidden">
-              {/* Horizontal Right-To-Left Spinning Green Grid Sphere Overlay */}
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black flex items-center justify-center font-black text-[var(--theme-accent-text)] text-xs sm:text-sm tracking-tighter shadow-[0_0_15px_var(--theme-accent-glow)] border border-[var(--theme-accent)]/50 shrink-0 relative overflow-hidden">
+              {/* Horizontal Right-To-Left Spinning Grid Sphere Overlay */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-65 overflow-hidden rounded-full">
                 <div className="w-[200%] h-full flex items-center animate-grid-horizontal">
-                  <svg className="w-1/2 h-full text-emerald-400 shrink-0" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <svg className="w-1/2 h-full text-[var(--theme-accent)] shrink-0" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <line x1="0" y1="25" x2="100" y2="25" strokeDasharray="3 2" />
                     <line x1="0" y1="50" x2="100" y2="50" strokeWidth="2" />
                     <line x1="0" y1="75" x2="100" y2="75" strokeDasharray="3 2" />
@@ -3584,7 +3584,7 @@ const DEFAULT_SEASON_NUM = 19;
                     <path d="M 33,0 Q 58,50 33,100" />
                     <path d="M 66,0 Q 91,50 66,100" />
                   </svg>
-                  <svg className="w-1/2 h-full text-emerald-400 shrink-0" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <svg className="w-1/2 h-full text-[var(--theme-accent)] shrink-0" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <line x1="0" y1="25" x2="100" y2="25" strokeDasharray="3 2" />
                     <line x1="0" y1="50" x2="100" y2="50" strokeWidth="2" />
                     <line x1="0" y1="75" x2="100" y2="75" strokeDasharray="3 2" />
@@ -3594,7 +3594,7 @@ const DEFAULT_SEASON_NUM = 19;
                   </svg>
                 </div>
               </div>
-              <span className="relative z-10 drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]">M5</span>
+              <span className="relative z-10">M5</span>
             </div>
             <span className="text-xs sm:text-lg md:text-xl font-black tracking-wider text-white uppercase truncate">
               <span className="sm:hidden">M5 STAT TRACKER</span>
@@ -3611,13 +3611,13 @@ const DEFAULT_SEASON_NUM = 19;
                   value={lookupQuery}
                   onChange={(e) => setLookupQuery(e.target.value)}
                   placeholder="Search..."
-                  className="w-full bg-[#131b2f] border border-slate-700/70 hover:border-emerald-500/50 focus:border-emerald-500 rounded-xl py-1.5 pl-8 pr-12 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all shadow-inner"
+                  className="w-full bg-[var(--theme-surface-2)] border border-[var(--theme-border)] hover:border-[var(--theme-accent)]/50 focus:border-[var(--theme-accent)] rounded-xl py-1.5 pl-8 pr-12 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[var(--theme-accent)] transition-all shadow-inner"
                 />
                 <span className="absolute left-2.5 text-slate-400 text-xs pointer-events-none">🔍</span>
                 {lookupQuery.trim() ? (
                   <button
                     type="submit"
-                    className="absolute right-1 px-2 py-0.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[10px] rounded-lg uppercase tracking-wider transition-all cursor-pointer shadow"
+                    className="absolute right-1 px-2 py-0.5 bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-slate-950 font-black text-[10px] rounded-lg uppercase tracking-wider transition-all cursor-pointer shadow"
                   >
                     Search
                   </button>
@@ -3635,9 +3635,9 @@ const DEFAULT_SEASON_NUM = 19;
 
             <button
               onClick={() => setIsMenuOpen(true)}
-              className="flex items-center gap-2 bg-[#131b2f] hover:bg-slate-800 border border-slate-700/80 hover:border-emerald-500/60 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer relative shadow-md group"
+              className="flex items-center gap-2 bg-[var(--theme-surface-2)] border border-[var(--theme-border)] text-white hover:border-[var(--theme-accent)] hover:text-[var(--theme-accent-text)] px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer relative shadow-md group"
             >
-              <svg className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <svg className="w-5 h-5 text-[var(--theme-accent)] group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
               <span className="hidden sm:inline text-xs font-bold text-slate-300 group-hover:text-white uppercase tracking-wider">
@@ -3892,7 +3892,7 @@ const DEFAULT_SEASON_NUM = 19;
                         triggerHaptic('light');
                         setShowMoreStatsModal(true);
                       }}
-                      className="bg-gradient-to-r from-emerald-600/30 to-teal-600/30 hover:from-emerald-600/50 hover:to-teal-600/50 text-emerald-300 border border-emerald-500/50 px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-emerald-500/10 active:scale-95 transition-all cursor-pointer"
+                      className="bg-[var(--theme-surface-2)] border border-[var(--theme-border)] text-[var(--theme-accent-text)] hover:border-[var(--theme-accent)] hover:bg-[var(--theme-surface-3)] px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
                     >
                       <span>📊</span>
                       <span>More Stats</span>
@@ -4129,7 +4129,7 @@ const DEFAULT_SEASON_NUM = 19;
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Assists:</span>
-                              <span className="font-bold text-cyan-400">{(stats.current.assists || 0).toLocaleString()}</span>
+                              <span className="font-bold text-[var(--theme-accent-text)]">{(stats.current.assists || 0).toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Deaths:</span>
@@ -4619,44 +4619,44 @@ const DEFAULT_SEASON_NUM = 19;
                         <div className="flex flex-col gap-2 relative z-10">
                           {stats.current.topHeroesDetailed && stats.current.topHeroesDetailed.length > 0 ? (
                             stats.current.topHeroesDetailed.map((hero, index) => (
-                              <details key={index} className="group bg-[#0f1526] rounded-xl border border-slate-700/50 overflow-hidden shadow-sm">
-                                <summary className="cursor-pointer flex items-center justify-between p-2.5 hover:bg-slate-800/50 transition-colors list-none">
+                              <details key={index} className="group bg-[var(--theme-surface-2)] border border-[var(--theme-border)] hover:border-[var(--theme-border-hover)] hover:bg-[var(--theme-surface-3)] transition-all rounded-xl overflow-hidden shadow-sm">
+                                <summary className="cursor-pointer flex items-center justify-between p-2.5 transition-colors list-none">
                                   <div className="flex items-center gap-2.5 min-w-0">
-                                    <div className="w-5 h-5 rounded bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-300 shrink-0 shadow-inner">
+                                    <div className="w-5 h-5 rounded bg-[var(--theme-surface-3)] border border-[var(--theme-border)] text-[var(--theme-accent-text)] font-mono flex items-center justify-center text-[10px] font-bold shrink-0 shadow-inner">
                                       {index + 1}
                                     </div>
                                     {hero.icon && (
                                       <img
                                         src={formatImageUrl(hero.icon)}
                                         alt={hero.name}
-                                        className="w-7 h-7 rounded-lg object-cover border border-emerald-500/40 shrink-0 bg-slate-900"
+                                        className="w-7 h-7 rounded-lg object-cover border border-[var(--theme-border)] shrink-0 bg-[var(--theme-surface-1)]"
                                         onError={(e) => {
                                           e.currentTarget.onerror = null;
                                           e.currentTarget.src = FALLBACK_IMAGE_SVG;
                                         }}
                                       />
                                     )}
-                                    <span className="text-sm sm:text-base font-black text-emerald-400 truncate">{hero.name}</span>
+                                    <span className="text-white font-bold tracking-wide text-sm sm:text-base truncate">{hero.name}</span>
                                   </div>
-                                  <svg className="w-4 h-4 text-slate-500 transition-transform duration-300 group-open:-rotate-180 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <svg className="w-4 h-4 text-[var(--theme-subtext)] transition-transform duration-300 group-open:-rotate-180 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                   </svg>
                                 </summary>
-                                <div className="p-3 border-t border-slate-700/50 bg-[#0b101e] grid grid-cols-2 gap-y-2.5 gap-x-3 text-left">
+                                <div className="p-3 border-t border-[var(--theme-border)] bg-[var(--theme-surface-1)] grid grid-cols-2 gap-y-2.5 gap-x-3 text-left">
                                   <div>
-                                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Win Rate</p>
-                                    <p className="text-sm font-black text-emerald-400">{hero.winRate}</p>
+                                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Win Rate</p>
+                                    <p className="text-sm font-black text-white">{hero.winRate}</p>
                                   </div>
                                   <div>
-                                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">KDA Ratio</p>
-                                    <p className="text-sm font-black text-blue-400">{hero.kda}</p>
+                                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">KDA Ratio</p>
+                                    <p className="text-sm font-black text-white">{hero.kda}</p>
                                   </div>
                                   <div>
-                                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Matches</p>
+                                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Matches</p>
                                     <p className="text-xs font-bold text-slate-200">{hero.matches}</p>
                                   </div>
                                   <div>
-                                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Playtime</p>
+                                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Playtime</p>
                                     <p className="text-xs font-bold text-slate-200">{hero.timePlayed}</p>
                                   </div>
                                 </div>
@@ -4665,11 +4665,11 @@ const DEFAULT_SEASON_NUM = 19;
                           ) : (
                             <div className="flex flex-col gap-2">
                               {stats.current.topHero.split(', ').map((hero, index) => (
-                                <div key={index} className="flex items-center gap-2.5">
-                                  <div className="w-5 h-5 rounded bg-slate-800 border border-slate-600 flex items-center justify-center text-[10px] font-bold text-slate-400">
+                                <div key={index} className="flex items-center gap-2.5 bg-[var(--theme-surface-2)] border border-[var(--theme-border)] p-2 rounded-xl">
+                                  <div className="w-5 h-5 rounded bg-[var(--theme-surface-3)] border border-[var(--theme-border)] text-[var(--theme-accent-text)] font-mono flex items-center justify-center text-[10px] font-bold">
                                     {index + 1}
                                   </div>
-                                  <span className="text-lg font-black text-emerald-400 truncate">{hero}</span>
+                                  <span className="text-base font-bold text-white truncate">{hero}</span>
                                 </div>
                               ))}
                             </div>
