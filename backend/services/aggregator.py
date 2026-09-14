@@ -8,10 +8,32 @@ import logging
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
-from backend.adapters.rivalsdata import (
-    fetch_rivalsdata_profile, resolve_player_identity, normalize_platform_code,
-    PlayerNotFoundError, ProfilePrivateError
-)
+from backend.database import get_connection
+from backend.adapters.rivalsdata import PlayerNotFoundError, ProfilePrivateError, normalize_platform_code
+
+def cache_player_profile(identifier: str, data: dict):
+    """Persists normalized profile data into player_cache."""
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS player_cache (
+                    identifier TEXT PRIMARY KEY,
+                    data TEXT NOT NULL,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            payload_str = json.dumps(data)
+            cursor.execute("""
+                INSERT INTO player_cache (identifier, data, updated_at)
+                VALUES (?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(identifier) DO UPDATE SET
+                    data=excluded.data,
+                    updated_at=CURRENT_TIMESTAMP;
+            """, (str(identifier).strip().lower(), payload_str))
+            conn.commit()
+    except Exception as e:
+        logger.warning(f"[aggregator] Non-fatal cache write failure for '{identifier}': {e}")
 
 logger = logging.getLogger("ingestion_aggregator")
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -390,7 +412,13 @@ async def get_player_profile(identifier: str, force: bool = False, force_refresh
         if target_user != target_uid and target_uid.isdigit():
             IdentityManager.link_identity(target_user, target_uid)
 
-        cache_player_profile(target_uid, canonical)
+        # Save to SQLite cache with non-blocking try/except
+        try:
+            cache_player_profile(target_uid, canonical)
+            if target_user and target_user.lower() != target_uid.lower():
+                cache_player_profile(target_user, canonical)
+        except Exception as cache_err:
+            logger.warning(f"[aggregator] Cache save warning: {cache_err}")
 
         return canonical
     except PlayerNotFoundError as pnf:
