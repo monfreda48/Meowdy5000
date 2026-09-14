@@ -1,27 +1,59 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-export default function HeroProgression({ heroes = [], roles = [], mode = "Quick Play", season = "Season 10" }) {
-  if (!heroes || heroes.length === 0) {
+export default function HeroProgression({
+  heroes = [],
+  roles = [],
+  mode = "Quick Play",
+  season = "Season 10",
+  expandAllHeroes: propExpandAllHeroes,
+  setExpandAllHeroes: propSetExpandAllHeroes,
+  showAllHeroesList: propShowAllHeroesList,
+  setShowAllHeroesList: propSetShowAllHeroesList
+}) {
+  const [internalExpandAllHeroes, setInternalExpandAllHeroes] = useState(false);
+  const [internalShowAllHeroesList, setInternalShowAllHeroesList] = useState(false);
+  const [expandedHeroId, setExpandedHeroId] = useState(null);
+
+  const expandAllHeroes = propExpandAllHeroes !== undefined ? propExpandAllHeroes : internalExpandAllHeroes;
+  const setExpandAllHeroes = propSetExpandAllHeroes || setInternalExpandAllHeroes;
+
+  const showAllHeroesList = propShowAllHeroesList !== undefined ? propShowAllHeroesList : internalShowAllHeroesList;
+  const setShowAllHeroesList = propSetShowAllHeroesList || setInternalShowAllHeroesList;
+
+  const heroList = heroes || [];
+  if (heroList.length === 0) {
     return null;
   }
 
+  const displayedHeroes = showAllHeroesList ? heroList : heroList.slice(0, 5);
+
   return (
     <div className="bg-[#0d111d] border border-slate-800 rounded-2xl p-5 mb-6 shadow-xl text-left select-none">
+      {/* Header with Expand All / Collapse All Controls */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-amber-400 text-sm">👑</span>
-            <h2 className="text-sm font-extrabold text-white uppercase tracking-wider">
-              HERO PERFORMANCE & COMBAT METRICS
+            <h2 className="text-xs font-extrabold text-white uppercase tracking-wider">
+              TOP HEROES & COMBAT METRICS
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-0.5 font-medium">
             Live telemetry parsed from RivalsMeta ({mode})
           </p>
         </div>
-        <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30 uppercase tracking-wide">
-          {mode || season}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30 uppercase tracking-wide">
+            {mode || season}
+          </span>
+          <button
+            type="button"
+            onClick={() => setExpandAllHeroes(!expandAllHeroes)}
+            className="text-[10px] font-bold uppercase tracking-wider text-[var(--theme-accent-text)] hover:text-white transition-colors cursor-pointer px-2 py-1 rounded bg-[var(--theme-surface-2)] border border-[var(--theme-border)]"
+          >
+            {expandAllHeroes ? '▲ Collapse All' : '▼ Expand All'}
+          </button>
+        </div>
       </div>
 
       {/* Role Summary Badges */}
@@ -38,63 +70,69 @@ export default function HeroProgression({ heroes = [], roles = [], mode = "Quick
         </div>
       )}
 
-      {/* Hero Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {heroes.map((h, idx) => {
-          const heroName = h.hero || h.hero_name || "Unknown";
-          const matches = h.matches || 0;
-          const winRate = h.win_rate || (h.win_rate_val ? `${h.win_rate_val}%` : "0%");
-          const kda = h.kda || "--";
-          const playtime = h.time_played || "--";
-          const avatar = h.avatar || "";
-
+      {/* Interactive Top Heroes Roster */}
+      <div className="space-y-2">
+        {displayedHeroes.map((hero, idx) => {
+          const heroName = hero.hero || hero.hero_name || hero.name || `Hero #${idx + 1}`;
+          const heroKey = hero.id || heroName || idx;
+          const isHeroExpanded = expandAllHeroes || expandedHeroId === heroKey;
           return (
-            <div key={idx} className="p-3.5 rounded-xl border border-slate-800/80 bg-slate-900/60 flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  {avatar ? (
-                    <img src={avatar} alt={heroName} className="w-10 h-10 rounded-lg border border-slate-700 object-cover" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center font-bold text-xs text-white border border-slate-700">
-                      {heroName.slice(0, 2).toUpperCase()}
-                    </div>
+            <div key={heroKey} className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-2)] overflow-hidden text-left transition-all">
+              <button
+                type="button"
+                onClick={() => setExpandedHeroId(isHeroExpanded && !expandAllHeroes ? null : heroKey)}
+                className="w-full flex items-center justify-between p-2.5 hover:bg-[var(--theme-surface-3)] transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="w-5 h-5 rounded bg-[var(--theme-surface-3)] border border-[var(--theme-border)] text-[10px] font-mono font-bold flex items-center justify-center text-[var(--theme-accent-text)] shrink-0">
+                    {idx + 1}
+                  </span>
+                  {(hero.avatar_url || hero.avatar) && (
+                    <img src={hero.avatar_url || hero.avatar} alt={heroName} className="w-6 h-6 rounded-full border border-[var(--theme-border)] object-cover shrink-0" />
                   )}
-                  <div>
-                    <h3 className="text-sm font-bold text-white leading-tight">{heroName}</h3>
-                    <span className="text-[11px] text-slate-400 font-medium">
-                      {playtime}
-                    </span>
-                  </div>
+                  <span className="text-xs font-bold text-white tracking-wide">{heroName}</span>
                 </div>
-                <div className="text-right">
-                  <div className="text-xs font-bold text-emerald-400">{winRate}</div>
-                  <div className="text-[10px] text-slate-400">{matches} {matches === 1 ? 'match' : 'matches'}</div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-emerald-400 font-mono">
+                    {hero.win_rate || (hero.win_rate_val ? `${hero.win_rate_val}%` : '--')}
+                  </span>
+                  <span className="text-[10px] text-[var(--theme-subtext)] font-mono">
+                    {isHeroExpanded ? '▲' : '▼'}
+                  </span>
                 </div>
-              </div>
+              </button>
 
-              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800/60 text-center">
-                <div>
-                  <div className="text-[10px] text-slate-400">KDA</div>
-                  <div className="text-xs font-bold text-white">{kda}</div>
-                  {h.kda_split && <div className="text-[9px] text-slate-400 font-mono">{h.kda_split}</div>}
-                </div>
-                <div>
-                  <div className="text-[10px] text-slate-400">Dmg / 10M</div>
-                  <div className="text-xs font-bold text-sky-400">
-                    {h.damage_10m ? h.damage_10m.toLocaleString() : `${h.damage_per_min || 0}/m`}
+              {/* Expanded Hero Substats */}
+              {isHeroExpanded && (
+                <div className="p-3 border-t border-[var(--theme-border)] bg-[var(--theme-surface-1)] grid grid-cols-3 gap-2 text-center text-xs animate-in fade-in slide-in-from-top-1 duration-200">
+                  <div>
+                    <span className="text-[9px] uppercase text-[var(--theme-subtext)] block">Matches</span>
+                    <span className="font-bold text-white font-mono">{hero.matches || hero.matches_played || hero.total_matches || '--'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] uppercase text-[var(--theme-subtext)] block">Win Rate</span>
+                    <span className="font-bold text-white font-mono">{hero.win_rate || (hero.win_rate_val ? `${hero.win_rate_val}%` : '--')}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] uppercase text-[var(--theme-subtext)] block">K/D</span>
+                    <span className="font-bold text-white font-mono">{hero.kda || hero.kd || '--'}</span>
                   </div>
                 </div>
-                <div>
-                  <div className="text-[10px] text-slate-400">Heal / 10M</div>
-                  <div className="text-xs font-bold text-emerald-400">
-                    {h.heal_10m ? h.heal_10m.toLocaleString() : `${h.heal_per_min || 0}/m`}
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           );
         })}
       </div>
+
+      {heroList.length > 5 && (
+        <button
+          type="button"
+          onClick={() => setShowAllHeroesList(!showAllHeroesList)}
+          className="w-full py-1.5 mt-3 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface-2)] text-[10px] font-bold uppercase tracking-wider text-[var(--theme-subtext)] hover:text-white hover:border-[var(--theme-accent)] transition-all cursor-pointer"
+        >
+          {showAllHeroesList ? 'Show Top 5 Only' : `View All ${heroList.length} Heroes`}
+        </button>
+      )}
     </div>
   );
 }

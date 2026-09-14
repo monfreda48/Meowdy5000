@@ -1350,6 +1350,9 @@ const calculateConsensusAverage = (sources, metricKey = '') => {
     });
   };
 
+  const [expandAllHeroes, setExpandAllHeroes] = useState(false);
+  const [showAllHeroesList, setShowAllHeroesList] = useState(false);
+
 
 
   const isClaimed = Boolean(
@@ -5072,6 +5075,10 @@ const DEFAULT_SEASON_NUM = 19;
                         heroes={stats?.top_heroes || stats?.current?.top_heroes || stats?.heroes || []}
                         roles={stats?.role_breakdown || []}
                         mode={telemetryMode}
+                        expandAllHeroes={expandAllHeroes}
+                        setExpandAllHeroes={setExpandAllHeroes}
+                        showAllHeroesList={showAllHeroesList}
+                        setShowAllHeroesList={setShowAllHeroesList}
                       />
                     )}
                     {activeViewTab === 'matchups' && (
