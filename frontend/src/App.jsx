@@ -3348,7 +3348,7 @@ ${payload.stack || 'No stack trace available.'}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      className="min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)] font-sans transition-colors duration-200 relative"
+      className="min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)] app-viewport"
     >
       {/* Animated Startup Splash Screen Overlay */}
       {showSplashOverlay && (
@@ -5482,11 +5482,11 @@ ${payload.stack || 'No stack trace available.'}
         {isMenuOpen && (
           <div
             onClick={() => setIsMenuOpen(false)}
-            className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex justify-end animate-in fade-in duration-300 select-none modal-safe-area"
+            className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex justify-end animate-in fade-in duration-300 select-none modal-safe-area"
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm bg-[#0f1526] border-l border-slate-700/80 h-full flex flex-col justify-between overflow-y-auto shadow-2xl animate-in slide-in-from-right duration-300 drawer-safe-area relative"
+              className="w-full max-w-sm bg-[var(--theme-surface-1)] text-[var(--theme-text)] border-l border-[var(--theme-border)] h-full flex flex-col justify-between overflow-y-auto shadow-2xl animate-in slide-in-from-right duration-300 drawer-safe-area relative"
             >
               {/* Drawer Header */}
               <div className="space-y-6 p-4">
@@ -5636,15 +5636,15 @@ ${payload.stack || 'No stack trace available.'}
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-bold uppercase tracking-wider text-[var(--theme-subtext)]">Color Theme</label>
                     <select
-                      value={currentTheme}
+                      value={theme || currentTheme}
                       onChange={(e) => changeTheme(e.target.value)}
-                      className="bg-[var(--theme-surface-2)] text-[var(--theme-accent-text)] border border-[var(--theme-border)] rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wider focus:outline-none focus:border-[var(--theme-accent)] cursor-pointer"
+                      className="w-full bg-[var(--theme-surface-2)] text-[var(--theme-accent-text)] border border-[var(--theme-border)] rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wider focus:outline-none focus:border-[var(--theme-accent)] cursor-pointer"
                     >
                       <option value="default">Default Cobalt</option>
                       <option value="kinetic-purple">Kinetic Purple</option>
                       <option value="gamma-green">Gamma Green</option>
-                      <option value="jean-grey">Jean Grey (Crimson)</option>
-                      <option value="oops-all-hallways">Oops All Hallways (Slate)</option>
+                      <option value="jean-grey">Jean Grey (Black & White)</option>
+                      <option value="oops-all-hallways">Oops, All Hallways (Daredevil Red)</option>
                     </select>
                   </div>
                 </div>

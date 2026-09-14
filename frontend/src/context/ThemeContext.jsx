@@ -1,48 +1,55 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const ThemeContext = createContext();
+export const VALID_THEMES = [
+  'default',
+  'kinetic-purple',
+  'gamma-green',
+  'jean-grey',
+  'oops-all-hallways'
+];
 
 export const THEME_PALETTES = [
   { id: 'default', name: 'Default Cobalt' },
   { id: 'kinetic-purple', name: 'Kinetic Purple' },
   { id: 'gamma-green', name: 'Gamma Green' },
-  { id: 'jean-grey', name: 'Jean Grey (Crimson)' },
-  { id: 'oops-all-hallways', name: 'Oops All Hallways (Slate)' }
+  { id: 'jean-grey', name: 'Jean Grey (Black & White)' },
+  { id: 'oops-all-hallways', name: 'Oops, All Hallways (Daredevil Red)' }
 ];
+
+const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
     try {
-      return localStorage.getItem('m5_theme') || 'default';
+      const saved = localStorage.getItem('m5_theme');
+      return VALID_THEMES.includes(saved) ? saved : 'default';
     } catch {
       return 'default';
     }
   });
 
-  // Synchronously update BOTH <html> and <body> on EVERY state change
+  // Synchronously mutate DOM and storage on every theme state update
   useEffect(() => {
     const root = document.documentElement;
     const body = document.body;
 
-    // 1. Set data-theme attribute on both root and body
+    // Set attribute on both <html> and <body>
     root.setAttribute('data-theme', theme);
     body.setAttribute('data-theme', theme);
 
-    // 2. Set theme class for selector redundancy
+    // Sync class names for redundant CSS selector specificity
     root.className = `theme-${theme}`;
-    body.className = `theme-${theme} bg-[var(--theme-bg)] text-[var(--theme-text)] min-h-screen`;
+    body.className = `theme-${theme} min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)] transition-colors duration-150`;
 
-    // 3. Persist to storage
     try {
       localStorage.setItem('m5_theme', theme);
-      localStorage.setItem('app_color_theme', theme);
-      localStorage.setItem('m5_color_scheme', theme);
     } catch (e) {}
   }, [theme]);
 
   const changeTheme = (newTheme) => {
-    if (!newTheme) return;
-    setTheme(newTheme);
+    if (VALID_THEMES.includes(newTheme)) {
+      setTheme(newTheme);
+    }
   };
 
   return (

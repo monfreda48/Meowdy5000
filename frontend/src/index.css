@@ -13,12 +13,10 @@
   --color-content-muted: var(--text-muted);
 }
 
-/* 1. Default Cobalt */
+/* 1. Default Cobalt (High-Tech Navy / Sky Blue) */
 :root,
 [data-theme="default"],
 .theme-default {
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
   --theme-bg: #080b13;
   --theme-surface-1: #0f1523;
   --theme-surface-2: #161f33;
@@ -27,13 +25,14 @@
   --theme-border-hover: #38bdf8;
   --theme-accent: #38bdf8;
   --theme-accent-hover: #7dd3fc;
-  --theme-accent-glow: rgba(56, 189, 248, 0.25);
+  --theme-accent-glow: rgba(56, 189, 248, 0.28);
   --theme-accent-text: #bae6fd;
   --theme-text: #f8fafc;
   --theme-subtext: #94a3b8;
+  --theme-text-muted: #64748b;
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
-  --text-muted: #475569;
+  --text-muted: #64748b;
 
   --bg-app: var(--theme-bg);
   --bg-card: var(--theme-surface-1);
@@ -45,24 +44,25 @@
   --accent-color: var(--theme-accent);
 }
 
-/* 2. Kinetic Purple */
+/* 2. Kinetic Purple (Void Black / Neon Violet) */
 [data-theme="kinetic-purple"],
 .theme-kinetic-purple {
   --theme-bg: #0b0714;
   --theme-surface-1: #130d24;
   --theme-surface-2: #1c1333;
-  --theme-surface-3: #2a1547;
+  --theme-surface-3: #291b4a;
   --theme-border: #3b2569;
-  --theme-border-hover: #c084fc;
-  --theme-accent: #c084fc;
-  --theme-accent-hover: #e879f9;
-  --theme-accent-glow: rgba(192, 132, 252, 0.25);
-  --theme-accent-text: #f3e8ff;
+  --theme-border-hover: #d946ef;
+  --theme-accent: #d946ef;
+  --theme-accent-hover: #f5d0fe;
+  --theme-accent-glow: rgba(217, 70, 239, 0.28);
+  --theme-accent-text: #f5d0fe;
   --theme-text: #f8fafc;
-  --theme-subtext: #a855f7;
+  --theme-subtext: #c084fc;
+  --theme-text-muted: #9333ea;
   --text-primary: #f8fafc;
   --text-secondary: #e9d5ff;
-  --text-muted: #58336d;
+  --text-muted: #9333ea;
 
   --bg-app: var(--theme-bg);
   --bg-card: var(--theme-surface-1);
@@ -74,24 +74,25 @@
   --accent-color: var(--theme-accent);
 }
 
-/* 3. Gamma Green */
+/* 3. Gamma Green (Bunker Black / Radioactive Emerald) */
 [data-theme="gamma-green"],
 .theme-gamma-green {
-  --theme-bg: #050f0a;
-  --theme-surface-1: #0a1c12;
-  --theme-surface-2: #112e1f;
-  --theme-surface-3: #15381d;
-  --theme-border: #1e5237;
-  --theme-border-hover: #34d399;
-  --theme-accent: #34d399;
-  --theme-accent-hover: #4ade80;
-  --theme-accent-glow: rgba(52, 211, 153, 0.25);
-  --theme-accent-text: #d1fae5;
+  --theme-bg: #040e08;
+  --theme-surface-1: #091b10;
+  --theme-surface-2: #102b1a;
+  --theme-surface-3: #183e26;
+  --theme-border: #1b4d2e;
+  --theme-border-hover: #22c55e;
+  --theme-accent: #22c55e;
+  --theme-accent-hover: #86efac;
+  --theme-accent-glow: rgba(34, 197, 94, 0.28);
+  --theme-accent-text: #bbf7d0;
   --theme-text: #f8fafc;
-  --theme-subtext: #6ee7b7;
+  --theme-subtext: #4ade80;
+  --theme-text-muted: #16a34a;
   --text-primary: #f8fafc;
   --text-secondary: #bbf7d0;
-  --text-muted: #3b5943;
+  --text-muted: #16a34a;
 
   --bg-app: var(--theme-bg);
   --bg-card: var(--theme-surface-1);
@@ -103,24 +104,25 @@
   --accent-color: var(--theme-accent);
 }
 
-/* 4. Jean Grey (Crimson) */
+/* 4. Jean Grey (High-Contrast Black & White / Monochrome) */
 [data-theme="jean-grey"],
 .theme-jean-grey {
-  --theme-bg: #0f0507;
-  --theme-surface-1: #1c0a0e;
-  --theme-surface-2: #2e1017;
-  --theme-surface-3: #3d141e;
-  --theme-border: #5c1d2b;
-  --theme-border-hover: #fb7185;
-  --theme-accent: #f43f5e;
-  --theme-accent-hover: #fda4af;
-  --theme-accent-glow: rgba(244, 63, 94, 0.25);
-  --theme-accent-text: #ffe4e6;
+  --theme-bg: #09090b;
+  --theme-surface-1: #121216;
+  --theme-surface-2: #18181f;
+  --theme-surface-3: #22222b;
+  --theme-border: #2e2e3a;
+  --theme-border-hover: #ffffff;
+  --theme-accent: #ffffff;
+  --theme-accent-hover: #e4e4e7;
+  --theme-accent-glow: rgba(255, 255, 255, 0.28);
+  --theme-accent-text: #ffffff;
   --theme-text: #f8fafc;
-  --theme-subtext: #fda4af;
+  --theme-subtext: #a1a1aa;
+  --theme-text-muted: #71717a;
   --text-primary: #f8fafc;
-  --text-secondary: #ffe4e6;
-  --text-muted: #52525b;
+  --text-secondary: #e4e4e7;
+  --text-muted: #71717a;
 
   --bg-app: var(--theme-bg);
   --bg-card: var(--theme-surface-1);
@@ -132,24 +134,25 @@
   --accent-color: var(--theme-accent);
 }
 
-/* 5. Oops All Hallways (Slate) */
+/* 5. Oops, All Hallways (Daredevil Crimson Red) */
 [data-theme="oops-all-hallways"],
 .theme-oops-all-hallways {
-  --theme-bg: #0b0f17;
-  --theme-surface-1: #131b29;
-  --theme-surface-2: #1c2638;
-  --theme-surface-3: #28374f;
-  --theme-border: #2d3b52;
-  --theme-border-hover: #94a3b8;
-  --theme-accent: #cbd5e1;
-  --theme-accent-hover: #f1f5f9;
-  --theme-accent-glow: rgba(203, 213, 225, 0.25);
-  --theme-accent-text: #ffffff;
+  --theme-bg: #0d0405;
+  --theme-surface-1: #170709;
+  --theme-surface-2: #240b0e;
+  --theme-surface-3: #361016;
+  --theme-border: #4d151e;
+  --theme-border-hover: #ef4444;
+  --theme-accent: #ef4444;
+  --theme-accent-hover: #fca5a5;
+  --theme-accent-glow: rgba(239, 68, 68, 0.32);
+  --theme-accent-text: #fee2e2;
   --theme-text: #f8fafc;
-  --theme-subtext: #94a3b8;
+  --theme-subtext: #f87171;
+  --theme-text-muted: #dc2626;
   --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #475569;
+  --text-secondary: #fee2e2;
+  --text-muted: #dc2626;
 
   --bg-app: var(--theme-bg);
   --bg-card: var(--theme-surface-1);
