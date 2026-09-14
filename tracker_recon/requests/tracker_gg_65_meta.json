@@ -1,0 +1,11 @@
+{
+  "url": "https://id.a-mx.com/sync?tao=1&&uid=c6f6c0bf-c2ae-4ef3-86f7-2df154a5e43f",
+  "method": "GET",
+  "headers": {
+    "sec-ch-ua-platform": "\"Windows\"",
+    "referer": "https://prebid.a-mo.net/",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+    "sec-ch-ua": "\"Not=A?Brand\";v=\"99\", \"HeadlessChrome\";v=\"151\", \"Chromium\";v=\"151\"",
+    "sec-ch-ua-mobile": "?0"
+  }
+}

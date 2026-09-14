@@ -1,0 +1,11 @@
+{
+  "url": "https://token.rubiconproject.com/khaos.json?gdpr_consent=1---&khaos=MU1OA3RX-24-FW4X",
+  "method": "GET",
+  "headers": {
+    "sec-ch-ua-platform": "\"Windows\"",
+    "referer": "https://eus.rubiconproject.com/",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+    "sec-ch-ua": "\"Not=A?Brand\";v=\"99\", \"HeadlessChrome\";v=\"151\", \"Chromium\";v=\"151\"",
+    "sec-ch-ua-mobile": "?0"
+  }
+}

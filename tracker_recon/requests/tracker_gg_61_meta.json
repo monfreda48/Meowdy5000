@@ -1,0 +1,12 @@
+{
+  "url": "https://sonic.impactify.media/cookie_sync",
+  "method": "POST",
+  "headers": {
+    "sec-ch-ua-platform": "\"Windows\"",
+    "referer": "https://sonic.impactify.media/static/cookie_sync.html?gdpr=0&gdpr_consent=&us_privacy=1YN-&",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+    "sec-ch-ua": "\"Not=A?Brand\";v=\"99\", \"HeadlessChrome\";v=\"151\", \"Chromium\";v=\"151\"",
+    "content-type": "application/json",
+    "sec-ch-ua-mobile": "?0"
+  }
+}

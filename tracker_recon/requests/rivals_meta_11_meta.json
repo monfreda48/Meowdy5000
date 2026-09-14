@@ -1,0 +1,11 @@
+{
+  "url": "https://seg.ad.gt/api/v2/segments?url=https%253A%252F%252Frivalsmeta.com%252Fplayer%252F70463344&partner_id=720&tagger_id=86cde3a58763040ec881605e429f437e&au_id=AU1D-0100-001789416375-52JY182F-NHZC",
+  "method": "GET",
+  "headers": {
+    "sec-ch-ua-platform": "\"Windows\"",
+    "referer": "https://rivalsmeta.com/",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+    "sec-ch-ua": "\"Not=A?Brand\";v=\"99\", \"HeadlessChrome\";v=\"151\", \"Chromium\";v=\"151\"",
+    "sec-ch-ua-mobile": "?0"
+  }
+}

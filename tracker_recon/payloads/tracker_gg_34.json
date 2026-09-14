@@ -1,0 +1,23 @@
+{
+  "cpm": 0.0,
+  "currency": "USD",
+  "width": 0,
+  "height": 0,
+  "ad": null,
+  "adUrl": null,
+  "dealId": null,
+  "ttl": 0,
+  "isNetCpm": true,
+  "creativeId": 0,
+  "cSyncUrl": null,
+  "isNoAd": true,
+  "dspPixels": [
+    "https://cs.admanmedia.com/e09bad714a425a93d6dea503dcf9c528.gif?redir=https%3A%2F%2Frtb-csync.smartadserver.com%2Fredir%2F%3Fissi%3D1%26partnerid%3D130%26partneruserid%3D%5BUID%5D%26gdpr%3D%5BGDPR%5D%26gdpr_consent%3D%5BGDPR_CONSENT%5D&gdpr=0&gdpr_consent=",
+    "https://cms.quantserve.com/pixel/p-_jQ037pSmtjhN.gif?idmatch=1&gdpr=0&gdpr_consent=",
+    "https://rtb-csync.smartadserver.com/redir/?issi=1&partnerid=134&partneruserid=OB_OK&redirurl=https%3A%2F%2Fcm.g.doubleclick.net%2Fpixel%3Fgoogle_nid%3Dsmart_adserver_eb%26google_hm%3DSMART_USER_ID_B64&gdpr=0&gdpr_consent=",
+    "https://match.prod.bidr.io/cookie-sync/sas?gdpr=0&gdpr_consent=",
+    "https://eu-u.openx.net/w/1.0/cm?id=a547219b-814b-4e3e-8a4f-35c044fa1891&ph=ec81d0b7-c42e-4a42-b97a-9305af647d30&r=https%3A%2F%2Frtb-csync.smartadserver.com%2Fredir%2F%3Fissi%3D1%26partnerid%3D100%26partneruserid%3D%7BOPENX_ID%7D&gdpr=0&gdpr_consent="
+  ],
+  "adomain": null,
+  "dsa": null
+}

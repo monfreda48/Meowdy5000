@@ -1,0 +1,40 @@
+{
+  "signature": "ID5_An21CalYDR1jpVTqCVfoViQClW248TP3k4nBoY2mF7v56qWhnTJfoAGVyOEp6b6zmO_Xt54x54F2qVWDIwo6YzQUAahxV78SsARxGar8q9AeiZ91w1YBrmDoJt18OYGuutOZt8SzGl3SMU6YY-bWszBnCiOCzDSeXYAMii9fiRo6o8VBtH0",
+  "created_at": "2026-09-14T20:05:28.271Z",
+  "id5_consent": true,
+  "original_uid": "ID5*exI_J15vRtek5LjuDljNYrm1ugXVIRmgNSzLxsSlAn3__2qoU4laAAEBCmqoU4gA4EDsCgFNH0Poajk3kd5mUA",
+  "universal_uid": "ID5*AjWaPS7ryN5GOEQhF4i4iBibzlThXKXkhboGcx5q-jz__2qoU4laAAEBCmqoU4gA4EC_KwjU48khqcEqoNbj0Q",
+  "link_type": 2,
+  "cascade_needed": true,
+  "privacy": {
+    "jurisdiction": "other",
+    "id5_consent": true
+  },
+  "ext": {
+    "linkType": 2,
+    "pba": "LoQ37+94o478JIlMXgjHkxCUfubZZumFcNBwPgS8nPxqFopQ2qofYn2qA2KSV1SaW9IqgY8bloeeUdMktTTRiQ=="
+  },
+  "cache_control": {
+    "max_age_sec": 7200
+  },
+  "ids": {
+    "id5id": {
+      "eid": {
+        "source": "id5-sync.com",
+        "uids": [
+          {
+            "id": "ID5*AjWaPS7ryN5GOEQhF4i4iBibzlThXKXkhboGcx5q-jz__2qoU4laAAEBCmqoU4gA4EC_KwjU48khqcEqoNbj0Q",
+            "atype": 1,
+            "ext": {
+              "linkType": 2,
+              "pba": "LoQ37+94o478JIlMXgjHkxCUfubZZumFcNBwPgS8nPxqFopQ2qofYn2qA2KSV1SaW9IqgY8bloeeUdMktTTRiQ=="
+            }
+          }
+        ]
+      }
+    }
+  },
+  "tags": {
+    "id": "y"
+  }
+}

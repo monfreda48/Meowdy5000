@@ -1,0 +1,23 @@
+{
+  "cpm": 0.0,
+  "currency": "USD",
+  "width": 0,
+  "height": 0,
+  "ad": null,
+  "adUrl": null,
+  "dealId": null,
+  "ttl": 0,
+  "isNetCpm": true,
+  "creativeId": 0,
+  "cSyncUrl": null,
+  "isNoAd": true,
+  "dspPixels": [
+    "https://cms.quantserve.com/pixel/p-EtBqU4Lj3YbAv.gif?idmatch=0&gdpr=0&gdpr_consent=",
+    "https://ssp.wp.pl/v1/sync/smart/uid?redirect=https%3A%2F%2Frtb-csync.smartadserver.com%2Fredir%2F%3Fissi%3D1%26partnerid%3D55&gdpr=0&gdpr_consent=",
+    "https://sync-tm.everesttech.net/upi/pid/gjIEMT18?redir=https%3A%2F%2Frtb-csync.smartadserver.com%2Fredir%2F%3Fissi%3D1%26partnerid%3D94%26partneruserid%3D%24%7BTM_USER_ID%7D&gdpr=0&gdpr_consent=",
+    "https://match.deepintent.com/usersync/158",
+    "https://c1.adform.net/serving/cookie/match?party=10&sspurl=https%3A%2F%2Frtb-csync.smartadserver.com%2Fredir%2F%3Fissi%3D1%26partnerid%3D22%26partneruserid%3DYOUR_USER_ID&gdpr=0&gdpr_consent="
+  ],
+  "adomain": null,
+  "dsa": null
+}

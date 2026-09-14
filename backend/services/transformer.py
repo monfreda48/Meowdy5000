@@ -103,42 +103,45 @@ class TelemetryTransformer:
             safe_float(rd_curr.get("kda")),
             safe_float(rd.get("kda"))
         ]
-        kda = next((k for k in kdas if k > 0), 4.21)
+        kda = next((k for k in kdas if k > 0), 0.0)
 
         kills = (
             safe_int(rd_curr.get("elims")) or
             safe_int(rd.get("elims")) or
             safe_int(tgg.get("kills")) or
-            safe_int(rm.get("kills")) or 399
+            safe_int(rm.get("kills")) or 0
         )
         deaths = (
             safe_int(rd_curr.get("deaths")) or
             safe_int(rd.get("deaths")) or
             safe_int(tgg.get("deaths")) or
-            safe_int(rm.get("deaths")) or 106
+            safe_int(rm.get("deaths")) or 0
         )
         assists = (
             safe_int(rd_curr.get("assists")) or
             safe_int(rd.get("assists")) or
             safe_int(tgg.get("assists")) or
-            safe_int(rm.get("assists")) or 106
+            safe_int(rm.get("assists")) or 0
         )
 
         # 5. Top Hero vs Total Season Playtime Calculation
-        top_hero_name = "Jubilee"
-        top_hero_hours = 2.4
+        top_hero_name = "N/A"
+        top_hero_hours = 0.0
         if rm.get("hero_stats") and len(rm["hero_stats"]) > 0:
-            top_hero_name = rm["hero_stats"][0].get("hero") or rm["hero_stats"][0].get("name") or "Jubilee"
-            top_hero_hours = safe_float(rm["hero_stats"][0].get("time_played", 2.4), 2.4)
+            top_hero_name = rm["hero_stats"][0].get("hero") or rm["hero_stats"][0].get("name") or "N/A"
+            top_hero_hours = safe_float(rm["hero_stats"][0].get("time_played", 0.0), 0.0)
         elif rt.get("hero_stats") and len(rt["hero_stats"]) > 0:
-            top_hero_name = rt["hero_stats"][0].get("hero") or rt["hero_stats"][0].get("name") or "Jubilee"
-            top_hero_hours = safe_float(rt["hero_stats"][0].get("time_played", 2.4), 2.4)
+            top_hero_name = rt["hero_stats"][0].get("hero") or rt["hero_stats"][0].get("name") or "N/A"
+            top_hero_hours = safe_float(rt["hero_stats"][0].get("time_played", 0.0), 0.0)
+        elif tgg.get("heroes") and len(tgg["heroes"]) > 0:
+            top_hero_name = tgg["heroes"][0].get("hero") or tgg["heroes"][0].get("name") or "N/A"
+            top_hero_hours = safe_float(tgg["heroes"][0].get("time_played", 0.0), 0.0)
 
-        total_season_hours = round(top_hero_hours + 2.8, 1)
+        total_season_hours = round(top_hero_hours, 1)
         if rm.get("hero_stats"):
             hero_hours_sum = sum(safe_float(h.get("time_played", 0)) for h in rm["hero_stats"])
             if hero_hours_sum > 0:
-                total_season_hours = round(hero_hours_sum * 1.6, 1)
+                total_season_hours = round(hero_hours_sum, 1)
 
         playtime_seconds = int(total_season_hours * 3600)
 

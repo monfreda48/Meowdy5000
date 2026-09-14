@@ -1,0 +1,2485 @@
+{
+  "data": {
+    "platformInfo": {
+      "platformSlug": "ign",
+      "platformUserId": null,
+      "platformUserHandle": "Meowdy 5000",
+      "platformUserIdentifier": "Meowdy 5000",
+      "avatarUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/items/nameplates/avatars/31029208.jpg?v=1778836364",
+      "additionalParameters": null
+    },
+    "userInfo": {
+      "userId": 18080787,
+      "isPremium": false,
+      "isVerified": false,
+      "isInfluencer": false,
+      "isPartner": false,
+      "countryCode": null,
+      "customAvatarUrl": null,
+      "customHeroUrl": null,
+      "customAvatarFrame": null,
+      "customAvatarFrameInfo": null,
+      "premiumDuration": null,
+      "socialAccounts": [],
+      "badges": [
+        {
+          "titleSlug": "marvel-rivals",
+          "userId": 18080787,
+          "key": "xp-tier",
+          "lootKey": null,
+          "tier": 2,
+          "name": "Ranger",
+          "description": "Climbed to the Ranger XP division.",
+          "isGlobal": false,
+          "isStatTracker": false,
+          "badgeImageUrl": "https://trackercdn.com/cdn/awards/badges/badge_xp-tier4.png",
+          "awardImageUrl": "https://trackercdn.com/cdn/awards/award_xp-tier4.png",
+          "rarity": "Rare",
+          "category": "XP",
+          "nextMilestone": "Hero Tier",
+          "dateAwarded": "2026-09-07T12:00:57.151308+00:00",
+          "awarderId": null,
+          "seen": true
+        }
+      ],
+      "pageviews": 63,
+      "xpTier": null,
+      "isSuspicious": null
+    },
+    "metadata": {
+      "lastUpdated": {
+        "value": "2000-01-01T00:00:00+00:00",
+        "displayValue": "2000-01-01T00:00:00.0000000+00:00"
+      },
+      "isPC": false,
+      "clubMiniName": "SN4CK",
+      "isPrivateCareerOverview": false,
+      "isPrivateCareerStatistics": false,
+      "isPrivateBattleHistory": false,
+      "level": 93,
+      "gamemodes": [
+        {
+          "id": "competitive",
+          "name": "Competitive"
+        },
+        {
+          "id": "quick-match",
+          "name": "Quick Match"
+        },
+        {
+          "id": "arcade",
+          "name": "Arcade"
+        },
+        {
+          "id": "18v18-annihilation",
+          "name": "18v18 Annihilation"
+        },
+        {
+          "id": "tournament",
+          "name": "Tournament"
+        },
+        {
+          "id": "event",
+          "name": "Event"
+        }
+      ],
+      "currentSeason": 20,
+      "defaultSeason": 20,
+      "seasons": [
+        {
+          "id": 20,
+          "name": "S10: Butcher's Blasphemy",
+          "shortName": "S10"
+        },
+        {
+          "id": 19,
+          "name": "S9.5: The Mystery of Thebes",
+          "shortName": "S9.5"
+        },
+        {
+          "id": 18,
+          "name": "S9: The Mystery of Thebes",
+          "shortName": "S9"
+        },
+        {
+          "id": 17,
+          "name": "S8.5: Sins of Alchemax",
+          "shortName": "S8.5"
+        },
+        {
+          "id": 16,
+          "name": "S8: Sins of Alchemax",
+          "shortName": "S8"
+        },
+        {
+          "id": 15,
+          "name": "S7.5: The Hunt is On",
+          "shortName": "S7.5"
+        },
+        {
+          "id": 14,
+          "name": "S7: The Hunt is On",
+          "shortName": "S7"
+        },
+        {
+          "id": 13,
+          "name": "S6.5: Night at the Museum",
+          "shortName": "S6.5"
+        },
+        {
+          "id": 12,
+          "name": "S6: Night at the Museum",
+          "shortName": "S6"
+        },
+        {
+          "id": 11,
+          "name": "S5.5: Love is a Battlefield",
+          "shortName": "S5.5"
+        },
+        {
+          "id": 10,
+          "name": "S5: Love is a Battlefield",
+          "shortName": "S5"
+        },
+        {
+          "id": 9,
+          "name": "S4.5: Heart of the Dragon",
+          "shortName": "S4.5"
+        },
+        {
+          "id": 8,
+          "name": "S4: Heart of the Dragon",
+          "shortName": "S4"
+        },
+        {
+          "id": 7,
+          "name": "S3.5: The Abyss Awakens",
+          "shortName": "S3.5"
+        },
+        {
+          "id": 6,
+          "name": "S3: The Abyss Awakens",
+          "shortName": "S3"
+        },
+        {
+          "id": 5,
+          "name": "S2.5: Hellfire Gala",
+          "shortName": "S2.5"
+        },
+        {
+          "id": 4,
+          "name": "S2: Hellfire Gala",
+          "shortName": "S2"
+        },
+        {
+          "id": 3,
+          "name": "S1.5: Eternal Night Falls",
+          "shortName": "S1.5"
+        },
+        {
+          "id": 2,
+          "name": "S1: Eternal Night Falls",
+          "shortName": "S1"
+        },
+        {
+          "id": 1,
+          "name": "S0: Dooms' Rise",
+          "shortName": "S0"
+        }
+      ]
+    },
+    "segments": [
+      {
+        "type": "overview",
+        "attributes": {
+          "season": 20,
+          "mode": "all"
+        },
+        "metadata": {
+          "name": "All"
+        },
+        "expiryDate": "0001-01-01T00:00:00+00:00",
+        "stats": {
+          "timePlayed": {
+            "displayName": "Time Played",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0s",
+            "displayType": "TimeSeconds"
+          },
+          "matchesPlayed": {
+            "displayName": "Matches Played",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 25,
+            "displayValue": "25",
+            "displayType": "Number"
+          },
+          "matchesWon": {
+            "percentile": 60.0,
+            "displayName": "Wins",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 12,
+            "displayValue": "12",
+            "displayType": "Number"
+          },
+          "matchesWinPct": {
+            "percentile": 36.0,
+            "displayName": "Win %",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 48.0,
+            "displayValue": "48.0%",
+            "displayType": "NumberPercentage"
+          },
+          "kills": {
+            "percentile": 64.0,
+            "displayName": "Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 542,
+            "displayValue": "542",
+            "displayType": "Number"
+          },
+          "deaths": {
+            "displayName": "Deaths",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 169,
+            "displayValue": "169",
+            "displayType": "Number"
+          },
+          "assists": {
+            "displayName": "Assists",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 169,
+            "displayValue": "169",
+            "displayType": "Number"
+          },
+          "kdRatio": {
+            "displayName": "K/D Ratio",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 3.2071005917159763,
+            "displayValue": "3.21",
+            "displayType": "NumberPrecision2"
+          },
+          "kdaRatio": {
+            "percentile": 24.0,
+            "displayName": "KDA Ratio",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 4.21,
+            "displayValue": "4.21",
+            "displayType": "NumberPrecision2"
+          },
+          "totalHeroDamage": {
+            "displayName": "Damage",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalHeroDamagePerMinute": {
+            "displayName": "Damage/Min",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalHeroHeal": {
+            "displayName": "Healing",
+            "displayCategory": "Healing",
+            "category": "healing",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalHeroHealPerMinute": {
+            "displayName": "Healing/Min",
+            "displayCategory": "Healing",
+            "category": "healing",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalDamageTaken": {
+            "displayName": "Damage Blocked",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalDamageTakenPerMinute": {
+            "displayName": "Damage Blocked/Min",
+            "displayCategory": "Healing",
+            "category": "healing",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "lastKills": {
+            "displayName": "Last Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "headKills": {
+            "displayName": "Head Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "soloKills": {
+            "displayName": "Solo Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "maxSurvivalKills": {
+            "displayName": "Max Survival Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "maxContinueKills": {
+            "displayName": "Max Continue Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills3": {
+            "displayName": "Continue Kills 3",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills4": {
+            "displayName": "Continue Kills 4",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills5": {
+            "displayName": "Continue Kills 5",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills6": {
+            "displayName": "Continue Kills 6",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "mainAttacks": {
+            "displayName": "Main Attacks",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "mainAttackHits": {
+            "displayName": "Main Attack Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "shieldHits": {
+            "displayName": "Shield Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "summonerHits": {
+            "displayName": "Summoner Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "chaosHits": {
+            "displayName": "Chaos Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalMvp": {
+            "percentile": 41.0,
+            "displayName": "MVPs",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 3,
+            "displayValue": "3",
+            "displayType": "Number"
+          },
+          "totalMvpPct": {
+            "displayName": "MVP %",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 25.0,
+            "displayValue": "25.00",
+            "displayType": "NumberPrecision2"
+          },
+          "totalSvp": {
+            "percentile": 0.0,
+            "displayName": "SVPs",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalSvpPct": {
+            "displayName": "SVP %",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0.00",
+            "displayType": "NumberPrecision2"
+          },
+          "ranked": {
+            "displayName": "Rank Score",
+            "category": "skillrating",
+            "metadata": {
+              "unit": "RS",
+              "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+              "tierName": "Platinum I",
+              "tierShortName": "P1",
+              "color": "#58E1E8",
+              "placementMatches": 10,
+              "placementFinished": true
+            },
+            "value": 4196.0,
+            "displayValue": "4,196",
+            "displayType": "String"
+          },
+          "peakRanked": {
+            "displayName": "Peak Rank Score",
+            "category": "skillrating",
+            "metadata": {
+              "unit": "RS",
+              "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+              "tierName": "Platinum I",
+              "tierShortName": "P1",
+              "color": "#58E1E8"
+            },
+            "value": 4171.0,
+            "displayValue": "4,171",
+            "displayType": "String"
+          }
+        }
+      },
+      {
+        "type": "ranked-peaks",
+        "attributes": {},
+        "metadata": {},
+        "expiryDate": "0001-01-01T00:00:00+00:00",
+        "stats": {
+          "peakTiers": {
+            "displayName": "Season Peaks",
+            "metadata": {},
+            "value": [
+              {
+                "displayName": "Peak Rating",
+                "metadata": {
+                  "unit": "RS",
+                  "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+                  "tierName": "Platinum I",
+                  "tierShortName": "P1",
+                  "color": "#58E1E8",
+                  "season": 20,
+                  "seasonName": "S10: Butcher's Blasphemy",
+                  "seasonShortName": "S10"
+                },
+                "value": 4171.0656864138655,
+                "displayValue": null,
+                "displayType": "Custom"
+              },
+              {
+                "displayName": "Peak Rating",
+                "metadata": {
+                  "unit": "RS",
+                  "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+                  "tierName": "Grandmaster III",
+                  "tierShortName": "GM3",
+                  "color": "#9E4BFF",
+                  "season": 19,
+                  "seasonName": "S9.5: The Mystery of Thebes",
+                  "seasonShortName": "S9.5"
+                },
+                "value": 4565.900356949439,
+                "displayValue": null,
+                "displayType": "Custom"
+              },
+              {
+                "displayName": "Peak Rating",
+                "metadata": {
+                  "unit": "RS",
+                  "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+                  "tierName": "Diamond II",
+                  "tierShortName": "D2",
+                  "color": "#1680FF",
+                  "season": 18,
+                  "seasonName": "S9: The Mystery of Thebes",
+                  "seasonShortName": "S9"
+                },
+                "value": 4355.143497215245,
+                "displayValue": null,
+                "displayType": "Custom"
+              },
+              {
+                "displayName": "Peak Rating",
+                "metadata": {
+                  "unit": "RS",
+                  "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+                  "tierName": "Grandmaster II",
+                  "tierShortName": "GM2",
+                  "color": "#9E4BFF",
+                  "season": 17,
+                  "seasonName": "S8.5: Sins of Alchemax",
+                  "seasonShortName": "S8.5"
+                },
+                "value": 4603.085885874333,
+                "displayValue": null,
+                "displayType": "Custom"
+              },
+              {
+                "displayName": "Peak Rating",
+                "metadata": {
+                  "unit": "RS",
+                  "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+                  "tierName": "Diamond II",
+                  "tierShortName": "D2",
+                  "color": "#1680FF",
+                  "season": 16,
+                  "seasonName": "S8: Sins of Alchemax",
+                  "seasonShortName": "S8"
+                },
+                "value": 4341.599730207595,
+                "displayValue": null,
+                "displayType": "Custom"
+              },
+              {
+                "displayName": "Peak Rating",
+                "metadata": {
+                  "unit": "RS",
+                  "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+                  "tierName": "Grandmaster III",
+                  "tierShortName": "GM3",
+                  "color": "#9E4BFF",
+                  "season": 15,
+                  "seasonName": "S7.5: The Hunt is On",
+                  "seasonShortName": "S7.5"
+                },
+                "value": 4506.672938932768,
+                "displayValue": null,
+                "displayType": "Custom"
+              },
+              {
+                "displayName": "Peak Rating",
+                "metadata": {
+                  "unit": "RS",
+                  "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+                  "tierName": "Platinum I",
+                  "tierShortName": "P1",
+                  "color": "#58E1E8",
+                  "season": 14,
+                  "seasonName": "S7: The Hunt is On",
+                  "seasonShortName": "S7"
+                },
+                "value": 4149.132175884627,
+                "displayValue": null,
+                "displayType": "Custom"
+              },
+              {
+                "displayName": "Peak Rating",
+                "metadata": {
+                  "unit": "RS",
+                  "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+                  "tierName": "Diamond I",
+                  "tierShortName": "D1",
+                  "color": "#1680FF",
+                  "season": 13,
+                  "seasonName": "S6.5: Night at the Museum",
+                  "seasonShortName": "S6.5"
+                },
+                "value": 4407.878126420894,
+                "displayValue": null,
+                "displayType": "Custom"
+              },
+              {
+                "displayName": "Peak Rating",
+                "metadata": {
+                  "unit": "RS",
+                  "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+                  "tierName": "Diamond II",
+                  "tierShortName": "D2",
+                  "color": "#1680FF",
+                  "season": 12,
+                  "seasonName": "S6: Night at the Museum",
+                  "seasonShortName": "S6"
+                },
+                "value": 4371.098925497139,
+                "displayValue": null,
+                "displayType": "Custom"
+              },
+              {
+                "displayName": "Peak Rating",
+                "metadata": {
+                  "unit": "RS",
+                  "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+                  "tierName": "Grandmaster III",
+                  "tierShortName": "GM3",
+                  "color": "#9E4BFF",
+                  "season": 11,
+                  "seasonName": "S5.5: Love is a Battlefield",
+                  "seasonShortName": "S5.5"
+                },
+                "value": 4520.53094006062,
+                "displayValue": null,
+                "displayType": "Custom"
+              },
+              {
+                "displayName": "Peak Rating",
+                "metadata": {
+                  "unit": "RS",
+                  "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+                  "tierName": "Diamond III",
+                  "tierShortName": "D3",
+                  "color": "#1680FF",
+                  "season": 10,
+                  "seasonName": "S5: Love is a Battlefield",
+                  "seasonShortName": "S5"
+                },
+                "value": 4238.3483361677345,
+                "displayValue": null,
+                "displayType": "Custom"
+              },
+              {
+                "displayName": "Peak Rating",
+                "metadata": {
+                  "unit": "RS",
+                  "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+                  "tierName": "Grandmaster III",
+                  "tierShortName": "GM3",
+                  "color": "#9E4BFF",
+                  "season": 9,
+                  "seasonName": "S4.5: Heart of the Dragon",
+                  "seasonShortName": "S4.5"
+                },
+                "value": 4522.017971205114,
+                "displayValue": null,
+                "displayType": "Custom"
+              },
+              {
+                "displayName": "Peak Rating",
+                "metadata": {
+                  "unit": "RS",
+                  "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+                  "tierName": "Platinum I",
+                  "tierShortName": "P1",
+                  "color": "#58E1E8",
+                  "season": 8,
+                  "seasonName": "S4: Heart of the Dragon",
+                  "seasonShortName": "S4"
+                },
+                "value": 4146.340303557399,
+                "displayValue": null,
+                "displayType": "Custom"
+              },
+              {
+                "displayName": "Peak Rating",
+                "metadata": {
+                  "unit": "RS",
+                  "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+                  "tierName": "Diamond II",
+                  "tierShortName": "D2",
+                  "color": "#1680FF",
+                  "season": 7,
+                  "seasonName": "S3.5: The Abyss Awakens",
+                  "seasonShortName": "S3.5"
+                },
+                "value": 4301.633104364775,
+                "displayValue": null,
+                "displayType": "Custom"
+              }
+            ],
+            "displayValue": null,
+            "displayType": "Custom"
+          },
+          "lifetimePeakRanked": {
+            "displayName": "Lifetime Peak Rank Score",
+            "category": "skillrating",
+            "metadata": {
+              "unit": "RS",
+              "iconUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "tierName": "Grandmaster II",
+              "tierShortName": "GM2",
+              "color": "#9E4BFF",
+              "season": 17,
+              "seasonName": "S8.5: Sins of Alchemax",
+              "seasonShortName": "S8.5"
+            },
+            "value": 4603.0,
+            "displayValue": "4,603",
+            "displayType": "String"
+          }
+        }
+      },
+      {
+        "type": "hero",
+        "attributes": {
+          "heroId": 1064,
+          "season": 20,
+          "mode": "all",
+          "role": "strategist"
+        },
+        "metadata": {
+          "name": "Jubilee",
+          "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/heroes/square/1064.png?v=1783679554",
+          "roleName": "Strategist",
+          "color": "#C9AD2E"
+        },
+        "expiryDate": "0001-01-01T00:00:00+00:00",
+        "stats": {
+          "timePlayed": {
+            "displayName": "Time Played",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0s",
+            "displayType": "TimeSeconds"
+          },
+          "timePlayedWon": {
+            "displayName": "Time Played Won",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0s",
+            "displayType": "TimeSeconds"
+          },
+          "matchesPlayed": {
+            "displayName": "Matches Played",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 17.0,
+            "displayValue": "17.0",
+            "displayType": "NumberPrecision1"
+          },
+          "matchesWon": {
+            "displayName": "Wins",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 8.0,
+            "displayValue": "8",
+            "displayType": "Number"
+          },
+          "matchesWinPct": {
+            "displayName": "Win %",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 47.05882352941176,
+            "displayValue": "47.1%",
+            "displayType": "NumberPercentage"
+          },
+          "kills": {
+            "displayName": "Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 372,
+            "displayValue": "372",
+            "displayType": "Number"
+          },
+          "deaths": {
+            "displayName": "Deaths",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 102,
+            "displayValue": "102",
+            "displayType": "Number"
+          },
+          "assists": {
+            "displayName": "Assists",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 102,
+            "displayValue": "102",
+            "displayType": "Number"
+          },
+          "kdRatio": {
+            "displayName": "K/D Ratio",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 3.6470588235294117,
+            "displayValue": "3.65",
+            "displayType": "NumberPrecision2"
+          },
+          "kdaRatio": {
+            "displayName": "KDA Ratio",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 4.647058823529412,
+            "displayValue": "4.65",
+            "displayType": "NumberPrecision2"
+          },
+          "totalHeroDamage": {
+            "displayName": "Damage",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalHeroDamagePerMinute": {
+            "displayName": "Damage/Min",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalHeroHeal": {
+            "displayName": "Healing",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "totalHeroHealPerMinute": {
+            "displayName": "Healing/Min",
+            "displayCategory": "Healing",
+            "category": "healing",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalDamageTaken": {
+            "displayName": "Damage Blocked",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalDamageTakenPerMinute": {
+            "displayName": "Damage Blocked/Min",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "lastKills": {
+            "displayName": "Last Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "headKills": {
+            "displayName": "Head Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "soloKills": {
+            "displayName": "Solo Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "survivalKills": {
+            "displayName": "Survival Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills": {
+            "displayName": "Continue Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills3": {
+            "displayName": "Continue Kills 3",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills4": {
+            "displayName": "Continue Kills 4",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills5": {
+            "displayName": "Continue Kills 5",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills6": {
+            "displayName": "Continue Kills 6",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "mainAttacks": {
+            "displayName": "Main Attacks",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "mainAttackHits": {
+            "displayName": "Main Attack Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "shieldHits": {
+            "displayName": "Shield Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "summonerHits": {
+            "displayName": "Summoner Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "chaosHits": {
+            "displayName": "Chaos Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalMvp": {
+            "displayName": "MVPs",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 2,
+            "displayValue": "2",
+            "displayType": "Number"
+          },
+          "totalSvp": {
+            "displayName": "SVPs",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "featureNormalData1": {
+            "displayName": "Feature Normal Data 1",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureNormalData2": {
+            "displayName": "Feature Normal Data 2",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureNormalData3": {
+            "displayName": "Feature Normal Data 3",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureNormalData4": {
+            "displayName": "Feature Normal Data 4",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureCriticalRate1CritHits": {
+            "displayName": "Feature Critical Rate 1 Crit Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureCriticalRate1Hits": {
+            "displayName": "Feature Critical Rate 1 Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureCriticalRate2CritHits": {
+            "displayName": "Feature Critical Rate 2 Crit Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureCriticalRate2Hits": {
+            "displayName": "Feature Critical Rate 2 Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate1UseCount": {
+            "displayName": "Feature Hit Rate 1 Use Count",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate1RealHitHeroCount": {
+            "displayName": "Feature Hit Rate 1 Real Hit Hero Count",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate1ChaosHits": {
+            "displayName": "Feature Hit Rate 1 Chaos Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate1AllyHits": {
+            "displayName": "Feature Hit Rate 1 Ally Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate1HeroHits": {
+            "displayName": "Feature Hit Rate 1 Hero Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate1EnemyHits": {
+            "displayName": "Feature Hit Rate 1 Enemy Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate1ShieldHits": {
+            "displayName": "Feature Hit Rate 1 Shield Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate1SummonerHits": {
+            "displayName": "Feature Hit Rate 1 Summoner Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate2UseCount": {
+            "displayName": "Feature Hit Rate 2 Use Count",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate2RealHitHeroCount": {
+            "displayName": "Feature Hit Rate 2 Real Hit Hero Count",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate2ChaosHits": {
+            "displayName": "Feature Hit Rate 2 Chaos Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate2AllyHits": {
+            "displayName": "Feature Hit Rate 2 Ally Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate2HeroHits": {
+            "displayName": "Feature Hit Rate 2 Hero Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate2EnemyHits": {
+            "displayName": "Feature Hit Rate 2 Enemy Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate2ShieldHits": {
+            "displayName": "Feature Hit Rate 2 Shield Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate2SummonerHits": {
+            "displayName": "Feature Hit Rate 2 Summoner Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureSpecialData1Total": {
+            "displayName": "Feature Special Data 1 Total",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureSpecialData1Value": {
+            "displayName": "Feature Special Data 1 Value",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          }
+        }
+      },
+      {
+        "type": "hero",
+        "attributes": {
+          "heroId": 1063,
+          "season": 20,
+          "mode": "all",
+          "role": "duelist"
+        },
+        "metadata": {
+          "name": "Cyclops",
+          "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/heroes/square/1063.png?v=1781261113",
+          "roleName": "Duelist",
+          "color": "#37AAD6"
+        },
+        "expiryDate": "0001-01-01T00:00:00+00:00",
+        "stats": {
+          "timePlayed": {
+            "displayName": "Time Played",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0s",
+            "displayType": "TimeSeconds"
+          },
+          "timePlayedWon": {
+            "displayName": "Time Played Won",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0s",
+            "displayType": "TimeSeconds"
+          },
+          "matchesPlayed": {
+            "displayName": "Matches Played",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 1.0,
+            "displayValue": "1.0",
+            "displayType": "NumberPrecision1"
+          },
+          "matchesWon": {
+            "displayName": "Wins",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "matchesWinPct": {
+            "displayName": "Win %",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0.0%",
+            "displayType": "NumberPercentage"
+          },
+          "kills": {
+            "displayName": "Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 27,
+            "displayValue": "27",
+            "displayType": "Number"
+          },
+          "deaths": {
+            "displayName": "Deaths",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 7,
+            "displayValue": "7",
+            "displayType": "Number"
+          },
+          "assists": {
+            "displayName": "Assists",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 7,
+            "displayValue": "7",
+            "displayType": "Number"
+          },
+          "kdRatio": {
+            "displayName": "K/D Ratio",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 3.857142857142857,
+            "displayValue": "3.86",
+            "displayType": "NumberPrecision2"
+          },
+          "kdaRatio": {
+            "displayName": "KDA Ratio",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 4.857142857142857,
+            "displayValue": "4.86",
+            "displayType": "NumberPrecision2"
+          },
+          "totalHeroDamage": {
+            "displayName": "Damage",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalHeroDamagePerMinute": {
+            "displayName": "Damage/Min",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalHeroHeal": {
+            "displayName": "Healing",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "totalHeroHealPerMinute": {
+            "displayName": "Healing/Min",
+            "displayCategory": "Healing",
+            "category": "healing",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalDamageTaken": {
+            "displayName": "Damage Blocked",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalDamageTakenPerMinute": {
+            "displayName": "Damage Blocked/Min",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "lastKills": {
+            "displayName": "Last Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "headKills": {
+            "displayName": "Head Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "soloKills": {
+            "displayName": "Solo Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "survivalKills": {
+            "displayName": "Survival Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills": {
+            "displayName": "Continue Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills3": {
+            "displayName": "Continue Kills 3",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills4": {
+            "displayName": "Continue Kills 4",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills5": {
+            "displayName": "Continue Kills 5",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills6": {
+            "displayName": "Continue Kills 6",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "mainAttacks": {
+            "displayName": "Main Attacks",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "mainAttackHits": {
+            "displayName": "Main Attack Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "shieldHits": {
+            "displayName": "Shield Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "summonerHits": {
+            "displayName": "Summoner Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "chaosHits": {
+            "displayName": "Chaos Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalMvp": {
+            "displayName": "MVPs",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalSvp": {
+            "displayName": "SVPs",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "featureNormalData1": {
+            "displayName": "Feature Normal Data 1",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureNormalData2": {
+            "displayName": "Feature Normal Data 2",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureNormalData3": {
+            "displayName": "Feature Normal Data 3",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureNormalData4": {
+            "displayName": "Feature Normal Data 4",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureCriticalRate1CritHits": {
+            "displayName": "Feature Critical Rate 1 Crit Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureCriticalRate1Hits": {
+            "displayName": "Feature Critical Rate 1 Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureCriticalRate2CritHits": {
+            "displayName": "Feature Critical Rate 2 Crit Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureCriticalRate2Hits": {
+            "displayName": "Feature Critical Rate 2 Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate1UseCount": {
+            "displayName": "Feature Hit Rate 1 Use Count",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate1RealHitHeroCount": {
+            "displayName": "Feature Hit Rate 1 Real Hit Hero Count",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate1ChaosHits": {
+            "displayName": "Feature Hit Rate 1 Chaos Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate1AllyHits": {
+            "displayName": "Feature Hit Rate 1 Ally Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate1HeroHits": {
+            "displayName": "Feature Hit Rate 1 Hero Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate1EnemyHits": {
+            "displayName": "Feature Hit Rate 1 Enemy Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate1ShieldHits": {
+            "displayName": "Feature Hit Rate 1 Shield Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate1SummonerHits": {
+            "displayName": "Feature Hit Rate 1 Summoner Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate2UseCount": {
+            "displayName": "Feature Hit Rate 2 Use Count",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate2RealHitHeroCount": {
+            "displayName": "Feature Hit Rate 2 Real Hit Hero Count",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate2ChaosHits": {
+            "displayName": "Feature Hit Rate 2 Chaos Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate2AllyHits": {
+            "displayName": "Feature Hit Rate 2 Ally Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate2HeroHits": {
+            "displayName": "Feature Hit Rate 2 Hero Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate2EnemyHits": {
+            "displayName": "Feature Hit Rate 2 Enemy Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate2ShieldHits": {
+            "displayName": "Feature Hit Rate 2 Shield Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureHitRate2SummonerHits": {
+            "displayName": "Feature Hit Rate 2 Summoner Hits",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureSpecialData1Total": {
+            "displayName": "Feature Special Data 1 Total",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "featureSpecialData1Value": {
+            "displayName": "Feature Special Data 1 Value",
+            "displayCategory": "Feature",
+            "category": "feature",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          }
+        }
+      },
+      {
+        "type": "hero-role",
+        "attributes": {
+          "roleId": "strategist",
+          "season": 20,
+          "mode": "all"
+        },
+        "metadata": {
+          "name": "Strategist",
+          "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/roles/strategist.png"
+        },
+        "expiryDate": "0001-01-01T00:00:00+00:00",
+        "stats": {
+          "timePlayed": {
+            "displayName": "Time Played",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0s",
+            "displayType": "TimeSeconds"
+          },
+          "timePlayedWon": {
+            "displayName": "Time Played Won",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0s",
+            "displayType": "TimeSeconds"
+          },
+          "matchesPlayed": {
+            "displayName": "Matches Played",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 17.0,
+            "displayValue": "17.0",
+            "displayType": "NumberPrecision1"
+          },
+          "matchesWon": {
+            "displayName": "Wins",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 8.0,
+            "displayValue": "8",
+            "displayType": "Number"
+          },
+          "matchesWinPct": {
+            "displayName": "Win %",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 47.05882352941176,
+            "displayValue": "47.1%",
+            "displayType": "NumberPercentage"
+          },
+          "kills": {
+            "displayName": "Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 372,
+            "displayValue": "372",
+            "displayType": "Number"
+          },
+          "deaths": {
+            "displayName": "Deaths",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 102,
+            "displayValue": "102",
+            "displayType": "Number"
+          },
+          "assists": {
+            "displayName": "Assists",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 102,
+            "displayValue": "102",
+            "displayType": "Number"
+          },
+          "kdRatio": {
+            "displayName": "K/D Ratio",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 3.6470588235294117,
+            "displayValue": "3.65",
+            "displayType": "NumberPrecision2"
+          },
+          "kdaRatio": {
+            "displayName": "KDA Ratio",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 4.647058823529412,
+            "displayValue": "4.65",
+            "displayType": "NumberPrecision2"
+          },
+          "totalHeroDamage": {
+            "displayName": "Damage",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalHeroDamagePerMinute": {
+            "displayName": "Damage/Min",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalHeroHeal": {
+            "displayName": "Healing",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "totalHeroHealPerMinute": {
+            "displayName": "Healing/Min",
+            "displayCategory": "Healing",
+            "category": "healing",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalDamageTaken": {
+            "displayName": "Damage Blocked",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalDamageTakenPerMinute": {
+            "displayName": "Damage Blocked/Min",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "lastKills": {
+            "displayName": "Last Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "headKills": {
+            "displayName": "Head Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "soloKills": {
+            "displayName": "Solo Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "survivalKills": {
+            "displayName": "Survival Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills": {
+            "displayName": "Continue Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills3": {
+            "displayName": "Continue Kills 3",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills4": {
+            "displayName": "Continue Kills 4",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills5": {
+            "displayName": "Continue Kills 5",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills6": {
+            "displayName": "Continue Kills 6",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "mainAttacks": {
+            "displayName": "Main Attacks",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "mainAttackHits": {
+            "displayName": "Main Attack Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "shieldHits": {
+            "displayName": "Shield Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "summonerHits": {
+            "displayName": "Summoner Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "chaosHits": {
+            "displayName": "Chaos Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalMvp": {
+            "displayName": "MVPs",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 2,
+            "displayValue": "2",
+            "displayType": "Number"
+          },
+          "totalSvp": {
+            "displayName": "SVPs",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          }
+        }
+      },
+      {
+        "type": "hero-role",
+        "attributes": {
+          "roleId": "duelist",
+          "season": 20,
+          "mode": "all"
+        },
+        "metadata": {
+          "name": "Duelist",
+          "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/roles/duelist.png"
+        },
+        "expiryDate": "0001-01-01T00:00:00+00:00",
+        "stats": {
+          "timePlayed": {
+            "displayName": "Time Played",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0s",
+            "displayType": "TimeSeconds"
+          },
+          "timePlayedWon": {
+            "displayName": "Time Played Won",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0s",
+            "displayType": "TimeSeconds"
+          },
+          "matchesPlayed": {
+            "displayName": "Matches Played",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 1.0,
+            "displayValue": "1.0",
+            "displayType": "NumberPrecision1"
+          },
+          "matchesWon": {
+            "displayName": "Wins",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "matchesWinPct": {
+            "displayName": "Win %",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0.0%",
+            "displayType": "NumberPercentage"
+          },
+          "kills": {
+            "displayName": "Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 27,
+            "displayValue": "27",
+            "displayType": "Number"
+          },
+          "deaths": {
+            "displayName": "Deaths",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 7,
+            "displayValue": "7",
+            "displayType": "Number"
+          },
+          "assists": {
+            "displayName": "Assists",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 7,
+            "displayValue": "7",
+            "displayType": "Number"
+          },
+          "kdRatio": {
+            "displayName": "K/D Ratio",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 3.857142857142857,
+            "displayValue": "3.86",
+            "displayType": "NumberPrecision2"
+          },
+          "kdaRatio": {
+            "displayName": "KDA Ratio",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 4.857142857142857,
+            "displayValue": "4.86",
+            "displayType": "NumberPrecision2"
+          },
+          "totalHeroDamage": {
+            "displayName": "Damage",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalHeroDamagePerMinute": {
+            "displayName": "Damage/Min",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalHeroHeal": {
+            "displayName": "Healing",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": null,
+            "displayValue": null,
+            "displayType": "Number"
+          },
+          "totalHeroHealPerMinute": {
+            "displayName": "Healing/Min",
+            "displayCategory": "Healing",
+            "category": "healing",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalDamageTaken": {
+            "displayName": "Damage Blocked",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalDamageTakenPerMinute": {
+            "displayName": "Damage Blocked/Min",
+            "displayCategory": "Damage",
+            "category": "damage",
+            "metadata": {},
+            "value": 0.0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "lastKills": {
+            "displayName": "Last Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "headKills": {
+            "displayName": "Head Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "soloKills": {
+            "displayName": "Solo Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "survivalKills": {
+            "displayName": "Survival Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills": {
+            "displayName": "Continue Kills",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills3": {
+            "displayName": "Continue Kills 3",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills4": {
+            "displayName": "Continue Kills 4",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills5": {
+            "displayName": "Continue Kills 5",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "continueKills6": {
+            "displayName": "Continue Kills 6",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "mainAttacks": {
+            "displayName": "Main Attacks",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "mainAttackHits": {
+            "displayName": "Main Attack Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "shieldHits": {
+            "displayName": "Shield Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "summonerHits": {
+            "displayName": "Summoner Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "chaosHits": {
+            "displayName": "Chaos Hits",
+            "displayCategory": "Combat",
+            "category": "combat",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalMvp": {
+            "displayName": "MVPs",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          },
+          "totalSvp": {
+            "displayName": "SVPs",
+            "displayCategory": "Game",
+            "category": "game",
+            "metadata": {},
+            "value": 0,
+            "displayValue": "0",
+            "displayType": "Number"
+          }
+        }
+      }
+    ],
+    "availableSegments": [],
+    "expiryDate": "2026-09-14T20:19:32.9464469+00:00"
+  }
+}

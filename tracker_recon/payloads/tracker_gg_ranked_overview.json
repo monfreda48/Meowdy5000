@@ -1,0 +1,1036 @@
+{
+  "data": {
+    "history": {
+      "metadata": {
+        "key": "tier",
+        "name": "rating",
+        "description": "rank"
+      },
+      "data": [
+        [
+          "2026-09-13T19:24:56+00:00",
+          {
+            "metadata": {
+              "name": "Platinum I",
+              "shortName": "P1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+              "color": "#58E1E8"
+            },
+            "value": [
+              "Platinum I",
+              4171
+            ],
+            "displayValue": "Platinum I: 4,171.07 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-13T18:52:22+00:00",
+          {
+            "metadata": {
+              "name": "Platinum I",
+              "shortName": "P1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+              "color": "#58E1E8"
+            },
+            "value": [
+              "Platinum I",
+              4145
+            ],
+            "displayValue": "Platinum I: 4,145.59 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-13T18:32:09+00:00",
+          {
+            "metadata": {
+              "name": "Platinum I",
+              "shortName": "P1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+              "color": "#58E1E8"
+            },
+            "value": [
+              "Platinum I",
+              4120
+            ],
+            "displayValue": "Platinum I: 4,120.18 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-13T01:11:05+00:00",
+          {
+            "metadata": {
+              "name": "Platinum I",
+              "shortName": "P1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+              "color": "#58E1E8"
+            },
+            "value": [
+              "Platinum I",
+              4134
+            ],
+            "displayValue": "Platinum I: 4,134.61 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-13T00:50:16+00:00",
+          {
+            "metadata": {
+              "name": "Platinum II",
+              "shortName": "P2",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+              "color": "#58E1E8"
+            },
+            "value": [
+              "Platinum II",
+              4096
+            ],
+            "displayValue": "Platinum II: 4,096.23 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-13T00:29:26+00:00",
+          {
+            "metadata": {
+              "name": "Platinum II",
+              "shortName": "P2",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+              "color": "#58E1E8"
+            },
+            "value": [
+              "Platinum II",
+              4063
+            ],
+            "displayValue": "Platinum II: 4,063.26 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-13T00:10:37+00:00",
+          {
+            "metadata": {
+              "name": "Platinum II",
+              "shortName": "P2",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+              "color": "#58E1E8"
+            },
+            "value": [
+              "Platinum II",
+              4033
+            ],
+            "displayValue": "Platinum II: 4,033.25 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-12T23:59:57+00:00",
+          {
+            "metadata": {
+              "name": "Platinum II",
+              "shortName": "P2",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+              "color": "#58E1E8"
+            },
+            "value": [
+              "Platinum II",
+              4000
+            ],
+            "displayValue": "Platinum II: 4,000.00 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-12T22:40:22+00:00",
+          {
+            "metadata": {
+              "name": "Platinum III",
+              "shortName": "P3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+              "color": "#58E1E8"
+            },
+            "value": [
+              "Platinum III",
+              3970
+            ],
+            "displayValue": "Platinum III: 3,970.00 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-12T21:26:00+00:00",
+          {
+            "metadata": {
+              "name": "Platinum II",
+              "shortName": "P2",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+              "color": "#58E1E8"
+            },
+            "value": [
+              "Platinum II",
+              4010
+            ],
+            "displayValue": "Platinum II: 4,010.00 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-12T21:05:37+00:00",
+          {
+            "metadata": {
+              "name": "Platinum II",
+              "shortName": "P2",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+              "color": "#58E1E8"
+            },
+            "value": [
+              "Platinum II",
+              4050
+            ],
+            "displayValue": "Platinum II: 4,050.00 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-12T20:44:06+00:00",
+          {
+            "metadata": {
+              "name": "Platinum II",
+              "shortName": "P2",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/4.png?v=1734906803",
+              "color": "#58E1E8"
+            },
+            "value": [
+              "Platinum II",
+              4010
+            ],
+            "displayValue": "Platinum II: 4,010.00 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-10T01:20:13+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4546
+            ],
+            "displayValue": "Grandmaster III: 4,546.31 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-10T00:51:22+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4565
+            ],
+            "displayValue": "Grandmaster III: 4,565.90 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-10T00:15:29+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4543
+            ],
+            "displayValue": "Grandmaster III: 4,543.42 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-10T00:01:59+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4524
+            ],
+            "displayValue": "Grandmaster III: 4,524.71 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-09T23:51:51+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4537
+            ],
+            "displayValue": "Grandmaster III: 4,537.18 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-09T23:38:09+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4514
+            ],
+            "displayValue": "Grandmaster III: 4,514.15 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-08T20:27:31+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4488
+            ],
+            "displayValue": "Diamond I: 4,488.82 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-08T19:52:26+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4462
+            ],
+            "displayValue": "Diamond I: 4,462.53 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-07T18:05:12+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4484
+            ],
+            "displayValue": "Grandmaster III: 4,484.56 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-07T17:43:19+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4505
+            ],
+            "displayValue": "Grandmaster III: 4,505.88 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-07T16:22:32+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4525
+            ],
+            "displayValue": "Grandmaster III: 4,525.24 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-07T16:01:32+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4546
+            ],
+            "displayValue": "Grandmaster III: 4,546.92 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-07T14:38:49+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4525
+            ],
+            "displayValue": "Grandmaster III: 4,525.85 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-07T14:22:21+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4503
+            ],
+            "displayValue": "Grandmaster III: 4,504.00 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-07T13:44:55+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4521
+            ],
+            "displayValue": "Grandmaster III: 4,521.37 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-06T22:47:23+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4495
+            ],
+            "displayValue": "Grandmaster III: 4,495.36 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-06T22:23:54+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4470
+            ],
+            "displayValue": "Grandmaster III: 4,470.19 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-06T00:02:57+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4485
+            ],
+            "displayValue": "Grandmaster III: 4,485.67 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-05T23:42:26+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4497
+            ],
+            "displayValue": "Grandmaster III: 4,497.69 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-05T03:34:17+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4518
+            ],
+            "displayValue": "Grandmaster III: 4,518.40 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-05T03:10:04+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4491
+            ],
+            "displayValue": "Diamond I: 4,491.32 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-05T02:47:13+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4465
+            ],
+            "displayValue": "Diamond I: 4,465.75 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-05T02:20:06+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4484
+            ],
+            "displayValue": "Grandmaster III: 4,484.99 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-05T01:29:25+00:00",
+          {
+            "metadata": {
+              "name": "Grandmaster III",
+              "shortName": "GM3",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/6.png?v=1734906804",
+              "color": "#9E4BFF"
+            },
+            "value": [
+              "Grandmaster III",
+              4501
+            ],
+            "displayValue": "Grandmaster III: 4,501.65 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-05T01:03:11+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4482
+            ],
+            "displayValue": "Diamond I: 4,482.61 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-04T22:39:19+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4459
+            ],
+            "displayValue": "Diamond I: 4,459.37 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-04T20:41:31+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4473
+            ],
+            "displayValue": "Diamond I: 4,473.46 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-04T20:27:32+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4444
+            ],
+            "displayValue": "Diamond I: 4,444.59 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-04T00:41:41+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4463
+            ],
+            "displayValue": "Diamond I: 4,463.92 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-04T00:19:55+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4478
+            ],
+            "displayValue": "Diamond I: 4,478.00 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-03T23:56:38+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4455
+            ],
+            "displayValue": "Diamond I: 4,455.42 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-03T23:33:15+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4470
+            ],
+            "displayValue": "Diamond I: 4,470.47 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-02T23:05:51+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4446
+            ],
+            "displayValue": "Diamond I: 4,446.35 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-02T22:33:09+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4465
+            ],
+            "displayValue": "Diamond I: 4,465.09 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-02T21:30:03+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4478
+            ],
+            "displayValue": "Diamond I: 4,478.31 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-02T21:11:33+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4450
+            ],
+            "displayValue": "Diamond I: 4,450.82 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-01T22:32:36+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4472
+            ],
+            "displayValue": "Diamond I: 4,472.25 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-01T22:11:49+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4446
+            ],
+            "displayValue": "Diamond I: 4,446.20 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-01T21:58:17+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4420
+            ],
+            "displayValue": "Diamond I: 4,420.51 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-01T21:39:18+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4399
+            ],
+            "displayValue": "Diamond I: 4,399.11 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-01T21:04:34+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4411
+            ],
+            "displayValue": "Diamond I: 4,411.12 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-01T00:26:27+00:00",
+          {
+            "metadata": {
+              "name": "Diamond II",
+              "shortName": "D2",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond II",
+              4386
+            ],
+            "displayValue": "Diamond II: 4,386.76 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-09-01T00:06:16+00:00",
+          {
+            "metadata": {
+              "name": "Diamond II",
+              "shortName": "D2",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond II",
+              4364
+            ],
+            "displayValue": "Diamond II: 4,364.36 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-08-31T23:34:15+00:00",
+          {
+            "metadata": {
+              "name": "Diamond II",
+              "shortName": "D2",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond II",
+              4385
+            ],
+            "displayValue": "Diamond II: 4,385.11 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-08-31T23:10:57+00:00",
+          {
+            "metadata": {
+              "name": "Diamond II",
+              "shortName": "D2",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond II",
+              4360
+            ],
+            "displayValue": "Diamond II: 4,360.81 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-08-30T21:37:28+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4384
+            ],
+            "displayValue": "Diamond I: 4,384.71 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-08-30T13:15:58+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4403
+            ],
+            "displayValue": "Diamond I: 4,403.38 SR",
+            "displayType": "Array"
+          }
+        ],
+        [
+          "2026-08-28T22:19:33+00:00",
+          {
+            "metadata": {
+              "name": "Diamond I",
+              "shortName": "D1",
+              "imageUrl": "https://trackercdn.com/cdn/tracker.gg/marvel-rivals/images/ranks/5.png?v=1734906804",
+              "color": "#1680FF"
+            },
+            "value": [
+              "Diamond I",
+              4425
+            ],
+            "displayValue": "Diamond I: 4,425.32 SR",
+            "displayType": "Array"
+          }
+        ]
+      ]
+    },
+    "leaderboard": null,
+    "expiryDate": "2026-09-14T20:17:33.9282694+00:00",
+    "bestMatches": null
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "projectId": "tracker-network",
+  "appId": "1:891558821262:web:d56343e21493f8a556b8df",
+  "databaseURL": "https://tracker-network.firebaseio.com",
+  "storageBucket": "tracker-network.firebasestorage.app",
+  "locationId": "us-central",
+  "authDomain": "tracker-network.firebaseapp.com",
+  "messagingSenderId": "891558821262",
+  "measurementId": "G-K1WK6WSY8C"
+}

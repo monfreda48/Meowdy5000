@@ -1,0 +1,9 @@
+{
+  "cookieSyncUrls": [
+    "https://ssbsync.smartadserver.com/api/sync?callerId=47&gdpr=0&gdpr_consent=",
+    "https://match.adsrvr.org/track/cmf/generic?ttd_pid=sharethrough&ttd_tpi=1&gdpr=0&gdpr_consent=",
+    "https://cm.g.doubleclick.net/pixel?google_nid=sharethrough_ob&gdpr=0&gdpr_consent=&google_hm=MjZlZWFiZDQtMjkwZS00ZTgxLWI4YTgtMzFiNzQwYjQwYzYx",
+    "https://ups.analytics.yahoo.com/ups/58919/cms?uid=26eeabd4-290e-4e81-b8a8-31b740b40c61&gdpr=0&gdpr_consent=",
+    "https://c1.adform.net/serving/cookie/match?party=1294&gdpr=0&gdpr_consent="
+  ]
+}

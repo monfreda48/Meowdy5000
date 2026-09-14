@@ -1,0 +1,59 @@
+{
+  "status": "no_cookie",
+  "bidder_status": [
+    {
+      "bidder": "pubmatic",
+      "no_cookie": true,
+      "usersync": {
+        "url": "https://ads.pubmatic.com/AdServer/js/user_sync.html?gdpr=0&gdpr_consent=&us_privacy=&gpp=&gpp_sid=&predirect=https%3A%2F%2Fsonic.impactify.media%2Fsetuid%3Fbidder%3Dpubmatic%26gdpr%3D0%26gdpr_consent%3D%26us_privacy%3D%26gpp%3D%26gpp_sid%3D%26f%3Db%26uid%3D",
+        "type": "iframe",
+        "supportCORS": false
+      }
+    },
+    {
+      "bidder": "smartadserver",
+      "no_cookie": true,
+      "usersync": {
+        "url": "https://ssbsync-global.smartadserver.com/api/sync?callerId=5&gdpr=0&gdpr_consent=&us_privacy=&redirectUri=https%3A%2F%2Fsonic.impactify.media%2Fsetuid%3Fbidder%3Dsmartadserver%26gdpr%3D0%26gdpr_consent%3D%26us_privacy%3D%26gpp%3D%26gpp_sid%3D%26f%3Di%26uid%3D%5Bssb_sync_pid%5D",
+        "type": "redirect",
+        "supportCORS": false
+      }
+    },
+    {
+      "bidder": "adnxs",
+      "no_cookie": true,
+      "usersync": {
+        "url": "https://ib.adnxs.com/getuid?https%3A%2F%2Fsonic.impactify.media%2Fsetuid%3Fbidder%3Dadnxs%26gdpr%3D0%26gdpr_consent%3D%26us_privacy%3D%26gpp%3D%26gpp_sid%3D%26f%3Di%26uid%3D%24UID",
+        "type": "redirect",
+        "supportCORS": false
+      }
+    },
+    {
+      "bidder": "improvedigital",
+      "no_cookie": true,
+      "usersync": {
+        "url": "https://ad.360yield.com/user_sync?rt=html&gdpr=0&gdpr_consent=&us_privacy=&gpp=&gpp_sid=&r=https%3A%2F%2Fsonic.impactify.media%2Fsetuid%3Fbidder%3Dimprovedigital%26gdpr%3D0%26gdpr_consent%3D%26us_privacy%3D%26gpp%3D%26gpp_sid%3D%26f%3Db%26uid%3D%7BPUB_USER_ID%7D",
+        "type": "iframe",
+        "supportCORS": false
+      }
+    },
+    {
+      "bidder": "adf",
+      "no_cookie": true,
+      "usersync": {
+        "url": "https://c1.adform.net/cookie?redirect_url=https%3A%2F%2Fsonic.impactify.media%2Fsetuid%3Fbidder%3Dadf%26gdpr%3D0%26gdpr_consent%3D%26us_privacy%3D%26gpp%3D%26gpp_sid%3D%26f%3Di%26uid%3D%24UID",
+        "type": "redirect",
+        "supportCORS": false
+      }
+    },
+    {
+      "bidder": "rubicon",
+      "no_cookie": true,
+      "usersync": {
+        "url": "GET_FROM_globalsupport@magnite.com",
+        "type": "redirect",
+        "supportCORS": false
+      }
+    }
+  ]
+}

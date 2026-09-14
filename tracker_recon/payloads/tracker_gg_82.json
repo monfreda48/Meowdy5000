@@ -1,0 +1,23 @@
+{
+  "cpm": 0.0,
+  "currency": "USD",
+  "width": 0,
+  "height": 0,
+  "ad": null,
+  "adUrl": null,
+  "dealId": null,
+  "ttl": 0,
+  "isNetCpm": true,
+  "creativeId": 0,
+  "cSyncUrl": null,
+  "isNoAd": true,
+  "dspPixels": [
+    "https://go.mediagotechnology.com/cs/equativ?gdpr=0&gdpr_consent=",
+    "https://equativ-match.dotomi.com/match/bounce/current?networkId=9252325&version=1&nuid=SMART_USER_ID&gdpr=0&gdpr_consent=",
+    "https://ad.turn.com/r/cs?pid=33&redir=https%3A%2F%2Frtb-csync.smartadserver.com%2Fredir%2F%3Fissi%3D1%26partnerid%3D32%26partneruserid%3D%23USER_ID%23%26gdpr%3D%23GDPR_APPLICABLE%23%26gdpr_consent%3D%23GDPR_CONSENT%23&gdpr=0&gdpr_consent=",
+    "https://match.prod.bidr.io/cookie-sync/sas?gdpr=0&gdpr_consent=",
+    "https://match.adsrvr.org/track/cmf/generic?ttd_pid=smart-adserver&ttd_tpi=1&gdpr=0&gdpr_consent="
+  ],
+  "adomain": null,
+  "dsa": null
+}

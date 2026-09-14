@@ -1,0 +1,11 @@
+{
+  "url": "https://cdn.api.btloader.com/device?orgid=6278260873756672&platformVersion=10.0&fullVersionList=%5B%7B%22brand%22%3A%22Not%3DA%3FBrand%22%2C%22version%22%3A%2299.0.0.0%22%7D%2C%7B%22brand%22%3A%22HeadlessChrome%22%2C%22version%22%3A%22151.0.7922.34%22%7D%2C%7B%22brand%22%3A%22Chromium%22%2C%22version%22%3A%22151.0.7922.34%22%7D%5D&upapi=true",
+  "method": "GET",
+  "headers": {
+    "sec-ch-ua-platform": "\"Windows\"",
+    "referer": "https://tracker.gg/",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+    "sec-ch-ua": "\"Not=A?Brand\";v=\"99\", \"HeadlessChrome\";v=\"151\", \"Chromium\";v=\"151\"",
+    "sec-ch-ua-mobile": "?0"
+  }
+}

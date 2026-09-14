@@ -1,0 +1,23 @@
+{
+  "cpm": 0.0,
+  "currency": "USD",
+  "width": 0,
+  "height": 0,
+  "ad": null,
+  "adUrl": null,
+  "dealId": null,
+  "ttl": 0,
+  "isNetCpm": true,
+  "creativeId": 0,
+  "cSyncUrl": "//csync.smartadserver.com/diff/rtb/csync/CookieSync.html?hasrtb=true&nwid=3436&dcid=22&iscname=false&cname=&gdpr=0&gdpr_consent=",
+  "isNoAd": true,
+  "dspPixels": [
+    "https://stx-match.dotomi.com/match/bounce/current?networkId=44410&version=1&nuid=SMART_USER_ID&gdpr=0&gdpr_consent=",
+    "https://dis.criteo.com/dis/usersync.aspx?r=30&p=273&cp=smartortb&cu=1&url=https%3A%2F%2Frtb-csync.smartadserver.com%2Fredir%2F%3Fissi%3D1%26partnerid%3D79%26partneruserid%3D%40%40CRITEO_USERID%40%40&gdpr=0&gdpr_consent=",
+    "https://cms.quantserve.com/pixel/p-EtBqU4Lj3YbAv.gif?idmatch=0&gdpr=0&gdpr_consent=",
+    "https://match.adsrvr.org/track/cmf/generic?ttd_pid=smart-adserver&ttd_tpi=1&gdpr=0&gdpr_consent=",
+    "https://sync-tm.everesttech.net/upi/pid/gjIEMT18?redir=https%3A%2F%2Frtb-csync.smartadserver.com%2Fredir%2F%3Fissi%3D1%26partnerid%3D94%26partneruserid%3D%24%7BTM_USER_ID%7D&gdpr=0&gdpr_consent="
+  ],
+  "adomain": null,
+  "dsa": null
+}

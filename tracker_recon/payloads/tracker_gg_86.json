@@ -1,0 +1,9 @@
+{
+  "cookieSyncUrls": [
+    "https://ssbsync.smartadserver.com/api/sync?callerId=47&gdpr=0&gdpr_consent=",
+    "https://match.adsrvr.org/track/cmf/generic?ttd_pid=sharethrough&ttd_tpi=1&gdpr=0&gdpr_consent=",
+    "https://sid.storygize.net/ccm/c9dd71b6-fd13-4133-bf5d-b88619cef491",
+    "https://ssc-cms.33across.com/ps/?ri=0013300001kQj2HAAS&ru=https%3A%2F%2Fmatch.sharethrough.com%2Fsync%2Fv1%3Fsource_id%3DkzFyzzqXEqukMDumpVLB6Eq3%26source_user_id%3D33XUSERID33X",
+    "https://pixel.rubiconproject.com/exchange/sync.php?p=18694&gdpr=0&gdpr_consent="
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "32d08040-29fd-447a-91cb-f7c165d7d616",
+  "seatbid": [],
+  "cur": "USD",
+  "nbr": 0,
+  "ext": {
+    "responsetimemillis": {
+      "rubicon": 104
+    },
+    "tmaxrequest": 2000,
+    "prebid": {
+      "auctiontimestamp": 1789416360282
+    }
+  }
+}

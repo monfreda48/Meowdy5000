@@ -1,0 +1,15 @@
+{
+  "url": "https://firebaseinstallations.googleapis.com/v1/projects/tracker-network/installations",
+  "method": "POST",
+  "headers": {
+    "x-firebase-client": "eyJ2ZXJzaW9uIjoyLCJoZWFydGJlYXRzIjpbeyJhZ2VudCI6ImZpcmUtY29yZS8wLjE0LjExIGZpcmUtY29yZS1lc20yMDIwLzAuMTQuMTEgZmlyZS1qcy8gZmlyZS1paWQvMC42LjIxIGZpcmUtaWlkLWVzbTIwMjAvMC42LjIxIGZpcmUtYW5hbHl0aWNzLzAuMTAuMjEgZmlyZS1hbmFseXRpY3MtZXNtMjAyMC8wLjEwLjIxIGZpcmUtanMtYWxsLWFwcC8xMi4xMi4xIGZpcmUtcmMvMC44LjIgZmlyZS1yYy1lc20yMDIwLzAuOC4yIiwiZGF0ZXMiOlsiMjAyNi0wOS0xNCJdfV19",
+    "sec-ch-ua-platform": "\"Windows\"",
+    "referer": "https://tracker.gg/",
+    "sec-ch-ua": "\"Not=A?Brand\";v=\"99\", \"HeadlessChrome\";v=\"151\", \"Chromium\";v=\"151\"",
+    "sec-ch-ua-mobile": "?0",
+    "x-goog-api-key": "AIzaSyD4fpTzV9TPK0_dms701XZTXnfqAP65tVc",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+    "accept": "application/json",
+    "content-type": "application/json"
+  }
+}

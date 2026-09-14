@@ -1,0 +1,11 @@
+{
+  "url": "https://u-ams.4dex.io/usync.json?it=ortb&publisher_id=1566&r=https%3A%2F%2Fsync.adtelligent.com%2Fcsync%3Ft%3Da%26ep%3D783512%26traffic_source%3Dsnippet%26sp%3D971761%26pb%3D780299%26c%3D871652%26a%3D783512%26domain%3Dcpm.vistarsagency.com%26extuid%3D%7BUID%7D",
+  "method": "GET",
+  "headers": {
+    "sec-ch-ua-platform": "\"Windows\"",
+    "referer": "https://usync.4dex.io/",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+    "sec-ch-ua": "\"Not=A?Brand\";v=\"99\", \"HeadlessChrome\";v=\"151\", \"Chromium\";v=\"151\"",
+    "sec-ch-ua-mobile": "?0"
+  }
+}

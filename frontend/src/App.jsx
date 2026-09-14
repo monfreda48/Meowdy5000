@@ -978,71 +978,18 @@ const calculateConsensusAverage = (sources, metricKey = '') => {
           }
         }
 
-        // 2. Direct domain fallbacks for KDA, MVPs, and Accuracy if site omits field
-        if (normKey === 'kda') {
-          if (siteName === 'RivalsMeta') return '7.59';
-          if (siteName === 'RivalsTracker') return '6.56';
-          if (siteName.includes('Data')) return '5.82';
-        }
-        if (normKey === 'accuracy') {
-          if (siteName === 'RivalsMeta') return '41.2%';
-          if (siteName === 'RivalsTracker') return '39.7%';
-          if (siteName.includes('Data')) return '38.5%';
-        }
-        if (normKey === 'mvps') {
-          if (siteName === 'RivalsMeta') return '3';
-          if (siteName === 'RivalsTracker') return '3';
-          if (siteName.includes('Data')) return '3';
-        }
-
-        // 3. Check direct source buckets on activeData
+        // 2. Check direct source buckets on activeData
         const directBucket = activeData[siteKey];
         if (directBucket && typeof directBucket === 'object') {
           const directVal = (safeKey && directBucket[safeKey]) ||
                             (safeKey && directBucket?.summary?.[safeKey]) ||
                             (safeKey && directBucket?.overview?.[safeKey]);
-          if (directVal && directVal !== '0s (Jubilee)' && directVal !== '--') return String(directVal);
+          if (directVal && directVal !== '--') return String(directVal);
         }
 
-        // 4. Fallback to defaultVal if valid
-        if (defaultVal !== null && defaultVal !== undefined && defaultVal !== '' && defaultVal !== '0' && defaultVal !== 0 && defaultVal !== '0s (Jubilee)' && defaultVal !== '--') {
+        // 3. Fallback to defaultVal if valid
+        if (defaultVal !== null && defaultVal !== undefined && defaultVal !== '' && defaultVal !== '0' && defaultVal !== 0 && defaultVal !== '--') {
           return String(defaultVal);
-        }
-
-        // 5. Metric fallbacks by domain
-        const safeSite = String(siteName || '');
-        if (safeSite === 'RivalsMeta') {
-          if (normKey.includes('win')) return '59.3%';
-          if (normKey.includes('kda')) return '7.59';
-          if (normKey.includes('dmg') || normKey.includes('damage')) return '7,930';
-          if (normKey.includes('heal')) return '21,590';
-          if (normKey.includes('block')) return '6,420';
-          if (normKey.includes('playtime')) return '18h';
-        }
-        if (safeSite === 'RivalsTracker') {
-          if (normKey.includes('win')) return '52.1%';
-          if (normKey.includes('kda')) return '6.56';
-          if (normKey.includes('dmg') || normKey.includes('damage')) return '8,590';
-          if (normKey.includes('heal')) return '23,580';
-          if (normKey.includes('block')) return '6,420';
-          if (normKey.includes('playtime')) return '24h';
-        }
-        if (safeSite.includes('Tracker.gg') || safeSite === 'Tracker.gg') {
-          if (normKey.includes('win')) return '48.0%';
-          if (normKey.includes('kda')) return '4.21';
-          if (normKey.includes('dmg') || normKey.includes('damage')) return '8,750';
-          if (normKey.includes('heal')) return '23,580';
-          if (normKey.includes('block')) return '6,420';
-          if (normKey.includes('playtime')) return '24h';
-        }
-
-        if (safeSite.toLowerCase().includes('data')) {
-          if (normKey.includes('win')) return '50.8%';
-          if (normKey.includes('kda')) return '5.82';
-          if (normKey.includes('dmg') || normKey.includes('damage')) return '8,120';
-          if (normKey.includes('heal')) return '22,450';
-          if (normKey.includes('block')) return '6,420';
-          if (normKey.includes('playtime')) return '24h';
         }
 
         return '--';
@@ -2895,15 +2842,15 @@ ${payload.stack || 'No stack trace available.'}
         healingPer10m: backendData.current.healingPer10m || backendData.healing_per_10m || '23,580',
         damageBlocked: backendData.current.damageBlocked || backendData.dmg_blocked_10m || '--',
         accuracy: backendData.current.accuracy || (backendData.accuracy ? `${backendData.accuracy}%` : '50.3%'),
-        mvp: String(backendData.current.mvp ?? backendData.mvps ?? 3),
-        svp: String(backendData.current.svp ?? backendData.svps ?? 1),
-        timePlayed: backendData.current.seasonPlaytimeHours || backendData.seasonPlaytimeHours || backendData.totalSeasonPlaytime || '5.2h',
-        seasonPlaytimeHours: backendData.current.seasonPlaytimeHours || backendData.seasonPlaytimeHours || '5.2h',
-        totalSeasonPlaytime: backendData.current.totalSeasonPlaytime || backendData.total_season_playtime || '5.2h',
-        topHeroPlaytimeHours: backendData.current.topHeroPlaytimeHours || backendData.top_hero_playtime_hours || '2.4h',
-        topHeroPlaytimeLabel: backendData.current.topHeroPlaytimeLabel || backendData.top_hero_playtime_label || '2.4h (Jubilee)',
-        topHeroName: backendData.current.topHeroName || backendData.top_hero_name || 'Jubilee',
-        totalDamage: backendData.current.totalDamage || backendData.total_damage || '268,008'
+        mvp: String(backendData.current.mvp ?? backendData.mvps ?? 0),
+        svp: String(backendData.current.svp ?? backendData.svps ?? 0),
+        timePlayed: backendData.current.seasonPlaytimeHours || backendData.seasonPlaytimeHours || backendData.totalSeasonPlaytime || '--',
+        seasonPlaytimeHours: backendData.current.seasonPlaytimeHours || backendData.seasonPlaytimeHours || '--',
+        totalSeasonPlaytime: backendData.current.totalSeasonPlaytime || backendData.total_season_playtime || '--',
+        topHeroPlaytimeHours: backendData.current.topHeroPlaytimeHours || backendData.top_hero_playtime_hours || '--',
+        topHeroPlaytimeLabel: backendData.current.topHeroPlaytimeLabel || backendData.top_hero_playtime_label || '--',
+        topHeroName: backendData.current.topHeroName || backendData.top_hero_name || '--',
+        totalDamage: backendData.current.totalDamage || backendData.total_damage || '--'
       };
       return backendData;
     }
@@ -4751,7 +4698,7 @@ ${payload.stack || 'No stack trace available.'}
                     </span>
                     <div className="mt-2 flex items-baseline gap-1">
                       <span className="text-lg sm:text-xl md:text-2xl font-black text-blue-400">
-                        {stats.current.topHeroPlaytimeLabel || (stats.current.topHeroPlaytimeHours ? `${stats.current.topHeroPlaytimeHours} (${stats.current.topHeroName || 'Jubilee'})` : '2.4h (Jubilee)')}
+                        {stats.current.topHeroPlaytimeLabel || (stats.current.topHeroPlaytimeHours && stats.current.topHeroName ? `${stats.current.topHeroPlaytimeHours} (${stats.current.topHeroName})` : '--')}
                       </span>
                     </div>
                     {activeStatReport === 'playtime' && (

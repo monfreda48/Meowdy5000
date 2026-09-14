@@ -1,0 +1,9 @@
+{
+  "cookieSyncUrls": [
+    "https://ssbsync.smartadserver.com/api/sync?callerId=47&gdpr=0&gdpr_consent=",
+    "https://match.adsrvr.org/track/cmf/generic?ttd_pid=sharethrough&ttd_tpi=1&gdpr=0&gdpr_consent=",
+    "https://ssc-cms.33across.com/ps/?ri=0013300001kQj2HAAS&ru=https%3A%2F%2Fmatch.sharethrough.com%2Fsync%2Fv1%3Fsource_id%3DkzFyzzqXEqukMDumpVLB6Eq3%26source_user_id%3D33XUSERID33X",
+    "https://sync.1rx.io/usersync2/sharethrough",
+    "https://s.amazon-adsystem.com/ecm3?ex=sharethrough.com&id=26eeabd4-290e-4e81-b8a8-31b740b40c61"
+  ]
+}
