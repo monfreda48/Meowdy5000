@@ -314,6 +314,14 @@ async def get_meta_tier_list_endpoint(source: str = Query("rivalstracker", descr
         "tier_list": records
     }
 
+@app.get("/api/heroes")
+@app.get("/api/meta/heroes")
+async def get_heroes_endpoint(background_tasks: BackgroundTasks):
+    from backend.services.hero_roster_service import load_heroes, sync_hero_roster
+    background_tasks.add_task(sync_hero_roster)
+    heroes = load_heroes()
+    return {"success": True, "heroes": heroes, "total": len(heroes)}
+
 @app.get("/api/player/{identifier}")
 @app.get("/api/player/{identifier}/stats")
 async def get_player_stats_endpoint(identifier: str, platform: Optional[str] = Query("pc"), force: bool = Query(False)):
