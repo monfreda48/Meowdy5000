@@ -1139,7 +1139,7 @@ const calculateConsensusAverage = (sources, metricKey = '') => {
   };
 
   const render3SiteBreakdown = (metricKey) => {
-    if (!expandedMetrics[metricKey]) return null;
+    if (isSimplifiedView || !expandedMetrics[metricKey]) return null;
 
     let normKey = metricKey;
     if (metricKey === 'winRate') normKey = 'win_rate';
@@ -4154,30 +4154,32 @@ const DEFAULT_SEASON_NUM = 19;
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Win Rate</p>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={(e) => handleOpenReportModal('winRate', e)}
-                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
-                              title="Report Inaccurate Stat for Win Rate"
-                            >
-                              ⚠️
-                            </button>
-                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                              {expandedMetrics.winRate ? '▲ Hide' : '▼ Expand'}
+                          {isSimplifiedView ? (
+                            <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-[var(--theme-accent)]/15 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/30">
+                              Avg
                             </span>
-                          </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={(e) => handleOpenReportModal('winRate', e)}
+                                className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                                title="Report Inaccurate Stat for Win Rate"
+                              >
+                                ⚠️
+                              </button>
+                              <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                                {expandedMetrics.winRate ? '▲ Hide' : '▼ Expand'}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                        {isSimplifiedView && (
-                          <span className="inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--theme-accent)]/20 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/40 shadow-sm">
-                            ✦ 4-Site Consensus Avg
-                          </span>
-                        )}
+
                         <p className="font-black text-white text-5xl md:text-6xl">
                           {getCardDisplayStat('winRate', stats.current.winRate)}
                         </p>
 
-                        {expandedMetrics.winRate && (
+                        {!isSimplifiedView && expandedMetrics.winRate && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Matches:</span>
@@ -4222,30 +4224,32 @@ const DEFAULT_SEASON_NUM = 19;
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">KDA Ratio</p>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={(e) => handleOpenReportModal('kdRatio', e)}
-                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
-                              title="Report Inaccurate Stat for KDA Ratio"
-                            >
-                              ⚠️
-                            </button>
-                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                              {expandedMetrics.kdRatio ? '▲ Hide' : '▼ Expand'}
+                          {isSimplifiedView ? (
+                            <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-[var(--theme-accent)]/15 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/30">
+                              Avg
                             </span>
-                          </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={(e) => handleOpenReportModal('kdRatio', e)}
+                                className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                                title="Report Inaccurate Stat for KDA Ratio"
+                              >
+                                ⚠️
+                              </button>
+                              <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                                {expandedMetrics.kdRatio ? '▲ Hide' : '▼ Expand'}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                        {isSimplifiedView && (
-                          <span className="inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--theme-accent)]/20 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/40 shadow-sm">
-                            ✦ 4-Site Consensus Avg
-                          </span>
-                        )}
+
                         <p className="font-black text-white text-5xl md:text-6xl">
                           {getCardDisplayStat('kdRatio', stats.current.kdRatio)}
                         </p>
 
-                        {expandedMetrics.kdRatio && (
+                        {!isSimplifiedView && expandedMetrics.kdRatio && (
                           <div className="mt-4 pt-3 border-t border-slate-800 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Eliminations (Kills):</span>
@@ -4290,30 +4294,32 @@ const DEFAULT_SEASON_NUM = 19;
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Damage / 10m</p>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={(e) => handleOpenReportModal('heroDamage', e)}
-                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
-                              title="Report Inaccurate Stat for Damage / 10m"
-                            >
-                              ⚠️
-                            </button>
-                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                              {expandedMetrics.heroDamage ? '▲ Hide' : '▼ Expand'}
+                          {isSimplifiedView ? (
+                            <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-[var(--theme-accent)]/15 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/30">
+                              Avg
                             </span>
-                          </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={(e) => handleOpenReportModal('heroDamage', e)}
+                                className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                                title="Report Inaccurate Stat for Damage / 10m"
+                              >
+                                ⚠️
+                              </button>
+                              <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                                {expandedMetrics.heroDamage ? '▲ Hide' : '▼ Expand'}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                        {isSimplifiedView && (
-                          <span className="inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--theme-accent)]/20 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/40 shadow-sm">
-                            ✦ 4-Site Consensus Avg
-                          </span>
-                        )}
+
                         <p className={`font-black text-white truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('heroDamage', stats.current.damage_per_10m || stats.current.damagePer10m || (stats.current.damage_10m ? stats.current.damage_10m.toLocaleString() : '8,750'))}
                         </p>
 
-                        {expandedMetrics.heroDamage && (
+                        {!isSimplifiedView && expandedMetrics.heroDamage && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Damage Output:</span>
@@ -4352,30 +4358,32 @@ const DEFAULT_SEASON_NUM = 19;
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Healing / 10m</p>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={(e) => handleOpenReportModal('healing', e)}
-                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
-                              title="Report Inaccurate Stat for Healing / 10m"
-                            >
-                              ⚠️
-                            </button>
-                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                              {expandedMetrics.healing ? '▲ Hide' : '▼ Expand'}
+                          {isSimplifiedView ? (
+                            <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-[var(--theme-accent)]/15 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/30">
+                              Avg
                             </span>
-                          </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={(e) => handleOpenReportModal('healing', e)}
+                                className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                                title="Report Inaccurate Stat for Healing / 10m"
+                              >
+                                ⚠️
+                              </button>
+                              <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                                {expandedMetrics.healing ? '▲ Hide' : '▼ Expand'}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                        {isSimplifiedView && (
-                          <span className="inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--theme-accent)]/20 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/40 shadow-sm">
-                            ✦ 4-Site Consensus Avg
-                          </span>
-                        )}
+
                         <p className={`font-black text-white truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('healing', stats.current.healing_per_10m || stats.current.healingPer10m || (stats.current.healing_10m ? stats.current.healing_10m.toLocaleString() : '23,580'))}
                         </p>
 
-                        {expandedMetrics.healing && (
+                        {!isSimplifiedView && expandedMetrics.healing && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Healing Output:</span>
@@ -4414,30 +4422,32 @@ const DEFAULT_SEASON_NUM = 19;
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Dmg Blocked / 10m</p>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={(e) => handleOpenReportModal('damageBlocked', e)}
-                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
-                              title="Report Inaccurate Stat for Damage Blocked / 10m"
-                            >
-                              ⚠️
-                            </button>
-                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                              {expandedMetrics.damageBlocked ? '▲ Hide' : '▼ Expand'}
+                          {isSimplifiedView ? (
+                            <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-[var(--theme-accent)]/15 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/30">
+                              Avg
                             </span>
-                          </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={(e) => handleOpenReportModal('damageBlocked', e)}
+                                className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                                title="Report Inaccurate Stat for Damage Blocked / 10m"
+                              >
+                                ⚠️
+                              </button>
+                              <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                                {expandedMetrics.damageBlocked ? '▲ Hide' : '▼ Expand'}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                        {isSimplifiedView && (
-                          <span className="inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--theme-accent)]/20 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/40 shadow-sm">
-                            ✦ 4-Site Consensus Avg
-                          </span>
-                        )}
+
                         <p className={`font-black text-white truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('damageBlocked', stats.current.dmg_blocked_10m || stats.current.damage_blocked_10m || '6,420')}
                         </p>
 
-                        {expandedMetrics.damageBlocked && (
+                        {!isSimplifiedView && expandedMetrics.damageBlocked && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Damage Blocked:</span>
@@ -4475,30 +4485,32 @@ const DEFAULT_SEASON_NUM = 19;
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Accuracy</p>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={(e) => handleOpenReportModal('accuracy', e)}
-                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
-                              title="Report Inaccurate Stat for Accuracy"
-                            >
-                              ⚠️
-                            </button>
-                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                              {expandedMetrics.accuracy ? '▲ Hide' : '▼ Expand'}
+                          {isSimplifiedView ? (
+                            <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-[var(--theme-accent)]/15 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/30">
+                              Avg
                             </span>
-                          </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={(e) => handleOpenReportModal('accuracy', e)}
+                                className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                                title="Report Inaccurate Stat for Accuracy"
+                              >
+                                ⚠️
+                              </button>
+                              <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                                {expandedMetrics.accuracy ? '▲ Hide' : '▼ Expand'}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                        {isSimplifiedView && (
-                          <span className="inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--theme-accent)]/20 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/40 shadow-sm">
-                            ✦ 4-Site Consensus Avg
-                          </span>
-                        )}
+
                         <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
                           {getCardDisplayStat('accuracy', stats.current.accuracy || 'N/A')}
                         </p>
 
-                        {expandedMetrics.accuracy && (
+                        {!isSimplifiedView && expandedMetrics.accuracy && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Primary Attack Hits:</span>
@@ -4539,25 +4551,31 @@ const DEFAULT_SEASON_NUM = 19;
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">MVPs</p>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={(e) => handleOpenReportModal('mvp', e)}
-                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
-                              title="Report Inaccurate Stat for MVPs"
-                            >
-                              ⚠️
-                            </button>
-                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                              {expandedMetrics.mvp ? '▲ Hide' : '▼ Expand'}
+                          {isSimplifiedView ? (
+                            <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-[var(--theme-accent)]/15 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/30">
+                              Avg
                             </span>
-                          </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={(e) => handleOpenReportModal('mvp', e)}
+                                className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                                title="Report Inaccurate Stat for MVPs"
+                              >
+                                ⚠️
+                              </button>
+                              <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                                {expandedMetrics.mvp ? '▲ Hide' : '▼ Expand'}
+                              </span>
+                            </div>
+                          )}
                         </div>
                         <p className={`font-black text-white ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('mvp', stats.current.mvp || '0')}
                         </p>
 
-                        {expandedMetrics.mvp && (
+                        {!isSimplifiedView && expandedMetrics.mvp && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>MVP Performance Trophies:</span>
@@ -4592,25 +4610,31 @@ const DEFAULT_SEASON_NUM = 19;
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">SVPs</p>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={(e) => handleOpenReportModal('svp', e)}
-                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
-                              title="Report Inaccurate Stat for SVPs"
-                            >
-                              ⚠️
-                            </button>
-                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                              {expandedMetrics.svp ? '▲ Hide' : '▼ Expand'}
+                          {isSimplifiedView ? (
+                            <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-[var(--theme-accent)]/15 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/30">
+                              Avg
                             </span>
-                          </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={(e) => handleOpenReportModal('svp', e)}
+                                className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                                title="Report Inaccurate Stat for SVPs"
+                              >
+                                ⚠️
+                              </button>
+                              <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                                {expandedMetrics.svp ? '▲ Hide' : '▼ Expand'}
+                              </span>
+                            </div>
+                          )}
                         </div>
                         <p className={`font-black text-white ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('svp', stats.current.svp || '0')}
                         </p>
 
-                        {expandedMetrics.svp && (
+                        {!isSimplifiedView && expandedMetrics.svp && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>SVP Team Honors:</span>
@@ -4647,30 +4671,32 @@ const DEFAULT_SEASON_NUM = 19;
                             )}
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">TOTAL SEASON PLAYTIME</p>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={(e) => handleOpenReportModal('timePlayed', e)}
-                              className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
-                              title="Report Inaccurate Stat for Total Playtime"
-                            >
-                              ⚠️
-                            </button>
-                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
-                              {expandedMetrics.timePlayed ? '▲ Hide' : '▼ Expand'}
+                          {isSimplifiedView ? (
+                            <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-[var(--theme-accent)]/15 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/30">
+                              Avg
                             </span>
-                          </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={(e) => handleOpenReportModal('timePlayed', e)}
+                                className="text-[10px] text-slate-500 hover:text-red-400 p-0.5 transition-colors cursor-pointer"
+                                title="Report Inaccurate Stat for Total Playtime"
+                              >
+                                ⚠️
+                              </button>
+                              <span className="text-[10px] font-bold text-slate-500 group-hover:text-emerald-400 transition-colors">
+                                {expandedMetrics.timePlayed ? '▲ Hide' : '▼ Expand'}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                        {isSimplifiedView && (
-                          <span className="inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--theme-accent)]/20 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/40 shadow-sm">
-                            ✦ 4-Site Consensus Avg
-                          </span>
-                        )}
+
                         <p className={`font-black text-white ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('timePlayed', stats.current.total_season_playtime || stats.current.season_playtime || stats.current.total_playtime || '24h')}
                         </p>
 
-                        {expandedMetrics.timePlayed && (
+                        {!isSimplifiedView && expandedMetrics.timePlayed && (
                           <div className="mt-4 pt-3 border-t border-slate-700/60 space-y-2 text-xs animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="flex justify-between text-slate-300 font-medium">
                               <span>Total Recorded Hours:</span>
