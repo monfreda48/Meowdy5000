@@ -47,6 +47,11 @@ logger = logging.getLogger("rivals_tracker_main")
 async def lifespan(app: FastAPI):
     logger.info("Initializing SQLite database tables via init_db()...")
     await init_db()
+    try:
+        from backend.services.hero_roster_service import sync_hero_roster
+        asyncio.create_task(sync_hero_roster())
+    except Exception as e:
+        logger.warning(f"Failed to schedule initial hero roster sync: {e}")
     yield
     logger.info("Shutting down backend server.")
 
@@ -55,6 +60,10 @@ app = FastAPI(
     version="2.0.0",
     lifespan=lifespan
 )
+
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+os.makedirs(static_dir, exist_ok=True)
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -316,11 +325,15 @@ async def get_meta_tier_list_endpoint(source: str = Query("rivalstracker", descr
 
 @app.get("/api/heroes")
 @app.get("/api/meta/heroes")
-async def get_heroes_endpoint(background_tasks: BackgroundTasks):
-    from backend.services.hero_roster_service import load_heroes, sync_hero_roster
-    background_tasks.add_task(sync_hero_roster)
-    heroes = load_heroes()
-    return {"success": True, "heroes": heroes, "total": len(heroes)}
+async def get_heroes():
+    from backend.services.hero_roster_service import load_heroes
+    return load_heroes()
+
+@app.post("/api/heroes/sync")
+async def trigger_hero_sync():
+    from backend.services.hero_roster_service import sync_hero_roster
+    updated = await sync_hero_roster()
+    return {"status": "success", "total_heroes": len(updated)}
 
 @app.get("/api/player/{identifier}")
 @app.get("/api/player/{identifier}/stats")

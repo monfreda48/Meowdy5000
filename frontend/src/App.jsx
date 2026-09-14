@@ -305,6 +305,7 @@ export default function App() {
   useEffect(() => {
     try { localStorage.removeItem('installed_version_name'); } catch (e) { }
     fetchDynamicSeasons();
+    fetchHeroesRoster();
   }, []);
 
   useEffect(() => {
@@ -2858,20 +2859,50 @@ ${payload.stack || 'No stack trace available.'}
     return candidates[Math.floor(Math.random() * candidates.length)];
   };
 
-  const HERO_MAP_CLIENT = {
-    "1011": "Mantis", "1014": "The Punisher", "1015": "Magneto", "1016": "Spider-Man",
-    "1017": "Venom", "1018": "Rocket Raccoon", "1020": "Groot", "1021": "Captain America",
-    "1022": "Hela", "1023": "Iron Man", "1024": "Doctor Strange", "1025": "Hawkeye",
-    "1026": "Black Panther", "1027": "Loki", "1028": "Winter Soldier", "1029": "Hulk", "1030": "Magik",
-    "1031": "Moon Knight", "1032": "Luna Snow", "1033": "Squirrel Girl", "1034": "Iron Fist",
-    "1035": "Adam Warlock", "1036": "Jeff the Land Shark", "1037": "Psylocke", "1038": "Storm",
-    "1039": "Mister Fantastic", "1040": "Invisible Woman", "1041": "Star-Lord", "1042": "Thor",
-    "1043": "Namor", "1044": "Scarlet Witch", "1045": "Peni Parker", "1046": "The Thing",
-    "1047": "Human Torch", "1048": "Wolverine", "1049": "Cloak & Dagger", "1050": "Psylocke",
-    "1051": "Ultron", "1052": "Flynn"
+  const [heroesMap, setHeroesMap] = useState({});
+
+  const fetchHeroesRoster = async () => {
+    try {
+      const res = await fetch(getApiUrl('/api/heroes'));
+      if (res.ok) {
+        const data = await safeFetchJson(res);
+        const heroesData = data?.heroes || data;
+        if (heroesData && typeof heroesData === 'object') {
+          setHeroesMap(heroesData);
+        }
+      }
+    } catch (err) {
+      console.warn('Could not fetch dynamic heroes roster:', err);
+    }
   };
 
-const DEFAULT_SEASON_NUM = 19;
+  const getHeroName = (idOrName) => {
+    if (!idOrName) return 'Unknown Hero';
+    const key = String(idOrName).trim();
+    if (heroesMap[key]) {
+      return typeof heroesMap[key] === 'object' ? heroesMap[key].name : heroesMap[key];
+    }
+    return key;
+  };
+
+  const getHeroIcon = (idOrName) => {
+    if (!idOrName) return '/static/heroes/default.png';
+    const key = String(idOrName).trim();
+    if (heroesMap[key] && typeof heroesMap[key] === 'object' && heroesMap[key].icon) {
+      return getApiUrl(heroesMap[key].icon);
+    }
+    return getApiUrl(`/static/heroes/${key}.png`);
+  };
+
+  const HERO_MAP_CLIENT = new Proxy(heroesMap, {
+    get: (target, prop) => {
+      const val = target[prop];
+      if (val) return typeof val === 'object' ? val.name : val;
+      return prop || 'Unknown Hero';
+    }
+  });
+
+  const DEFAULT_SEASON_NUM = 19;
 
   const normalizeBackendStatsToCurrent = (backendData, queryVal, seasonVal) => {
     if (!backendData) return null;
