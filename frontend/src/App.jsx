@@ -253,16 +253,15 @@ const isProfileMatch = (profileA, profileB) => {
 };
 
 export default function App() {
-  const [query, setQuery] = useState(() => {
+  const [claimedUid, setClaimedUid] = useState(() => {
     try {
-      const saved = localStorage.getItem('claimed_profile');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed?.username || parsed?.name || '';
-      }
-    } catch (e) {}
-    return '';
+      return localStorage.getItem('m5_claimed_uid') || null;
+    } catch {
+      return null;
+    }
   });
+  const [searchedUid, setSearchedUid] = useState(null);
+  const [query, setQuery] = useState('');
   const [season, setSeason] = useState('19');
   const [timeframe, setTimeframe] = useState('all');
   const [expandedMetrics, setExpandedMetrics] = useState({});
@@ -593,15 +592,25 @@ export default function App() {
     return formatStatDisplayValue(metricKey, rawVal);
   };
 
-  // Claimed Profile & Tracking Source Selection State
-  const [claimedProfile, setClaimedProfile] = useState(() => {
+  const handleClaimProfile = (uidToClaim) => {
+    if (!uidToClaim) return;
+    const cleanUid = String(uidToClaim).trim();
     try {
-      const saved = localStorage.getItem('m5_claimed_player') || localStorage.getItem('claimed_profile');
-      return saved ? JSON.parse(saved) : null;
-    } catch { return null; }
-  });
+      localStorage.setItem('m5_claimed_uid', cleanUid);
+    } catch (e) {}
+    setClaimedUid(cleanUid);
+    triggerHaptic('success');
+    showNativeToast(`✔ Claimed Profile ${cleanUid}`);
+  };
 
-  const [showClaimModal, setShowClaimModal] = useState(false);
+  const handleUnclaimProfile = () => {
+    try {
+      localStorage.removeItem('m5_claimed_uid');
+    } catch (e) {}
+    setClaimedUid(null);
+    triggerHaptic('light');
+    showNativeToast('Profile unclaimed.');
+  };
 
   const [claimedSources, setClaimedSources] = useState(() => {
     try {
@@ -752,188 +761,6 @@ export default function App() {
       message: `⭐ Direct tracking URLs saved across Tracker.gg, RivalsMeta, & RivalsTracker for ${targetUser}!`
     });
     setTimeout(() => setUpdateToast(null), 4000);
-  };
-
-  const handleClaimProfile = (targetDataOrUsername = null, sourcesToTrack = null) => {
-    let targetStats = null;
-    let targetUser = query;
-
-    if (targetDataOrUsername && typeof targetDataOrUsername === 'object') {
-      targetStats = targetDataOrUsername;
-      targetUser = targetStats.username;
-    } else if (typeof targetDataOrUsername === 'string' && targetDataOrUsername) {
-      targetUser = targetDataOrUsername;
-      targetStats = stats?.current;
-    } else if (stats?.current) {
-      targetStats = stats.current;
-      targetUser = targetStats.username;
-    }
-
-    if (!targetUser) return;
-    const sources = sourcesToTrack || claimedSources;
-    const cleanUser = targetUser.trim();
-
-    // Use the exact actual profile URLs captured during the active scraping session
-    const actualTrackerGgUrl = targetStats?.siteUrls?.trackerGg || targetStats?.trackerUrl || null;
-    const actualRivalsMetaUrl = targetStats?.siteUrls?.rivalsMeta || null;
-    const actualRivalsTrackerUrl = targetStats?.siteUrls?.rivalsTracker || null;
-
-    const siteUrls = {
-      trackerGg: actualTrackerGgUrl || `https://tracker.gg/marvel-rivals/profile/ign/${encodeURIComponent(cleanUser)}/overview`,
-      rivalsMeta: actualRivalsMetaUrl || `https://rivalsmeta.com/search?q=${encodeURIComponent(cleanUser)}`,
-      rivalsTracker: actualRivalsTrackerUrl || `https://rivalstracker.com/search?q=${encodeURIComponent(cleanUser)}`
-    };
-
-    const primarySavedUrl = actualRivalsMetaUrl || actualTrackerGgUrl || actualRivalsTrackerUrl || siteUrls.trackerGg;
-    
-    const claimObj = {
-      username: cleanUser,
-      platform: targetStats?.platform || selectedPlatform || 'PC',
-      savedUrl: primarySavedUrl,
-      siteUrls: siteUrls,
-      trackerGgUrl: siteUrls.trackerGg,
-      rivalsMetaUrl: siteUrls.rivalsMeta,
-      rivalsTrackerUrl: siteUrls.rivalsTracker,
-      claimedAt: new Date().toISOString(),
-      trackingSources: sources,
-      cachedStats: targetStats
-    };
-
-    setClaimedProfile(claimObj);
-    setClaimedSources(sources);
-    try {
-      localStorage.setItem('claimed_profile', JSON.stringify(claimObj));
-      localStorage.setItem('claimed_tracking_sources', JSON.stringify(sources));
-    } catch (e) { }
-
-    // Sync with backend API POST /api/profile/claim
-    try {
-      fetch(getApiUrl('/api/profile/claim'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          player_name: cleanUser,
-          profile_url: primarySavedUrl,
-          platform: (targetStats?.platform || selectedPlatform || 'pc').toLowerCase(),
-          stats: targetStats
-        })
-      }).catch(err => console.warn('[ClaimProfile] Backend sync note:', err));
-    } catch (err) {}
-
-    if (targetStats) {
-      togglePinHomeProfile(targetStats);
-      saveTrackedStatSnapshot({ current: targetStats });
-      try { localStorage.setItem(`last_auto_snapshot_time_${targetUser.toLowerCase()}`, String(Date.now())); } catch (e) { }
-    }
-
-    triggerHaptic('success');
-    showNativeToast(`👑 TRACKING ACTIVE: ${cleanUser} profile claimed!`);
-    setUpdateToast({ type: 'success', message: `👑 TRACKING ACTIVE: ${cleanUser} profile claimed!` });
-    setTimeout(() => setUpdateToast(null), 3500);
-    setShowClaimModal(false);
-  };
-
-  // On App Launch: Auto-load claimed profile from localStorage and GET /api/profile/claimed
-  useEffect(() => {
-    const initClaimedProfile = async () => {
-      // Check local storage directly first
-      let savedUser = null;
-      try {
-        const saved = localStorage.getItem('claimed_profile');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed?.username) {
-            savedUser = parsed.username;
-            setClaimedProfile(parsed);
-            setQuery(parsed.username);
-          }
-        }
-      } catch (e) {}
-
-      // If backend has a claimed user, sync it
-      try {
-        const res = await fetch(getApiUrl('/api/profile/claimed'));
-        if (res.ok) {
-          const data = await res.json();
-          if (data.claimed && data.player_name) {
-            savedUser = data.player_name;
-            const claimObj = {
-              username: data.player_name,
-              trackerGgUrl: data.profile_url,
-              claimedAt: data.last_scraped_at
-            };
-            setClaimedProfile(claimObj);
-            try { localStorage.setItem('claimed_profile', JSON.stringify(claimObj)); } catch (e) {}
-          }
-        }
-      } catch (err) {
-        console.warn('[AppInit] GET /api/profile/claimed note:', err);
-      }
-
-      // Fetch stats for the resolved user
-      if (savedUser) {
-        fetchStats(null, savedUser, season);
-      } else if (autoLoadHomeProfile && pinnedHomeProfile?.username) {
-        setQuery(pinnedHomeProfile.username);
-        fetchStats(null, pinnedHomeProfile.username, pinnedHomeProfile.season || season);
-      }
-    };
-
-    initClaimedProfile();
-  }, []);
-
-  const handleRefreshClaimedProfile = async () => {
-    const targetUser = claimedProfile?.username || stats?.current?.username || query;
-    if (!targetUser) return;
-
-    triggerHaptic('medium');
-    showNativeToast('🔄 Syncing & refreshing stats from origin...');
-    setUpdateToast({ type: 'update', message: '🔄 Syncing stats from scraping origin...' });
-
-    try {
-      const res = await fetch(getApiUrl('/api/profile/refresh'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ player_name: targetUser })
-      });
-      if (res.ok) {
-        const freshData = await res.json();
-        const normalized = normalizeBackendStatsToCurrent(freshData, targetUser, season);
-        if (normalized) {
-          setStats(normalized);
-          triggerHaptic('success');
-          showNativeToast('✅ Stats updated from scraping origin!');
-          setUpdateToast({ type: 'success', message: '✅ Profile stats refreshed & synced successfully!' });
-          setTimeout(() => setUpdateToast(null), 3000);
-          return;
-        }
-      }
-      await fetchStats(null, targetUser, season);
-    } catch (err) {
-      console.warn('Refresh error:', err);
-      await fetchStats(null, targetUser, season);
-    }
-  };
-
-  const handleUnclaimProfile = () => {
-    const unclaimingUser = claimedProfile?.username;
-    setClaimedProfile(null);
-    try {
-      localStorage.removeItem('claimed_profile');
-    } catch (e) { }
-
-    if (backendBaseUrl && unclaimingUser) {
-      try {
-        fetch(getApiUrl(`/api/claim-profile?username=${encodeURIComponent(unclaimingUser)}`), {
-          method: 'DELETE'
-        }).catch(err => {});
-      } catch (err) {}
-    }
-
-    showNativeToast('👑 Claimed profile removed');
-    setUpdateToast({ type: 'update', message: '👑 Claimed profile removed.' });
-    setTimeout(() => setUpdateToast(null), 3000);
-    setShowClaimModal(false);
   };
 
   const toggleTrackingSource = (sourceKey) => {
@@ -3653,33 +3480,31 @@ const DEFAULT_SEASON_NUM = 19;
             </span>
           </div>
 
-          {/* Top Bar Quick Profile Lookup Search Bar (hidden when profile is claimed) */}
-          {!isClaimed && (
-            <form onSubmit={handleProfileLookup} className="flex-1 max-w-[200px] xs:max-w-xs sm:max-w-md mx-2">
-              <div className="relative flex items-center">
-                <input
-                  type="text"
-                  value={lookupQuery}
-                  onChange={(e) => setLookupQuery(e.target.value)}
-                  placeholder="Search..."
-                  className="w-full bg-[var(--theme-surface-2)] border border-[var(--theme-border)] hover:border-[var(--theme-accent)]/50 focus:border-[var(--theme-accent)] rounded-xl py-1.5 pl-8 pr-12 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[var(--theme-accent)] transition-all shadow-inner"
-                />
-                <span className="absolute left-2.5 text-slate-400 text-xs pointer-events-none">🔍</span>
-                {lookupQuery.trim() ? (
-                  <button
-                    type="submit"
-                    className="absolute right-1 px-2 py-0.5 bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-slate-950 font-black text-[10px] rounded-lg uppercase tracking-wider transition-all cursor-pointer shadow"
-                  >
-                    Search
-                  </button>
-                ) : (
-                  <span className="absolute right-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline select-none">
-                    Search
-                  </span>
-                )}
-              </div>
-            </form>
-          )}
+          {/* Top Bar Quick Profile Lookup Search Bar */}
+          <form onSubmit={handleProfileLookup} className="flex-1 max-w-[200px] xs:max-w-xs sm:max-w-md mx-2">
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                value={lookupQuery}
+                onChange={(e) => setLookupQuery(e.target.value)}
+                placeholder="Search UID or IGN..."
+                className="w-full bg-[var(--theme-surface-2)] border border-[var(--theme-border)] hover:border-[var(--theme-accent)]/50 focus:border-[var(--theme-accent)] rounded-xl py-1.5 pl-8 pr-12 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[var(--theme-accent)] transition-all shadow-inner"
+              />
+              <span className="absolute left-2.5 text-slate-400 text-xs pointer-events-none">🔍</span>
+              {lookupQuery.trim() ? (
+                <button
+                  type="submit"
+                  className="absolute right-1 px-2 py-0.5 bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-slate-950 font-black text-[10px] rounded-lg uppercase tracking-wider transition-all cursor-pointer shadow"
+                >
+                  Search
+                </button>
+              ) : (
+                <span className="absolute right-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline select-none">
+                  Search
+                </span>
+              )}
+            </div>
+          </form>
 
           {/* Right Nav Menu Button */}
           <div className="flex items-center gap-2">
@@ -3869,6 +3694,41 @@ const DEFAULT_SEASON_NUM = 19;
 
         </div>
 
+        {/* Search Hero Container when no profile is loaded */}
+        {!stats && !loading && (
+          <div className="w-full max-w-3xl mx-auto my-12 p-8 bg-[var(--theme-surface-1)] border border-[var(--theme-border)] rounded-3xl shadow-2xl text-center space-y-6 animate-in fade-in duration-300">
+            <div className="w-20 h-20 mx-auto rounded-2xl bg-[var(--theme-accent)]/15 border border-[var(--theme-accent)]/40 flex items-center justify-center text-4xl shadow-inner">
+              🔍
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-wider">
+                WELCOME TO M5 STAT TRACKER
+              </h2>
+              <p className="text-xs sm:text-sm text-[var(--theme-subtext)] max-w-md mx-auto">
+                Enter your Marvel Rivals Player UID or IGN below to view live 4-site stats, combat metrics, and telemetry.
+              </p>
+            </div>
+            <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row items-center gap-3 max-w-xl mx-auto">
+              <div className="relative flex-1 w-full">
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Enter Player UID or IGN..."
+                  className="w-full bg-[var(--theme-surface-2)] border border-[var(--theme-border)] focus:border-[var(--theme-accent)] rounded-xl px-4 py-3 pl-10 text-sm text-white placeholder-slate-400 focus:outline-none transition-all"
+                />
+                <span className="absolute left-3.5 top-3.5 text-slate-400 text-sm">🔍</span>
+              </div>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-6 py-3 bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg hover:scale-105 active:scale-95"
+              >
+                Search Stats
+              </button>
+            </form>
+          </div>
+        )}
+
         {/* Dashboard Results */}
         {stats && !loading && (
           <div className={`animate-in fade-in slide-in-from-bottom-8 duration-700 ${isMobileView ? 'space-y-5' : 'space-y-8'}`}>
@@ -3970,27 +3830,39 @@ const DEFAULT_SEASON_NUM = 19;
 
 
               <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                {isClaimed ? (
-                  <div className="flex items-center gap-2">
-                    <button className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wide transition-all border shadow-sm bg-[var(--theme-accent)]/15 border-[var(--theme-accent)]/40 text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent)]/25">
-                      <span className="w-2 h-2 rounded-full bg-[var(--theme-accent)] animate-pulse" />
-                      TRACKING ACTIVE
+                {(() => {
+                  const currentProfileUid = String(stats?.current?.uid || stats?.current?.player_id || stats?.current?.username || query).trim().toLowerCase();
+                  const isCurrentClaimed = Boolean(claimedUid && String(claimedUid).trim().toLowerCase() === currentProfileUid);
+
+                  return isCurrentClaimed ? (
+                    <div className="flex items-center gap-2">
+                      <span className="px-3.5 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wide border bg-emerald-500/15 border-emerald-500/40 text-emerald-300 flex items-center gap-1.5">
+                        <span>✔</span>
+                        <span>Profile Claimed</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleUnclaimProfile}
+                        className="px-3 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wide border bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:border-slate-600 transition-all cursor-pointer"
+                      >
+                        Unclaim / Switch
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleClaimProfile(stats?.current?.uid || stats?.current?.username || query)}
+                      className="px-4 py-2 rounded-xl font-black text-xs sm:text-sm bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-slate-950 transition-all flex items-center gap-1.5 cursor-pointer shadow-lg uppercase tracking-wider hover:scale-105 active:scale-95"
+                    >
+                      <span>★</span>
+                      <span>Claim Profile</span>
                     </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleClaimProfile(stats.current)}
-                    className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-amber-500/20 border border-amber-400/50 uppercase tracking-wider font-black hover:scale-105 active:scale-95"
-                    title="Claim profile to start tracking"
-                  >
-                    <span>👑 CLAIM YOUR USERNAME TO START TRACKING</span>
-                  </button>
-                )}
+                  );
+                })()}
 
                 <button
                   type="button"
-                  onClick={() => handleRefreshClaimedProfile()}
+                  onClick={() => fetchStats(null, query || claimedUid, season, null, selectedPlatform, true)}
                   className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wide transition-all border shadow-sm bg-[var(--theme-surface-2)] border-[var(--theme-border)] text-white hover:border-[var(--theme-accent)] hover:text-[var(--theme-accent-text)] cursor-pointer"
                   title="Refresh / Sync Stats using saved scraping origin"
                 >
