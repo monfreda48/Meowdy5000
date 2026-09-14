@@ -13,36 +13,60 @@
   --color-content-muted: var(--text-muted);
 }
 
-/* 1. Default (Midnight Blue & Cyan) */
-:root, [data-theme="default"] {
+/* 1. Default & Crimson Themes */
+:root, [data-theme="default"], [data-theme="crimson"], .theme-crimson {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --bg-app: #080b13;
-  --bg-card: #0d111d;
-  --bg-card-subtle: #131929;
-  --border-card: #1e293b;
-  --border-subtle: #151f30;
-  --accent-primary: #38bdf8;
-  --accent-glow: rgba(56, 189, 248, 0.22);
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --accent-color: var(--accent-primary);
+  --theme-bg: #0d0608;
+  --theme-surface-1: #160a0d;
+  --theme-surface-2: #1e0d12;
+  --theme-surface-3: #2a1219;
+  --theme-border: #4a1923;
+  --theme-border-hover: #732637;
+  --theme-accent: #ff4655;
+  --theme-accent-hover: #ff5e6c;
+  --theme-accent-glow: rgba(255, 70, 85, 0.25);
+  --theme-accent-text: #ff9aa2;
+  --theme-subtext: #a85868;
+  --text-primary: #ffffff;
+  --text-secondary: #f0cdd4;
+  --text-muted: #8c4c59;
+
+  --bg-app: var(--theme-bg);
+  --bg-card: var(--theme-surface-1);
+  --bg-card-subtle: var(--theme-surface-2);
+  --border-card: var(--theme-border);
+  --border-subtle: var(--theme-border-hover);
+  --accent-primary: var(--theme-accent);
+  --accent-glow: var(--theme-accent-glow);
+  --accent-color: var(--theme-accent);
 }
 
-/* 2. Kinetic Purple (Gambit - Charged Bio-Kinetic Magenta / Deep Trenchcoat) */
-[data-theme="kinetic-purple"], [data-theme="kinetic_purple"], [data-theme="cyberpunk"] {
-  --bg-app: #0a0512;
-  --bg-card: #140b24;
-  --bg-card-subtle: #1f1136;
-  --border-card: #3b1859;
-  --border-subtle: #29103e;
-  --accent-primary: #d946ef;
-  --accent-glow: rgba(217, 70, 239, 0.28);
-  --text-primary: #fdf4ff;
-  --text-secondary: #e879f9;
-  --text-muted: #a21caf;
-  --accent-color: var(--accent-primary);
+/* 2. Cyberpunk Theme */
+[data-theme="cyberpunk"], .theme-cyberpunk {
+  --theme-bg: #0b0e1b;
+  --theme-surface-1: #111628;
+  --theme-surface-2: #171d36;
+  --theme-surface-3: #1f2747;
+  --theme-border: #2a3560;
+  --theme-border-hover: #3d4d8c;
+  --theme-accent: #00ffcc;
+  --theme-accent-hover: #33ffd6;
+  --theme-accent-glow: rgba(0, 255, 204, 0.25);
+  --theme-accent-text: #80ffe5;
+  --theme-subtext: #4d998a;
+  --text-primary: #ffffff;
+  --text-secondary: #c2e0dc;
+  --text-muted: #537570;
+
+  --bg-app: var(--theme-bg);
+  --bg-card: var(--theme-surface-1);
+  --bg-card-subtle: var(--theme-surface-2);
+  --border-card: var(--theme-border);
+  --border-subtle: var(--theme-border-hover);
+  --accent-primary: var(--theme-accent);
+  --accent-glow: var(--theme-accent-glow);
+  --accent-color: var(--theme-accent);
 }
 
 /* 3. Gamma Green (Hulk - Radioactive Gamma Surge / Dark Mutation) */

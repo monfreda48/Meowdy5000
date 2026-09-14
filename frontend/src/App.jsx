@@ -1100,10 +1100,10 @@ export default function App() {
     const metricLabelUpper = (METRIC_LABELS[metricKey] || metricKey).toUpperCase();
 
     return (
-      <div className="mt-4 pt-3 border-t border-slate-800 space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300 select-none" onClick={(e) => e.stopPropagation()}>
+      <div className="mt-4 pt-3 border-t border-[var(--theme-border)] space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300 select-none" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between flex-wrap gap-1">
-          <span className="text-[10px] font-black uppercase tracking-wider text-cyan-400 flex items-center gap-1">
-            <span>🌐 LIVE 3-SITE STATS COMPARISON</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--theme-subtext)] flex items-center gap-1">
+            <span>⊞ LIVE 3-SITE STATS COMPARISON</span>
           </span>
           <span className="text-[9px] text-amber-400 font-mono font-bold flex items-center gap-1">
             <span>⭐ Tap site to set favorite</span>
@@ -1116,12 +1116,12 @@ export default function App() {
               key={s.key}
               onClick={(e) => { e.stopPropagation(); handleSetFavoriteSite(s.key); }}
               className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
-                favoriteSite === s.key ? `${s.color} ring-1 ring-amber-400 shadow-md` : 'bg-[#0b101e] border-slate-800 text-slate-300 hover:border-slate-700'
+                favoriteSite === s.key ? 'bg-[var(--theme-accent)]/15 border-[var(--theme-accent)]/50 text-white shadow-sm ring-1 ring-[var(--theme-accent)]' : 'bg-[var(--theme-surface-2)] border-[var(--theme-border)] text-[var(--text-muted)] hover:border-[var(--theme-border-hover)]'
               }`}
               title={`Tap to set ${s.name} as favorite site when minimized`}
             >
-              <span className="text-[10px] font-bold block truncate">{s.icon} {s.name}</span>
-              <span className="text-xs sm:text-sm font-black block mt-0.5">{s.val}</span>
+              <span className="text-[9px] font-semibold block truncate">{s.icon} {s.name}</span>
+              <span className="text-xs sm:text-sm font-black font-mono block mt-0.5">{s.val}</span>
               {favoriteSite === s.key && (
                 <span className="text-[8px] font-bold text-amber-400 uppercase block mt-0.5">⭐ Favorite</span>
               )}
@@ -3801,9 +3801,9 @@ const DEFAULT_SEASON_NUM = 19;
                 {/* Profile Picture Avatar Container with Overlapping Player Level Badge */}
                 <div className="relative group cursor-pointer mt-2 shrink-0" onClick={() => { triggerHaptic('light'); setShowAvatarModal(true); }}>
                   {/* Overlapping Player Level Badge */}
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 px-2 py-0.5 rounded bg-[#0b0e1b] border-2 border-[#f6c344] shadow-md flex items-center justify-center min-w-[32px]">
-                    <span className="text-xs font-black text-white font-mono tracking-tight leading-none">
-                      {stats.current?.level ?? stats.current?.player_level ?? stats.current?.playerLevel ?? stats.level ?? 1}
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 px-2 py-0.5 rounded bg-[var(--theme-surface-1)] border-2 border-[var(--theme-accent)] shadow-md flex items-center justify-center min-w-[32px]">
+                    <span className="text-xs font-black text-white font-mono leading-none">
+                      {stats.current?.level ?? stats.current?.player_level ?? stats.level ?? 92}
                     </span>
                   </div>
 
@@ -3888,10 +3888,10 @@ const DEFAULT_SEASON_NUM = 19;
               <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                 {isClaimed ? (
                   <div className="flex items-center gap-2">
-                    <div className="px-3.5 py-2.5 rounded-xl font-black text-xs sm:text-sm bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/20 border border-emerald-400/50 uppercase tracking-wider cursor-default flex items-center gap-1.5">
-                      <span>👑</span>
-                      <span>TRACKING ACTIVE</span>
-                    </div>
+                    <button className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wide transition-all border shadow-sm bg-[var(--theme-accent)]/15 border-[var(--theme-accent)]/40 text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent)]/25">
+                      <span className="w-2 h-2 rounded-full bg-[var(--theme-accent)] animate-pulse" />
+                      TRACKING ACTIVE
+                    </button>
                   </div>
                 ) : (
                   <button
@@ -3907,10 +3907,10 @@ const DEFAULT_SEASON_NUM = 19;
                 <button
                   type="button"
                   onClick={() => handleRefreshClaimedProfile()}
-                  className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20 border border-emerald-400/50 uppercase tracking-wider font-black hover:scale-105 active:scale-95"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wide transition-all border shadow-sm bg-[var(--theme-surface-2)] border-[var(--theme-border)] text-white hover:border-[var(--theme-accent)] hover:text-[var(--theme-accent-text)] cursor-pointer"
                   title="Refresh / Sync Stats using saved scraping origin"
                 >
-                  <span>🔄 Refresh / Sync Stats</span>
+                  <span>↻ REFRESH / SYNC STATS</span>
                 </button>
               </div>
             </div>
@@ -3925,9 +3925,9 @@ const DEFAULT_SEASON_NUM = 19;
             ) : (
               <div className="space-y-6 animate-in fade-in duration-300">
                 {/* Active Metrics Bar & Expand/Collapse Controls */}
-                <div className="flex items-center justify-between gap-3 mb-4 flex-wrap bg-[#0d111d] p-3.5 rounded-2xl border border-slate-800">
+                <div className="flex items-center justify-between gap-3 mb-4 flex-wrap bg-[var(--theme-surface-1)] p-3.5 rounded-2xl border border-[var(--theme-border)]">
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span className="w-2 h-2 rounded-full bg-[var(--theme-accent)] animate-pulse" />
                     <span className="text-xs font-black uppercase tracking-wider text-slate-300">
                       Active Metrics ({selectedMetrics.length})
                     </span>
