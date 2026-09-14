@@ -3710,6 +3710,25 @@ ${payload.stack || 'No stack trace available.'}
                       </span>
                     )}
 
+                    {/* Hero Leaderboard Rank Position Chips */}
+                    {Array.isArray(stats.hero_leaderboard_badges || stats.current?.hero_leaderboard_badges) &&
+                      (stats.hero_leaderboard_badges || stats.current?.hero_leaderboard_badges).map((badge, idx) => {
+                        if (!badge || !badge.rank || badge.rank > 500) return null;
+                        return (
+                          <a
+                            key={idx}
+                            href={badge.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-2.5 py-1 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface-2)] text-xs font-medium hover:border-[var(--theme-accent)] transition-colors gap-1.5 shadow-sm"
+                            title={`View #${badge.rank} ${badge.provider} Leaderboard`}
+                          >
+                            <span className="font-bold text-sm text-[var(--theme-accent)]">#{badge.rank}</span>
+                            <span className="text-[11px] opacity-75 font-normal text-white">{badge.provider}</span>
+                          </a>
+                        );
+                      })}
+
                     <button
                       type="button"
                       onClick={() => {

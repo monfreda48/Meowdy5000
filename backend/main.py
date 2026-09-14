@@ -349,12 +349,13 @@ async def get_player_stats_endpoint(identifier: str, platform: Optional[str] = Q
         from backend.services.metric_brain import MetricBrain
         fetcher = MultiSourceTrackerFetcher(uid=identifier, ign=identifier)
         raw_telemetry = await fetcher.fetch_all()
-        brain_data = MetricBrain.process(raw_telemetry, uid=identifier)
+        brain_data = await MetricBrain.process_async(raw_telemetry, uid=identifier)
         if isinstance(profile, dict):
             profile["extended_metrics"] = brain_data.get("extended_metrics", {})
             profile["raw_telemetry"] = brain_data.get("raw_telemetry", {})
             profile["top_squadmates"] = brain_data.get("top_squadmates", [])
             profile["hero_matchups"] = brain_data.get("hero_matchups", [])
+            profile["hero_leaderboard_badges"] = brain_data.get("hero_leaderboard_badges", [])
             profile["player_identity"] = brain_data.get("player_identity", {})
             canonical_display = brain_data.get("player_identity", {}).get("display_name")
             if canonical_display:
@@ -373,7 +374,7 @@ async def get_multi_source_telemetry(identifier: str):
     from backend.services.metric_brain import MetricBrain
     fetcher = MultiSourceTrackerFetcher(uid=identifier, ign=identifier)
     raw = await fetcher.fetch_all()
-    brain_result = MetricBrain.process(raw, uid=identifier)
+    brain_result = await MetricBrain.process_async(raw, uid=identifier)
     return brain_result
 
 @app.get("/api/player/{identifier}/debug-raw")

@@ -1,6 +1,7 @@
 import math
 import logging
 from typing import Dict, Any, List
+from backend.services.platform_detector import extract_platform_from_rivalsdata
 
 logger = logging.getLogger("metric_brain")
 
@@ -161,16 +162,35 @@ class MetricBrain:
         )
         canonical_name = format_username(str(raw_name))
 
+        # Platform Resolution via RivalsData HTML
+        r_data_html = str(r_data.get("raw_html", "")) or str(r_data)
+        canonical_platform = extract_platform_from_rivalsdata(r_data_html)
+
+        # Top Hero Slug Extraction
+        top_hero_slug = "hulk"
+        if r_meta.get("hero_stats") and len(r_meta["hero_stats"]) > 0:
+            top_hero_slug = r_meta["hero_stats"][0].get("hero") or r_meta["hero_stats"][0].get("name") or top_hero_slug
+        elif r_tr.get("hero_stats") and len(r_tr["hero_stats"]) > 0:
+            top_hero_slug = r_tr["hero_stats"][0].get("hero") or r_tr["hero_stats"][0].get("name") or top_hero_slug
+        elif t_gg.get("heroes") and len(t_gg["heroes"]) > 0:
+            top_hero_slug = t_gg["heroes"][0].get("hero") or t_gg["heroes"][0].get("name") or top_hero_slug
+
+        top_hero_slug = str(top_hero_slug).lower().strip().replace(" ", "-").replace("&", "and")
+
         return {
             "uid": uid,
+            "platform": canonical_platform,
+            "top_hero_slug": top_hero_slug,
             "player_identity": {
                 "display_name": canonical_name,
                 "username": canonical_name,
-                "uid": uid
+                "uid": uid,
+                "platform": canonical_platform
             },
             "canonical": {
                 "display_name": canonical_name,
                 "username": canonical_name,
+                "platform": canonical_platform,
                 "total_matches": total_matches,
                 "win_rate": str(win_rate),
                 "kda": kda,
@@ -182,5 +202,29 @@ class MetricBrain:
             "extended_metrics": extended_metrics,
             "top_squadmates": top_squadmates,
             "hero_matchups": hero_matchups,
+            "hero_leaderboard_badges": [],
             "raw_telemetry": raw_telemetry
         }
+
+    @staticmethod
+    async def process_async(raw_telemetry: Dict[str, Any], uid: str = "") -> Dict[str, Any]:
+        data = MetricBrain.process(raw_telemetry, uid=uid)
+        canonical_name = data.get("player_identity", {}).get("display_name", uid)
+        canonical_platform = data.get("platform", "pc")
+        top_hero_slug = data.get("top_hero_slug", "hulk")
+
+        try:
+            from backend.services.hero_leaderboard_service import HeroLeaderboardRankService
+            rank_service = HeroLeaderboardRankService(
+                hero_slug=top_hero_slug,
+                ign=canonical_name,
+                player_uid=uid,
+                canonical_platform=canonical_platform
+            )
+            badges = await rank_service.get_badges()
+            data["hero_leaderboard_badges"] = badges
+        except Exception as e:
+            logger.warning(f"[process_async] Hero leaderboard warning: {e}")
+            data["hero_leaderboard_badges"] = []
+
+        return data
