@@ -1084,12 +1084,22 @@ export default function App() {
         // Resolve active data payload from component scope safely
         const activeData = (typeof stats !== 'undefined' && stats) ? stats : {};
         const safeKey = typeof metricKey === 'string' ? metricKey : '';
-        const normKey = safeKey.toLowerCase().replace(/[^a-z0-9]/g, '');
+        let normKey = safeKey.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        // Normalize common metric aliases
+        if (normKey.includes('kda')) normKey = 'kda';
+        if (normKey.includes('block')) normKey = 'dmg_blocked_10m';
+        if (normKey.includes('damage') && !normKey.includes('block')) normKey = 'damage_10m';
+        if (normKey.includes('heal')) normKey = 'healing_10m';
+        if (normKey.includes('win')) normKey = 'win_rate';
+        if (normKey.includes('playtime')) normKey = 'total_playtime';
+        if (normKey.includes('matches')) normKey = 'total_matches';
 
         // 1. Check reconciled_stats from activeData
         const recStats = activeData.reconciled_stats || {};
-        const sources = (safeKey && recStats[safeKey]?.sources) || 
-                        (normKey && recStats[normKey]?.sources) || null;
+        const sources = recStats[normKey]?.sources || 
+                        recStats[safeKey]?.sources || 
+                        recStats[safeKey.toLowerCase()]?.sources || null;
 
         if (sources && typeof sources === 'object' && !Array.isArray(sources)) {
           const target = String(siteName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
