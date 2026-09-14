@@ -9,7 +9,53 @@ from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
 from backend.database import get_connection
-from backend.adapters.rivalsdata import PlayerNotFoundError, ProfilePrivateError, normalize_platform_code
+def extract_dynamic_seasons(raw_payloads: dict) -> list:
+    """Extracts only seasons that actually exist in the player's actual historical segments."""
+    if not isinstance(raw_payloads, dict):
+        return []
+
+    seasons_found = {}
+    
+    # Inspect tracker_gg segments
+    t_gg_segments = raw_payloads.get("tracker_gg", {}).get("data", {}).get("segments", [])
+    if isinstance(t_gg_segments, list):
+        for seg in t_gg_segments:
+            if isinstance(seg, dict) and seg.get("type") in ["season", "playlist"] and "season" in seg.get("attributes", {}):
+                s_id = str(seg["attributes"]["season"])
+                s_name = seg.get("metadata", {}).get("name", f"Season {s_id}")
+                seasons_found[s_id] = {"id": s_id, "name": s_name}
+
+    # Inspect rivals_meta segments
+    r_meta_seasons = raw_payloads.get("rivals_meta", {}).get("seasons", [])
+    if isinstance(r_meta_seasons, list):
+        for s in r_meta_seasons:
+            if isinstance(s, dict):
+                s_id = str(s.get("id") or s.get("season_id") or "")
+                if s_id and s_id not in seasons_found:
+                    seasons_found[s_id] = {
+                        "id": s_id,
+                        "name": s.get("name", f"Season {s_id}")
+                    }
+
+    # Inspect top-level seasons if present
+    top_seasons = raw_payloads.get("seasons", [])
+    if isinstance(top_seasons, list):
+        for s in top_seasons:
+            if isinstance(s, dict):
+                s_id = str(s.get("id") or s.get("season_id") or "")
+                if s_id and s_id not in seasons_found:
+                    seasons_found[s_id] = {
+                        "id": s_id,
+                        "name": s.get("name", f"Season {s_id}")
+                    }
+
+    # Sort descending so newest seasons appear first
+    sorted_seasons = sorted(
+        seasons_found.values(),
+        key=lambda x: float(x["id"]) if str(x["id"]).replace(".", "", 1).isdigit() else 0,
+        reverse=True
+    )
+    return sorted_seasons
 
 def cache_player_profile(identifier: str, data: dict):
     """Persists normalized profile data into player_cache."""
@@ -429,6 +475,14 @@ async def get_player_profile(identifier: str, force: bool = False, force_refresh
         canonical["uid"] = target_uid
         canonical["username"] = target_user
         canonical["success"] = True
+
+        raw_payloads = {
+            "tracker_gg": tgg if isinstance(tgg, dict) else {},
+            "rivals_meta": rm if isinstance(rm, dict) else {},
+            "rivals_data": rd if isinstance(rd, dict) else {},
+            "rivalstracker": rt if isinstance(rt, dict) else {}
+        }
+        canonical["available_seasons"] = extract_dynamic_seasons(raw_payloads)
 
         # Link verified pair back to SQLite identity cache
         if target_user != target_uid and target_uid.isdigit():

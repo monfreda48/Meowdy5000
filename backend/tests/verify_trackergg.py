@@ -9,9 +9,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from backend.adapters.trackergg import fetch_all_trackergg_tabs
 
 async def run_verification():
-    test_user = "Meowdy 5000"
-    print(f"=== INITIATING LIVE TRACKER.GG 5-TAB PROBE FOR '{test_user}' ===")
-    data = await fetch_all_trackergg_tabs(test_user)
+    target_user_name = "Meowdy 5000"
+    print(f"=== INITIATING LIVE TRACKER.GG 5-TAB PROBE FOR '{target_user_name}' ===")
+    data = await fetch_all_trackergg_tabs(target_user_name)
 
     ov = data.get("overview", {})
     print("\n[TAB 1: OVERVIEW]")

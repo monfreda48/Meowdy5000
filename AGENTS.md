@@ -6,6 +6,8 @@
 - DO NOT "improve", "refactor", or restyle adjacent components unless explicitly told to do so.
 - DO NOT invent new state variables, dummy data arrays, or UI strings not present in the instructions.
 - NEVER substitute hardcoded mock data or placeholder arrays for actual dynamic API bindings.
+- NEVER define hardcoded season arrays (e.g., SEASONS_LIST), mock rank ladders, or placeholder player telemetry.
+- Always run 'python scripts/audit_no_mock_data.py' before finishing any code generation.
 
 ## 2. SURGICAL DIFF ENFORCEMENT
 - Prioritize the minimal diff footprint required to complete the task.
