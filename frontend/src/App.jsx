@@ -589,6 +589,23 @@ export default function App() {
   };
 
   const getCardDisplayStat = (metricKey, defaultValue) => {
+    let normKey = metricKey;
+    if (metricKey === 'winRate') normKey = 'win_rate';
+    if (metricKey === 'kdRatio') normKey = 'kda';
+    if (metricKey === 'heroDamage') normKey = 'damage_10m';
+    if (metricKey === 'healing') normKey = 'healing_10m';
+    if (metricKey === 'damageBlocked') normKey = 'dmg_blocked_10m';
+    if (metricKey === 'matchesPlayed') normKey = 'total_matches';
+    if (metricKey === 'timePlayed') normKey = 'total_playtime';
+
+    const cardSources = stats?.reconciled_stats?.[normKey]?.sources ||
+                        stats?.reconciled_stats?.[metricKey]?.sources;
+
+    if (isSimplifiedView) {
+      const consensusAvg = calculateConsensusAverage(cardSources, metricKey);
+      if (consensusAvg) return consensusAvg;
+    }
+
     let rawVal = defaultValue;
     if (stats?.statBreakdown && favoriteSite !== 'merged') {
       const breakdownVal = stats.statBreakdown[metricKey]?.[favoriteSite];
@@ -1039,6 +1056,59 @@ export default function App() {
     return ranks;
   };
 
+/**
+ * Computes the mathematical arithmetic mean across all valid scraped sites.
+ * Strips formatting (%, commas, units), rejects null/zero/stale sentinels,
+ * and formats the output according to the metric's expected data type.
+ */
+const calculateConsensusAverage = (sources, metricKey = '') => {
+  if (!sources || typeof sources !== 'object') return null;
+
+  const normKey = String(metricKey).toLowerCase();
+
+  // Extract and parse numeric values from the 4-site dictionary
+  const numericValues = Object.values(sources)
+    .map((val) => {
+      if (val === null || val === undefined || val === '' || val === '--' || val === 'N/A') {
+        return null;
+      }
+      // Strip commas, percentage signs, and trailing text
+      const clean = String(val).replace(/,/g, '').replace(/%/g, '').replace(/[a-zA-Z\s]/g, '').trim();
+      const parsed = parseFloat(clean);
+      return (!isNaN(parsed) && parsed > 0) ? parsed : null;
+    })
+    .filter((v) => v !== null);
+
+  if (numericValues.length === 0) return null;
+
+  // Formula: Arithmetic Mean = Σ(values) / N
+  const sum = numericValues.reduce((acc, curr) => acc + curr, 0);
+  const mean = sum / numericValues.length;
+
+  // Format based on metric domain rules:
+  if (normKey.includes('win') || normKey.includes('accuracy') || normKey.includes('rate')) {
+    return `${mean.toFixed(1)}%`;
+  }
+  if (normKey.includes('kda') || normKey.includes('ratio')) {
+    return mean.toFixed(2);
+  }
+  if (normKey.includes('playtime') || normKey.includes('hours')) {
+    return `${Math.round(mean)}h`;
+  }
+  if (
+    normKey.includes('damage') ||
+    normKey.includes('heal') ||
+    normKey.includes('block') ||
+    normKey.includes('output') ||
+    normKey.includes('score')
+  ) {
+    return Math.round(mean).toLocaleString();
+  }
+
+  // Default fallback formatting
+  return mean >= 100 ? Math.round(mean).toLocaleString() : mean.toFixed(1);
+};
+
   const getMinimizedStatValue = (metricKey, unit = '') => {
     if (!stats?.rawSourcesData) {
       const fallback = stats?.current?.[metricKey] || 'N/A';
@@ -1266,6 +1336,19 @@ export default function App() {
 
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isSimplifiedView, setIsSimplifiedView] = useState(() => {
+    return localStorage.getItem('m5_simplified_view') === 'true';
+  });
+
+  const toggleSimplifiedView = () => {
+    setIsSimplifiedView((prev) => {
+      const next = !prev;
+      localStorage.setItem('m5_simplified_view', String(next));
+      return next;
+    });
+  };
+
+
 
   const isClaimed = Boolean(
     claimedProfile &&
@@ -3985,6 +4068,18 @@ const DEFAULT_SEASON_NUM = 19;
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
+                      onClick={toggleSimplifiedView}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 border shadow-sm cursor-pointer ${
+                        isSimplifiedView
+                          ? 'bg-[var(--theme-accent)]/20 border-[var(--theme-accent)] text-white shadow-[0_0_10px_var(--theme-accent-glow)]'
+                          : 'bg-[var(--theme-surface-2)] border-[var(--theme-border)] text-[var(--text-secondary)] hover:border-[var(--theme-border-hover)]'
+                      }`}
+                    >
+                      <span>{isSimplifiedView ? '✦' : '✧'}</span>
+                      <span>Simplified View</span>
+                    </button>
+                    <button
+                      type="button"
                       onClick={toggleCollapseAll}
                       className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer"
                     >
@@ -4071,6 +4166,11 @@ const DEFAULT_SEASON_NUM = 19;
                             </span>
                           </div>
                         </div>
+                        {isSimplifiedView && (
+                          <span className="inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--theme-accent)]/20 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/40 shadow-sm">
+                            ✦ 4-Site Consensus Avg
+                          </span>
+                        )}
                         <p className="font-black text-white text-5xl md:text-6xl">
                           {getCardDisplayStat('winRate', stats.current.winRate)}
                         </p>
@@ -4134,6 +4234,11 @@ const DEFAULT_SEASON_NUM = 19;
                             </span>
                           </div>
                         </div>
+                        {isSimplifiedView && (
+                          <span className="inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--theme-accent)]/20 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/40 shadow-sm">
+                            ✦ 4-Site Consensus Avg
+                          </span>
+                        )}
                         <p className="font-black text-white text-5xl md:text-6xl">
                           {getCardDisplayStat('kdRatio', stats.current.kdRatio)}
                         </p>
@@ -4197,6 +4302,11 @@ const DEFAULT_SEASON_NUM = 19;
                             </span>
                           </div>
                         </div>
+                        {isSimplifiedView && (
+                          <span className="inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--theme-accent)]/20 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/40 shadow-sm">
+                            ✦ 4-Site Consensus Avg
+                          </span>
+                        )}
                         <p className={`font-black text-white truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('heroDamage', stats.current.damage_per_10m || stats.current.damagePer10m || (stats.current.damage_10m ? stats.current.damage_10m.toLocaleString() : '8,750'))}
                         </p>
@@ -4254,6 +4364,11 @@ const DEFAULT_SEASON_NUM = 19;
                             </span>
                           </div>
                         </div>
+                        {isSimplifiedView && (
+                          <span className="inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--theme-accent)]/20 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/40 shadow-sm">
+                            ✦ 4-Site Consensus Avg
+                          </span>
+                        )}
                         <p className={`font-black text-white truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('healing', stats.current.healing_per_10m || stats.current.healingPer10m || (stats.current.healing_10m ? stats.current.healing_10m.toLocaleString() : '23,580'))}
                         </p>
@@ -4311,6 +4426,11 @@ const DEFAULT_SEASON_NUM = 19;
                             </span>
                           </div>
                         </div>
+                        {isSimplifiedView && (
+                          <span className="inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--theme-accent)]/20 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/40 shadow-sm">
+                            ✦ 4-Site Consensus Avg
+                          </span>
+                        )}
                         <p className={`font-black text-white truncate ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('damageBlocked', stats.current.dmg_blocked_10m || stats.current.damage_blocked_10m || '6,420')}
                         </p>
@@ -4367,6 +4487,11 @@ const DEFAULT_SEASON_NUM = 19;
                             </span>
                           </div>
                         </div>
+                        {isSimplifiedView && (
+                          <span className="inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--theme-accent)]/20 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/40 shadow-sm">
+                            ✦ 4-Site Consensus Avg
+                          </span>
+                        )}
                         <p className={`font-black text-white ${isMobileView ? 'text-4xl' : 'text-5xl'}`}>
                           {getCardDisplayStat('accuracy', stats.current.accuracy || 'N/A')}
                         </p>
@@ -4534,6 +4659,11 @@ const DEFAULT_SEASON_NUM = 19;
                             </span>
                           </div>
                         </div>
+                        {isSimplifiedView && (
+                          <span className="inline-block mb-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--theme-accent)]/20 text-[var(--theme-accent-text)] border border-[var(--theme-accent)]/40 shadow-sm">
+                            ✦ 4-Site Consensus Avg
+                          </span>
+                        )}
                         <p className={`font-black text-white ${isMobileView ? 'text-3xl' : 'text-4xl'}`}>
                           {getCardDisplayStat('timePlayed', stats.current.total_season_playtime || stats.current.season_playtime || stats.current.total_playtime || '24h')}
                         </p>
