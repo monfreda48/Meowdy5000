@@ -2848,24 +2848,36 @@ ${payload.stack || 'No stack trace available.'}
   const normalizeBackendStatsToCurrent = (backendData, queryVal, seasonVal) => {
     if (!backendData) return null;
     if (backendData.current) {
+      const curr = backendData.current;
+      const matchesCnt = Number(curr.matchesPlayed || curr.matches_played || curr.matches || curr.total_matches || 0);
+      const wrNum = parseFloat(String(curr.winRate || curr.win_rate || '0').replace('%', '')) || 0;
+      const calcWon = Math.round(matchesCnt * (wrNum / 100.0));
+      const calcLost = Math.max(0, matchesCnt - calcWon);
+
       backendData.current = {
         ...backendData,
-        ...backendData.current,
-        heroDamage: backendData.current.heroDamage || backendData.hero_damage_10m || backendData.damage_per_10m || backendData.damagePer10m || '--',
-        damagePer10m: backendData.current.damagePer10m || backendData.hero_damage_10m || backendData.damage_per_10m || '--',
-        healing: backendData.current.healing || backendData.healing_10m || backendData.healing_per_10m || backendData.healingPer10m || '--',
-        healingPer10m: backendData.current.healingPer10m || backendData.healing_10m || backendData.healing_per_10m || '--',
-        damageBlocked: backendData.current.damageBlocked || backendData.dmg_blocked_10m || '--',
-        accuracy: backendData.current.accuracy || (backendData.accuracy ? `${backendData.accuracy}%` : '50.3%'),
-        mvp: String(backendData.current.mvp ?? backendData.mvps ?? 0),
-        svp: String(backendData.current.svp ?? backendData.svps ?? 0),
-        timePlayed: backendData.current.seasonPlaytimeHours || backendData.seasonPlaytimeHours || backendData.totalSeasonPlaytime || '--',
-        seasonPlaytimeHours: backendData.current.seasonPlaytimeHours || backendData.seasonPlaytimeHours || '--',
-        totalSeasonPlaytime: backendData.current.totalSeasonPlaytime || backendData.total_season_playtime || '--',
-        topHeroPlaytimeHours: backendData.current.topHeroPlaytimeHours || backendData.top_hero_playtime_hours || '--',
-        topHeroPlaytimeLabel: backendData.current.topHeroPlaytimeLabel || backendData.top_hero_playtime_label || '--',
-        topHeroName: backendData.current.topHeroName || backendData.top_hero_name || '--',
-        totalDamage: backendData.current.totalDamage || backendData.total_damage || '--'
+        ...curr,
+        matchesPlayed: matchesCnt,
+        matchesWon: curr.matchesWon ?? curr.wins ?? calcWon,
+        matchesLost: curr.matchesLost ?? curr.losses ?? calcLost,
+        wins: curr.wins ?? curr.matchesWon ?? calcWon,
+        losses: curr.losses ?? curr.matchesLost ?? calcLost,
+        record: curr.record || `${calcWon}W ${calcLost}L`,
+        heroDamage: curr.heroDamage || backendData.hero_damage_10m || backendData.damage_per_10m || backendData.damagePer10m || '--',
+        damagePer10m: curr.damagePer10m || backendData.hero_damage_10m || backendData.damage_per_10m || '--',
+        healing: curr.healing || backendData.healing_10m || backendData.healing_per_10m || backendData.healingPer10m || '--',
+        healingPer10m: curr.healingPer10m || backendData.healing_10m || backendData.healing_per_10m || '--',
+        damageBlocked: curr.damageBlocked || backendData.dmg_blocked_10m || '--',
+        accuracy: curr.accuracy || (backendData.accuracy ? `${backendData.accuracy}%` : '50.3%'),
+        mvp: String(curr.mvp ?? backendData.mvps ?? 0),
+        svp: String(curr.svp ?? backendData.svps ?? 0),
+        timePlayed: curr.seasonPlaytimeHours || backendData.seasonPlaytimeHours || backendData.totalSeasonPlaytime || '--',
+        seasonPlaytimeHours: curr.seasonPlaytimeHours || backendData.seasonPlaytimeHours || '--',
+        totalSeasonPlaytime: curr.totalSeasonPlaytime || backendData.total_season_playtime || '--',
+        topHeroPlaytimeHours: curr.topHeroPlaytimeHours || backendData.top_hero_playtime_hours || '--',
+        topHeroPlaytimeLabel: curr.topHeroPlaytimeLabel || backendData.top_hero_playtime_label || '--',
+        topHeroName: curr.topHeroName || backendData.top_hero_name || '--',
+        totalDamage: curr.totalDamage || backendData.total_damage || '--'
       };
       return backendData;
     }
