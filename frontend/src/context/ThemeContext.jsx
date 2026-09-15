@@ -5,6 +5,7 @@ export const VALID_THEMES = [
   'kinetic-purple',
   'gamma-green',
   'jean-grey',
+  'jeangrey',
   'oops-all-hallways'
 ];
 

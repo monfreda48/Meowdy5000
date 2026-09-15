@@ -44,6 +44,7 @@ export default function RivalsDashboard({
   const heal10m = current.healing || current.healingPer10m || current.healing_per_10m || '--';
   const block10m = current.damageBlocked || current.dmg_blocked_10m || '--';
   const playtime = current.timePlayed || current.totalSeasonPlaytime || current.seasonPlaytimeHours || '--';
+  const accuracy = current.accuracy ? (String(current.accuracy).includes('%') ? current.accuracy : `${current.accuracy}%`) : null;
   const mvps = current.mvps ?? current.mvp ?? 0;
   const svps = current.svps ?? current.svp ?? 0;
 
@@ -73,7 +74,6 @@ export default function RivalsDashboard({
     return '--';
   };
 
-  // Competitive rank row removed as requested
   const consensusRows = [
     { label: 'Win Rate', metricKey: 'winRate', consensus: winRate },
     { label: 'KDA Ratio', metricKey: 'kda', consensus: kda },
@@ -98,7 +98,7 @@ export default function RivalsDashboard({
 
   return (
     <div className="w-full space-y-6 text-[var(--theme-text)] font-sans">
-      {/* Top Search & Sync Bar */}
+      {/* Top Header Bar */}
       <header className="flex flex-col md:flex-row items-center justify-between gap-4 pb-4 border-b border-[var(--theme-border)]">
         <div className="flex items-center gap-3">
           <span className="bg-[var(--theme-accent)]/15 text-[var(--theme-accent)] border border-[var(--theme-accent)]/30 px-2.5 py-1 rounded-md text-xs font-black tracking-widest uppercase">
@@ -130,7 +130,7 @@ export default function RivalsDashboard({
           </button>
 
           <span className="bg-[var(--theme-surface-2)] border border-[var(--theme-border)] text-[var(--theme-subtext)] text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap">
-            ⏳ S{season} LIVE
+            ? S{season} LIVE
           </span>
         </div>
       </header>
@@ -140,7 +140,7 @@ export default function RivalsDashboard({
         <div className="flex items-center gap-5">
           <div className="relative">
             <div className="w-16 h-16 rounded-2xl bg-[var(--theme-surface-2)] border border-[var(--theme-border)] flex items-center justify-center text-[var(--theme-subtext)] text-2xl font-bold">
-              👤
+              ??
             </div>
             <span className="absolute -top-2 -right-2 bg-[var(--theme-accent)] border border-[var(--theme-accent)]/50 text-[10px] font-black px-1.5 py-0.5 rounded-md text-slate-950 shadow-sm">
               {level}
@@ -157,7 +157,7 @@ export default function RivalsDashboard({
 
             <div className="flex items-center gap-2 text-xs font-medium text-[var(--theme-subtext)]">
               <span>UID: {uid}</span>
-              <span>•</span>
+              <span>?</span>
               {isClaimed ? (
                 <div className="flex items-center gap-1.5">
                   <span className="text-emerald-400 flex items-center gap-1 font-semibold">
@@ -180,7 +180,7 @@ export default function RivalsDashboard({
                     onClick={() => onClaim(uid || username)}
                     className="text-[var(--theme-accent)] hover:underline font-bold cursor-pointer text-[11px]"
                   >
-                    ★ Claim Profile
+                    ? Claim Profile
                   </button>
                 )
               )}
@@ -194,21 +194,20 @@ export default function RivalsDashboard({
           </div>
         </div>
 
-        {/* Dynamic Rank Card */}
         <div className="w-full md:w-auto bg-[var(--theme-surface-2)] border border-[var(--theme-border)] rounded-xl p-4 flex flex-col items-start md:items-end justify-center min-w-[220px]">
           <div className="flex items-center gap-2">
-            <span className="text-base">💎</span>
+            <span className="text-base">??</span>
             <span className="text-sm font-black uppercase text-blue-400">{rank}</span>
             {rankScore && (
               <>
-                <span className="text-[var(--theme-subtext)] text-xs">•</span>
+                <span className="text-[var(--theme-subtext)] text-xs">?</span>
                 <span className="text-sm font-mono font-bold text-[var(--theme-text)]">{rankScore} RS</span>
               </>
             )}
           </div>
           {peakRank && (
             <p className="text-xs text-purple-400 font-semibold mt-1 flex items-center gap-1">
-              🏆 Peak: {peakRank}
+              ?? Peak: {peakRank}
             </p>
           )}
         </div>
@@ -280,7 +279,7 @@ export default function RivalsDashboard({
             </div>
           </div>
 
-          {/* Card 4: Dedicated Season Playtime */}
+          {/* Card 4: Season Playtime */}
           <div className="bg-[var(--theme-surface-1)] border border-[var(--theme-border)] rounded-2xl p-5 flex flex-col justify-between space-y-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[var(--theme-subtext)]">Season Playtime</span>
@@ -329,7 +328,7 @@ export default function RivalsDashboard({
           {/* TAB 1: OVERVIEW */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div className="bg-[var(--theme-surface-2)] border border-[var(--theme-border)] p-4 rounded-xl">
                   <span className="text-xs text-[var(--theme-subtext)] font-semibold uppercase">Total Eliminations</span>
                   <p className="text-2xl font-black font-mono text-emerald-400 mt-1">{kills}</p>
@@ -341,6 +340,10 @@ export default function RivalsDashboard({
                 <div className="bg-[var(--theme-surface-2)] border border-[var(--theme-border)] p-4 rounded-xl">
                   <span className="text-xs text-[var(--theme-subtext)] font-semibold uppercase">Total Deaths</span>
                   <p className="text-2xl font-black font-mono text-rose-400 mt-1">{deaths}</p>
+                </div>
+                <div className="bg-[var(--theme-surface-2)] border border-[var(--theme-border)] p-4 rounded-xl">
+                  <span className="text-xs text-[var(--theme-subtext)] font-semibold uppercase">Weapon Accuracy</span>
+                  <p className="text-2xl font-black font-mono text-[var(--theme-text)] mt-1">{accuracy || '--'}</p>
                 </div>
               </div>
 
@@ -377,7 +380,7 @@ export default function RivalsDashboard({
                   Live 4-Site Consensus Verification
                 </h4>
                 <span className="text-[11px] text-amber-400 font-bold flex items-center gap-1">
-                  ⭐ Multi-Source Active
+                  ? Multi-Source Active
                 </span>
               </div>
 
@@ -386,10 +389,10 @@ export default function RivalsDashboard({
                   <thead className="bg-[var(--theme-surface-2)] text-[var(--theme-subtext)] uppercase font-black tracking-wider border-b border-[var(--theme-border)]">
                     <tr>
                       <th className="py-3 px-4">Metric</th>
-                      <th className="py-3 px-4 text-center">🌐 Tracker.gg</th>
-                      <th className="py-3 px-4 text-center">⚔️ RivalsMeta</th>
-                      <th className="py-3 px-4 text-center">🎯 RivalsTracker</th>
-                      <th className="py-3 px-4 text-center">📊 RivalsData</th>
+                      <th className="py-3 px-4 text-center">?? Tracker.gg</th>
+                      <th className="py-3 px-4 text-center">?? RivalsMeta</th>
+                      <th className="py-3 px-4 text-center">?? RivalsTracker</th>
+                      <th className="py-3 px-4 text-center">?? RivalsData</th>
                       <th className="py-3 px-4 text-right text-[var(--theme-accent)]">Consensus</th>
                     </tr>
                   </thead>

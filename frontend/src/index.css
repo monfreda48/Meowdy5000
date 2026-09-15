@@ -106,21 +106,23 @@
 
 /* 4. Jean Grey (High-Contrast Black & White / Monochrome) */
 [data-theme="jean-grey"],
-.theme-jean-grey {
-  --theme-bg: #09090b;
-  --theme-surface-1: #121216;
-  --theme-surface-2: #18181f;
-  --theme-surface-3: #22222b;
-  --theme-border: #2e2e3a;
+[data-theme="jeangrey"],
+.theme-jean-grey,
+.theme-jeangrey {
+  --theme-bg: #000000;
+  --theme-surface-1: #09090b;
+  --theme-surface-2: #141417;
+  --theme-surface-3: #27272a;
+  --theme-border: #3f3f46;
   --theme-border-hover: #ffffff;
   --theme-accent: #ffffff;
   --theme-accent-hover: #e4e4e7;
-  --theme-accent-glow: rgba(255, 255, 255, 0.28);
+  --theme-accent-glow: rgba(255, 255, 255, 0.4);
   --theme-accent-text: #ffffff;
-  --theme-text: #f8fafc;
+  --theme-text: #ffffff;
   --theme-subtext: #a1a1aa;
   --theme-text-muted: #71717a;
-  --text-primary: #f8fafc;
+  --text-primary: #ffffff;
   --text-secondary: #e4e4e7;
   --text-muted: #71717a;
 
