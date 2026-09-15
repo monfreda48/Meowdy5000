@@ -28,6 +28,7 @@ import ReconciledStatCard from './components/ReconciledStatCard';
 import StatCardsGrid from './components/StatCardsGrid';
 import RawTelemetryInspector from './components/RawTelemetryInspector';
 import { formatPlayerName } from './utils/formatters';
+import RivalsDashboard from './components/RivalsDashboard';
 
 
 const triggerHaptic = (type = 'light') => {
@@ -3835,6 +3836,18 @@ ${payload.stack || 'No stack trace available.'}
               />
             ) : (
               <div className="space-y-6 animate-in fade-in duration-300">
+                {/* Clean 4-Site Consensus Rivals Dashboard */}
+                <RivalsDashboard
+                  stats={stats}
+                  loading={loading}
+                  claimedUid={claimedUid}
+                  season={season}
+                  onSearch={(q) => handleSearchSubmit(null, q)}
+                  onSync={() => fetchStats(null, query || claimedUid, season, null, selectedPlatform, true)}
+                  onClaim={handleClaimProfile}
+                  onUnclaim={handleUnclaimProfile}
+                />
+
                 {/* 4-Site Reconciled Canonical & Extended Stat Cards Grid */}
                 <StatCardsGrid
                   stats={stats.current}
@@ -3878,33 +3891,6 @@ ${payload.stack || 'No stack trace available.'}
 
 
 
-
-                {/* Multi-Source Reconciled Telemetry Cards */}
-                {(stats?.reconciled_stats || stats?.data?.reconciled_stats) && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <ReconciledStatCard
-                      label="Win Rate"
-                      iconEmoji="📈"
-                      unit="%"
-                      statObj={stats?.reconciled_stats?.win_rate || stats?.data?.reconciled_stats?.win_rate}
-                    />
-                    <ReconciledStatCard
-                      label="Rank Tier"
-                      iconEmoji="💎"
-                      statObj={stats?.reconciled_stats?.rank || stats?.data?.reconciled_stats?.rank}
-                    />
-                    <ReconciledStatCard
-                      label="Total Matches"
-                      iconEmoji="🎮"
-                      statObj={stats?.reconciled_stats?.total_matches || stats?.data?.reconciled_stats?.total_matches}
-                    />
-                    <ReconciledStatCard
-                      label="Rank Points (RS)"
-                      iconEmoji="🏆"
-                      statObj={stats?.reconciled_stats?.rank_points || stats?.data?.reconciled_stats?.rank_points}
-                    />
-                  </div>
-                )}
 
                 {/* Primary Tracked Metrics Grid */}
                 <div className={`grid gap-4 mb-6 w-full ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4'
