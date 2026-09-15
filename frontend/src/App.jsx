@@ -3471,44 +3471,37 @@ ${payload.stack || 'No stack trace available.'}
             </span>
           </div>
 
-          {/* Top Bar Quick Profile Lookup Search Bar */}
-          <form onSubmit={handleProfileLookup} className="flex-1 max-w-[200px] xs:max-w-xs sm:max-w-md mx-2">
-            <div className="relative flex items-center">
-              <input
-                type="text"
-                value={lookupQuery}
-                onChange={(e) => setLookupQuery(e.target.value)}
-                placeholder="Search UID or IGN..."
-                className="w-full bg-[var(--theme-surface-2)] border border-[var(--theme-border)] hover:border-[var(--theme-accent)]/50 focus:border-[var(--theme-accent)] rounded-xl py-1.5 pl-8 pr-12 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[var(--theme-accent)] transition-all shadow-inner"
-              />
-              <span className="absolute left-2.5 text-slate-400 text-xs pointer-events-none">🔍</span>
-              {lookupQuery.trim() ? (
-                <button
-                  type="submit"
-                  className="absolute right-1 px-2 py-0.5 bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-slate-950 font-black text-[10px] rounded-lg uppercase tracking-wider transition-all cursor-pointer shadow"
-                >
-                  Search
-                </button>
-              ) : (
-                <span className="absolute right-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline select-none">
-                  Search
-                </span>
-              )}
-            </div>
-          </form>
+          {/* Top Bar Quick Profile Lookup Search Bar (Hidden when claimed or profile loaded) */}
+          {!claimedUid && !stats && (
+            <form onSubmit={handleProfileLookup} className="flex-1 max-w-[200px] xs:max-w-xs sm:max-w-md mx-2">
+              <div className="relative flex items-center">
+                <input
+                  type="text"
+                  value={lookupQuery}
+                  onChange={(e) => setLookupQuery(e.target.value)}
+                  placeholder="Search UID or IGN..."
+                  className="w-full bg-[var(--theme-surface-2)] border border-[var(--theme-border)] hover:border-[var(--theme-accent)]/50 focus:border-[var(--theme-accent)] rounded-xl py-1.5 pl-8 pr-12 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[var(--theme-accent)] transition-all shadow-inner"
+                />
+                <span className="absolute left-2.5 text-slate-400 text-xs pointer-events-none">??</span>
+                {lookupQuery.trim() ? (
+                  <button
+                    type="submit"
+                    className="absolute right-1 px-2 py-0.5 bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-slate-950 font-black text-[10px] rounded-lg uppercase tracking-wider transition-all cursor-pointer shadow"
+                  >
+                    Search
+                  </button>
+                ) : (
+                  <span className="absolute right-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline select-none">
+                    Search
+                  </span>
+                )}
+              </div>
+            </form>
+          )}
 
           {/* Right Nav Menu Button */}
           <div className="flex items-center gap-2">
-            {Boolean(stats) && (
-              <button
-                onClick={() => setIsInspectorOpen(true)}
-                className="flex items-center gap-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-md"
-                title="Open Raw Telemetry Inspector"
-              >
-                <span>🔬</span>
-                <span className="hidden md:inline">Raw Inspector</span>
-              </button>
-            )}
+            
 
             <button
               onClick={() => setIsMenuOpen(true)}
@@ -5579,12 +5572,7 @@ ${payload.stack || 'No stack trace available.'}
         />
       )}
 
-      {/* Raw Telemetry Inspector Slide-Out Drawer */}
-      <RawTelemetryInspector
-        isOpen={isInspectorOpen}
-        onClose={() => setIsInspectorOpen(false)}
-        rawTelemetry={stats?.raw_telemetry || stats?.current?.raw_telemetry || {}}
-      />
+      
 
       </main>
     </div>
