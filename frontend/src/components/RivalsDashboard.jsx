@@ -97,11 +97,11 @@ export default function RivalsDashboard({
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0e14] text-slate-100 font-sans p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[var(--theme-bg,#0b0e14)] text-[var(--theme-text,#f1f5f9)] font-sans p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       {/* Top Header Bar */}
-      <header className="flex flex-col md:flex-row items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <header className="flex flex-col md:flex-row items-center justify-between gap-4 pb-4 border-b border-[var(--theme-border,#1e293b)]">
         <div className="flex items-center gap-3">
-          <span className="bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 px-2.5 py-1 rounded-md text-xs font-black tracking-widest uppercase">
+          <span className="bg-[var(--theme-accent)]/15 text-[var(--theme-accent-text,#818cf8)] border border-[var(--theme-accent)]/30 px-2.5 py-1 rounded-md text-xs font-black tracking-widest uppercase shadow-sm">
             M5
           </span>
           <h1 className="text-lg font-black tracking-wider uppercase text-white">Rivals Tracker</h1>
@@ -114,35 +114,35 @@ export default function RivalsDashboard({
               placeholder="Search UID or IGN..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 pl-9 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full bg-[var(--theme-surface-2,#0f172a)] border border-[var(--theme-border,#1e293b)] rounded-xl px-3.5 py-2 pl-9 text-sm text-white placeholder-[var(--theme-subtext,#64748b)] focus:outline-none focus:border-[var(--theme-accent,#6366f1)] transition-colors"
             />
-            <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+            <Search className="w-4 h-4 text-[var(--theme-subtext,#64748b)] absolute left-3 top-2.5" />
           </form>
 
           <button
             type="button"
             onClick={onSync}
             disabled={loading}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 border border-slate-700 rounded-xl text-xs font-bold text-slate-200 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-[var(--theme-surface-2,#1e293b)] hover:bg-[var(--theme-surface-1,#334155)] disabled:opacity-50 border border-[var(--theme-border,#334155)] rounded-xl text-xs font-bold text-[var(--theme-text,#f8fafc)] transition-all cursor-pointer shadow-sm hover:border-[var(--theme-accent,#6366f1)]"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-indigo-400' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[var(--theme-accent,#818cf8)]' : ''}`} />
             <span>{loading ? 'Syncing...' : 'Sync'}</span>
           </button>
 
-          <span className="bg-slate-900 border border-slate-800 text-slate-400 text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap">
+          <span className="bg-[var(--theme-surface-2,#0f172a)] border border-[var(--theme-border,#1e293b)] text-[var(--text-secondary,#94a3b8)] text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap">
             ⏳ S{season} LIVE
           </span>
         </div>
       </header>
 
       {/* Tier 1: Identity Banner */}
-      <section className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
+      <section className="bg-[var(--theme-surface-1,#0f172a)]/80 border border-[var(--theme-border,#1e293b)] rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
         <div className="flex items-center gap-5">
           <div className="relative">
-            <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 text-2xl font-bold">
+            <div className="w-16 h-16 rounded-2xl bg-[var(--theme-surface-2,#1e293b)] border border-[var(--theme-border,#334155)] flex items-center justify-center text-[var(--theme-subtext,#94a3b8)] text-2xl font-bold">
               👤
             </div>
-            <span className="absolute -top-2 -right-2 bg-indigo-600 border border-indigo-400/50 text-[10px] font-black px-1.5 py-0.5 rounded-md text-white shadow-sm">
+            <span className="absolute -top-2 -right-2 bg-[var(--theme-accent,#6366f1)] border border-[var(--theme-accent)]/50 text-[10px] font-black px-1.5 py-0.5 rounded-md text-white shadow-sm">
               {level}
             </span>
           </div>
@@ -150,12 +150,12 @@ export default function RivalsDashboard({
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
               <h2 className="text-xl font-black text-white">{username}</h2>
-              <span className="bg-slate-800 border border-slate-700 text-slate-400 text-[11px] font-bold px-2 py-0.5 rounded uppercase">
+              <span className="bg-[var(--theme-surface-2,#1e293b)] border border-[var(--theme-border,#334155)] text-[var(--text-secondary,#94a3b8)] text-[11px] font-bold px-2 py-0.5 rounded uppercase">
                 {platform}
               </span>
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
+            <div className="flex items-center gap-2 text-xs font-medium text-[var(--theme-subtext,#94a3b8)]">
               <span>UID: {uid}</span>
               <span>•</span>
               {isClaimed ? (
@@ -167,7 +167,7 @@ export default function RivalsDashboard({
                     <button
                       type="button"
                       onClick={onUnclaim}
-                      className="text-slate-500 hover:text-slate-300 ml-1 underline cursor-pointer text-[11px]"
+                      className="text-[var(--theme-subtext,#64748b)] hover:text-white ml-1 underline cursor-pointer text-[11px]"
                     >
                       Unclaim
                     </button>
@@ -178,7 +178,7 @@ export default function RivalsDashboard({
                   <button
                     type="button"
                     onClick={() => onClaim(uid || username)}
-                    className="text-amber-400 hover:text-amber-300 font-bold cursor-pointer text-[11px]"
+                    className="text-[var(--theme-accent-text,#818cf8)] hover:text-white font-bold cursor-pointer text-[11px]"
                   >
                     ★ Claim Profile
                   </button>
@@ -187,21 +187,21 @@ export default function RivalsDashboard({
             </div>
 
             {mainHero && (
-              <p className="text-xs text-slate-400">
-                Main Hero: <span className="font-bold text-slate-200">{mainHero}</span>
+              <p className="text-xs text-[var(--theme-subtext,#94a3b8)]">
+                Main Hero: <span className="font-bold text-white">{mainHero}</span>
               </p>
             )}
           </div>
         </div>
 
         {/* Dynamic Rank Card */}
-        <div className="w-full md:w-auto bg-slate-950/80 border border-slate-800 rounded-xl p-4 flex flex-col items-start md:items-end justify-center min-w-[220px]">
+        <div className="w-full md:w-auto bg-[var(--theme-surface-2,#0b0e14)] border border-[var(--theme-border,#1e293b)] rounded-xl p-4 flex flex-col items-start md:items-end justify-center min-w-[220px]">
           <div className="flex items-center gap-2">
             <span className="text-base">💎</span>
             <span className="text-sm font-black uppercase text-blue-400">{rank}</span>
             {rankScore && (
               <>
-                <span className="text-slate-500 text-xs">•</span>
+                <span className="text-[var(--theme-subtext,#64748b)] text-xs">•</span>
                 <span className="text-sm font-mono font-bold text-white">{rankScore} RS</span>
               </>
             )}
@@ -216,22 +216,22 @@ export default function RivalsDashboard({
 
       {/* Tier 2: Core Combat Performance */}
       <section className="space-y-3">
-        <h3 className="text-xs font-black tracking-widest uppercase text-slate-400">
+        <h3 className="text-xs font-black tracking-widest uppercase text-[var(--theme-subtext,#94a3b8)]">
           Core Combat Performance
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Card 1: Win Rate */}
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+          <div className="bg-[var(--theme-surface-1,#0f172a)]/80 border border-[var(--theme-border,#1e293b)] rounded-2xl p-5 flex flex-col justify-between space-y-4">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Win Rate</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--theme-subtext,#94a3b8)]">Win Rate</span>
               <p className="text-3xl font-black text-white mt-1 font-mono">{winRate}</p>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-[var(--theme-subtext,#94a3b8)] mt-1">
                 <span className="text-emerald-400 font-bold">{wins} Wins</span> /{' '}
                 <span className="text-rose-400 font-bold">{losses} Losses</span>
               </p>
             </div>
             <div>
-              <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden flex">
+              <div className="w-full bg-[var(--theme-surface-2,#1e293b)] rounded-full h-2 overflow-hidden flex">
                 <div
                   className="bg-emerald-500 h-full transition-all duration-500"
                   style={{ width: `${winPercent}%` }}
@@ -241,51 +241,51 @@ export default function RivalsDashboard({
                   style={{ width: `${lossPercent}%` }}
                 />
               </div>
-              <p className="text-[11px] font-mono text-slate-500 text-right mt-1.5">
+              <p className="text-[11px] font-mono text-[var(--theme-subtext,#64748b)] text-right mt-1.5">
                 {totalMatches > 0 ? `${totalMatches} Games Total` : '-- Games Total'}
               </p>
             </div>
           </div>
 
           {/* Card 2: KDA Ratio */}
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+          <div className="bg-[var(--theme-surface-1,#0f172a)]/80 border border-[var(--theme-border,#1e293b)] rounded-2xl p-5 flex flex-col justify-between space-y-4">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">KDA Ratio</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--theme-subtext,#94a3b8)]">KDA Ratio</span>
               <p className="text-3xl font-black text-white mt-1 font-mono">{kda}</p>
-              <p className="text-xs font-mono text-slate-400 mt-1">
+              <p className="text-xs font-mono text-[var(--theme-subtext,#94a3b8)] mt-1">
                 <span className="text-emerald-400 font-bold">{kills} K</span> /{' '}
                 <span className="text-rose-400 font-bold">{deaths} D</span> /{' '}
-                <span className="text-indigo-400 font-bold">{assists} A</span>
+                <span className="text-[var(--theme-accent-text,#818cf8)] font-bold">{assists} A</span>
               </p>
             </div>
-            <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+            <div className="pt-2 border-t border-[var(--theme-border,#1e293b)] flex items-center justify-between text-xs text-[var(--theme-subtext,#94a3b8)]">
               <span>Combat Spread:</span>
               <span className="font-mono text-slate-300 font-semibold">{totalMatches > 0 ? `${(Number(kills || 0) / totalMatches).toFixed(1)} K/Match` : '--'}</span>
             </div>
           </div>
 
           {/* Card 3: 10 Min Rates & Playtime */}
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+          <div className="bg-[var(--theme-surface-1,#0f172a)]/80 border border-[var(--theme-border,#1e293b)] rounded-2xl p-5 flex flex-col justify-between space-y-4">
             <div className="grid grid-cols-2 gap-2">
-              <div className="bg-slate-950/60 border border-slate-800/60 p-2.5 rounded-xl">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Damage / 10 Min</span>
+              <div className="bg-[var(--theme-surface-2,#0b0e14)] border border-[var(--theme-border,#1e293b)] p-2.5 rounded-xl">
+                <span className="text-[10px] text-[var(--theme-subtext,#94a3b8)] uppercase font-semibold block">Damage / 10 Min</span>
                 <p className="text-sm font-black font-mono text-rose-300 mt-0.5">{dmg10m}</p>
               </div>
-              <div className="bg-slate-950/60 border border-slate-800/60 p-2.5 rounded-xl">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Healing / 10 Min</span>
+              <div className="bg-[var(--theme-surface-2,#0b0e14)] border border-[var(--theme-border,#1e293b)] p-2.5 rounded-xl">
+                <span className="text-[10px] text-[var(--theme-subtext,#94a3b8)] uppercase font-semibold block">Healing / 10 Min</span>
                 <p className="text-sm font-black font-mono text-purple-300 mt-0.5">{heal10m}</p>
               </div>
-              <div className="bg-slate-950/60 border border-slate-800/60 p-2.5 rounded-xl">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Blocked / 10 Min</span>
+              <div className="bg-[var(--theme-surface-2,#0b0e14)] border border-[var(--theme-border,#1e293b)] p-2.5 rounded-xl">
+                <span className="text-[10px] text-[var(--theme-subtext,#94a3b8)] uppercase font-semibold block">Blocked / 10 Min</span>
                 <p className="text-sm font-black font-mono text-indigo-300 mt-0.5">{block10m}</p>
               </div>
-              <div className="bg-slate-950/60 border border-slate-800/60 p-2.5 rounded-xl">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Season Playtime</span>
+              <div className="bg-[var(--theme-surface-2,#0b0e14)] border border-[var(--theme-border,#1e293b)] p-2.5 rounded-xl">
+                <span className="text-[10px] text-[var(--theme-subtext,#94a3b8)] uppercase font-semibold block">Season Playtime</span>
                 <p className="text-sm font-black font-mono text-amber-300 mt-0.5">{playtime}</p>
               </div>
             </div>
 
-            <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+            <div className="pt-2 border-t border-[var(--theme-border,#1e293b)] flex items-center justify-between text-xs text-[var(--theme-subtext,#94a3b8)]">
               <span>Status:</span>
               <span className="text-emerald-400 font-bold">Active Season</span>
             </div>
@@ -293,9 +293,9 @@ export default function RivalsDashboard({
         </div>
       </section>
 
-      {/* Tier 3: Navigation Drawer with Full Content */}
-      <section className="bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden shadow-sm">
-        <div className="flex items-center gap-1 border-b border-slate-800 bg-slate-950/60 px-4 pt-3 overflow-x-auto">
+      {/* Tier 3: Navigation Drawer */}
+      <section className="bg-[var(--theme-surface-1,#0f172a)]/80 border border-[var(--theme-border,#1e293b)] rounded-2xl overflow-hidden shadow-sm">
+        <div className="flex items-center gap-1 border-b border-[var(--theme-border,#1e293b)] bg-[var(--theme-surface-2,#0b0e14)] px-4 pt-3 overflow-x-auto">
           {[
             { id: 'overview', label: 'Overview', icon: BarChart3 },
             { id: 'consensus', label: '4-Site Consensus', icon: Shield },
@@ -312,8 +312,8 @@ export default function RivalsDashboard({
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-t-xl transition-all border-t border-x cursor-pointer whitespace-nowrap ${
                   isActive
-                    ? 'bg-slate-900 border-slate-800 text-white border-b-2 border-b-indigo-500'
-                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                    ? 'bg-[var(--theme-surface-1,#0f172a)] border-[var(--theme-border,#1e293b)] text-white border-b-2 border-b-[var(--theme-accent,#6366f1)]'
+                    : 'border-transparent text-[var(--text-secondary,#94a3b8)] hover:text-white hover:bg-[var(--theme-surface-1,#0f172a)]/40'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -328,41 +328,41 @@ export default function RivalsDashboard({
           {activeTab === 'overview' && (
             <div className="space-y-6">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl">
-                  <span className="text-xs text-slate-400 font-semibold uppercase">Total Eliminations</span>
+                <div className="bg-[var(--theme-surface-2,#0b0e14)] border border-[var(--theme-border,#1e293b)] p-4 rounded-xl">
+                  <span className="text-xs text-[var(--theme-subtext,#94a3b8)] font-semibold uppercase">Total Eliminations</span>
                   <p className="text-2xl font-black font-mono text-emerald-400 mt-1">{kills}</p>
                 </div>
-                <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl">
-                  <span className="text-xs text-slate-400 font-semibold uppercase">Total Assists</span>
-                  <p className="text-2xl font-black font-mono text-indigo-400 mt-1">{assists}</p>
+                <div className="bg-[var(--theme-surface-2,#0b0e14)] border border-[var(--theme-border,#1e293b)] p-4 rounded-xl">
+                  <span className="text-xs text-[var(--theme-subtext,#94a3b8)] font-semibold uppercase">Total Assists</span>
+                  <p className="text-2xl font-black font-mono text-[var(--theme-accent-text,#818cf8)] mt-1">{assists}</p>
                 </div>
-                <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl">
-                  <span className="text-xs text-slate-400 font-semibold uppercase">Total Deaths</span>
+                <div className="bg-[var(--theme-surface-2,#0b0e14)] border border-[var(--theme-border,#1e293b)] p-4 rounded-xl">
+                  <span className="text-xs text-[var(--theme-subtext,#94a3b8)] font-semibold uppercase">Total Deaths</span>
                   <p className="text-2xl font-black font-mono text-rose-400 mt-1">{deaths}</p>
                 </div>
-                <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl">
-                  <span className="text-xs text-slate-400 font-semibold uppercase">Weapon Accuracy</span>
+                <div className="bg-[var(--theme-surface-2,#0b0e14)] border border-[var(--theme-border,#1e293b)] p-4 rounded-xl">
+                  <span className="text-xs text-[var(--theme-subtext,#94a3b8)] font-semibold uppercase">Weapon Accuracy</span>
                   <p className="text-2xl font-black font-mono text-white mt-1">{accuracy || '--'}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                <div className="bg-[var(--theme-surface-2,#0b0e14)] border border-[var(--theme-border,#1e293b)] p-4 rounded-xl flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Award className="w-6 h-6 text-amber-400" />
                     <div>
                       <h4 className="text-sm font-bold text-white">MVP Honors</h4>
-                      <p className="text-xs text-slate-400">Match MVP recognitions</p>
+                      <p className="text-xs text-[var(--theme-subtext,#94a3b8)]">Match MVP recognitions</p>
                     </div>
                   </div>
                   <span className="text-xl font-black font-mono text-amber-400">{mvps}</span>
                 </div>
-                <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                <div className="bg-[var(--theme-surface-2,#0b0e14)] border border-[var(--theme-border,#1e293b)] p-4 rounded-xl flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Flame className="w-6 h-6 text-purple-400" />
                     <div>
                       <h4 className="text-sm font-bold text-white">SVP Honors</h4>
-                      <p className="text-xs text-slate-400">Top performer on defeated side</p>
+                      <p className="text-xs text-[var(--theme-subtext,#94a3b8)]">Top performer on defeated side</p>
                     </div>
                   </div>
                   <span className="text-xl font-black font-mono text-purple-400">{svps}</span>
@@ -375,7 +375,7 @@ export default function RivalsDashboard({
           {activeTab === 'consensus' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black tracking-widest uppercase text-slate-400">
+                <h4 className="text-xs font-black tracking-widest uppercase text-[var(--theme-subtext,#94a3b8)]">
                   Live 4-Site Consensus Verification
                 </h4>
                 <span className="text-[11px] text-amber-400 font-bold flex items-center gap-1">
@@ -383,19 +383,19 @@ export default function RivalsDashboard({
                 </span>
               </div>
 
-              <div className="overflow-x-auto border border-slate-800 rounded-xl">
+              <div className="overflow-x-auto border border-[var(--theme-border,#1e293b)] rounded-xl">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-950/80 text-slate-400 uppercase font-black tracking-wider border-b border-slate-800">
+                  <thead className="bg-[var(--theme-surface-2,#0b0e14)] text-[var(--theme-subtext,#94a3b8)] uppercase font-black tracking-wider border-b border-[var(--theme-border,#1e293b)]">
                     <tr>
                       <th className="py-3 px-4">Metric</th>
                       <th className="py-3 px-4 text-center">🌐 Tracker.gg</th>
                       <th className="py-3 px-4 text-center">⚔️ RivalsMeta</th>
                       <th className="py-3 px-4 text-center">🎯 RivalsTracker</th>
                       <th className="py-3 px-4 text-center">📊 RivalsData</th>
-                      <th className="py-3 px-4 text-right text-indigo-400">Consensus</th>
+                      <th className="py-3 px-4 text-right text-[var(--theme-accent-text,#818cf8)]">Consensus</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60 font-mono text-slate-200">
+                  <tbody className="divide-y divide-[var(--theme-border,#1e293b)]/60 font-mono text-slate-200">
                     {consensusRows.map((row, idx) => {
                       const tGgVal = getSiteStat(row.metricKey, 'trackerGg', 'Tracker.gg');
                       const rMetaVal = getSiteStat(row.metricKey, 'rivalsMeta', 'RivalsMeta');
@@ -403,13 +403,13 @@ export default function RivalsDashboard({
                       const rDataVal = getSiteStat(row.metricKey, 'rivalsData', 'RivalsData');
 
                       return (
-                        <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
+                        <tr key={idx} className="hover:bg-[var(--theme-surface-2,#1e293b)]/40 transition-colors">
                           <td className="py-3 px-4 font-sans font-bold text-white">{row.label}</td>
                           <td className="py-3 px-4 text-center">{tGgVal}</td>
                           <td className="py-3 px-4 text-center">{rMetaVal}</td>
                           <td className="py-3 px-4 text-center">{rTrVal}</td>
                           <td className="py-3 px-4 text-center">{rDataVal}</td>
-                          <td className="py-3 px-4 text-right font-black text-emerald-400 bg-emerald-500/5">
+                          <td className="py-3 px-4 text-right font-black text-emerald-400 bg-[var(--theme-accent)]/10 border-l border-[var(--theme-accent)]/20">
                             {row.consensus}
                           </td>
                         </tr>
@@ -424,12 +424,12 @@ export default function RivalsDashboard({
           {/* TAB 3: HEROES */}
           {activeTab === 'heroes' && (
             <div className="space-y-4">
-              <h4 className="text-xs font-black tracking-widest uppercase text-slate-400">
+              <h4 className="text-xs font-black tracking-widest uppercase text-[var(--theme-subtext,#94a3b8)]">
                 Hero Performance & Roster Breakdown
               </h4>
-              <div className="overflow-x-auto border border-slate-800 rounded-xl">
+              <div className="overflow-x-auto border border-[var(--theme-border,#1e293b)] rounded-xl">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-950/80 text-slate-400 uppercase font-black tracking-wider border-b border-slate-800">
+                  <thead className="bg-[var(--theme-surface-2,#0b0e14)] text-[var(--theme-subtext,#94a3b8)] uppercase font-black tracking-wider border-b border-[var(--theme-border,#1e293b)]">
                     <tr>
                       <th className="py-3 px-4">Hero</th>
                       <th className="py-3 px-4 text-center">Matches</th>
@@ -438,12 +438,12 @@ export default function RivalsDashboard({
                       <th className="py-3 px-4 text-right">Dmg / Min</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60 font-mono text-slate-200">
+                  <tbody className="divide-y divide-[var(--theme-border,#1e293b)]/60 font-mono text-slate-200">
                     {heroesList.length > 0 ? (
                       heroesList.map((h, idx) => (
-                        <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
+                        <tr key={idx} className="hover:bg-[var(--theme-surface-2,#1e293b)]/40 transition-colors">
                           <td className="py-3 px-4 font-sans font-bold text-white flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                            <span className="w-2 h-2 rounded-full bg-[var(--theme-accent,#6366f1)]" />
                             {h.hero || h.name || 'Hero'}
                           </td>
                           <td className="py-3 px-4 text-center">{h.matches ?? '--'}</td>
@@ -454,7 +454,7 @@ export default function RivalsDashboard({
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={5} className="py-6 text-center text-slate-500 font-sans">
+                        <td colSpan={5} className="py-6 text-center text-[var(--theme-subtext,#64748b)] font-sans">
                           No hero breakdown data recorded for this season.
                         </td>
                       </tr>
@@ -469,22 +469,22 @@ export default function RivalsDashboard({
           {activeTab === 'maps' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
-                <h4 className="text-xs font-black tracking-widest uppercase text-slate-400">
+                <h4 className="text-xs font-black tracking-widest uppercase text-[var(--theme-subtext,#94a3b8)]">
                   Frequent Squadmates
                 </h4>
-                <div className="border border-slate-800 rounded-xl overflow-hidden">
+                <div className="border border-[var(--theme-border,#1e293b)] rounded-xl overflow-hidden">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-950/80 text-slate-400 uppercase font-bold border-b border-slate-800">
+                    <thead className="bg-[var(--theme-surface-2,#0b0e14)] text-[var(--theme-subtext,#94a3b8)] uppercase font-bold border-b border-[var(--theme-border,#1e293b)]">
                       <tr>
                         <th className="py-2.5 px-3">Player</th>
                         <th className="py-2.5 px-3 text-center">Matches</th>
                         <th className="py-2.5 px-3 text-right">Win Rate</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60 font-mono">
+                    <tbody className="divide-y divide-[var(--theme-border,#1e293b)]/60 font-mono">
                       {squadmates.length > 0 ? (
                         squadmates.slice(0, 6).map((mate, idx) => (
-                          <tr key={idx} className="hover:bg-slate-800/30">
+                          <tr key={idx} className="hover:bg-[var(--theme-surface-2,#1e293b)]/40">
                             <td className="py-2.5 px-3 font-sans font-medium text-white">{mate.name || mate.player_name || 'Teammate'}</td>
                             <td className="py-2.5 px-3 text-center">{mate.matches || mate.played_with_count || '--'}</td>
                             <td className="py-2.5 px-3 text-right text-emerald-400">{mate.win_rate ? `${mate.win_rate}%` : '--'}</td>
@@ -492,7 +492,7 @@ export default function RivalsDashboard({
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={3} className="py-4 text-center text-slate-500 font-sans">
+                          <td colSpan={3} className="py-4 text-center text-[var(--theme-subtext,#64748b)] font-sans">
                             No squadmate synergy data logged yet.
                           </td>
                         </tr>
@@ -503,30 +503,30 @@ export default function RivalsDashboard({
               </div>
 
               <div className="space-y-3">
-                <h4 className="text-xs font-black tracking-widest uppercase text-slate-400">
+                <h4 className="text-xs font-black tracking-widest uppercase text-[var(--theme-subtext,#94a3b8)]">
                   Hero Matchups & Counters
                 </h4>
-                <div className="border border-slate-800 rounded-xl overflow-hidden">
+                <div className="border border-[var(--theme-border,#1e293b)] rounded-xl overflow-hidden">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-950/80 text-slate-400 uppercase font-bold border-b border-slate-800">
+                    <thead className="bg-[var(--theme-surface-2,#0b0e14)] text-[var(--theme-subtext,#94a3b8)] uppercase font-bold border-b border-[var(--theme-border,#1e293b)]">
                       <tr>
                         <th className="py-2.5 px-3">Opponent Hero</th>
                         <th className="py-2.5 px-3 text-center">Matches</th>
                         <th className="py-2.5 px-3 text-right">Advantage</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60 font-mono">
+                    <tbody className="divide-y divide-[var(--theme-border,#1e293b)]/60 font-mono">
                       {matchups.length > 0 ? (
                         matchups.slice(0, 6).map((m, idx) => (
-                          <tr key={idx} className="hover:bg-slate-800/30">
+                          <tr key={idx} className="hover:bg-[var(--theme-surface-2,#1e293b)]/40">
                             <td className="py-2.5 px-3 font-sans font-medium text-white">{m.opponent_hero || m.hero || 'Opponent'}</td>
                             <td className="py-2.5 px-3 text-center">{m.matches ?? '--'}</td>
-                            <td className="py-2.5 px-3 text-right text-indigo-400">{m.win_rate || m.advantage || '--'}</td>
+                            <td className="py-2.5 px-3 text-right text-[var(--theme-accent-text,#818cf8)]">{m.win_rate || m.advantage || '--'}</td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={3} className="py-4 text-center text-slate-500 font-sans">
+                          <td colSpan={3} className="py-4 text-center text-[var(--theme-subtext,#64748b)] font-sans">
                             No matchup counter data logged yet.
                           </td>
                         </tr>
@@ -542,14 +542,14 @@ export default function RivalsDashboard({
           {activeTab === 'settings' && (
             <div className="space-y-6 max-w-xl">
               <div>
-                <h4 className="text-xs font-black tracking-widest uppercase text-slate-400 mb-2">
+                <h4 className="text-xs font-black tracking-widest uppercase text-[var(--theme-subtext,#94a3b8)] mb-2">
                   Profile Status & Telemetry Preferences
                 </h4>
-                <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl space-y-4">
+                <div className="bg-[var(--theme-surface-2,#0b0e14)] border border-[var(--theme-border,#1e293b)] p-4 rounded-xl space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-bold text-white">Claimed Account</p>
-                      <p className="text-xs text-slate-400">{uid ? `UID: ${uid}` : 'No account claimed'}</p>
+                      <p className="text-xs text-[var(--theme-subtext,#94a3b8)]">{uid ? `UID: ${uid}` : 'No account claimed'}</p>
                     </div>
                     {isClaimed && onUnclaim && (
                       <button
@@ -562,13 +562,13 @@ export default function RivalsDashboard({
                     )}
                   </div>
 
-                  <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Scraper Consensus Pipeline:</span>
+                  <div className="pt-3 border-t border-[var(--theme-border,#1e293b)] flex items-center justify-between text-xs">
+                    <span className="text-[var(--theme-subtext,#94a3b8)]">Scraper Consensus Pipeline:</span>
                     <span className="font-mono text-emerald-400 font-semibold">4/4 Active Providers</span>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Cache Invalidation:</span>
+                  <div className="pt-3 border-t border-[var(--theme-border,#1e293b)] flex items-center justify-between text-xs">
+                    <span className="text-[var(--theme-subtext,#94a3b8)]">Cache Invalidation:</span>
                     <span className="font-mono text-slate-300">Auto-refresh on sync</span>
                   </div>
                 </div>
