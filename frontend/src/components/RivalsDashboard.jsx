@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, RefreshCw, Trophy, Shield, Swords, BarChart3, Users, Map, Settings, Check } from 'lucide-react';
+import { Search, RefreshCw, Shield, Swords, BarChart3, Users, Map, Settings, Check, Flame, Award } from 'lucide-react';
 
 export default function RivalsDashboard({
   stats = null,
@@ -16,7 +16,7 @@ export default function RivalsDashboard({
 
   const current = stats?.current || {};
 
-  // Numeric and string parsing from live telemetry
+  // Core Identity Telemetry
   const username = current.username || stats?.username || 'Unknown Player';
   const platform = (current.platform || stats?.platform || 'PC').toUpperCase();
   const uid = current.uid || stats?.uid || '--';
@@ -26,12 +26,12 @@ export default function RivalsDashboard({
   const peakRank = current.peakRank || current.peak_rank || null;
   const mainHero = current.topHero || current.top_hero || current.main_hero || null;
 
-  // Combat metrics
+  // Combat Telemetry
   const winRate = current.winRate || current.win_rate || '--';
   const wins = Number(current.matchesWon ?? current.wins ?? 0);
   const losses = Number(current.matchesLost ?? current.losses ?? 0);
   const totalMatches = Number(current.matchesPlayed ?? current.total_matches ?? current.matches ?? (wins + losses) ?? 0);
-  
+
   const winPercent = totalMatches > 0 ? Math.min(100, Math.max(0, (wins / totalMatches) * 100)) : 0;
   const lossPercent = totalMatches > 0 ? Math.min(100 - winPercent, Math.max(0, (losses / totalMatches) * 100)) : 0;
 
@@ -39,17 +39,22 @@ export default function RivalsDashboard({
   const kills = current.kills ?? current.total_kills ?? '--';
   const deaths = current.deaths ?? current.total_deaths ?? '--';
   const assists = current.assists ?? current.total_assists ?? '--';
-  const pureKd = current.pureKdRatio || current.pure_kd || (deaths > 0 && kills !== '--' ? (Number(kills) / Number(deaths)).toFixed(2) : '--');
 
   const dmg10m = current.heroDamage || current.damagePer10m || current.damage_per_10m || '--';
   const heal10m = current.healing || current.healingPer10m || current.healing_per_10m || '--';
   const block10m = current.damageBlocked || current.dmg_blocked_10m || '--';
-  const accuracy = current.accuracy ? (String(current.accuracy).includes('%') ? current.accuracy : `${current.accuracy}%`) : '--';
   const playtime = current.timePlayed || current.totalSeasonPlaytime || current.seasonPlaytimeHours || '--';
+  const accuracy = current.accuracy ? (String(current.accuracy).includes('%') ? current.accuracy : `${current.accuracy}%`) : null;
+  const mvps = current.mvps ?? current.mvp ?? 0;
+  const svps = current.svps ?? current.svp ?? 0;
+
+  // Tab Data Ingestion
+  const heroesList = stats?.heroes || stats?.data?.heroes || stats?.tabs?.heroes || (mainHero ? [{ hero: mainHero, matches: totalMatches, win_rate: winRate, kda }] : []);
+  const squadmates = stats?.top_squadmates || stats?.teammates || stats?.tabs?.matches_data?.teammates || [];
+  const matchups = stats?.hero_matchups || stats?.matchups || [];
 
   // Dynamic 4-Site Consensus Cell Resolver
   const getSiteStat = (metricKey, siteKey, siteName) => {
-    // 1. Check reconciled_stats sources dictionary
     const recSources = stats?.reconciled_stats?.[metricKey]?.sources;
     if (recSources && typeof recSources === 'object') {
       const target = siteName.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -60,7 +65,6 @@ export default function RivalsDashboard({
       }
     }
 
-    // 2. Check direct provider bucket on root payload
     const bucket = stats?.[siteKey];
     if (bucket && typeof bucket === 'object') {
       const val = bucket[metricKey] ?? bucket.summary?.[metricKey] ?? bucket.overview?.[metricKey];
@@ -71,42 +75,19 @@ export default function RivalsDashboard({
   };
 
   const consensusRows = [
-    {
-      label: 'Win Rate',
-      metricKey: 'winRate',
-      consensus: winRate
-    },
-    {
-      label: 'KDA Ratio',
-      metricKey: 'kda',
-      consensus: kda
-    },
-    {
-      label: 'Total Matches',
-      metricKey: 'matchesPlayed',
-      consensus: totalMatches > 0 ? String(totalMatches) : '--'
-    },
-    {
-      label: 'Hero Damage / 10m',
-      metricKey: 'heroDamage',
-      consensus: dmg10m
-    },
-    {
-      label: 'Healing / 10m',
-      metricKey: 'healing',
-      consensus: heal10m
-    },
-    {
-      label: 'Damage Blocked / 10m',
-      metricKey: 'damageBlocked',
-      consensus: block10m
-    },
-    {
-      label: 'Competitive Rank',
-      metricKey: 'rank',
-      consensus: rank
-    }
+    { label: 'Win Rate', metricKey: 'winRate', consensus: winRate },
+    { label: 'KDA Ratio', metricKey: 'kda', consensus: kda },
+    { label: 'Total Matches', metricKey: 'matchesPlayed', consensus: totalMatches > 0 ? String(totalMatches) : '--' },
+    { label: 'Hero Damage / 10m', metricKey: 'heroDamage', consensus: dmg10m },
+    { label: 'Healing / 10m', metricKey: 'healing', consensus: heal10m },
+    { label: 'Damage Blocked / 10m', metricKey: 'damageBlocked', consensus: block10m }
   ];
+
+  const isClaimed = Boolean(
+    claimedUid &&
+    (String(claimedUid).trim().toLowerCase() === String(uid).trim().toLowerCase() ||
+     String(claimedUid).trim().toLowerCase() === String(username).trim().toLowerCase())
+  );
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -114,12 +95,6 @@ export default function RivalsDashboard({
       onSearch(searchQuery.trim());
     }
   };
-
-  const isClaimed = Boolean(
-    claimedUid &&
-    (String(claimedUid).trim().toLowerCase() === String(uid).trim().toLowerCase() ||
-     String(claimedUid).trim().toLowerCase() === String(username).trim().toLowerCase())
-  );
 
   return (
     <div className="min-h-screen bg-[#0b0e14] text-slate-100 font-sans p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
@@ -160,7 +135,7 @@ export default function RivalsDashboard({
         </div>
       </header>
 
-      {/* Tier 1: Consolidated Identity Banner */}
+      {/* Tier 1: Identity Banner */}
       <section className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
         <div className="flex items-center gap-5">
           <div className="relative">
@@ -239,7 +214,7 @@ export default function RivalsDashboard({
         </div>
       </section>
 
-      {/* Tier 2: Core Combat Performance (3 Cards) */}
+      {/* Tier 2: Core Combat Performance */}
       <section className="space-y-3">
         <h3 className="text-xs font-black tracking-widest uppercase text-slate-400">
           Core Combat Performance
@@ -283,44 +258,42 @@ export default function RivalsDashboard({
                 <span className="text-indigo-400 font-bold">{assists} A</span>
               </p>
             </div>
-            <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
-              <span className="text-slate-400">Pure K/D Ratio:</span>
-              <span className="font-mono font-bold text-white">{pureKd}</span>
+            <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+              <span>Combat Spread:</span>
+              <span className="font-mono text-slate-300 font-semibold">{totalMatches > 0 ? `${(Number(kills || 0) / totalMatches).toFixed(1)} K/Match` : '--'}</span>
             </div>
           </div>
 
-          {/* Card 3: Combat Output Per 10 Min */}
+          {/* Card 3: 10 Min Rates & Playtime */}
           <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between space-y-4">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Combat Per 10 Min</span>
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                <div className="bg-slate-950/60 border border-slate-800/60 p-2 rounded-lg">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold">Damage</span>
-                  <p className="text-sm font-black font-mono text-rose-300">{dmg10m}</p>
-                </div>
-                <div className="bg-slate-950/60 border border-slate-800/60 p-2 rounded-lg">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold">Healing</span>
-                  <p className="text-sm font-black font-mono text-purple-300">{heal10m}</p>
-                </div>
-                <div className="bg-slate-950/60 border border-slate-800/60 p-2 rounded-lg">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold">Blocked</span>
-                  <p className="text-sm font-black font-mono text-indigo-300">{block10m}</p>
-                </div>
-                <div className="bg-slate-950/60 border border-slate-800/60 p-2 rounded-lg">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold">Accuracy</span>
-                  <p className="text-sm font-black font-mono text-slate-200">{accuracy}</p>
-                </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-slate-950/60 border border-slate-800/60 p-2.5 rounded-xl">
+                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Damage / 10 Min</span>
+                <p className="text-sm font-black font-mono text-rose-300 mt-0.5">{dmg10m}</p>
+              </div>
+              <div className="bg-slate-950/60 border border-slate-800/60 p-2.5 rounded-xl">
+                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Healing / 10 Min</span>
+                <p className="text-sm font-black font-mono text-purple-300 mt-0.5">{heal10m}</p>
+              </div>
+              <div className="bg-slate-950/60 border border-slate-800/60 p-2.5 rounded-xl">
+                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Blocked / 10 Min</span>
+                <p className="text-sm font-black font-mono text-indigo-300 mt-0.5">{block10m}</p>
+              </div>
+              <div className="bg-slate-950/60 border border-slate-800/60 p-2.5 rounded-xl">
+                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Season Playtime</span>
+                <p className="text-sm font-black font-mono text-amber-300 mt-0.5">{playtime}</p>
               </div>
             </div>
-            <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
-              <span className="text-slate-400">Season Playtime:</span>
-              <span className="font-mono font-bold text-slate-200">{playtime}</span>
+
+            <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+              <span>Status:</span>
+              <span className="text-emerald-400 font-bold">Active Season</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Tier 3: Drawer & 4-Site Consensus Verification */}
+      {/* Tier 3: Navigation Drawer with Full Content */}
       <section className="bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden shadow-sm">
         <div className="flex items-center gap-1 border-b border-slate-800 bg-slate-950/60 px-4 pt-3 overflow-x-auto">
           {[
@@ -351,6 +324,54 @@ export default function RivalsDashboard({
         </div>
 
         <div className="p-6">
+          {/* TAB 1: OVERVIEW */}
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl">
+                  <span className="text-xs text-slate-400 font-semibold uppercase">Total Eliminations</span>
+                  <p className="text-2xl font-black font-mono text-emerald-400 mt-1">{kills}</p>
+                </div>
+                <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl">
+                  <span className="text-xs text-slate-400 font-semibold uppercase">Total Assists</span>
+                  <p className="text-2xl font-black font-mono text-indigo-400 mt-1">{assists}</p>
+                </div>
+                <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl">
+                  <span className="text-xs text-slate-400 font-semibold uppercase">Total Deaths</span>
+                  <p className="text-2xl font-black font-mono text-rose-400 mt-1">{deaths}</p>
+                </div>
+                <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl">
+                  <span className="text-xs text-slate-400 font-semibold uppercase">Weapon Accuracy</span>
+                  <p className="text-2xl font-black font-mono text-white mt-1">{accuracy || '--'}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Award className="w-6 h-6 text-amber-400" />
+                    <div>
+                      <h4 className="text-sm font-bold text-white">MVP Honors</h4>
+                      <p className="text-xs text-slate-400">Match MVP recognitions</p>
+                    </div>
+                  </div>
+                  <span className="text-xl font-black font-mono text-amber-400">{mvps}</span>
+                </div>
+                <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Flame className="w-6 h-6 text-purple-400" />
+                    <div>
+                      <h4 className="text-sm font-bold text-white">SVP Honors</h4>
+                      <p className="text-xs text-slate-400">Top performer on defeated side</p>
+                    </div>
+                  </div>
+                  <span className="text-xl font-black font-mono text-purple-400">{svps}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: 4-SITE CONSENSUS */}
           {activeTab === 'consensus' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -400,27 +421,158 @@ export default function RivalsDashboard({
             </div>
           )}
 
-          {activeTab === 'overview' && (
-            <div className="py-8 text-center text-xs text-slate-500 font-medium">
-              Additional telemetry details and accolades from active scrapers.
-            </div>
-          )}
-
+          {/* TAB 3: HEROES */}
           {activeTab === 'heroes' && (
-            <div className="py-8 text-center text-xs text-slate-500 font-medium">
-              Hero mastery, individual win rates, and playtime breakdowns.
+            <div className="space-y-4">
+              <h4 className="text-xs font-black tracking-widest uppercase text-slate-400">
+                Hero Performance & Roster Breakdown
+              </h4>
+              <div className="overflow-x-auto border border-slate-800 rounded-xl">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-950/80 text-slate-400 uppercase font-black tracking-wider border-b border-slate-800">
+                    <tr>
+                      <th className="py-3 px-4">Hero</th>
+                      <th className="py-3 px-4 text-center">Matches</th>
+                      <th className="py-3 px-4 text-center">Win Rate</th>
+                      <th className="py-3 px-4 text-center">KDA</th>
+                      <th className="py-3 px-4 text-right">Dmg / Min</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 font-mono text-slate-200">
+                    {heroesList.length > 0 ? (
+                      heroesList.map((h, idx) => (
+                        <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
+                          <td className="py-3 px-4 font-sans font-bold text-white flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                            {h.hero || h.name || 'Hero'}
+                          </td>
+                          <td className="py-3 px-4 text-center">{h.matches ?? '--'}</td>
+                          <td className="py-3 px-4 text-center text-emerald-400">{h.win_rate ?? h.winRate ?? '--'}</td>
+                          <td className="py-3 px-4 text-center">{h.kda ?? h.kda_ratio ?? '--'}</td>
+                          <td className="py-3 px-4 text-right">{h.damage_per_min ? Math.round(h.damage_per_min) : '--'}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="py-6 text-center text-slate-500 font-sans">
+                          No hero breakdown data recorded for this season.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
+          {/* TAB 4: MAPS & SQUAD */}
           {activeTab === 'maps' && (
-            <div className="py-8 text-center text-xs text-slate-500 font-medium">
-              Map attack/defense win rates and squad synergy records.
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <h4 className="text-xs font-black tracking-widest uppercase text-slate-400">
+                  Frequent Squadmates
+                </h4>
+                <div className="border border-slate-800 rounded-xl overflow-hidden">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-950/80 text-slate-400 uppercase font-bold border-b border-slate-800">
+                      <tr>
+                        <th className="py-2.5 px-3">Player</th>
+                        <th className="py-2.5 px-3 text-center">Matches</th>
+                        <th className="py-2.5 px-3 text-right">Win Rate</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60 font-mono">
+                      {squadmates.length > 0 ? (
+                        squadmates.slice(0, 6).map((mate, idx) => (
+                          <tr key={idx} className="hover:bg-slate-800/30">
+                            <td className="py-2.5 px-3 font-sans font-medium text-white">{mate.name || mate.player_name || 'Teammate'}</td>
+                            <td className="py-2.5 px-3 text-center">{mate.matches || mate.played_with_count || '--'}</td>
+                            <td className="py-2.5 px-3 text-right text-emerald-400">{mate.win_rate ? `${mate.win_rate}%` : '--'}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={3} className="py-4 text-center text-slate-500 font-sans">
+                            No squadmate synergy data logged yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-xs font-black tracking-widest uppercase text-slate-400">
+                  Hero Matchups & Counters
+                </h4>
+                <div className="border border-slate-800 rounded-xl overflow-hidden">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-950/80 text-slate-400 uppercase font-bold border-b border-slate-800">
+                      <tr>
+                        <th className="py-2.5 px-3">Opponent Hero</th>
+                        <th className="py-2.5 px-3 text-center">Matches</th>
+                        <th className="py-2.5 px-3 text-right">Advantage</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60 font-mono">
+                      {matchups.length > 0 ? (
+                        matchups.slice(0, 6).map((m, idx) => (
+                          <tr key={idx} className="hover:bg-slate-800/30">
+                            <td className="py-2.5 px-3 font-sans font-medium text-white">{m.opponent_hero || m.hero || 'Opponent'}</td>
+                            <td className="py-2.5 px-3 text-center">{m.matches ?? '--'}</td>
+                            <td className="py-2.5 px-3 text-right text-indigo-400">{m.win_rate || m.advantage || '--'}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={3} className="py-4 text-center text-slate-500 font-sans">
+                            No matchup counter data logged yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
 
+          {/* TAB 5: SETTINGS */}
           {activeTab === 'settings' && (
-            <div className="py-8 text-center text-xs text-slate-500 font-medium">
-              Telemetry preferences, auto-sync intervals, and theme configuration.
+            <div className="space-y-6 max-w-xl">
+              <div>
+                <h4 className="text-xs font-black tracking-widest uppercase text-slate-400 mb-2">
+                  Profile Status & Telemetry Preferences
+                </h4>
+                <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-white">Claimed Account</p>
+                      <p className="text-xs text-slate-400">{uid ? `UID: ${uid}` : 'No account claimed'}</p>
+                    </div>
+                    {isClaimed && onUnclaim && (
+                      <button
+                        type="button"
+                        onClick={onUnclaim}
+                        className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                      >
+                        Unclaim Profile
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+                    <span className="text-slate-400">Scraper Consensus Pipeline:</span>
+                    <span className="font-mono text-emerald-400 font-semibold">4/4 Active Providers</span>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+                    <span className="text-slate-400">Cache Invalidation:</span>
+                    <span className="font-mono text-slate-300">Auto-refresh on sync</span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
