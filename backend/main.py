@@ -338,34 +338,12 @@ async def trigger_hero_sync():
 
 @app.get("/api/player/{identifier}")
 @app.get("/api/player/{identifier}/stats")
-async def get_player_stats_endpoint(identifier: str, platform: Optional[str] = Query("pc"), force: bool = Query(False)):
+async def get_player_stats_endpoint(identifier: str, platform: Optional[str] = Query("ps5"), force: bool = Query(False)):
     """
-    Returns player profile payload using bidirectional IdentityManager & multi-source telemetry.
+    Returns player profile payload using strict non-mocked data ingestion pipeline.
     """
-    from backend.services.aggregator import get_player_profile
-    profile = await get_player_profile(identifier, force_refresh=force)
-    try:
-        from backend.services.multi_source_fetcher import MultiSourceTrackerFetcher
-        from backend.services.metric_brain import MetricBrain
-        fetcher = MultiSourceTrackerFetcher(uid=identifier, ign=identifier)
-        raw_telemetry = await fetcher.fetch_all()
-        brain_data = await MetricBrain.process_async(raw_telemetry, uid=identifier)
-        if isinstance(profile, dict):
-            profile["extended_metrics"] = brain_data.get("extended_metrics", {})
-            profile["raw_telemetry"] = brain_data.get("raw_telemetry", {})
-            profile["top_squadmates"] = brain_data.get("top_squadmates", [])
-            profile["hero_matchups"] = brain_data.get("hero_matchups", [])
-            profile["hero_leaderboard_badges"] = brain_data.get("hero_leaderboard_badges", [])
-            profile["player_identity"] = brain_data.get("player_identity", {})
-            canonical_display = brain_data.get("player_identity", {}).get("display_name")
-            if canonical_display:
-                profile["display_name"] = canonical_display
-                profile["username"] = canonical_display
-                if isinstance(profile.get("current"), dict):
-                    profile["current"]["username"] = canonical_display
-    except Exception as e:
-        logger.warning(f"MetricBrain enrichment warning for {identifier}: {e}")
-    return profile
+    from backend.services.pipeline import fetch_and_normalize
+    return fetch_and_normalize(identifier, platform or "ps5")
 
 @app.get("/api/player/{identifier}/multi-fetch")
 @app.get("/api/player/{identifier}/raw-telemetry")
