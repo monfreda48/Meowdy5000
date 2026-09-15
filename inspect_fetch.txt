@@ -1,0 +1,153 @@
+=== NORMALIZER & API PARSER (L2900-L2980) ===
+L2901:     const heroList = rawHeroesList.map(h => {
+L2902:       const rawName = h.hero_name || h.name || 'Unknown';
+L2903:       const cleanName = rawName.replace(/\s*\([^)]*\)/g, '').trim();
+L2904:       const rawWr = h.win_rate || h.winRate || '0%';
+L2905:       const cleanWr = formatPercent(rawWr);
+L2906:       return {
+L2907:         name: cleanName || rawName,
+L2908:         rawName: rawName,
+L2909:         icon: h.hero_icon_url || h.hero_icon || h.icon || '',
+L2910:         matches: Number(h.matches_played ?? h.matches ?? 0),
+L2911:         wins: Number(h.wins ?? h.matches_won ?? 0),
+L2912:         winRate: cleanWr,
+L2913:         kda: (!isNaN(Number(h.kda || h.kda_ratio))) ? Number(h.kda || h.kda_ratio).toFixed(2) : (h.kda || h.kda_ratio || '0.00'),
+L2914:         timePlayed: h.time_played || h.timePlayed || 'N/A'
+L2915:       };
+L2916:     });
+L2917: 
+L2918:     heroList.sort((a, b) => (b.matches - a.matches) || (b.wins - a.wins));
+L2919: 
+L2920:     const username = userProfile.player_name || backendData.username || queryVal;
+L2921:     const avatarUrl = userProfile.avatar_url || backendData.avatar_url || '';
+L2922:     const trackerUrl = userProfile.profile_url || `https://tracker.gg/marvel-rivals/profile/ign/${encodeURIComponent(username)}/overview?season=${seasonVal || '19'}`;
+L2923:     const rivalsMetaUrl = `https://rivalsmeta.com/search?q=${encodeURIComponent(username)}`;
+L2924:     const rivalsTrackerUrl = `https://rivalstracker.com/search?q=${encodeURIComponent(username)}`;
+L2925: 
+L2926:     const playedHeroes = heroList.filter(h => h.matches > 0);
+L2927:     const primaryHeroList = playedHeroes.length > 0 ? playedHeroes : heroList;
+L2928: 
+L2929:     const siteCards = [
+L2930:       {
+L2931:         siteKey: 'trackerGg',
+L2932:         siteName: 'Tracker.gg',
+L2933:         icon: '🌐',
+L2934:         color: 'from-blue-600 to-indigo-700',
+L2935:         borderColor: 'border-blue-500/50',
+L2936:         username,
+L2937:         platform: 'PC',
+L2938:         avatarUrl,
+L2939:         rank: rankDetails.tier_name || 'Unranked',
+L2940:         winRate: formattedWinRate,
+L2941:         kdRatio: kdaRatioVal,
+L2942:         topHero: primaryHeroList[0]?.name || 'N/A',
+L2943:         matches: combatOverview.matches_played || overview.matches_played || 0,
+L2944:         profileUrl: trackerUrl,
+L2945:         found: true,
+L2946:         enabled: true
+L2947:       },
+L2948:       {
+L2949:         siteKey: 'rivalsMeta',
+L2950:         siteName: 'RivalsMeta.com',
+L2951:         icon: '⚔️',
+L2952:         color: 'from-purple-600 to-pink-700',
+L2953:         borderColor: 'border-purple-500/50',
+L2954:         username,
+L2955:         platform: 'PC',
+L2956:         avatarUrl,
+L2957:         rank: rankDetails.tier_name || 'Unranked',
+L2958:         winRate: formattedWinRate,
+L2959:         kdRatio: kdaRatioVal,
+L2960:         topHero: primaryHeroList[0]?.name || 'N/A',
+L2961:         matches: combatOverview.matches_played || overview.matches_played || 0,
+L2962:         profileUrl: rivalsMetaUrl,
+L2963:         found: false,
+L2964:         enabled: false
+L2965:       },
+L2966:       {
+L2967:         siteKey: 'rivalsTracker',
+L2968:         siteName: 'RivalsTracker.com',
+L2969:         icon: '🎯',
+L2970:         color: 'from-emerald-600 to-teal-700',
+L2971:         borderColor: 'border-emerald-500/50',
+L2972:         username,
+L2973:         platform: 'PC',
+L2974:         avatarUrl,
+L2975:         rank: rankDetails.tier_name || 'Unranked',
+L2976:         winRate: formattedWinRate,
+L2977:         kdRatio: kdaRatioVal,
+L2978:         topHero: primaryHeroList[0]?.name || 'N/A',
+L2979:         matches: combatOverview.matches_played || overview.matches_played || 0,
+L2980:         profileUrl: rivalsTrackerUrl,
+
+=== FETCH STATS FUNCTION ===
+L3091:   const fetchStats = async (e, overrideQuery = null, overrideSeason = null, overrideUid = null, overridePlatform = null, forceRefresh = false) => {
+L3092:     if (e) e.preventDefault();
+L3093:     const activeQuery = overrideQuery !== null ? overrideQuery : query;
+L3094:     const activeSeason = overrideSeason !== null ? overrideSeason : season;
+L3095:     if (!activeQuery) return;
+L3096: 
+L3097:     if (searchAbortControllerRef.current) {
+L3098:       searchAbortControllerRef.current.abort();
+L3099:     }
+L3100:     const controller = new AbortController();
+L3101:     searchAbortControllerRef.current = controller;
+L3102: 
+L3103:     addRecentSearch(activeQuery);
+L3104:     setLoading(true);
+L3105:     setError(null);
+L3106:     setSearchProgress(15);
+L3107:     const initialQuote = getRandomMarvelQuote();
+L3108:     setSearchProgressMsg(initialQuote);
+L3109: 
+L3110:     const pInterval = setInterval(() => {
+L3111:       setSearchProgress(prev => {
+L3112:         if (prev < 35) return prev + 5;
+L3113:         if (prev < 65) return prev + 3;
+L3114:         if (prev < 85) return prev + 2;
+L3115:         if (prev < 94) return prev + 1;
+L3116:         return prev;
+L3117:       });
+L3118:     }, 400);
+L3119: 
+L3120:     const qInterval = setInterval(() => {
+L3121:       setSearchProgressMsg(prevMsg => getRandomMarvelQuote(prevMsg));
+L3122:     }, 2800);
+L3123: 
+L3124:     const timeoutId = setTimeout(() => {
+L3125:       if (controller) controller.abort();
+L3126:     }, 45000);
+L3127: 
+L3128:     const isClaimedMatch = isProfileMatch(claimedProfile, activeQuery);
+L3129: 
+L3130:     const isWeb = typeof window !== 'undefined' && (!window.Capacitor || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform());
+L3131: 
+L3132:     try {
+L3133:       let data = null;
+L3134:       if (isClaimedMatch && claimedProfile.cachedStats && !forceRefresh) {
+L3135:         console.log(`[ClaimedProfile] Instant loading for claimed user '${activeQuery}' using saved URL (${claimedProfile.savedUrl})`);
+L3136:         data = {
+L3137:           current: {
+L3138:             ...claimedProfile.cachedStats,
+L3139:             isFastLoaded: true,
+L3140:             savedUrl: claimedProfile.savedUrl,
+L3141:             sources: [`👑 Claimed Profile (Saved Direct URL: ${claimedProfile.savedUrl})`]
+L3142:           }
+L3143:         };
+L3144:       } else {
+L3145:         try {
+L3146:           const backendController = new AbortController();
+L3147:           const bTimeout = setTimeout(() => backendController.abort(), 20000);
+L3148:           let apiUrl = getApiUrl(`/api/stats?query=${encodeURIComponent(activeQuery)}&season=${encodeURIComponent(activeSeason)}`);
+L3149:           if (overridePlatform) apiUrl += `&platform=${encodeURIComponent(overridePlatform)}`;
+L3150:           if (overrideUid) apiUrl += `&uid=${encodeURIComponent(overrideUid)}`;
+L3151:           if (forceRefresh) apiUrl += `&force=true`;
+L3152:           const response = await fetch(
+L3153:             apiUrl,
+L3154:             {
+L3155:               signal: backendController.signal,
+L3156:               headers: {
+L3157:                 'bypass-tunnel-reminder': 'true',
+L3158:                 'Accept': 'application/json'
+L3159:               }
+L3160:             }

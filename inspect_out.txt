@@ -1,0 +1,14 @@
+﻿=== 1. SEARCHED UID & CLAIMED UID USAGE ===
+L240:       return localStorage.getItem('m5_claimed_uid') || null;
+L245:   const [searchedUid, setSearchedUid] = useState(null);
+L586:   const handleClaimProfile = (uidToClaim) => {
+L590:       localStorage.setItem('m5_claimed_uid', cleanUid);
+L599:       localStorage.removeItem('m5_claimed_uid');
+L3788:                       onClick={() => handleClaimProfile(stats?.current?.uid || stats?.current?.username || query)}
+
+=== 2. STATS FETCH & SET STATE ===
+L744:     } catch (e) { }
+L745: 
+L746:     setStats(mergedStats);
+L747:     setShow3SiteConfirmModal(false);
+L748: 

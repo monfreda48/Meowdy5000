@@ -1,0 +1,274 @@
+=== A. AUTO-LOAD ON STARTUP (useEffect around L310-L450) ===
+--- Triggered at L240: return localStorage.getItem('m5_claimed_uid') || null; ---
+L237: export default function App() {
+L238:   const [claimedUid, setClaimedUid] = useState(() => {
+L239:     try {
+L240:       return localStorage.getItem('m5_claimed_uid') || null;
+L241:     } catch {
+L242:       return null;
+L243:     }
+L244:   });
+L245:   const [searchedUid, setSearchedUid] = useState(null);
+L246: 
+L247:   // Safe fallback for legacy components expecting an object or boolean
+L248:   // --- Hoisted to resolve TDZ ReferenceError ---
+L249:   const [stats, setStats] = useState(null);
+L250: 
+L251:   const claimedProfile = (claimedUid && (stats?.current?.uid === claimedUid || stats?.current?.player_id === claimedUid || stats?.current?.username?.toLowerCase() === claimedUid.toLowerCase())) 
+L252:     ? stats.current 
+L253:     : (claimedUid ? { uid: claimedUid, username: claimedUid } : null);
+L254:   const [query, setQuery] = useState('');
+
+========================================
+--- Triggered at L416: const [autoLoadHomeProfile, setAutoLoadHomeProfile] = useState(() => { ---
+L413: 
+L414:   const [heroRanksMap, setHeroRanksMap] = useState({});
+L415: 
+L416:   const [autoLoadHomeProfile, setAutoLoadHomeProfile] = useState(() => {
+L417:     try {
+L418:       return localStorage.getItem('auto_load_home_profile') === 'enabled';
+L419:     } catch (e) {
+L420:       return false;
+L421:     }
+L422:   });
+L423: 
+L424:   const togglePinHomeProfile = (profileData = null) => {
+L425:     triggerHaptic('light');
+L426:     if (!profileData && !stats?.current) return;
+L427:     const target = profileData || stats.current;
+L428:     
+L429:     const targetUser = target.username || query;
+L430:     const isCurrentlyPinned = pinnedHomeProfile && pinnedHomeProfile.username?.toLowerCase() === targetUser.toLowerCase();
+
+========================================
+--- Triggered at L590: localStorage.setItem('m5_claimed_uid', cleanUid); ---
+L587:     if (!uidToClaim) return;
+L588:     const cleanUid = String(uidToClaim).trim();
+L589:     try {
+L590:       localStorage.setItem('m5_claimed_uid', cleanUid);
+L591:     } catch (e) {}
+L592:     setClaimedUid(cleanUid);
+L593:     triggerHaptic('success');
+L594:     showNativeToast(`✔ Claimed Profile ${cleanUid}`);
+L595:   };
+L596: 
+L597:   const handleUnclaimProfile = () => {
+L598:     try {
+L599:       localStorage.removeItem('m5_claimed_uid');
+L600:     } catch (e) {}
+L601:     setClaimedUid(null);
+L602:     triggerHaptic('light');
+L603:     showNativeToast('Profile unclaimed.');
+L604:   };
+
+========================================
+--- Triggered at L599: localStorage.removeItem('m5_claimed_uid'); ---
+L596: 
+L597:   const handleUnclaimProfile = () => {
+L598:     try {
+L599:       localStorage.removeItem('m5_claimed_uid');
+L600:     } catch (e) {}
+L601:     setClaimedUid(null);
+L602:     triggerHaptic('light');
+L603:     showNativeToast('Profile unclaimed.');
+L604:   };
+L605: 
+L606:   const [claimedSources, setClaimedSources] = useState(() => {
+L607:     try {
+L608:       const saved = localStorage.getItem('claimed_tracking_sources');
+L609:       return saved ? JSON.parse(saved) : ['trackerGg', 'rivalsMeta', 'rivalsTracker'];
+L610:     } catch (e) {
+L611:       return ['trackerGg', 'rivalsMeta', 'rivalsTracker'];
+L612:     }
+L613:   });
+
+========================================
+--- Triggered at L651: const saved = localStorage.getItem('claimed_profile'); ---
+L648:   // Account UID Connection State & Handler
+L649:   const [userUidInput, setUserUidInput] = useState(() => {
+L650:     try {
+L651:       const saved = localStorage.getItem('claimed_profile');
+L652:       if (saved) {
+L653:         const parsed = JSON.parse(saved);
+L654:         return parsed?.uid || '';
+L655:       }
+L656:     } catch (e) {}
+L657:     return '';
+L658:   });
+L659: 
+L660:   const handleConnectAccountUid = (e) => {
+L661:     if (e) e.preventDefault();
+L662:     const cleanUid = (userUidInput || '').trim();
+L663:     if (!cleanUid) {
+L664:       showNativeToast('⚠️ Please enter your numeric Account UID (e.g. 70463344)');
+L665:       return;
+
+========================================
+--- Triggered at L695: localStorage.setItem('claimed_profile', JSON.stringify(updatedClaim)); ---
+L692:     setClaimedProfile(updatedClaim);
+L693:     setClaimedSources(['trackerGg', 'rivalsMeta', 'rivalsTracker']);
+L694:     try {
+L695:       localStorage.setItem('claimed_profile', JSON.stringify(updatedClaim));
+L696:       localStorage.setItem('claimed_tracking_sources', JSON.stringify(['trackerGg', 'rivalsMeta', 'rivalsTracker']));
+L697:     } catch (err) {}
+L698: 
+L699:     showNativeToast(`🔗 Connected Account UID ${cleanUid}! Saved 3-site tracking URLs.`);
+L700:     setUpdateToast({
+L701:       type: 'success',
+L702:       message: `🔗 Connected UID ${cleanUid}! Saved rivalstracker.com/profile/${cleanUid} & rivalsmeta.com/player/${cleanUid}.`
+L703:     });
+L704:     setTimeout(() => setUpdateToast(null), 4000);
+L705: 
+L706:     if (targetUser) {
+L707:       fetchStats(null, targetUser, season, cleanUid);
+L708:     }
+L709:   };
+
+========================================
+--- Triggered at L742: localStorage.setItem('claimed_profile', JSON.stringify(claimObj)); ---
+L739:     setClaimedSources(enabledSiteKeys);
+L740: 
+L741:     try {
+L742:       localStorage.setItem('claimed_profile', JSON.stringify(claimObj));
+L743:       localStorage.setItem('claimed_tracking_sources', JSON.stringify(enabledSiteKeys));
+L744:     } catch (e) { }
+L745: 
+L746:     setStats(mergedStats);
+L747:     setShow3SiteConfirmModal(false);
+L748: 
+L749:     showNativeToast(`⭐ Verified 3-site profile URLs saved for ${targetUser}!`);
+L750:     setUpdateToast({
+L751:       type: 'success',
+L752:       message: `⭐ Direct tracking URLs saved across Tracker.gg, RivalsMeta, & RivalsTracker for ${targetUser}!`
+L753:     });
+L754:     setTimeout(() => setUpdateToast(null), 4000);
+L755:   };
+L756: 
+
+========================================
+--- Triggered at L774: localStorage.setItem('claimed_profile', JSON.stringify(newClaimObj)); ---
+L771:         if (claimedProfile) {
+L772:           const newClaimObj = { ...claimedProfile, trackingSources: updated };
+L773:           setClaimedProfile(newClaimObj);
+L774:           localStorage.setItem('claimed_profile', JSON.stringify(newClaimObj));
+L775:         }
+L776:       } catch (e) { }
+L777:       return updated;
+L778:     });
+L779:   };
+L780: 
+L781:   const renderPlatformIcon = (platformStr, fallbackIcon) => {
+L782:     const pStr = (platformStr || '').toLowerCase();
+L783:     if (pStr.includes('playstation') || pStr.includes('ps5') || pStr.includes('psn') || pStr === 'ps') {
+L784:       return <span>🎮</span>;
+L785:     }
+L786:     if (pStr.includes('xbox') || pStr.includes('xbl')) {
+L787:       return <span>❎</span>;
+L788:     }
+
+========================================
+--- Triggered at L3206: localStorage.setItem('claimed_profile', JSON.stringify(updatedClaim)); ---
+L3203:         };
+L3204:         setClaimedProfile(updatedClaim);
+L3205:         try {
+L3206:           localStorage.setItem('claimed_profile', JSON.stringify(updatedClaim));
+L3207:         } catch (e) {}
+L3208:         showNativeToast(`⚡ Tracker.gg link upgraded to Season ${nextSeason}! Saved new URL.`);
+L3209:         setUpdateToast({
+L3210:           type: 'success',
+L3211:           message: `⚡ Tracker.gg season auto-upgraded to Season ${nextSeason}! Replaced saved profile URL.`
+L3212:         });
+L3213:         setTimeout(() => setUpdateToast(null), 4000);
+L3214:       }
+L3215: 
+L3216:       if (data?.current?.username || data?.username) {
+L3217:         const uKey = (data.current?.username || data.username).toLowerCase();
+L3218:         const isClaimedUser = isProfileMatch(claimedProfile, data?.current || data || uKey);
+L3219: 
+L3220:         if (isClaimedUser) {
+
+========================================
+
+=== B. OVERVIEW 5 CARDS (CURRENT RANK, WIN RATE, KDA, DAMAGE, HEALING) ===
+
+=== C. NORMALIZER INPUT (Lines 2820-2900) ===
+L2821:     if (!idOrName) return '/static/heroes/default.png';
+L2822:     const key = String(idOrName).trim();
+L2823:     if (heroesMap[key] && typeof heroesMap[key] === 'object' && heroesMap[key].icon) {
+L2824:       return getApiUrl(heroesMap[key].icon);
+L2825:     }
+L2826:     return getApiUrl(`/static/heroes/${key}.png`);
+L2827:   };
+L2828: 
+L2829:   const HERO_MAP_CLIENT = new Proxy(heroesMap, {
+L2830:     get: (target, prop) => {
+L2831:       const val = target[prop];
+L2832:       if (val) return typeof val === 'object' ? val.name : val;
+L2833:       return prop || 'Unknown Hero';
+L2834:     }
+L2835:   });
+L2836: 
+L2837:   const DEFAULT_SEASON_NUM = 19;
+L2838: 
+L2839:   const normalizeBackendStatsToCurrent = (backendData, queryVal, seasonVal) => {
+L2840:     if (!backendData) return null;
+L2841:     if (backendData.current) {
+L2842:       backendData.current = {
+L2843:         ...backendData,
+L2844:         ...backendData.current,
+L2845:         heroDamage: backendData.current.heroDamage || backendData.damage_per_10m || backendData.damagePer10m || 8590,
+L2846:         damagePer10m: backendData.current.damagePer10m || backendData.damage_per_10m || '8,590',
+L2847:         healing: backendData.current.healing || backendData.healing_per_10m || backendData.healingPer10m || 23580,
+L2848:         healingPer10m: backendData.current.healingPer10m || backendData.healing_per_10m || '23,580',
+L2849:         damageBlocked: backendData.current.damageBlocked || backendData.dmg_blocked_10m || '--',
+L2850:         accuracy: backendData.current.accuracy || (backendData.accuracy ? `${backendData.accuracy}%` : '50.3%'),
+L2851:         mvp: String(backendData.current.mvp ?? backendData.mvps ?? 0),
+L2852:         svp: String(backendData.current.svp ?? backendData.svps ?? 0),
+L2853:         timePlayed: backendData.current.seasonPlaytimeHours || backendData.seasonPlaytimeHours || backendData.totalSeasonPlaytime || '--',
+L2854:         seasonPlaytimeHours: backendData.current.seasonPlaytimeHours || backendData.seasonPlaytimeHours || '--',
+L2855:         totalSeasonPlaytime: backendData.current.totalSeasonPlaytime || backendData.total_season_playtime || '--',
+L2856:         topHeroPlaytimeHours: backendData.current.topHeroPlaytimeHours || backendData.top_hero_playtime_hours || '--',
+L2857:         topHeroPlaytimeLabel: backendData.current.topHeroPlaytimeLabel || backendData.top_hero_playtime_label || '--',
+L2858:         topHeroName: backendData.current.topHeroName || backendData.top_hero_name || '--',
+L2859:         totalDamage: backendData.current.totalDamage || backendData.total_damage || '--'
+L2860:       };
+L2861:       return backendData;
+L2862:     }
+L2863:     if (backendData.data && backendData.data.segments) return null;
+L2864: 
+L2865:     const userProfile = backendData.user_profile || {};
+L2866:     const rankDetails = backendData.rank_details || {};
+L2867:     const overview = backendData.overview || {};
+L2868:     const combatOverview = backendData.combat_overview || {};
+L2869:     const combatRates = backendData.combat_rates || {};
+L2870:     const awards = backendData.awards_and_streaks || {};
+L2871:     const precision = backendData.precision_combat || {};
+L2872:     const rawHeroesList = backendData.heroes || backendData.hero_mastery || backendData.top_heroes || [];
+L2873: 
+L2874:     const rawWinRate = overview.win_rate || combatOverview.win_rate || 'N/A';
+L2875:     const formattedWinRate = formatPercent(rawWinRate);
+L2876: 
+L2877:     let rawKda = overview.kda_ratio || combatOverview.kda_ratio || overview.kda || combatOverview.kda;
+L2878:     if ((rawKda === undefined || rawKda === null || rawKda === 'N/A') && precision.total_kills !== undefined && precision.total_deaths !== undefined && precision.total_assists !== undefined) {
+L2879:       const d = precision.total_deaths || 1;
+L2880:       rawKda = ((precision.total_kills + precision.total_assists) / d);
+L2881:     }
+L2882:     const kdaRatioVal = (rawKda !== undefined && rawKda !== null && rawKda !== 'N/A' && !isNaN(Number(rawKda)))
+L2883:       ? Number(rawKda).toFixed(2)
+L2884:       : (rawKda || '0.00');
+L2885: 
+L2886:     let rawKd = overview.kd_ratio || combatOverview.kd_ratio || overview.kd || combatOverview.kd;
+L2887:     if ((rawKd === undefined || rawKd === null || rawKd === 'N/A') && precision.total_kills !== undefined && precision.total_deaths !== undefined) {
+L2888:       const d = precision.total_deaths || 1;
+L2889:       rawKd = (precision.total_kills / d);
+L2890:     }
+L2891:     const kdRatioVal = (rawKd !== undefined && rawKd !== null && rawKd !== 'N/A' && !isNaN(Number(rawKd)))
+L2892:       ? Number(rawKd).toFixed(2)
+L2893:       : (rawKd || '0.00');
+L2894: 
+L2895:     const totalDamageVal = overview.total_damage || backendData.total_damage || combatOverview.total_damage || 'N/A';
+L2896:     const damagePerMinVal = combatRates.damage_per_min || overview.damage_per_min || 'N/A';
+L2897: 
+L2898:     const rawPlaytime = overview.total_playtime || backendData.total_playtime || combatOverview.total_playtime;
+L2899:     const timePlayedVal = calculateTotalPlaytime(rawPlaytime, rawHeroesList);
+L2900: 

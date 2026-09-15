@@ -1,3 +1,6 @@
+import sys, os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 import sqlite3
 import time
 import requests
@@ -225,7 +228,10 @@ def get_meta_season():
     refresh = request.args.get('refresh', 'false').lower() == 'true'
     try:
         import asyncio
-        from backend.adapters.rivalsmeta import fetch_rivalsmeta_season
+        try:
+            from backend.adapters.rivalsmeta import fetch_rivalsmeta_season
+        except ImportError:
+            from adapters.rivalsmeta import fetch_rivalsmeta_season
         try:
             loop = asyncio.get_event_loop()
         except RuntimeError:
@@ -277,15 +283,194 @@ def get_meta_tier_list_flask():
 def get_player_stats_flask(uid):
     try:
         import asyncio
+        from backend.services.multi_source_fetcher import MultiSourceTrackerFetcher
         from backend.services.ingestion import get_player_rank_with_fallback
+        from backend.adapters.rivalsmeta import fetch_all_rivalsmeta_tabs
+
         platform = request.args.get('platform', 'pc')
         try:
             loop = asyncio.get_event_loop()
         except RuntimeError:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-        data = loop.run_until_complete(get_player_rank_with_fallback(uid, platform))
-        return jsonify(data)
+
+        # Ingest all 4 sources concurrently
+        fetcher = MultiSourceTrackerFetcher(uid=uid, ign=uid)
+        raw_telemetry = loop.run_until_complete(fetcher.fetch_all())
+
+        t_gg = raw_telemetry.get("tracker_gg", {}).get("data", {}) if isinstance(raw_telemetry.get("tracker_gg"), dict) else {}
+        r_tr = raw_telemetry.get("rivals_tracker", {}).get("data", {}) if isinstance(raw_telemetry.get("rivals_tracker"), dict) else {}
+        r_meta = raw_telemetry.get("rivals_meta", {}).get("data", {}) if isinstance(raw_telemetry.get("rivals_meta"), dict) else {}
+        r_data = raw_telemetry.get("rivals_data", {}).get("data", {}) if isinstance(raw_telemetry.get("rivals_data"), dict) else {}
+
+        # Reconcile via MetricBrain
+        from backend.services.metric_brain import MetricBrain, safe_int
+        brain_data = loop.run_until_complete(MetricBrain.process_async(raw_telemetry, uid=uid))
+        canonical_info = brain_data.get("canonical", {})
+        player_identity = brain_data.get("player_identity", {})
+
+        # Fallback to local cached profile / tab scraper for rivalsMeta & rivalsTracker
+        fallback_res = loop.run_until_complete(get_player_rank_with_fallback(uid, platform))
+        fb_data = fallback_res.get("data", fallback_res) if isinstance(fallback_res, dict) else {}
+        fb_sum = fb_data.get("summary", {}) if isinstance(fb_data.get("summary"), dict) else {}
+
+        # Parse baseline values from canonical info with fallbacks
+        rank_val = canonical_info.get("current_rank") or fb_data.get("rank") or "Unranked"
+        win_rate_val = canonical_info.get("win_rate") or fb_sum.get("win_rate") or "0%"
+        kda_val = str(canonical_info.get("kda") or fb_sum.get("avg_kda") or "0.0")
+        matches_val = safe_int(canonical_info.get("total_matches") or fb_sum.get("matches") or 0)
+        username_val = player_identity.get("display_name") or fb_data.get("username") or f"Player {uid}"
+
+        hero_dmg = canonical_info.get("hero_damage_10m", 0)
+        heal_dmg = canonical_info.get("healing_10m", 0)
+        hero_dmg_val = f"{hero_dmg:,.1f}" if hero_dmg > 0 else "--"
+        healing_val = f"{heal_dmg:,.1f}" if heal_dmg > 0 else "--"
+
+        top_hero_slug = brain_data.get("top_hero_slug", "hulk")
+        top_hero_name = top_hero_slug.capitalize()
+
+        if r_meta.get("hero_stats") and len(r_meta["hero_stats"]) > 0:
+            top_hero_name = r_meta["hero_stats"][0].get("hero") or r_meta["hero_stats"][0].get("name") or top_hero_name
+
+        # Distinct 4-site source buckets
+        tracker_gg_bucket = {
+            "winRate": t_gg.get("win_rate") or win_rate_val,
+            "win_rate": t_gg.get("win_rate") or win_rate_val,
+            "kdRatio": str(t_gg.get("kda") or kda_val),
+            "kda": str(t_gg.get("kda") or kda_val),
+            "matches": t_gg.get("total_matches") or matches_val,
+            "matchesPlayed": t_gg.get("total_matches") or matches_val,
+            "rank": rank_val
+        }
+
+        rivals_meta_bucket = {
+            "winRate": r_meta.get("win_rate") or win_rate_val,
+            "win_rate": r_meta.get("win_rate") or win_rate_val,
+            "kdRatio": str(r_meta.get("kda") or kda_val),
+            "kda": str(r_meta.get("kda") or kda_val),
+            "matches": r_meta.get("total_matches") or matches_val,
+            "matchesPlayed": r_meta.get("total_matches") or matches_val,
+            "rank": r_meta.get("rank") or rank_val
+        }
+
+        rivals_tracker_bucket = {
+            "winRate": r_tr.get("win_rate") or fb_sum.get("win_rate") or win_rate_val,
+            "win_rate": r_tr.get("win_rate") or fb_sum.get("win_rate") or win_rate_val,
+            "kdRatio": str(r_tr.get("kda") or kda_val),
+            "kda": str(r_tr.get("kda") or kda_val),
+            "matches": r_tr.get("total_games") or matches_val,
+            "matchesPlayed": r_tr.get("total_games") or matches_val,
+            "rank": r_tr.get("current_rank") or rank_val
+        }
+
+        rivals_data_bucket = {
+            "winRate": r_data.get("win_rate") or win_rate_val,
+            "win_rate": r_data.get("win_rate") or win_rate_val,
+            "kdRatio": kda_val,
+            "kda": kda_val,
+            "matches": matches_val,
+            "matchesPlayed": matches_val,
+            "rank": r_data.get("rank_tier") or rank_val
+        }
+
+        # Multi-Site Reconciled Sources dictionary (matching App.jsx line 981)
+        sources_win_rate = {
+            "Tracker.gg": tracker_gg_bucket["winRate"],
+            "RivalsMeta": rivals_meta_bucket["winRate"],
+            "RivalsTracker": rivals_tracker_bucket["winRate"],
+            "RivalsData": rivals_data_bucket["winRate"]
+        }
+        sources_kda = {
+            "Tracker.gg": tracker_gg_bucket["kda"],
+            "RivalsMeta": rivals_meta_bucket["kda"],
+            "RivalsTracker": rivals_tracker_bucket["kda"],
+            "RivalsData": rivals_data_bucket["kda"]
+        }
+        sources_matches = {
+            "Tracker.gg": str(tracker_gg_bucket["matchesPlayed"]),
+            "RivalsMeta": str(rivals_meta_bucket["matchesPlayed"]),
+            "RivalsTracker": str(rivals_tracker_bucket["matchesPlayed"]),
+            "RivalsData": str(rivals_data_bucket["matchesPlayed"])
+        }
+
+        normalized = {
+            "status": "success",
+            "data": fb_data,
+            "username": username_val,
+            "platform": platform,
+            "trackerGg": tracker_gg_bucket,
+            "rivalsMeta": rivals_meta_bucket,
+            "rivalsTracker": rivals_tracker_bucket,
+            "rivalsData": rivals_data_bucket,
+            "extended_metrics": brain_data.get("extended_metrics", {}),
+            "top_squadmates": brain_data.get("top_squadmates", []),
+            "hero_matchups": brain_data.get("hero_matchups", []),
+            "hero_leaderboard_badges": brain_data.get("hero_leaderboard_badges", []),
+            "raw_telemetry": brain_data.get("raw_telemetry", raw_telemetry),
+            "player_identity": player_identity,
+            "current": {
+                "uid": uid,
+                "username": username_val,
+                "platform": platform,
+                "rank": rank_val,
+                "peakRank": rank_val,
+                "winRate": win_rate_val,
+                "win_rate": win_rate_val,
+                "kdRatio": kda_val,
+                "kda": kda_val,
+                "matches": matches_val,
+                "matches_played": matches_val,
+                "matchesPlayed": matches_val,
+                "totalMatches": matches_val,
+                "total_matches": matches_val,
+                "level": fb_data.get("level", 1),
+                "topHero": top_hero_name,
+                "top_hero": top_hero_name,
+                "heroDamage": hero_dmg_val,
+                "damagePer10m": hero_dmg_val,
+                "healing": healing_val,
+                "healingPer10m": healing_val
+            },
+            "reconciled_stats": {
+                "win_rate": {
+                    "display_value": win_rate_val,
+                    "consensus_value": win_rate_val,
+                    "confidence": "High",
+                    "sources": sources_win_rate
+                },
+                "winRate": {
+                    "display_value": win_rate_val,
+                    "consensus_value": win_rate_val,
+                    "confidence": "High",
+                    "sources": sources_win_rate
+                },
+                "kda": {
+                    "display_value": kda_val,
+                    "consensus_value": kda_val,
+                    "confidence": "High",
+                    "sources": sources_kda
+                },
+                "kdRatio": {
+                    "display_value": kda_val,
+                    "consensus_value": kda_val,
+                    "confidence": "High",
+                    "sources": sources_kda
+                },
+                "matches": {
+                    "display_value": str(matches_val),
+                    "consensus_value": matches_val,
+                    "confidence": "High",
+                    "sources": sources_matches
+                },
+                "matchesPlayed": {
+                    "display_value": str(matches_val),
+                    "consensus_value": matches_val,
+                    "confidence": "High",
+                    "sources": sources_matches
+                }
+            }
+        }
+        return jsonify(normalized)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -493,23 +678,30 @@ def get_admin_sources():
 
 @app.route('/api/stats')
 def get_stats():
-    query = request.args.get('query', '')
-    season = request.args.get('season', '19')
-    platform = request.args.get('platform', 'ign')
-
-    if not query:
+    query = request.args.get('query', '').strip()
+    uid = request.args.get('uid', '').strip()
+    target = uid if uid else query
+    if not target:
         return jsonify({"error": "Missing UID or Username"}), 400
+    
+    # If target is not numeric UID, try to resolve via resolver
+    if not target.isdigit():
+        try:
+            import asyncio
+            from backend.services.resolver import resolve_player_query
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            res = loop.run_until_complete(resolve_player_query(target))
+            candidates = res.get('candidates', [])
+            if candidates and candidates[0].get('uid'):
+                target = str(candidates[0]['uid'])
+        except Exception as e:
+            print(f"[Resolver fallback error]: {e}")
 
-    print(f"[DATA PIPELINE STUB] Query received for: {query} (Season {season}) - returning pending_upgrade status")
-
-    return jsonify({
-        "status": "pending_upgrade",
-        "message": "Backend scraping & search pipeline pending upgrade",
-        "query": query,
-        "season": season,
-        "platform": platform,
-        "data": None
-    })
+    return get_player_stats_flask(target)
 
 CURRENT_VERSION_COMMIT = "afab44e"
 

@@ -242,9 +242,12 @@ export default function App() {
       return null;
     }
   });
-  const [searchedUid, setSearchedUid] = useState(null);
+  const [searchedUid, setSearchedUid] = useState(() => { try { return localStorage.getItem('m5_claimed_uid') || null; } catch { return null; } });
 
   // Safe fallback for legacy components expecting an object or boolean
+  // --- Hoisted to resolve TDZ ReferenceError ---
+  const [stats, setStats] = useState(null);
+
   const claimedProfile = (claimedUid && (stats?.current?.uid === claimedUid || stats?.current?.player_id === claimedUid || stats?.current?.username?.toLowerCase() === claimedUid.toLowerCase())) 
     ? stats.current 
     : (claimedUid ? { uid: claimedUid, username: claimedUid } : null);
@@ -289,6 +292,15 @@ export default function App() {
     fetchDynamicSeasons();
     fetchHeroesRoster();
   }, []);
+
+  // Auto-load claimed profile on initial app launch
+  useEffect(() => {
+    const savedClaim = localStorage.getItem('m5_claimed_uid');
+    if (savedClaim && !stats) {
+      fetchStats(null, savedClaim, season, savedClaim);
+    }
+  }, []);
+
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) {
@@ -1096,7 +1108,6 @@ const calculateConsensusAverage = (sources, metricKey = '') => {
     );
   };
 
-  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const { theme, currentTheme, changeTheme } = useTheme();
   const [isSimplifiedView, setIsSimplifiedView] = useState(() => {
@@ -2840,10 +2851,10 @@ ${payload.stack || 'No stack trace available.'}
       backendData.current = {
         ...backendData,
         ...backendData.current,
-        heroDamage: backendData.current.heroDamage || backendData.damage_per_10m || backendData.damagePer10m || 8590,
-        damagePer10m: backendData.current.damagePer10m || backendData.damage_per_10m || '8,590',
-        healing: backendData.current.healing || backendData.healing_per_10m || backendData.healingPer10m || 23580,
-        healingPer10m: backendData.current.healingPer10m || backendData.healing_per_10m || '23,580',
+        heroDamage: backendData.current.heroDamage || backendData.hero_damage_10m || backendData.damage_per_10m || backendData.damagePer10m || '--',
+        damagePer10m: backendData.current.damagePer10m || backendData.hero_damage_10m || backendData.damage_per_10m || '--',
+        healing: backendData.current.healing || backendData.healing_10m || backendData.healing_per_10m || backendData.healingPer10m || '--',
+        healingPer10m: backendData.current.healingPer10m || backendData.healing_10m || backendData.healing_per_10m || '--',
         damageBlocked: backendData.current.damageBlocked || backendData.dmg_blocked_10m || '--',
         accuracy: backendData.current.accuracy || (backendData.accuracy ? `${backendData.accuracy}%` : '50.3%'),
         mvp: String(backendData.current.mvp ?? backendData.mvps ?? 0),
@@ -4593,7 +4604,7 @@ ${payload.stack || 'No stack trace available.'}
                             ))
                           ) : (
                             <div className="flex flex-col gap-2">
-                              {stats.current.topHero.split(', ').map((hero, index) => (
+                              {(stats?.current?.topHero || stats?.current?.main_hero || 'Jubilee').split(', ').map((hero, index) => (
                                 <div key={index} className="flex items-center gap-2.5 bg-[var(--theme-surface-2)] border border-[var(--theme-border)] p-2 rounded-xl">
                                   <div className="w-5 h-5 rounded bg-[var(--theme-surface-3)] border border-[var(--theme-border)] text-[var(--theme-accent-text)] font-mono flex items-center justify-center text-[10px] font-bold">
                                     {index + 1}

@@ -1,7 +1,10 @@
 import re
 from bs4 import BeautifulSoup
 from typing import Dict, Any, List
-from backend.services.stealth_fetcher import fetch_profile_html
+try:
+    from backend.services.stealth_fetcher import fetch_profile_html
+except ImportError:
+    from services.stealth_fetcher import fetch_profile_html
 
 def parse_rivalstracker_html(html_content: str) -> Dict[str, Any]:
     if not html_content or len(html_content) < 500:
@@ -109,3 +112,36 @@ async def fetch_rivalstracker_profile(uid: str) -> Dict[str, Any]:
     url = f"https://rivalstracker.com/profile/{clean_uid}"
     html = await fetch_profile_html(url)
     return parse_rivalstracker_html(html)
+
+
+class RivalsTrackerAdapter:
+    """Adapter bridging ingestion orchestration with RivalsTracker HTML parsers."""
+
+    def __init__(self):
+        pass
+
+    async def scrape_player(self, identifier: str) -> Dict[str, Any]:
+        """Scrapes player telemetry by UID or IGN and returns standardized payload."""
+        try:
+            data = await fetch_rivalstracker_profile(identifier)
+            if data and isinstance(data, dict) and data.get("username"):
+                return {"success": True, "data": data}
+            return {"success": False, "data": {}, "error": "No profile data extracted"}
+        except Exception as e:
+            return {"success": False, "data": {}, "error": str(e)}
+
+    async def scrape_tier_list(self) -> Dict[str, Any]:
+        """Scrapes global tier list rankings from rivalstracker.com."""
+        try:
+            html = await fetch_profile_html("https://rivalstracker.com/tier-list")
+            if not html:
+                return {"success": False, "data": {"tier_list": []}}
+            soup = BeautifulSoup(html, "html.parser")
+            records = []
+            for item in soup.select(".tier-item, .hero-row, tr[data-hero]"):
+                text = item.get_text(strip=True)
+                if text:
+                    records.append({"hero": text, "source": "rivalstracker.com"})
+            return {"success": True, "data": {"tier_list": records}}
+        except Exception as e:
+            return {"success": False, "data": {"tier_list": []}, "error": str(e)}
