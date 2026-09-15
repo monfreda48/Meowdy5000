@@ -26,7 +26,6 @@ import PrivateProfileBanner from './components/PrivateProfileBanner';
 import PlayerProfile from './pages/PlayerProfile';
 import ReconciledStatCard from './components/ReconciledStatCard';
 import StatCardsGrid from './components/StatCardsGrid';
-import RawTelemetryInspector from './components/RawTelemetryInspector';
 import { formatPlayerName } from './utils/formatters';
 import RivalsDashboard from './components/RivalsDashboard';
 
@@ -1245,7 +1244,6 @@ const calculateConsensusAverage = (sources, metricKey = '') => {
 
   const [isMobileView, setIsMobileView] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [updateInfo, setUpdateInfo] = useState(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false);
@@ -3482,7 +3480,9 @@ ${payload.stack || 'No stack trace available.'}
                   placeholder="Search UID or IGN..."
                   className="w-full bg-[var(--theme-surface-2)] border border-[var(--theme-border)] hover:border-[var(--theme-accent)]/50 focus:border-[var(--theme-accent)] rounded-xl py-1.5 pl-8 pr-12 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[var(--theme-accent)] transition-all shadow-inner"
                 />
-                <span className="absolute left-2.5 text-slate-400 text-xs pointer-events-none">??</span>
+                <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
                 {lookupQuery.trim() ? (
                   <button
                     type="submit"
