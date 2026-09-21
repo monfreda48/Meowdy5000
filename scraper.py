@@ -3,113 +3,123 @@ import json
 import logging
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
+import urllib.parse
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-BASE_URL = "https://rivalsmeta.com"
-STARTING_URLS = [
-    "/characters",
-    "/team-ups",
-    "/tier-list",
-    "/team-comps",
-    "/skins",
-    "/pve"
+SITES = [
+    {
+        "base_url": "https://marvelrivals.gg",
+        "starting_urls": ["/heroes/", "/tier-list/", "/team-ups/", "/meta/", "/maps/", "/costumes/"],
+        "is_allowed": lambda link, base: any(link.startswith(base + prefix) for prefix in ["/heroes/", "/tier-list/", "/team-ups/", "/meta/", "/maps/", "/costumes/"])
+    },
+    {
+        "base_url": "https://rivalstracker.com",
+        "starting_urls": ["/heroes", "/tier-list", "/team-comps", "/skins", "/heroes/team-ups"],
+        "is_allowed": lambda link, base: any(link.startswith(base + prefix) for prefix in ["/heroes", "/tier-list", "/team-comps", "/skins"]) and "/leaderboard" not in link and "/profile" not in link
+    },
+    {
+        "base_url": "https://rivalsmeta.com",
+        "starting_urls": ["/characters", "/team-ups", "/tier-list", "/team-comps", "/skins", "/pve"],
+        "is_allowed": lambda link, base: any(link.startswith(base + prefix) for prefix in ["/characters", "/team-ups", "/tier-list", "/team-comps", "/skins", "/pve"]) and len(link.split('/')) <= 5 # avoid deep subpages for characters
+    }
 ]
+# tracker.gg and rivalsdata.com block us with 403 on standard requests. In a real-world scenario we would use advanced stealth plugins or proxies.
+# We'll skip them here since they require captchas/Cloudflare bypasses that are out of scope for a simple playwright script.
 
-# We want to skip dynamic leaderboard/stats inside characters as per user request to ignore dynamic things.
-# "characters/psylocke/leaderboard", "characters/psylocke/matchups", etc.
-# We will just scrape the main character page.
+async def scrape_site(context, site_config):
+    base_url = site_config["base_url"]
+    starting_urls = site_config["starting_urls"]
+    is_allowed = site_config["is_allowed"]
 
-def is_allowed(link):
-    # Check if the link starts with one of our prefixes
-    if not any(link.startswith(BASE_URL + prefix) for prefix in STARTING_URLS):
-        return False
-    # If it's a character link, only allow the main character page (e.g. /characters/iron-man)
-    # but not sub-pages of characters (e.g. /characters/iron-man/leaderboard)
-    path = link[len(BASE_URL):]
-    if path.startswith("/characters/"):
-        parts = path.split('/')
-        # parts will be ['', 'characters', 'iron-man', 'leaderboard']
-        if len(parts) > 3 and parts[3] != "":
-            return False
-    return True
-
-async def scrape_page(page, url):
-    """Scrapes a single page and returns text, nuxt data, and found links."""
-    logging.info(f"Navigating to {url}")
-    try:
-        await page.goto(url, wait_until='domcontentloaded', timeout=30000)
-        await page.wait_for_selector('script#__NUXT_DATA__', state='attached', timeout=10000)
-    except Exception as e:
-        logging.error(f"Failed to navigate to {url}: {e}")
-        return None, None, []
-
-    content = await page.content()
-    soup = BeautifulSoup(content, 'html.parser')
-
-    # Extract visible text
-    visible_text = soup.get_text(separator='\n', strip=True)
-
-    # Extract NUXT data
-    nuxt_data = None
-    nuxt_tag = soup.find('script', id='__NUXT_DATA__')
-    if nuxt_tag:
-        try:
-            nuxt_data = json.loads(nuxt_tag.string)
-        except json.JSONDecodeError:
-            logging.error(f"Failed to parse NUXT data on {url}")
-
-    # Extract sub-links
-    links = [a.get('href') for a in soup.find_all('a', href=True) if a.get('href')]
-
-    valid_links = []
-    for link in links:
-        if link.startswith('/'):
-            valid_links.append(BASE_URL + link)
-        elif link.startswith(BASE_URL):
-            valid_links.append(link)
-
-    return visible_text, nuxt_data, list(set(valid_links))
-
-async def main():
     scraped_data = []
     visited_urls = set()
-    urls_to_visit = [BASE_URL + u for u in STARTING_URLS]
+    urls_to_visit = [base_url + u for u in starting_urls]
 
+    domain = urllib.parse.urlparse(base_url).netloc
+
+    page = await context.new_page()
+
+    while urls_to_visit:
+        url = urls_to_visit.pop(0)
+        if url in visited_urls:
+            continue
+
+        visited_urls.add(url)
+        logging.info(f"[{domain}] Navigating to {url}")
+
+        try:
+            await page.goto(url, wait_until='domcontentloaded', timeout=30000)
+
+            # If it's a Nuxt site (like rivalsmeta or rivalstracker), wait for data
+            if "rivals" in domain:
+                try:
+                    await page.wait_for_selector('script#__NUXT_DATA__', state='attached', timeout=5000)
+                except:
+                    pass # Not all pages have it, or it might be a different framework
+
+        except Exception as e:
+            logging.error(f"[{domain}] Failed to navigate: {e}")
+            continue
+
+        content = await page.content()
+        soup = BeautifulSoup(content, 'html.parser')
+
+        visible_text = soup.get_text(separator='\n', strip=True)
+
+        nuxt_data = None
+        nuxt_tag = soup.find('script', id='__NUXT_DATA__')
+        if nuxt_tag:
+            try:
+                nuxt_data = json.loads(nuxt_tag.string)
+            except:
+                pass
+
+        # Extract next.js data if it exists (some trackers use it)
+        next_data = None
+        next_tag = soup.find('script', id='__NEXT_DATA__')
+        if next_tag:
+            try:
+                next_data = json.loads(next_tag.string)
+            except:
+                pass
+
+        scraped_data.append({
+            "url": url,
+            "text_dump": visible_text,
+            "nuxt_data": nuxt_data,
+            "next_data": next_data
+        })
+
+        links = [a.get('href') for a in soup.find_all('a', href=True) if a.get('href')]
+        for link in links:
+            if link.startswith('/'):
+                link = base_url + link
+
+            if link.startswith(base_url) and link not in visited_urls and link not in urls_to_visit:
+                if is_allowed(link, base_url):
+                    urls_to_visit.append(link)
+
+        await asyncio.sleep(1)
+
+    await page.close()
+
+    filename = f"{domain.replace('.', '_')}_dump.json"
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(scraped_data, f, indent=2)
+    logging.info(f"[{domain}] Scraping complete. Dumped {len(scraped_data)} pages to {filename}")
+
+async def main():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         )
-        page = await context.new_page()
 
-        while urls_to_visit:
-            current_url = urls_to_visit.pop(0)
-            if current_url in visited_urls:
-                continue
-
-            visited_urls.add(current_url)
-            text, nuxt, new_links = await scrape_page(page, current_url)
-
-            if text or nuxt:
-                scraped_data.append({
-                    "url": current_url,
-                    "text_dump": text,
-                    "nuxt_data": nuxt
-                })
-
-            for link in new_links:
-                if link not in visited_urls and link not in urls_to_visit:
-                    if is_allowed(link) and link != BASE_URL + "/" and len(link) > len(BASE_URL):
-                        urls_to_visit.append(link)
-
-            await asyncio.sleep(1)
+        for site in SITES:
+            await scrape_site(context, site)
 
         await browser.close()
-
-    with open("rivalsmeta_dump.json", "w", encoding="utf-8") as f:
-        json.dump(scraped_data, f, indent=2)
-    logging.info(f"Scraping complete. Dumped {len(scraped_data)} pages to rivalsmeta_dump.json")
 
 if __name__ == "__main__":
     asyncio.run(main())
